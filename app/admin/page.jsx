@@ -11,8 +11,14 @@ export default function AdminPage() {
     const [msg, setMsg] = useState({ text: '', type: '' });
 
     useEffect(() => {
-        fetch('/api/config')
-            .then(res => res.json())
+     fetch('/api/config')
+        .then(async res => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+
+             return res.json();
+        })
             .then(data => {
                 // التأكد من وجود المصفوفات لتفادي الأخطاء
                 if (!data.events) data.events = [];
