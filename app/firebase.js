@@ -64,6 +64,7 @@ export async function getAdminStats() {
         const snap = await getDoc(statsRef);
         return snap.exists() ? snap.data() : null;
     } catch (error) {
+        console.error("Error fetching stats:", error);
         return null;
     }
 }

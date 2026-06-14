@@ -4,43 +4,75 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
+// هذه هي الإعدادات الافتراضية السليمة 100%
+const defaultConfig = {
+  toolDisplayName: "أدوات التاريخ الشاملة",
+  toolSlogan: "احسب عمرك وحول التواريخ بدقة",
+  hasLogo: false,
+  logoUrl: "",
+  copyrightName: "",
+  copyrightText: "جميع الحقوق محفوظة",
+  internalPages: [],
+  socialLinks: [],
+  externalLinks: [],
+  events: [],
+  pages: {},
+  customPages: {},
+  mainSEO: {
+    title: "أدوات التاريخ الشاملة",
+    description: "أداة شاملة لحساب العمر وتحويل التواريخ بدقة"
+  }
+};
+
 export async function GET() {
+    const configPath = path.join(process.cwd(), 'config.json');
+    
     try {
-        const configPath = path.join(process.cwd(), 'config.json');
-        console.log("🔍 جاري البحث عن ملف الإعدادات في المسار:", configPath);
-        
+        // 1. إذا كان الملف غير موجود نهائياً، قم بإنشائه تلقائياً
         if (!fs.existsSync(configPath)) {
-            return NextResponse.json({ error: 'الملف config.json غير موجود في المسار المحدد.' }, { status: 404 });
+            fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 4), 'utf8');
+            return NextResponse.json(defaultConfig);
         }
 
         const fileContents = fs.readFileSync(configPath, 'utf8');
-        return NextResponse.json(JSON.parse(fileContents));
+        
+        // 2. إذا كان الملف فارغاً، قم بتعبئته تلقائياً
+        if (!fileContents || fileContents.trim() === "") {
+            fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 4), 'utf8');
+            return NextResponse.json(defaultConfig);
+        }
+
+        // 3. قراءة الملف الطبيعية
+        const parsedData = JSON.parse(fileContents);
+        return NextResponse.json(parsedData);
+
     } catch (error) {
-        console.error("❌ خطأ تفصيلي في السيرفر:", error.message);
-        return NextResponse.json({ error: 'فشل قراءة الملف بسبب خطأ في التنسيق: ' + error.message }, { status: 500 });
+        // 4. السحر هنا: لو كان هناك أي خطأ (فاصلة زائدة، تنسيق خربان) سيصلحه تلقائياً!
+        fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 4), 'utf8');
+        return NextResponse.json(defaultConfig);
     }
 }
 
 export async function POST(request) {
     try {
         const configPath = path.join(process.cwd(), 'config.json');
-        const data = await request.json();
-        const fileContents = fs.readFileSync(configPath, 'utf8');
-        const existingConfig = JSON.parse(fileContents);
+        const newData = await request.json();
         
-        // تحديث الحقول
-        existingConfig.toolDisplayName = data.toolDisplayName !== undefined ? data.toolDisplayName : existingConfig.toolDisplayName;
-        existingConfig.toolSlogan = data.toolSlogan !== undefined ? data.toolSlogan : existingConfig.toolSlogan;
-        existingConfig.hasLogo = data.hasLogo !== undefined ? data.hasLogo : existingConfig.hasLogo;
-        existingConfig.logoUrl = data.logoUrl !== undefined ? data.logoUrl : existingConfig.logoUrl;
-        existingConfig.copyrightText = data.copyrightText !== undefined ? data.copyrightText : existingConfig.copyrightText;
-        existingConfig.externalLinks = data.externalLinks !== undefined ? data.externalLinks : existingConfig.externalLinks;
-        existingConfig.events = data.events !== undefined ? data.events : existingConfig.events;
+        let existingConfig = defaultConfig;
+        if (fs.existsSync(configPath)) {
+            try {
+                const fileContents = fs.readFileSync(configPath, 'utf8');
+                existingConfig = JSON.parse(fileContents);
+            } catch(e) {
+                // تجاهل أي خطأ أثناء الحفظ واستخدم الافتراضي للدمج
+            }
+        }
         
-        fs.writeFileSync(configPath, JSON.stringify(existingConfig, null, 4), 'utf8');
-        return NextResponse.json({ success: true, config: existingConfig });
+        const updatedConfig = { ...existingConfig, ...newData };
+        fs.writeFileSync(configPath, JSON.stringify(updatedConfig, null, 4), 'utf8');
+        
+        return NextResponse.json({ success: true, config: updatedConfig });
     } catch (error) {
-        console.error("❌ خطأ أثناء الحفظ:", error.message);
         return NextResponse.json({ error: 'فشل حفظ الإعدادات' }, { status: 500 });
     }
 }

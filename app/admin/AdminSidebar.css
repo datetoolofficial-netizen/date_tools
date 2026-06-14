@@ -1,0 +1,98 @@
+.admin-sidebar {
+    width: 280px;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #1e293b;
+    position: sticky;
+    top: 0;
+}
+
+.admin-logo-area {
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid #1e293b;
+    background: #0b1120;
+}
+
+.admin-logo-area i {
+    font-size: 36px;
+    color: #38bdf8;
+    margin-bottom: 10px;
+}
+
+.admin-logo-area h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.admin-nav-menu {
+    padding: 20px 15px;
+    flex: 1;
+}
+
+.nav-group-title {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-right: 10px;
+}
+
+.admin-nav-menu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 15px;
+    margin-bottom: 6px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: right;
+    transition: all 0.2s ease;
+}
+
+.admin-nav-menu button i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+.admin-nav-menu button:hover {
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+.admin-nav-menu button.active {
+    background: #38bdf8;
+    color: #0f172a;
+}
+
+.back-to-site-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px;
+    padding: 15px;
+    background: #334155;
+    color: #f8fafc;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.back-to-site-btn:hover {
+    background: #ef4444;
+}
