@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, updateDoc, increment, setDoc, getDoc } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+// 1. أضفنا استيراد المصادقة هنا
+import { getAuth } from "firebase/auth"; 
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -14,6 +16,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+
+// 2. قمنا بتعريف وتصدير الـ auth لكي تعمل صفحات تسجيل الدخول
+export const auth = getAuth(app); 
 
 if (typeof window !== "undefined") {
     initializeAppCheck(app, {
