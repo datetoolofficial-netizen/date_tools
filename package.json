@@ -1,6 +1,6 @@
 {
   "name": "date_tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,19 +10,20 @@
   },
   "dependencies": {
     "@marsidev/react-turnstile": "^1.5.3",
-    "firebase": "^12.12.1",
-    "next": "16.2.4",
-    "react": "19.2.5",
-    "react-dom": "19.2.5"
+    "firebase": "^12.14.0",
+    "next": "^15.5.19",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
-  "@tailwindcss/postcss": "^4",
-  "@types/node": "^25.6.0",
-  "@types/react": "^19.2.14",
-  "@types/react-dom": "^19",
-  "eslint": "^9.39.0",
-  "eslint-config-next": "16.2.4",
-  "tailwindcss": "^4",
-  "typescript": "^6.0.3"
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^10.5.0",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
   }
 }
