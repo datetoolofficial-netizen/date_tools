@@ -15,7 +15,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "incremental": true,
     "plugins": [
       {
@@ -34,8 +34,14 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "**/*.mts",
-    ".next/dev/types/**/*.ts"
-, "app/api/config/.route.js", "app/page.jsx", "app/layout.jsx", "app/Header.jsx", "app/Footer.jsx", "app/admin/page.jsx"  ],
+    ".next/dev/types/**/*.ts",
+    "app/api/config/.route.js",
+    "app/page.jsx",
+    "app/layout.jsx",
+    "app/Header.jsx",
+    "app/Footer.jsx",
+    "app/admin/page.jsx"
+  ],
   "exclude": [
     "node_modules"
   ]
