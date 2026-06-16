@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
-import { initAndTrackVisit, trackToolUsage, trackAdClick } from './firebase';
+import { initAndTrackVisit, trackToolUsage, trackAdClick, getSiteConfig } from './firebase';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -73,12 +73,14 @@ export default function Home() {
 
         initAndTrackVisit();
         
-        // جلب الإعدادات والأحداث من لوحة التحكم
-        fetch('/api/config')
-            .then(res => res.json())
-            .then(data => {
-                setConfigData(data);
-            });
+        // جلب الإعدادات والأحداث من Firestore
+        getSiteConfig()
+       .then(data => {
+        setConfigData(data);
+            })
+        .catch(error => {
+        console.error("Error fetching site config:", error);
+         });
 
         // مراقب نقرات الإعلانات (خدعة الـ iframe focus)
         const handleBlur = () => {
@@ -417,7 +419,13 @@ export default function Home() {
             </div>
 
             <div className="container">
-                <Header lang={lang} isDarkMode={isDarkMode} toggleLang={toggleLang} toggleTheme={toggleTheme} />
+                <Header
+    lang={lang}
+    isDarkMode={isDarkMode}
+    toggleLang={toggleLang}
+    toggleTheme={toggleTheme}
+    config={configData}
+/>
 
                 {lang === 'ar' && (
                     <div className="today-info-banner">
@@ -624,7 +632,7 @@ export default function Home() {
                     </div>
                 )}
             </div>
-            <Footer lang={lang} i18n={i18n} />
+            <Footer lang={lang} config={configData} />
         </>
     );
 }
