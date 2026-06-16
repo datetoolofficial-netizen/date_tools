@@ -43,8 +43,7 @@ export default function AdminPage() {
                 getAdminStats().then(data => setStats(data)).catch(() => setStats({}));
             } else {
                 // المستخدم غير مسجل دخوله، تحويله لصفحة تسجيل الدخول
-                window.location.href = './admin_login'; // تأكد من أن هذا المسار يتطابق مع مسار صفحة تسجيل الدخول لديك
-            }
+            window.location.replace('/admin_login');            }
         });
 
         // تنظيم المراقب عند تفريغ المكون
