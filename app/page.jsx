@@ -1,7 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Script from 'next/script';
-import { initAndTrackVisit, trackToolUsage, trackAdClick, getSiteConfig } from './firebase';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -63,7 +62,16 @@ export default function Home() {
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [enteredDateInfo, setEnteredDateInfo] = useState(null);
 
+    const firebaseApiRef = useRef({
+        initAndTrackVisit: async () => {},
+        trackToolUsage: async () => {},
+        trackAdClick: async () => {},
+        getSiteConfig: async () => null,
+    });
+
     useEffect(() => {
+        let isMounted = true;
+
         const savedLang = localStorage.getItem('site_lang') || 'ar';
         setLang(savedLang);
         
@@ -71,25 +79,43 @@ export default function Home() {
         const savedTheme = localStorage.getItem('site_theme');
         setIsDarkMode(savedTheme ? savedTheme === 'dark' : osThemeQuery.matches);
 
-        initAndTrackVisit();
-        
-        // جلب الإعدادات والأحداث من Firestore
-        getSiteConfig()
-       .then(data => {
-        setConfigData(data);
-            })
-        .catch(error => {
-        console.error("Error fetching site config:", error);
-         });
+        async function loadFirebaseData() {
+            try {
+                // مهم: نستورد Firebase داخل المتصفح فقط حتى لا يتم تشغيله داخل Cloudflare Worker أثناء SSR
+                const firebaseApi = await import('./firebase');
+
+                firebaseApiRef.current = {
+                    initAndTrackVisit: firebaseApi.initAndTrackVisit || (async () => {}),
+                    trackToolUsage: firebaseApi.trackToolUsage || (async () => {}),
+                    trackAdClick: firebaseApi.trackAdClick || (async () => {}),
+                    getSiteConfig: firebaseApi.getSiteConfig || (async () => null),
+                };
+
+                await firebaseApiRef.current.initAndTrackVisit();
+
+                const data = await firebaseApiRef.current.getSiteConfig();
+                if (isMounted) setConfigData(data || {});
+            } catch (error) {
+                console.error("Error fetching site config:", error);
+                if (isMounted) setConfigData({ events: [] });
+            }
+        }
+
+        loadFirebaseData();
 
         // مراقب نقرات الإعلانات (خدعة الـ iframe focus)
         const handleBlur = () => {
             if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-                if (window.hoveredAdId) trackAdClick(window.hoveredAdId);
+                if (window.hoveredAdId) firebaseApiRef.current.trackAdClick(window.hoveredAdId);
             }
         };
+
         window.addEventListener('blur', handleBlur);
-        return () => window.removeEventListener('blur', handleBlur);
+
+        return () => {
+            isMounted = false;
+            window.removeEventListener('blur', handleBlur);
+        };
     }, []);
 
     useEffect(() => {
@@ -287,7 +313,7 @@ export default function Home() {
         
         setResAgeGreg(`${i18n[lang].resAge} <br><span style="color:inherit;">${durationStr}</span>`);
         generateDateStory(birthDate, 'حساب العمر (ميلادي)', durationStr);
-        trackToolUsage('ageCalc');
+        firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
     const calculateAgeHijri = () => {
@@ -309,7 +335,7 @@ export default function Home() {
         
         const gregEquivalent = hijriToGregorian(bYear, bMonth, bDay);
         generateDateStory(gregEquivalent, 'حساب العمر (هجري)', durationStr);
-        trackToolUsage('ageCalc');
+        firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
     const convertGregToHijri = () => {
@@ -323,7 +349,7 @@ export default function Home() {
         
         setResHijriConv(`${i18n[lang].resG2H} <br><span style="color:inherit;">${hDate}</span>`);
         generateDateStory(gDate, 'تحويل ميلادي إلى هجري', hDate);
-        trackToolUsage('dateConverter');
+        firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 
     const convertHijriToGreg = () => {
@@ -339,7 +365,7 @@ export default function Home() {
         
         setResGregConv(`${i18n[lang].resH2G} <br><span style="color:inherit;">${finalRes}</span>`);
         generateDateStory(gDateObj, 'تحويل هجري إلى ميلادي', finalRes);
-        trackToolUsage('dateConverter');
+        firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 
     const calcDiffGreg = () => {
@@ -354,7 +380,7 @@ export default function Home() {
         
         setResDiffGreg(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
         setEnteredDateInfo(null);
-        trackToolUsage('durationCalc');
+        firebaseApiRef.current.trackToolUsage('durationCalc');
     };
 
     const calcDiffHijri = () => {
@@ -379,7 +405,7 @@ export default function Home() {
         const durationStr = formatDuration(years, months, days);
         setResDiffHijri(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
         setEnteredDateInfo(null);
-        trackToolUsage('durationCalc');
+        firebaseApiRef.current.trackToolUsage('durationCalc');
     };
 
     const renderDays = (max) => Array.from({ length: max }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>);
@@ -501,7 +527,7 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div id="customAdContainer" data-ad-location="middle-banner" onClick={() => trackAdClick('custom_promo_middle')}>
+                <div id="customAdContainer" data-ad-location="middle-banner" onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}>
                     <a href="https://ads-tools-official.com" target="_blank" style={{textDecoration: 'none', display: 'block'}}>
                         <div className="ad-placeholder custom-ad-promo">
                             <i className="fa-solid fa-star"></i> <span>{i18n[lang].adPortal}</span> <i className="fa-solid fa-star"></i>
