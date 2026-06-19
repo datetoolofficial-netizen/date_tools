@@ -73,6 +73,7 @@ https://www.date-tool.com
 11. الوصول إلى حالة مستقرة يمكن لـ Codex إكمال التطوير منها.
 12. إضافة قواعد Firestore صارمة ومنع الكتابة العامة المباشرة على الإحصائيات.
 13. مراجعة ورفع تعديلات `layout.jsx` وصفحات slug بعد التأكد من سببها وسلامتها.
+14. بناء endpoint آمن للإحصائيات بدل الكتابة المباشرة من المتصفح إلى Firestore.
 
 ---
 
@@ -915,6 +916,63 @@ customPages/pages كقوائم عند الحاجة
 
 ---
 
+### التعديل 13: بناء Endpoint آمن للإحصائيات
+
+تمت إضافة:
+
+```txt
+app/api/statistics/route.js
+.dev.vars.example
+```
+
+وتم تعديل:
+
+```txt
+app/firebase.js
+```
+
+الآلية الجديدة:
+
+```txt
+المتصفح يرسل حدثًا محدودًا إلى /api/statistics.
+الـ endpoint يتحقق من نوع الحدث والحقول المسموحة.
+الـ endpoint يستخدم Firestore REST commit من جهة الخادم لزيادة العدادات.
+لا توجد كتابة مباشرة من المتصفح إلى statistics/main.
+```
+
+الأحداث المسموحة:
+
+```txt
+visit
+tool: ageCalc / dateConverter / durationCalc
+adClick مع adId آمن ومحدود
+```
+
+متطلبات التشغيل على Cloudflare:
+
+```txt
+FIREBASE_PROJECT_ID
+FIREBASE_SERVICE_ACCOUNT_EMAIL
+FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
+STATISTICS_ALLOWED_ORIGINS
+```
+
+أو يمكن استخدام:
+
+```txt
+FIREBASE_SERVICE_ACCOUNT_JSON
+```
+
+مهم:
+
+```txt
+لا يتم commit لأي private key أو service account JSON.
+يجب إضافة الأسرار عبر Cloudflare/Wrangler secrets قبل اعتبار الإحصائيات مفعلة على الإنتاج.
+إذا لم تكن الأسرار موجودة، يرجع endpoint خطأ statistics_not_configured بدل فتح Firestore للزوار.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -994,6 +1052,18 @@ git diff -- app\layout.jsx
 git diff -- app\[slug]\page.jsx
 Get-Content -Raw -Encoding UTF8 -LiteralPath 'app\[slug]\PageClient.jsx'
 rg -n "customPages|internalPages|pages\b|slug" app\admin\page.jsx app\firebase.js app\page.jsx app\Header.jsx app\Footer.jsx
+npm run lint
+npm run build
+```
+
+### بناء endpoint آمن للإحصائيات
+
+```powershell
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\workers-best-practices\SKILL.md
+Get-Content -Raw AGENTS.md
+Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
+Get-Content -Raw -Encoding UTF8 app\page.jsx
+Get-Content -Raw -Encoding UTF8 app\firebase.js
 npm run lint
 npm run build
 ```
@@ -1092,6 +1162,8 @@ Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
 تمت إضافة firestore.rules محليًا.
 الزائر لا يملك مسار كتابة مباشر على statistics/main في الكود الحالي.
 تم نشر قواعد Firestore على الإنتاج في مشروع date-tool-official.
+تمت إضافة /api/statistics لإعادة تفعيل الإحصائيات من جهة الخادم.
+تشغيل /api/statistics على الإنتاج يحتاج أسرار خدمة Firebase في Cloudflare.
 ```
 
 ---
@@ -1313,6 +1385,42 @@ npm run build
 
 ---
 
+### اختبار endpoint الإحصائيات
+
+تم تشغيل:
+
+```powershell
+npm run lint
+```
+
+والنتيجة:
+
+```txt
+نجح.
+```
+
+تم تشغيل:
+
+```powershell
+npm run build
+```
+
+والنتيجة:
+
+```txt
+نجح.
+ظهر المسار /api/statistics كمسار dynamic server-rendered on demand.
+```
+
+ملاحظة تشغيلية:
+
+```txt
+لم يتم وضع أسرار خدمة Firebase داخل Cloudflare من هذا التعديل.
+الكود جاهز، لكن الإنتاج يحتاج FIREBASE_SERVICE_ACCOUNT_EMAIL و FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY أو FIREBASE_SERVICE_ACCOUNT_JSON.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1341,6 +1449,8 @@ npm run build
 ✅ layout.jsx يستخدم metadata ثابتة بدون fs/path/config.json
 ✅ صفحات slug مفصولة إلى Server wrapper و PageClient آمن لتحميل Firebase من جهة العميل
 ✅ PageClient يدعم customPages/pages ككائنات keyed by slug كما تحفظها لوحة الإدارة
+✅ تمت إضافة /api/statistics كـ endpoint آمن للإحصائيات
+✅ app/firebase.js يرسل أحداث الإحصائيات إلى endpoint بدل الكتابة المباشرة على Firestore
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1349,15 +1459,23 @@ npm run build
 
 ## 10. المتبقي
 
-### 1. Endpoint آمن للإحصائيات
+### 1. ضبط أسرار endpoint الإحصائيات على Cloudflare
 
-تم إيقاف الكتابة المباشرة من المتصفح إلى:
+تم بناء endpoint الإحصائيات، لكن تشغيله على الإنتاج يحتاج إضافة أسرار خدمة Firebase إلى Cloudflare:
 
 ```txt
-statistics/main
+FIREBASE_PROJECT_ID
+FIREBASE_SERVICE_ACCOUNT_EMAIL
+FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
 ```
 
-المطلوب لاحقًا بناء API آمن أو Worker endpoint لتحديث الإحصائيات من جهة موثوقة، مع منع أي كتابة عامة مباشرة من المتصفح.
+أو:
+
+```txt
+FIREBASE_SERVICE_ACCOUNT_JSON
+```
+
+يجب عدم commit هذه القيم نهائيًا. بعد إضافتها يجب تشغيل `npm run deploy` أو انتظار GitHub/Cloudflare deploy حسب المسار المعتمد، ثم اختبار أن `statistics/main` يتحدث.
 
 ---
 
@@ -1541,6 +1659,6 @@ git commit -m "message"
 git push origin master
 ```
 
-10. المرحلة القادمة الأفضل أن تبدأ ببناء endpoint آمن للإحصائيات ثم SEO ثم تنظيم لوحة الإدارة.
+10. المرحلة القادمة الأفضل أن تبدأ بضبط أسرار endpoint الإحصائيات على Cloudflare ثم SEO ثم تنظيم لوحة الإدارة.
 
-11. تم نشر `firestore.rules` على Firebase. المهمة القادمة المباشرة هي بناء endpoint آمن للإحصائيات. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
+11. تم بناء `/api/statistics`. المهمة القادمة المباشرة هي ضبط أسرار خدمة Firebase في Cloudflare ثم اختبار تحديث `statistics/main`. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.

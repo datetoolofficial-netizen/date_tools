@@ -1,0 +1,4 @@
+FIREBASE_PROJECT_ID=date-tool-official
+FIREBASE_SERVICE_ACCOUNT_EMAIL=
+FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+STATISTICS_ALLOWED_ORIGINS=https://date-tool.com,https://www.date-tool.com,https://datetools.date-tool-official.workers.dev

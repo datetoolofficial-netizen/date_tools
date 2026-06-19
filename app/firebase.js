@@ -170,16 +170,33 @@ export async function getAdminProfile(uid) {
 ========================= */
 
 export async function initAndTrackVisit() {
-    // Public visitors must not write directly to Firestore statistics.
-    // Move tracking to a trusted API/Worker endpoint before re-enabling it.
-    return null;
+    return sendStatisticEvent({ event: "visit" });
 }
 
-export async function trackToolUsage() {
-    return null;
+export async function trackToolUsage(toolName) {
+    return sendStatisticEvent({ event: "tool", toolName });
 }
 
-export async function trackAdClick() {
+export async function trackAdClick(adId) {
+    return sendStatisticEvent({ event: "adClick", adId });
+}
+
+async function sendStatisticEvent(payload) {
+    if (typeof window === "undefined") return null;
+
+    try {
+        await fetch("/api/statistics", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+            keepalive: true,
+        });
+    } catch (error) {
+        // الإحصائيات لا يجب أن تكسر تجربة الزائر إذا تعذر تسجيل الحدث.
+    }
+
     return null;
 }
 
