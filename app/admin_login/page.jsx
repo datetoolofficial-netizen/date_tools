@@ -1,9 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from '../firebase';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
@@ -18,6 +15,12 @@ export default function AdminLogin() {
         setIsLoading(true);
 
         try {
+            const [{ auth, db }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
+                import('../firebase'),
+                import('firebase/auth'),
+                import('firebase/firestore'),
+            ]);
+
             // 1. تسجيل الدخول عبر Firebase Auth
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;

@@ -76,6 +76,7 @@ https://www.date-tool.com
 14. بناء endpoint آمن للإحصائيات بدل الكتابة المباشرة من المتصفح إلى Firestore.
 15. إضافة SEO الأساسي وCanonical Redirect للدومين.
 16. تفعيل أسرار Firebase على Cloudflare وتشغيل endpoint الإحصائيات على الإنتاج.
+17. تنظيف Firebase Imports في الصفحات المحددة بدون تقسيم لوحة الإدارة.
 
 ---
 
@@ -1085,6 +1086,46 @@ FIREBASE_SERVICE_ACCOUNT_JSON
 
 ---
 
+### التعديل 17: تنظيف Firebase Imports بدون تقسيم الصفحات
+
+تم تعديل:
+
+```txt
+app/[slug]/PageClient.jsx
+app/admin/page.jsx
+app/admin_login/page.jsx
+```
+
+وتمت مراجعة:
+
+```txt
+app/page.jsx
+app/firebase.js
+app/Header.jsx
+app/Footer.jsx
+```
+
+ما تم إنجازه:
+
+```txt
+إزالة import المباشر لـ ../firebase من app/[slug]/PageClient.jsx.
+إزالة import المباشر لـ ../firebase و firebase/auth من app/admin/page.jsx.
+إزالة import المباشر لـ ../firebase و firebase/auth و firebase/firestore من app/admin_login/page.jsx.
+استخدام dynamic import داخل useEffect أو داخل حدث تسجيل الدخول فقط.
+الإبقاء على app/firebase.js كملف مركزي وحيد يتعامل مع Firebase Client SDK.
+عدم تقسيم app/admin/page.jsx إلى مكونات في هذه المهمة.
+```
+
+الحالة:
+
+```txt
+npm run lint نجح.
+npm run build نجح بعد السماح لـ Wrangler بكتابة سجلاته في AppData.
+لم يتم تعديل إعدادات الأسرار أو قواعد Firestore.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -1166,6 +1207,11 @@ Get-Content -Raw -Encoding UTF8 -LiteralPath 'app\[slug]\PageClient.jsx'
 rg -n "customPages|internalPages|pages\b|slug" app\admin\page.jsx app\firebase.js app\page.jsx app\Header.jsx app\Footer.jsx
 npm run lint
 npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin_login
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://date-tool.com/privacy
 ```
 
 ### بناء endpoint آمن للإحصائيات
@@ -1213,6 +1259,15 @@ curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: appli
 ```txt
 ملفات tmp-stat-*.json كانت مؤقتة للاختبار فقط وتم حذفها بعد الاختبار.
 لم تتم طباعة أو حفظ قيم الأسرار في Git.
+```
+
+### تنظيف Firebase Imports
+
+```powershell
+rg -n "firebase/auth|firebase/firestore|firebase/storage|firebase/app|../firebase|./firebase" app\page.jsx app\admin\page.jsx app\admin_login\page.jsx app\firebase.js app\Header.jsx app\Footer.jsx
+rg -n "firebase/auth|firebase/firestore|firebase/storage|firebase/app|../firebase|./firebase" -g "PageClient.jsx" app
+npm run lint
+npm run build
 ```
 
 ---
@@ -1710,6 +1765,38 @@ Current Version ID: cfed1eb7-1cc9-4381-b75a-4cb45446ee02
 
 ---
 
+### اختبار تنظيف Firebase Imports
+
+تم تشغيل:
+
+```powershell
+rg -n "firebase/auth|firebase/firestore|firebase/storage|firebase/app|../firebase|./firebase" app\page.jsx app\admin\page.jsx app\admin_login\page.jsx app\firebase.js app\Header.jsx app\Footer.jsx
+rg -n "firebase/auth|firebase/firestore|firebase/storage|firebase/app|../firebase|./firebase" -g "PageClient.jsx" app
+npm run lint
+npm run build
+```
+
+والنتيجة:
+
+```txt
+app/page.jsx يستخدم dynamic import داخل useEffect.
+app/[slug]/PageClient.jsx يستخدم dynamic import داخل useEffect.
+app/admin/page.jsx يستخدم dynamic import داخل useEffect.
+app/admin_login/page.jsx يستخدم dynamic import داخل handleLogin.
+app/Header.jsx و app/Footer.jsx لا يستوردان Firebase.
+app/firebase.js هو الملف المركزي الوحيد الذي يستورد Firebase Client SDK مباشرة.
+npm run lint -> نجح.
+npm run build -> نجح بعد السماح لـ Wrangler بكتابة سجلاته في AppData.
+npm run deploy -> نجح.
+Current Version ID: 08a8faca-a871-40a6-82af-80fc44a68161
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin_login -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://date-tool.com/privacy -> 200 OK
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1752,6 +1839,8 @@ Current Version ID: cfed1eb7-1cc9-4381-b75a-4cb45446ee02
 ✅ تم ضبط أسرار Firebase المطلوبة للـ statistics endpoint على Cloudflare
 ✅ تم حذف FIREBASE_SERVICE_ACCOUNT_JSON غير الصحيح والاعتماد على الأسرار المفصولة
 ✅ /api/statistics يعمل على الإنتاج ويحدث Firestore عبر جهة الخادم
+✅ تم تنظيف Firebase Imports في app/page.jsx و app/[slug]/PageClient.jsx و app/admin/page.jsx و app/admin_login/page.jsx و app/Header.jsx و app/Footer.jsx
+✅ لم يتم تقسيم لوحة الإدارة في مهمة تنظيف Firebase Imports
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1760,30 +1849,7 @@ Current Version ID: cfed1eb7-1cc9-4381-b75a-4cb45446ee02
 
 ## 10. المتبقي
 
-### 1. تنظيف Firebase Imports
-
-يجب على Codex مراجعة هذه الملفات:
-
-```txt
-app/page.jsx
-app/[slug]/PageClient.jsx
-app/admin/page.jsx
-app/admin_login/page.jsx
-app/firebase.js
-app/Header.jsx
-app/Footer.jsx
-```
-
-القاعدة:
-
-```txt
-لا يتم تحميل Firebase Client SDK داخل Server Component أو Worker runtime.
-أي استخدام Firebase يكون داخل Client Component أو dynamic import داخل useEffect.
-```
-
----
-
-### 2. لوحة الإدارة
+### 1. لوحة الإدارة
 
 المتبقي من خطة الإدارة:
 
@@ -1810,7 +1876,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 3. إصلاح تحذير ESLint
+### 2. إصلاح تحذير ESLint
 
 ظهر التحذير:
 
@@ -1822,7 +1888,7 @@ The Next.js plugin was not detected in your ESLint configuration
 
 ---
 
-### 4. مراجعة npm audit
+### 3. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -1909,4 +1975,4 @@ FIREBASE_SERVICE_ACCOUNT_EMAIL
 FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
 ```
 
-11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect وتفعيل أسرار Firebase على Cloudflare. المهمة القادمة المباشرة هي تنظيف Firebase Imports، ثم تنظيم لوحة الإدارة. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
+11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect وتفعيل أسرار Firebase على Cloudflare وتنظيف Firebase Imports. المهمة القادمة المباشرة هي تنظيم لوحة الإدارة في مهمة منفصلة. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.

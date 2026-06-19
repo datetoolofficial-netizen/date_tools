@@ -1,15 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-    getAdminStats,
-    getSiteConfig,
-    saveSiteConfig,
-    getAdminProfile,
-    auth
-} from '../firebase';
-
-import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { useState, useEffect, useRef } from 'react';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -22,47 +13,82 @@ export default function AdminPage() {
     const [savingSection, setSavingSection] = useState('');
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
+    const firebaseApiRef = useRef(null);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.replace('/admin_login');
-                return;
-            }
+        let unsubscribe = () => {};
+        let isMounted = true;
 
+        async function loadAdminData() {
             try {
-                if (document.body.classList.contains('dark-mode')) {
-                    setIsDarkMode(true);
-                }
+                const [{ auth, getAdminProfile, getAdminStats, getSiteConfig, saveSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
+                    import('../firebase'),
+                    import('firebase/auth'),
+                ]);
 
-                const adminProfile = await getAdminProfile(user.uid);
+                if (!isMounted) return;
 
-                if (!adminProfile || adminProfile.active !== true) {
-                    await signOut(auth);
-                    window.location.replace('/admin_login');
-                    return;
-                }
+                firebaseApiRef.current = {
+                    auth,
+                    getAdminStats,
+                    getSiteConfig,
+                    getAdminProfile,
+                    signOut,
+                    saveSiteConfig,
+                };
 
-                setUserRole(
-                    adminProfile.role === 'super_admin'
-                        ? 'مدير عام'
-                        : adminProfile.role || 'مدير'
-                );
+                unsubscribe = onAuthStateChanged(auth, async (user) => {
+                    if (!user) {
+                        window.location.replace('/admin_login');
+                        return;
+                    }
 
-                const siteConfig = await getSiteConfig();
-                setConfig(siteConfig);
+                    try {
+                        if (document.body.classList.contains('dark-mode')) {
+                            setIsDarkMode(true);
+                        }
 
-                const statsData = await getAdminStats();
-                setStats(statsData || {});
+                        const adminProfile = await getAdminProfile(user.uid);
+
+                        if (!adminProfile || adminProfile.active !== true) {
+                            await signOut(auth);
+                            window.location.replace('/admin_login');
+                            return;
+                        }
+
+                        setUserRole(
+                            adminProfile.role === 'super_admin'
+                                ? 'مدير عام'
+                                : adminProfile.role || 'مدير'
+                        );
+
+                        const siteConfig = await getSiteConfig();
+                        setConfig(siteConfig);
+
+                        const statsData = await getAdminStats();
+                        setStats(statsData || {});
+                    } catch (error) {
+                        console.error('Error loading admin data:', error);
+                        setConfig({ hasError: true });
+                    } finally {
+                        setIsCheckingAuth(false);
+                    }
+                });
             } catch (error) {
-                console.error('Error loading admin data:', error);
-                setConfig({ hasError: true });
-            } finally {
-                setIsCheckingAuth(false);
+                console.error('Error loading Firebase admin modules:', error);
+                if (isMounted) {
+                    setConfig({ hasError: true });
+                    setIsCheckingAuth(false);
+                }
             }
-        });
+        }
 
-        return () => unsubscribe();
+        loadAdminData();
+
+        return () => {
+            isMounted = false;
+            unsubscribe();
+        };
     }, []);
 
     const showMessage = (text, type = 'info') => {
@@ -71,11 +97,18 @@ export default function AdminPage() {
     };
 
     const saveSection = async (sectionName = 'الإعدادات') => {
+        const firebaseApi = firebaseApiRef.current;
+
+        if (!firebaseApi?.saveSiteConfig) {
+            showMessage('❌ لم تكتمل تهيئة Firebase بعد.', 'error');
+            return;
+        }
+
         setSavingSection(sectionName);
         showMessage(`جاري حفظ ${sectionName}...`, 'info');
 
         try {
-            const savedConfig = await saveSiteConfig(config);
+            const savedConfig = await firebaseApi.saveSiteConfig(config);
             setConfig(savedConfig);
             showMessage(`✅ تم حفظ ${sectionName} بنجاح.`, 'success');
         } catch (error) {
@@ -92,8 +125,13 @@ export default function AdminPage() {
     };
 
     const handleLogout = async () => {
+        const firebaseApi = firebaseApiRef.current;
+
         try {
-            await signOut(auth);
+            if (firebaseApi?.signOut && firebaseApi?.auth) {
+                await firebaseApi.signOut(firebaseApi.auth);
+            }
+
             window.location.replace('/admin_login');
         } catch (error) {
             console.error('خطأ في تسجيل الخروج:', error);

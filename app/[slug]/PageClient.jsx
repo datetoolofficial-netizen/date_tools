@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { getSiteConfig } from '../firebase';
 
 function normalizeSlug(value = '') {
     return String(value)
@@ -111,6 +110,7 @@ export default function PageClient({ slug }) {
                 setLoading(true);
                 setError('');
 
+                const { getSiteConfig } = await import('../firebase');
                 const siteConfig = await getSiteConfig();
 
                 if (isMounted) {
