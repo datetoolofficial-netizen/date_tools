@@ -78,6 +78,7 @@ https://www.date-tool.com
 16. تفعيل أسرار Firebase على Cloudflare وتشغيل endpoint الإحصائيات على الإنتاج.
 17. تنظيف Firebase Imports في الصفحات المحددة بدون تقسيم لوحة الإدارة.
 18. تأسيس تخزين صور Cloudflare R2 للّوقو وfavicon والإعلانات مع headers أمنية وتنظيف HTML.
+19. تفعيل Cloudflare R2 فعليًا وربط bucket الصور بالـ Worker.
 
 ---
 
@@ -1192,6 +1193,52 @@ Security Headers ظهرت على الإنتاج.
 
 ---
 
+### التعديل 19: تفعيل R2 وربط bucket الصور بالـ Worker
+
+تم إنشاء R2 bucket:
+
+```txt
+datetools-media
+```
+
+وتم تعديل:
+
+```txt
+wrangler.jsonc
+```
+
+بإضافة binding:
+
+```jsonc
+"r2_buckets": [
+  {
+    "binding": "MEDIA_BUCKET",
+    "bucket_name": "datetools-media"
+  }
+]
+```
+
+ما تم إنجازه:
+
+```txt
+تم تفعيل R2 في حساب Cloudflare.
+تم إنشاء bucket بنجاح عبر Wrangler.
+تم نشر Worker بعد إضافة binding.
+ظهر binding في النشر: env.MEDIA_BUCKET (datetools-media) R2 Bucket.
+تم اختبار القراءة من /api/media بعد رفع صورة مؤقتة إلى R2 الحقيقي باستخدام --remote.
+تم حذف صورة الاختبار بعد التحقق.
+```
+
+الحالة:
+
+```txt
+R2 مفعل ومربوط بالإنتاج.
+/api/media يقرأ من R2 بنجاح.
+رفع الصور من لوحة الإدارة جاهز للاختبار العملي عند تسجيل الدخول كمدير.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -1348,6 +1395,20 @@ curl.exe -I https://date-tool.com/admin
 curl.exe -s -i https://date-tool.com/api/media/logo/test.png
 ```
 
+### تفعيل R2 وربط bucket الصور
+
+```powershell
+npx wrangler r2 bucket list
+npx wrangler r2 bucket create datetools-media
+npm run lint
+npm run build
+npm run deploy
+npx wrangler r2 object put datetools-media/logo/codex-r2-test.png --remote --file tmp-r2-test.png --content-type image/png --cache-control "public, max-age=60"
+curl.exe -I https://date-tool.com/api/media/logo/codex-r2-test.png
+npx wrangler r2 object delete datetools-media/logo/codex-r2-test.png --remote --force
+curl.exe -s https://date-tool.com/api/media/logo/codex-r2-test.png
+```
+
 ---
 
 ## 7. إعدادات Cloudflare / Firebase / GitHub
@@ -1451,6 +1512,7 @@ Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
 تم حذف FIREBASE_SERVICE_ACCOUNT_JSON لأنه أُدخل بتنسيق غير صالح.
 لا توجد أسرار محفوظة داخل المستودع.
 تمت إضافة endpoints لتخزين الصور عبر R2 لكن R2 غير مفعل بعد في حساب Cloudflare.
+تم تفعيل R2 لاحقًا وإنشاء bucket datetools-media وربطه بالـ Worker عبر MEDIA_BUCKET.
 ```
 
 ---
@@ -1917,6 +1979,38 @@ X-Frame-Options
 
 ---
 
+### اختبار تفعيل R2 وربطه بالإنتاج
+
+تم تشغيل:
+
+```powershell
+npx wrangler r2 bucket list
+npx wrangler r2 bucket create datetools-media
+npm run lint
+npm run build
+npm run deploy
+npx wrangler r2 object put datetools-media/logo/codex-r2-test.png --remote --file tmp-r2-test.png --content-type image/png --cache-control "public, max-age=60"
+curl.exe -I https://date-tool.com/api/media/logo/codex-r2-test.png
+npx wrangler r2 object delete datetools-media/logo/codex-r2-test.png --remote --force
+curl.exe -s https://date-tool.com/api/media/logo/codex-r2-test.png
+```
+
+والنتيجة:
+
+```txt
+R2 bucket list -> نجح بعد تفعيل R2.
+تم إنشاء bucket datetools-media.
+npm run lint -> نجح.
+npm run build -> نجح.
+npm run deploy -> نجح.
+ظهر binding في النشر: env.MEDIA_BUCKET (datetools-media) R2 Bucket.
+Current Version ID: 74c58791-b937-4942-bdfe-d46e6520429c
+قراءة صورة الاختبار من /api/media/logo/codex-r2-test.png -> 200 OK / Content-Type: image/png.
+بعد حذف الصورة المؤقتة -> {"ok":false,"error":"media_not_found"}.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1965,7 +2059,9 @@ X-Frame-Options
 ✅ تمت إضافة حقول رفع/روابط للّوقو وfavicon وصور الإعلانات في لوحة الإدارة
 ✅ تمت إضافة Security Headers أساسية عبر middleware
 ✅ تمت إضافة تنظيف HTML مبدئي لمحتوى الصفحات
-⚠️ R2 غير مفعل بعد في حساب Cloudflare، لذلك رفع الصور ينتظر تفعيل R2 وإضافة binding
+✅ R2 مفعل وتم إنشاء bucket datetools-media
+✅ تم ربط R2 بالـ Worker عبر MEDIA_BUCKET
+✅ تم اختبار قراءة صورة من R2 عبر /api/media بنجاح
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1974,27 +2070,17 @@ X-Frame-Options
 
 ## 10. المتبقي
 
-### 1. تفعيل Cloudflare R2 وإضافة binding الصور
+### 1. اختبار رفع الصور من لوحة الإدارة
 
-يجب تنفيذ الخطوات التالية بعد تفعيل R2 من Cloudflare Dashboard:
+بعد تسجيل الدخول كمدير، يجب اختبار رفع:
 
 ```txt
-إنشاء bucket باسم datetools-media أو اسم واضح مشابه.
-إضافة binding في wrangler.jsonc باسم MEDIA_BUCKET.
-تشغيل npm run deploy.
-اختبار رفع logo وfavicon وصور الإعلانات من لوحة الإدارة.
+logo
+favicon
+ads top / middle / bottom1 / bottom2
 ```
 
-إعداد binding المتوقع لاحقًا:
-
-```jsonc
-"r2_buckets": [
-  {
-    "binding": "MEDIA_BUCKET",
-    "bucket_name": "datetools-media"
-  }
-]
-```
+ثم حفظ الأقسام والتأكد من ظهور الصور على الإنتاج.
 
 ---
 
@@ -2126,10 +2212,16 @@ FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
 
 11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect وتفعيل أسرار Firebase على Cloudflare وتنظيف Firebase Imports. المهمة القادمة المباشرة هي تنظيم لوحة الإدارة في مهمة منفصلة. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
 
-12. لتفعيل تخزين الصور يجب أولًا تفعيل R2 من Cloudflare Dashboard، ثم إنشاء bucket وإضافة binding باسم:
+12. تخزين الصور عبر R2 مفعل حاليًا. الـ bucket المستخدم هو:
+
+```txt
+datetools-media
+```
+
+والـ binding المستخدم في Worker هو:
 
 ```txt
 MEDIA_BUCKET
 ```
 
-لا تضف binding إلى `wrangler.jsonc` قبل وجود bucket فعلي حتى لا يفشل النشر. المسار العام `/api/media/{key}` مخصص للصور العامة فقط مثل logo وfavicon والإعلانات، وليس للتذاكر أو مرفقات خاصة.
+المسار العام `/api/media/{key}` مخصص للصور العامة فقط مثل logo وfavicon والإعلانات، وليس للتذاكر أو مرفقات خاصة.
