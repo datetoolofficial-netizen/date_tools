@@ -54,7 +54,7 @@ async function getServiceAccount() {
                 privateKey: parsed.private_key || '',
             };
         } catch {
-            return null;
+            // Fall back to split service account secrets if the JSON secret was pasted incorrectly.
         }
     }
 
@@ -153,7 +153,8 @@ async function getAccessToken(serviceAccount) {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to mint Google access token.');
+        await response.text();
+        throw new Error(`token_failed_${response.status}`);
     }
 
     const tokenData = await response.json();
@@ -285,7 +286,8 @@ async function commitStatisticIncrement(serviceAccount, fieldPaths) {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to update Firestore statistics.');
+        await response.text();
+        throw new Error(`firestore_failed_${response.status}`);
     }
 }
 
@@ -300,7 +302,17 @@ export async function POST(request) {
     }
 
     try {
-        const payload = await readLimitedJson(request);
+        let payload;
+        try {
+            payload = await readLimitedJson(request);
+        } catch (error) {
+            if (error instanceof SyntaxError) {
+                return jsonResponse({ ok: false, error: 'invalid_json' }, 400);
+            }
+
+            throw error;
+        }
+
         const fieldPaths = getFieldTransforms(payload);
 
         if (fieldPaths.length === 0) {
@@ -312,7 +324,11 @@ export async function POST(request) {
         return jsonResponse({ ok: true });
     } catch (error) {
         console.error('statistics endpoint error:', error);
-        return jsonResponse({ ok: false, error: 'statistics_update_failed' }, 500);
+        const errorCode = error instanceof Error && /^(token|firestore)_failed_\d+$/.test(error.message)
+            ? error.message
+            : `statistics_update_failed_${error?.name || 'unknown'}`;
+
+        return jsonResponse({ ok: false, error: errorCode }, 500);
     }
 }
 

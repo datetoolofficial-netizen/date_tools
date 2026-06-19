@@ -75,6 +75,7 @@ https://www.date-tool.com
 13. مراجعة ورفع تعديلات `layout.jsx` وصفحات slug بعد التأكد من سببها وسلامتها.
 14. بناء endpoint آمن للإحصائيات بدل الكتابة المباشرة من المتصفح إلى Firestore.
 15. إضافة SEO الأساسي وCanonical Redirect للدومين.
+16. تفعيل أسرار Firebase على Cloudflare وتشغيل endpoint الإحصائيات على الإنتاج.
 
 ---
 
@@ -1036,6 +1037,54 @@ app/[slug]/page.jsx
 
 ---
 
+### التعديل 16: تفعيل endpoint الإحصائيات على الإنتاج بأسرار Cloudflare
+
+تم تعديل:
+
+```txt
+app/api/statistics/route.js
+```
+
+وتم ضبط أسرار Cloudflare التالية على Worker بدون حفظها في Git:
+
+```txt
+FIREBASE_SERVICE_ACCOUNT_EMAIL
+FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
+```
+
+تم حذف السر غير الصحيح:
+
+```txt
+FIREBASE_SERVICE_ACCOUNT_JSON
+```
+
+سبب الحذف:
+
+```txt
+تم إدخال JSON بطريقة أدت إلى فشل JSON.parse داخل Worker.
+تم اعتماد الأسرار المفصولة بدل JSON الكامل لتقليل احتمال تلف التنسيق عند اللصق.
+```
+
+تحسينات endpoint:
+
+```txt
+قراءة الأسرار من process.env ومن getCloudflareContext({ async: true }).env.
+دعم fallback من FIREBASE_SERVICE_ACCOUNT_JSON إلى الأسرار المفصولة.
+إرجاع invalid_json عند وصول جسم طلب غير صالح بدل خطأ عام.
+إرجاع أخطاء تشغيل مختصرة بدون كشف تفاصيل داخلية أو أسرار.
+```
+
+الحالة:
+
+```txt
+تم نشر Worker.
+/api/statistics يعمل على الإنتاج.
+اختبارات visit و tool و adClick رجعت {"ok":true}.
+لا توجد أسرار ملتزمة في Git.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -1145,6 +1194,27 @@ curl.exe -I https://www.date-tool.com/
 curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" -d "{\"event\":\"visit\"}"
 ```
 
+### تفعيل أسرار endpoint الإحصائيات واختبار الإنتاج
+
+```powershell
+npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_EMAIL
+npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
+npx wrangler secret delete FIREBASE_SERVICE_ACCOUNT_JSON
+npx wrangler secret list
+npm run lint
+npm run deploy
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-visit.json"
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-tool.json"
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-ad.json"
+```
+
+ملاحظة:
+
+```txt
+ملفات tmp-stat-*.json كانت مؤقتة للاختبار فقط وتم حذفها بعد الاختبار.
+لم تتم طباعة أو حفظ قيم الأسرار في Git.
+```
+
 ---
 
 ## 7. إعدادات Cloudflare / Firebase / GitHub
@@ -1240,10 +1310,13 @@ Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
 الزائر لا يملك مسار كتابة مباشر على statistics/main في الكود الحالي.
 تم نشر قواعد Firestore على الإنتاج في مشروع date-tool-official.
 تمت إضافة /api/statistics لإعادة تفعيل الإحصائيات من جهة الخادم.
-تشغيل /api/statistics على الإنتاج يحتاج أسرار خدمة Firebase في Cloudflare.
+تم تشغيل /api/statistics على الإنتاج بعد ضبط أسرار خدمة Firebase في Cloudflare.
 تمت إضافة متغيرات Cloudflare غير السرية في wrangler.jsonc.
 تمت إضافة sitemap.xml و robots.txt.
 تم ضبط Canonical Redirect من www إلى الدومين الأساسي.
+الأسرار المعتمدة حاليًا هي FIREBASE_SERVICE_ACCOUNT_EMAIL و FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY.
+تم حذف FIREBASE_SERVICE_ACCOUNT_JSON لأنه أُدخل بتنسيق غير صالح.
+لا توجد أسرار محفوظة داخل المستودع.
 ```
 
 ---
@@ -1601,6 +1674,42 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 
 ---
 
+### اختبار تفعيل endpoint الإحصائيات بعد ضبط الأسرار
+
+تم تشغيل:
+
+```powershell
+npx wrangler secret list
+npm run lint
+npm run deploy
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-visit.json"
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-tool.json"
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" --data-binary "@tmp-stat-ad.json"
+```
+
+والنتيجة:
+
+```txt
+npx wrangler secret list -> FIREBASE_SERVICE_ACCOUNT_EMAIL و FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY موجودان.
+FIREBASE_SERVICE_ACCOUNT_JSON غير موجود بعد حذفه.
+npm run lint -> نجح.
+npm run deploy -> نجح.
+Current Version ID: cfed1eb7-1cc9-4381-b75a-4cb45446ee02
+/api/statistics visit -> {"ok":true}
+/api/statistics tool ageCalc -> {"ok":true}
+/api/statistics adClick test_ad -> {"ok":true}
+```
+
+ملاحظة أمنية:
+
+```txt
+لم تتم طباعة قيم الأسرار.
+لم يتم commit لملف service account JSON.
+ملفات JSON المؤقتة للاختبار حُذفت بعد الاختبار.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1640,6 +1749,9 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ robots.txt يعمل على الإنتاج
 ✅ sitemap.xml يعمل على الإنتاج
 ✅ تحويل www إلى الدومين الأساسي يعمل على الإنتاج
+✅ تم ضبط أسرار Firebase المطلوبة للـ statistics endpoint على Cloudflare
+✅ تم حذف FIREBASE_SERVICE_ACCOUNT_JSON غير الصحيح والاعتماد على الأسرار المفصولة
+✅ /api/statistics يعمل على الإنتاج ويحدث Firestore عبر جهة الخادم
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1648,27 +1760,7 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 
 ## 10. المتبقي
 
-### 1. ضبط أسرار endpoint الإحصائيات على Cloudflare
-
-تم بناء endpoint الإحصائيات، لكن تشغيله على الإنتاج يحتاج إضافة أسرار خدمة Firebase إلى Cloudflare:
-
-```txt
-FIREBASE_PROJECT_ID
-FIREBASE_SERVICE_ACCOUNT_EMAIL
-FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
-```
-
-أو:
-
-```txt
-FIREBASE_SERVICE_ACCOUNT_JSON
-```
-
-يجب عدم commit هذه القيم نهائيًا. بعد إضافتها يجب تشغيل `npm run deploy` أو انتظار GitHub/Cloudflare deploy حسب المسار المعتمد، ثم اختبار أن `statistics/main` يتحدث.
-
----
-
-### 2. تنظيف Firebase Imports
+### 1. تنظيف Firebase Imports
 
 يجب على Codex مراجعة هذه الملفات:
 
@@ -1691,7 +1783,7 @@ app/Footer.jsx
 
 ---
 
-### 3. لوحة الإدارة
+### 2. لوحة الإدارة
 
 المتبقي من خطة الإدارة:
 
@@ -1718,7 +1810,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 4. إصلاح تحذير ESLint
+### 3. إصلاح تحذير ESLint
 
 ظهر التحذير:
 
@@ -1730,7 +1822,7 @@ The Next.js plugin was not detected in your ESLint configuration
 
 ---
 
-### 5. مراجعة npm audit
+### 4. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -1810,6 +1902,11 @@ git commit -m "message"
 git push origin master
 ```
 
-10. المرحلة القادمة الأفضل أن تبدأ بضبط سر `FIREBASE_SERVICE_ACCOUNT_JSON` في Cloudflare ثم اختبار `/api/statistics` على الإنتاج، ثم تنظيف Firebase Imports، ثم تنظيم لوحة الإدارة.
+10. لا تعيد إدخال `FIREBASE_SERVICE_ACCOUNT_JSON` إلا إذا كان الإدخال سيتم من ملف JSON صالح ومختبر. الوضع المعتمد حاليًا هو الأسرار المفصولة:
 
-11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect. المهمة القادمة المباشرة هي إدخال `FIREBASE_SERVICE_ACCOUNT_JSON` عبر `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON` ثم نشر واختبار تحديث `statistics/main`. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
+```txt
+FIREBASE_SERVICE_ACCOUNT_EMAIL
+FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
+```
+
+11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect وتفعيل أسرار Firebase على Cloudflare. المهمة القادمة المباشرة هي تنظيف Firebase Imports، ثم تنظيم لوحة الإدارة. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
