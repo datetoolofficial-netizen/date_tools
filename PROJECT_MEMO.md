@@ -1138,6 +1138,11 @@ npx wrangler whoami
 npx wrangler secret list
 npm run lint
 npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/robots.txt
+curl.exe -I https://date-tool.com/sitemap.xml
+curl.exe -I https://www.date-tool.com/
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" -d "{\"event\":\"visit\"}"
 ```
 
 ---
@@ -1299,6 +1304,38 @@ Uploaded datetools
 Deployed datetools triggers
 Success: Deploy command completed
 Success! Build completed
+```
+
+آخر نشر يدوي عبر:
+
+```powershell
+npm run deploy
+```
+
+النتيجة:
+
+```txt
+OpenNext build complete
+Uploaded datetools
+Deployed datetools triggers
+https://datetools.date-tool-official.workers.dev
+Current Version ID: 72f032f0-97a9-456b-88d3-11ae3a4765d6
+```
+
+Bindings الظاهرة في النشر:
+
+```txt
+WORKER_SELF_REFERENCE
+IMAGES
+ASSETS
+FIREBASE_PROJECT_ID
+STATISTICS_ALLOWED_ORIGINS
+```
+
+ملاحظة:
+
+```txt
+FIREBASE_SERVICE_ACCOUNT_JSON غير موجود بعد في أسرار Worker.
 ```
 
 ---
@@ -1538,6 +1575,30 @@ npm run build
 ظهر Middleware ضمن البناء.
 ```
 
+تم اختبار الإنتاج:
+
+```powershell
+curl.exe -I https://date-tool.com/robots.txt
+curl.exe -I https://date-tool.com/sitemap.xml
+curl.exe -I https://www.date-tool.com/
+curl.exe -s -X POST https://date-tool.com/api/statistics -H "Content-Type: application/json" -d "{\"event\":\"visit\"}"
+```
+
+والنتيجة:
+
+```txt
+https://date-tool.com/robots.txt -> 200 OK
+https://date-tool.com/sitemap.xml -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+/api/statistics -> {"ok":false,"error":"statistics_not_configured"}
+```
+
+تفسير نتيجة endpoint:
+
+```txt
+هذه نتيجة آمنة ومتوقعة لأن FIREBASE_SERVICE_ACCOUNT_JSON لم يتم إدخاله بعد كـ Cloudflare secret.
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -1575,6 +1636,10 @@ npm run build
 ✅ تمت إضافة sitemap.xml
 ✅ تمت إضافة robots.txt
 ✅ تمت إضافة Canonical Redirect من www.date-tool.com إلى date-tool.com
+✅ تم نشر التغييرات يدويًا إلى Cloudflare Workers
+✅ robots.txt يعمل على الإنتاج
+✅ sitemap.xml يعمل على الإنتاج
+✅ تحويل www إلى الدومين الأساسي يعمل على الإنتاج
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
