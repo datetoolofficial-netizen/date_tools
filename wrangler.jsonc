@@ -7,6 +7,10 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
+	"vars": {
+		"FIREBASE_PROJECT_ID": "date-tool-official",
+		"STATISTICS_ALLOWED_ORIGINS": "https://date-tool.com,https://www.date-tool.com,https://datetools.date-tool-official.workers.dev"
+	},
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"

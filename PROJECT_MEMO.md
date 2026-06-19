@@ -74,6 +74,7 @@ https://www.date-tool.com
 12. إضافة قواعد Firestore صارمة ومنع الكتابة العامة المباشرة على الإحصائيات.
 13. مراجعة ورفع تعديلات `layout.jsx` وصفحات slug بعد التأكد من سببها وسلامتها.
 14. بناء endpoint آمن للإحصائيات بدل الكتابة المباشرة من المتصفح إلى Firestore.
+15. إضافة SEO الأساسي وCanonical Redirect للدومين.
 
 ---
 
@@ -973,6 +974,68 @@ FIREBASE_SERVICE_ACCOUNT_JSON
 
 ---
 
+### التعديل 14: تجهيز متغيرات Cloudflare غير السرية للـ statistics endpoint
+
+تم تعديل:
+
+```txt
+wrangler.jsonc
+app/api/statistics/route.js
+```
+
+تمت إضافة متغيرات غير سرية إلى `wrangler.jsonc`:
+
+```txt
+FIREBASE_PROJECT_ID=date-tool-official
+STATISTICS_ALLOWED_ORIGINS=https://date-tool.com,https://www.date-tool.com,https://datetools.date-tool-official.workers.dev
+```
+
+وتم تعديل endpoint ليقرأ المتغيرات من:
+
+```txt
+process.env
+getCloudflareContext({ async: true }).env
+```
+
+الحالة:
+
+```txt
+Wrangler مسجل الدخول.
+لا توجد أسرار Cloudflare محفوظة بعد.
+FIREBASE_SERVICE_ACCOUNT_JSON لم يتم إدخاله بعد.
+```
+
+---
+
+### التعديل 15: SEO الأساسي و Canonical Redirect
+
+تمت إضافة:
+
+```txt
+app/sitemap.js
+app/robots.js
+middleware.js
+```
+
+وتم تعديل:
+
+```txt
+app/layout.jsx
+app/[slug]/page.jsx
+```
+
+ما تم إنجازه:
+
+```txt
+إضافة metadataBase و canonical و OpenGraph و Twitter metadata للصفحة العامة.
+إضافة metadata آمنة عامة لصفحات slug بدون تحميل Firebase على الخادم.
+إضافة sitemap.xml للصفحة الرئيسية والصفحات الثابتة.
+إضافة robots.txt مع منع /admin و /admin_login و /api.
+إضافة تحويل 308 من www.date-tool.com إلى date-tool.com.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -1064,6 +1127,15 @@ Get-Content -Raw AGENTS.md
 Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
 Get-Content -Raw -Encoding UTF8 app\page.jsx
 Get-Content -Raw -Encoding UTF8 app\firebase.js
+npm run lint
+npm run build
+```
+
+### ضبط Cloudflare و SEO الأساسي
+
+```powershell
+npx wrangler whoami
+npx wrangler secret list
 npm run lint
 npm run build
 ```
@@ -1164,6 +1236,9 @@ Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
 تم نشر قواعد Firestore على الإنتاج في مشروع date-tool-official.
 تمت إضافة /api/statistics لإعادة تفعيل الإحصائيات من جهة الخادم.
 تشغيل /api/statistics على الإنتاج يحتاج أسرار خدمة Firebase في Cloudflare.
+تمت إضافة متغيرات Cloudflare غير السرية في wrangler.jsonc.
+تمت إضافة sitemap.xml و robots.txt.
+تم ضبط Canonical Redirect من www إلى الدومين الأساسي.
 ```
 
 ---
@@ -1421,6 +1496,50 @@ npm run build
 
 ---
 
+### اختبار Cloudflare secrets و SEO
+
+تم تشغيل:
+
+```powershell
+npx wrangler whoami
+```
+
+والنتيجة:
+
+```txt
+Wrangler مسجل الدخول بحساب date.tool.official@gmail.com.
+```
+
+تم تشغيل:
+
+```powershell
+npx wrangler secret list
+```
+
+والنتيجة:
+
+```txt
+[]
+لا توجد أسرار محفوظة للـ Worker حتى الآن.
+```
+
+تم تشغيل:
+
+```powershell
+npm run lint
+npm run build
+```
+
+والنتيجة:
+
+```txt
+نجحا.
+ظهر /robots.txt و /sitemap.xml ضمن البناء.
+ظهر Middleware ضمن البناء.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1451,6 +1570,11 @@ npm run build
 ✅ PageClient يدعم customPages/pages ككائنات keyed by slug كما تحفظها لوحة الإدارة
 ✅ تمت إضافة /api/statistics كـ endpoint آمن للإحصائيات
 ✅ app/firebase.js يرسل أحداث الإحصائيات إلى endpoint بدل الكتابة المباشرة على Firestore
+✅ Wrangler مسجل الدخول بحساب Cloudflare الصحيح
+✅ تمت إضافة متغيرات Cloudflare غير السرية إلى wrangler.jsonc
+✅ تمت إضافة sitemap.xml
+✅ تمت إضافة robots.txt
+✅ تمت إضافة Canonical Redirect من www.date-tool.com إلى date-tool.com
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1479,45 +1603,7 @@ FIREBASE_SERVICE_ACCOUNT_JSON
 
 ---
 
-### 2. SEO
-
-بعد حذف قراءة `config.json` من `layout.jsx`، يجب بناء SEO جديد مناسب لـ Cloudflare.
-
-المطلوب لاحقًا:
-
-```txt
-app/sitemap.js
-app/robots.js
-Canonical URL
-OpenGraph metadata
-Twitter metadata
-Metadata للصفحات الديناميكية
-```
-
----
-
-### 3. Canonical Redirect
-
-حاليًا يعمل:
-
-```txt
-date-tool.com
-www.date-tool.com
-```
-
-الأفضل تحديد نسخة واحدة رئيسية لتجنب تكرار المحتوى.
-
-الاقتراح:
-
-```txt
-www.date-tool.com → date-tool.com
-```
-
-أو العكس، لكن يجب اختيار واحد فقط.
-
----
-
-### 4. تنظيف Firebase Imports
+### 2. تنظيف Firebase Imports
 
 يجب على Codex مراجعة هذه الملفات:
 
@@ -1540,7 +1626,7 @@ app/Footer.jsx
 
 ---
 
-### 5. لوحة الإدارة
+### 3. لوحة الإدارة
 
 المتبقي من خطة الإدارة:
 
@@ -1567,7 +1653,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 6. إصلاح تحذير ESLint
+### 4. إصلاح تحذير ESLint
 
 ظهر التحذير:
 
@@ -1579,7 +1665,7 @@ The Next.js plugin was not detected in your ESLint configuration
 
 ---
 
-### 7. مراجعة npm audit
+### 5. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -1659,6 +1745,6 @@ git commit -m "message"
 git push origin master
 ```
 
-10. المرحلة القادمة الأفضل أن تبدأ بضبط أسرار endpoint الإحصائيات على Cloudflare ثم SEO ثم تنظيم لوحة الإدارة.
+10. المرحلة القادمة الأفضل أن تبدأ بضبط سر `FIREBASE_SERVICE_ACCOUNT_JSON` في Cloudflare ثم اختبار `/api/statistics` على الإنتاج، ثم تنظيف Firebase Imports، ثم تنظيم لوحة الإدارة.
 
-11. تم بناء `/api/statistics`. المهمة القادمة المباشرة هي ضبط أسرار خدمة Firebase في Cloudflare ثم اختبار تحديث `statistics/main`. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
+11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect. المهمة القادمة المباشرة هي إدخال `FIREBASE_SERVICE_ACCOUNT_JSON` عبر `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_JSON` ثم نشر واختبار تحديث `statistics/main`. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.

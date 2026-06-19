@@ -1,3 +1,5 @@
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 const MAX_BODY_BYTES = 2048;
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
@@ -20,17 +22,28 @@ function jsonResponse(body, status = 200) {
     });
 }
 
-function getEnvValue(...keys) {
+async function getEnvValue(...keys) {
     for (const key of keys) {
         const value = process.env[key];
         if (value) return value;
     }
 
+    try {
+        const { env } = await getCloudflareContext({ async: true });
+
+        for (const key of keys) {
+            const value = env?.[key];
+            if (typeof value === 'string' && value) return value;
+        }
+    } catch {
+        // Local Next builds may not have a Cloudflare request context.
+    }
+
     return '';
 }
 
-function getServiceAccount() {
-    const json = getEnvValue('FIREBASE_SERVICE_ACCOUNT_JSON', 'GOOGLE_SERVICE_ACCOUNT_JSON');
+async function getServiceAccount() {
+    const json = await getEnvValue('FIREBASE_SERVICE_ACCOUNT_JSON', 'GOOGLE_SERVICE_ACCOUNT_JSON');
 
     if (json) {
         try {
@@ -46,9 +59,9 @@ function getServiceAccount() {
     }
 
     return {
-        projectId: getEnvValue('FIREBASE_PROJECT_ID', 'GOOGLE_CLOUD_PROJECT') || DEFAULT_PROJECT_ID,
-        clientEmail: getEnvValue('FIREBASE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_CLIENT_EMAIL'),
-        privateKey: getEnvValue('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY', 'GOOGLE_PRIVATE_KEY'),
+        projectId: (await getEnvValue('FIREBASE_PROJECT_ID', 'GOOGLE_CLOUD_PROJECT')) || DEFAULT_PROJECT_ID,
+        clientEmail: await getEnvValue('FIREBASE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_CLIENT_EMAIL'),
+        privateKey: await getEnvValue('FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY', 'GOOGLE_PRIVATE_KEY'),
     };
 }
 
@@ -183,9 +196,9 @@ async function readLimitedJson(request) {
     return JSON.parse(text);
 }
 
-function getAllowedOrigins(request) {
+async function getAllowedOrigins(request) {
     const requestOrigin = new URL(request.url).origin;
-    const configuredOrigins = getEnvValue('STATISTICS_ALLOWED_ORIGINS')
+    const configuredOrigins = (await getEnvValue('STATISTICS_ALLOWED_ORIGINS'))
         .split(',')
         .map((origin) => origin.trim())
         .filter(Boolean);
@@ -203,11 +216,11 @@ function getAllowedOrigins(request) {
     ]);
 }
 
-function isAllowedOrigin(request) {
+async function isAllowedOrigin(request) {
     const origin = request.headers.get('origin');
     if (!origin) return true;
 
-    return getAllowedOrigins(request).has(origin);
+    return (await getAllowedOrigins(request)).has(origin);
 }
 
 function normalizeAdId(adId) {
@@ -277,11 +290,11 @@ async function commitStatisticIncrement(serviceAccount, fieldPaths) {
 }
 
 export async function POST(request) {
-    if (!isAllowedOrigin(request)) {
+    if (!(await isAllowedOrigin(request))) {
         return jsonResponse({ ok: false, error: 'forbidden_origin' }, 403);
     }
 
-    const serviceAccount = getServiceAccount();
+    const serviceAccount = await getServiceAccount();
     if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) {
         return jsonResponse({ ok: false, error: 'statistics_not_configured' }, 503);
     }

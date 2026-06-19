@@ -1,8 +1,27 @@
 import './globals.css';
 
+const siteUrl = 'https://date-tool.com';
+
 export const metadata = {
+    metadataBase: new URL(siteUrl),
     title: 'أدوات التاريخ الشاملة',
     description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+    alternates: {
+        canonical: '/',
+    },
+    openGraph: {
+        title: 'أدوات التاريخ الشاملة',
+        description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+        url: siteUrl,
+        siteName: 'أدوات التاريخ الشاملة',
+        locale: 'ar_SA',
+        type: 'website',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'أدوات التاريخ الشاملة',
+        description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+    },
     icons: {
         icon: '/favicon.ico',
     },
