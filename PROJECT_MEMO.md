@@ -71,6 +71,7 @@ https://www.date-tool.com
 9. ربط `date-tool.com`.
 10. ربط `www.date-tool.com`.
 11. الوصول إلى حالة مستقرة يمكن لـ Codex إكمال التطوير منها.
+12. إضافة قواعد Firestore صارمة ومنع الكتابة العامة المباشرة على الإحصائيات.
 
 ---
 
@@ -592,6 +593,42 @@ datetools
 
 ---
 
+### الخطأ 10: الزائر يستطيع امتلاك مسار كتابة مباشر محتمل على statistics/main
+
+**الأعراض:**
+
+```txt
+app/firebase.js كان يحتوي على دوال من المتصفح لتحديث statistics/main مباشرة:
+initAndTrackVisit
+trackToolUsage
+trackAdClick
+```
+
+**السبب:**
+
+تحديث الإحصائيات من المتصفح يتطلب فتح صلاحيات كتابة عامة أو شبه عامة في Firestore، وهذا غير آمن. عدم وجود ملف `firestore.rules` داخل المستودع كان يجعل مراجعة الصلاحيات ونشرها عرضة للخطأ اليدوي.
+
+**الحل:**
+
+تمت إضافة قواعد Firestore محلية صارمة:
+
+```txt
+firestore.rules
+firebase.json
+.firebaserc
+```
+
+وتم تعديل `app/firebase.js` بحيث تصبح دوال تتبع الزائر no-op مؤقتًا ولا تكتب مباشرة إلى `statistics/main`. تبقى قراءة الإحصائيات متاحة للمدير فقط حسب القواعد، ويجب نقل التتبع لاحقًا إلى API آمن أو Worker endpoint قبل إعادة تفعيله.
+
+**الحالة:**
+
+```txt
+تم الحل
+تم نشر قواعد Firestore على مشروع date-tool-official عبر Firebase CLI
+```
+
+---
+
 ## 5. التعديلات المنفذة
 
 ### التعديل 1: تثبيت OpenNext و Wrangler
@@ -774,6 +811,74 @@ datetools
 
 ---
 
+### التعديل 9: إضافة Firestore Rules
+
+تمت إضافة:
+
+```txt
+firestore.rules
+firebase.json
+.firebaserc
+```
+
+القواعد الحالية:
+
+```txt
+settings/main:
+- قراءة عامة للزوار
+- كتابة للمدير النشط فقط
+
+statistics/main:
+- قراءة وكتابة للمدير النشط فقط
+- لا توجد كتابة مباشرة للزائر
+
+admins/{uid}:
+- قراءة المستند الخاص بالمستخدم المسجل فقط للتحقق من صلاحية الدخول
+- لا توجد list عامة
+- لا توجد كتابة من التطبيق
+```
+
+---
+
+### التعديل 10: تعطيل الكتابة العامة المباشرة على الإحصائيات
+
+تم تعديل:
+
+```txt
+app/firebase.js
+```
+
+وأصبحت الدوال التالية لا تكتب إلى Firestore من المتصفح:
+
+```txt
+initAndTrackVisit
+trackToolUsage
+trackAdClick
+```
+
+الهدف هو حماية `statistics/main` وعدم فتح صلاحيات كتابة عامة لمجرد استمرار العدادات. المهمة التالية المناسبة هي بناء endpoint موثوق لتحديث الإحصائيات.
+
+---
+
+### التعديل 11: تنظيف ESLint من فحص مخرجات OpenNext
+
+تم تعديل:
+
+```txt
+eslint.config.mjs
+```
+
+وتمت إضافة:
+
+```txt
+.open-next/**
+.wrangler/**
+```
+
+إلى قائمة التجاهل، لأن هذه ملفات توليد وليست مصدر التطبيق، وكانت تسبب فشل `npm run lint`.
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -831,6 +936,19 @@ git push origin master
 ```powershell
 nslookup www.date-tool.com
 curl -I https://www.date-tool.com
+```
+
+### إضافة قواعد Firestore وحماية الإحصائيات
+
+```powershell
+Get-Content -Raw AGENTS.md
+Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
+rg --files | rg "firestore|firebase|rules|\.rules$|\.firebaserc|firebase\.json"
+rg -n "initAndTrackVisit|trackToolUsage|trackAdClick|getAdminStats|updateDoc|increment|setDoc" app\firebase.js app\page.jsx app\admin\page.jsx
+npm run lint
+npm run build
+npx firebase-tools deploy --only firestore:rules --project date-tool-official
+npx firebase-tools projects:list --json
 ```
 
 ---
@@ -924,6 +1042,9 @@ statistics/main
 الموقع العام يقرأ settings/main.
 لوحة الإدارة تعدل settings/main.
 Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
+تمت إضافة firestore.rules محليًا.
+الزائر لا يملك مسار كتابة مباشر على statistics/main في الكود الحالي.
+تم نشر قواعد Firestore على الإنتاج في مشروع date-tool-official.
 ```
 
 ---
@@ -1050,6 +1171,72 @@ https://www.date-tool.com
 
 ---
 
+### اختبار Firestore Rules وحماية الإحصائيات
+
+تم تشغيل:
+
+```powershell
+npm run lint
+```
+
+والنتيجة:
+
+```txt
+نجح بعد تجاهل مخرجات .open-next و .wrangler.
+```
+
+تم تشغيل:
+
+```powershell
+npm run build
+```
+
+والنتيجة:
+
+```txt
+نجح بعد السماح لـ Wrangler بكتابة سجلاته في AppData.
+```
+
+ملاحظة:
+
+```txt
+تم تسجيل الدخول إلى Firebase بنجاح بعد فتح جلسة تفاعلية.
+تم نشر firestore.rules على مشروع date-tool-official.
+أكد Firebase CLI أن ملف القواعد compiled successfully ثم released rules إلى cloud.firestore.
+```
+
+---
+
+### اختبار نشر Firestore Rules
+
+تم تشغيل:
+
+```powershell
+npx firebase-tools projects:list --json
+```
+
+والنتيجة:
+
+```txt
+ظهر مشروع date-tool-official بحالة ACTIVE.
+```
+
+تم تشغيل:
+
+```powershell
+npx firebase-tools deploy --only firestore:rules --project date-tool-official
+```
+
+والنتيجة:
+
+```txt
+cloud.firestore: rules file firestore.rules compiled successfully
+firestore: released rules firestore.rules to cloud.firestore
+Deploy complete
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1071,42 +1258,31 @@ https://www.date-tool.com
 ✅ layout.jsx لم يعد يقرأ config.json
 ✅ الصفحة الرئيسية لم تعد تستورد Firebase مباشرة أثناء Worker runtime
 ✅ Route الخاص بـ www مضبوط على datetools
+✅ تمت إضافة firestore.rules محليًا
+✅ تمت إضافة firebase.json و .firebaserc لتحديد مشروع Firebase وقواعده
+✅ تم نشر Firestore Rules على مشروع date-tool-official
+✅ تم منع الكتابة العامة المباشرة على statistics/main من كود المتصفح
+✅ npm run lint ينجح
+✅ npm run build ينجح
 ```
 
 ---
 
 ## 10. المتبقي
 
-### 1. Firestore Rules
+### 1. Endpoint آمن للإحصائيات
 
-أولوية عالية.
-
-المطلوب:
-
-```txt
-السماح للزوار بقراءة settings/main
-منع الزوار من الكتابة على settings/main
-السماح للمدير فقط بالكتابة
-منع الزوار من الكتابة المباشرة على statistics/main
-```
-
-يجب مراجعة قواعد Firestore قبل اعتبار الموقع آمنًا للإطلاق الكامل.
-
----
-
-### 2. حماية الإحصائيات
-
-حاليًا يجب التأكد أن الزائر لا يستطيع تعديل:
+تم إيقاف الكتابة المباشرة من المتصفح إلى:
 
 ```txt
 statistics/main
 ```
 
-الأفضل لاحقًا نقل تحديث الإحصائيات إلى API آمن أو Worker endpoint بدل السماح المباشر من المتصفح.
+المطلوب لاحقًا بناء API آمن أو Worker endpoint لتحديث الإحصائيات من جهة موثوقة، مع منع أي كتابة عامة مباشرة من المتصفح.
 
 ---
 
-### 3. SEO
+### 2. SEO
 
 بعد حذف قراءة `config.json` من `layout.jsx`، يجب بناء SEO جديد مناسب لـ Cloudflare.
 
@@ -1123,7 +1299,7 @@ Metadata للصفحات الديناميكية
 
 ---
 
-### 4. Canonical Redirect
+### 3. Canonical Redirect
 
 حاليًا يعمل:
 
@@ -1144,7 +1320,7 @@ www.date-tool.com → date-tool.com
 
 ---
 
-### 5. تنظيف Firebase Imports
+### 4. تنظيف Firebase Imports
 
 يجب على Codex مراجعة هذه الملفات:
 
@@ -1167,7 +1343,7 @@ app/Footer.jsx
 
 ---
 
-### 6. لوحة الإدارة
+### 5. لوحة الإدارة
 
 المتبقي من خطة الإدارة:
 
@@ -1194,7 +1370,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 7. إصلاح تحذير ESLint
+### 6. إصلاح تحذير ESLint
 
 ظهر التحذير:
 
@@ -1206,7 +1382,7 @@ The Next.js plugin was not detected in your ESLint configuration
 
 ---
 
-### 8. مراجعة npm audit
+### 7. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -1286,4 +1462,6 @@ git commit -m "message"
 git push origin master
 ```
 
-10. المرحلة القادمة الأفضل أن تبدأ بـ Firestore Rules ثم SEO ثم تنظيم لوحة الإدارة.
+10. المرحلة القادمة الأفضل أن تبدأ ببناء endpoint آمن للإحصائيات ثم SEO ثم تنظيم لوحة الإدارة.
+
+11. تم نشر `firestore.rules` على Firebase. المهمة القادمة المباشرة هي بناء endpoint آمن للإحصائيات. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.

@@ -3,8 +3,6 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import {
     getFirestore,
     doc,
-    updateDoc,
-    increment,
     setDoc,
     getDoc
 } from "firebase/firestore";
@@ -172,52 +170,17 @@ export async function getAdminProfile(uid) {
 ========================= */
 
 export async function initAndTrackVisit() {
-    const statsRef = doc(db, "statistics", "main");
-
-    try {
-        const snap = await getDoc(statsRef);
-
-        if (!snap.exists()) {
-            await setDoc(statsRef, {
-                visits: 1,
-                ageCalc: 0,
-                dateConverter: 0,
-                durationCalc: 0,
-                adClicks: 0
-            });
-        } else {
-            await updateDoc(statsRef, {
-                visits: increment(1)
-            });
-        }
-    } catch (error) {
-        console.warn("ملاحظة: تم تخطي تسجيل الزيارة لعدم وجود صلاحيات.");
-    }
+    // Public visitors must not write directly to Firestore statistics.
+    // Move tracking to a trusted API/Worker endpoint before re-enabling it.
+    return null;
 }
 
-export async function trackToolUsage(toolName) {
-    try {
-        const statsRef = doc(db, "statistics", "main");
-
-        await updateDoc(statsRef, {
-            [toolName]: increment(1)
-        });
-    } catch (error) {
-        console.warn("ملاحظة: تم تخطي تسجيل استخدام الأداة.");
-    }
+export async function trackToolUsage() {
+    return null;
 }
 
-export async function trackAdClick(adId) {
-    try {
-        const statsRef = doc(db, "statistics", "main");
-
-        await updateDoc(statsRef, {
-            adClicks: increment(1),
-            [`ad_${adId}`]: increment(1)
-        });
-    } catch (error) {
-        console.warn("ملاحظة: تم تخطي تسجيل النقرة.");
-    }
+export async function trackAdClick() {
+    return null;
 }
 
 export async function getAdminStats() {
