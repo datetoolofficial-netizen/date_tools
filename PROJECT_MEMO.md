@@ -72,6 +72,7 @@ https://www.date-tool.com
 10. ربط `www.date-tool.com`.
 11. الوصول إلى حالة مستقرة يمكن لـ Codex إكمال التطوير منها.
 12. إضافة قواعد Firestore صارمة ومنع الكتابة العامة المباشرة على الإحصائيات.
+13. مراجعة ورفع تعديلات `layout.jsx` وصفحات slug بعد التأكد من سببها وسلامتها.
 
 ---
 
@@ -879,6 +880,41 @@ eslint.config.mjs
 
 ---
 
+### التعديل 12: مراجعة ورفع تعديلات layout وصفحات slug
+
+تمت مراجعة الملفات:
+
+```txt
+app/layout.jsx
+app/[slug]/page.jsx
+app/[slug]/PageClient.jsx
+```
+
+سبب تعديل `app/layout.jsx`:
+
+```txt
+إزالة fs/path وقراءة config.json من Root Layout حتى لا يفشل Cloudflare Worker.
+استبدال generateMetadata ببيانات metadata ثابتة وآمنة لبيئة Cloudflare.
+```
+
+سبب تعديل صفحات slug:
+
+```txt
+فصل صفحة slug إلى Server wrapper خفيف وClient Component.
+منع استيراد Firebase Client SDK داخل Server Component أو Worker runtime.
+```
+
+تم تصحيح `PageClient.jsx` قبل الرفع حتى يدعم شكل البيانات الذي تحفظه لوحة الإدارة:
+
+```txt
+customPages ككائن keyed by slug
+pages ككائن keyed by slug
+internalPages كقائمة
+customPages/pages كقوائم عند الحاجة
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -949,6 +985,17 @@ npm run lint
 npm run build
 npx firebase-tools deploy --only firestore:rules --project date-tool-official
 npx firebase-tools projects:list --json
+```
+
+### مراجعة ورفع ملفات layout و slug
+
+```powershell
+git diff -- app\layout.jsx
+git diff -- app\[slug]\page.jsx
+Get-Content -Raw -Encoding UTF8 -LiteralPath 'app\[slug]\PageClient.jsx'
+rg -n "customPages|internalPages|pages\b|slug" app\admin\page.jsx app\firebase.js app\page.jsx app\Header.jsx app\Footer.jsx
+npm run lint
+npm run build
 ```
 
 ---
@@ -1237,6 +1284,35 @@ Deploy complete
 
 ---
 
+### اختبار تعديلات layout و slug
+
+تم تشغيل:
+
+```powershell
+npm run lint
+```
+
+والنتيجة:
+
+```txt
+نجح.
+```
+
+تم تشغيل:
+
+```powershell
+npm run build
+```
+
+والنتيجة:
+
+```txt
+نجح.
+ظهر المسار /[slug] كمسار dynamic server-rendered on demand.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1262,6 +1338,9 @@ Deploy complete
 ✅ تمت إضافة firebase.json و .firebaserc لتحديد مشروع Firebase وقواعده
 ✅ تم نشر Firestore Rules على مشروع date-tool-official
 ✅ تم منع الكتابة العامة المباشرة على statistics/main من كود المتصفح
+✅ layout.jsx يستخدم metadata ثابتة بدون fs/path/config.json
+✅ صفحات slug مفصولة إلى Server wrapper و PageClient آمن لتحميل Firebase من جهة العميل
+✅ PageClient يدعم customPages/pages ككائنات keyed by slug كما تحفظها لوحة الإدارة
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
