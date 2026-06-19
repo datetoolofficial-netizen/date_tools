@@ -123,6 +123,19 @@ export default function Home() {
     }, [configData]);
 
     useEffect(() => {
+        if (!configData?.faviconUrl) return;
+
+        let icon = document.querySelector("link[rel='icon']");
+        if (!icon) {
+            icon = document.createElement('link');
+            icon.rel = 'icon';
+            document.head.appendChild(icon);
+        }
+
+        icon.href = configData.faviconUrl;
+    }, [configData?.faviconUrl]);
+
+    useEffect(() => {
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
         if (isDarkMode) document.body.classList.add('dark-mode');
@@ -437,6 +450,25 @@ export default function Home() {
         </div>
     );
 
+    const renderAdImage = (slot, altText) => {
+        const src = configData?.adImages?.[slot];
+        if (!src) return null;
+
+        return (
+            <img
+                src={src}
+                alt={altText}
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: '180px',
+                    objectFit: 'contain',
+                    display: 'block',
+                    margin: '0 auto'
+                }}
+            />
+        );
+    };
+
     return (
         <>
             <div className={`custom-alert ${alertConfig.show ? 'show' : ''} ${alertConfig.type === 'info' ? 'info' : ''}`}>
@@ -467,8 +499,12 @@ export default function Home() {
                      onMouseEnter={() => window.hoveredAdId = 'google_top'} 
                      onMouseLeave={() => window.hoveredAdId = null}
                      data-ad-location="top-banner">
-                    <ins className="adsbygoogle" style={{ display: "block" }} data-ad-client="ca-pub-1147243690926079" data-ad-slot="7882868833" data-ad-format="auto" data-full-width-responsive="true"></ins>
-                    <Script id="adsbygoogle-init" strategy="afterInteractive">{`(adsbygoogle = window.adsbygoogle || []).push({});`}</Script>
+                    {renderAdImage('top', i18n[lang].adBanner1) || (
+                        <>
+                            <ins className="adsbygoogle" style={{ display: "block" }} data-ad-client="ca-pub-1147243690926079" data-ad-slot="7882868833" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                            <Script id="adsbygoogle-init" strategy="afterInteractive">{`(adsbygoogle = window.adsbygoogle || []).push({});`}</Script>
+                        </>
+                    )}
                 </div>
 
                 {lang === 'ar' && upcomingEvents.length > 0 && (
@@ -530,7 +566,11 @@ export default function Home() {
                 <div id="customAdContainer" data-ad-location="middle-banner" onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}>
                     <a href="https://ads-tools-official.com" target="_blank" style={{textDecoration: 'none', display: 'block'}}>
                         <div className="ad-placeholder custom-ad-promo">
-                            <i className="fa-solid fa-star"></i> <span>{i18n[lang].adPortal}</span> <i className="fa-solid fa-star"></i>
+                            {renderAdImage('middle', i18n[lang].adPortal) || (
+                                <>
+                                    <i className="fa-solid fa-star"></i> <span>{i18n[lang].adPortal}</span> <i className="fa-solid fa-star"></i>
+                                </>
+                            )}
                         </div>
                     </a>
                 </div>
@@ -616,13 +656,13 @@ export default function Home() {
                          onMouseEnter={() => window.hoveredAdId = 'google_bottom_1'} 
                          onMouseLeave={() => window.hoveredAdId = null}
                          data-ad-location="bottom-banner-1">
-                        {i18n[lang].adBanner1}
+                        {renderAdImage('bottom1', i18n[lang].adBanner1) || i18n[lang].adBanner1}
                     </div>
                     <div className="ad-placeholder" 
                          onMouseEnter={() => window.hoveredAdId = 'google_bottom_2'} 
                          onMouseLeave={() => window.hoveredAdId = null}
                          data-ad-location="bottom-banner-2">
-                        {i18n[lang].adBanner2}
+                        {renderAdImage('bottom2', i18n[lang].adBanner2) || i18n[lang].adBanner2}
                     </div>
                 </div>
 

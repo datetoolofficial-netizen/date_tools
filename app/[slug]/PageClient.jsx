@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { sanitizeHtml } from '../sanitizeHtml';
 
 function normalizeSlug(value = '') {
     return String(value)
@@ -182,7 +183,7 @@ export default function PageClient({ slug }) {
 
     const title = getPageTitle(page);
     const description = getPageDescription(page);
-    const content = getPageContent(page);
+    const content = sanitizeHtml(getPageContent(page));
 
     return (
         <main style={styles.page}>

@@ -14,6 +14,7 @@ import {
 
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
+import { sanitizeHtml } from "./sanitizeHtml";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -55,6 +56,13 @@ export const defaultSiteConfig = {
     toolSlogan: "احسب عمرك وحول التواريخ بدقة",
     hasLogo: false,
     logoUrl: "",
+    faviconUrl: "",
+    adImages: {
+        top: "",
+        middle: "",
+        bottom1: "",
+        bottom2: ""
+    },
     copyrightName: "",
     copyrightText: "جميع الحقوق محفوظة",
     internalPages: [],
@@ -95,6 +103,11 @@ export async function getSiteConfig() {
             internalPages: Array.isArray(data.internalPages) ? data.internalPages : [],
             socialLinks: Array.isArray(data.socialLinks) ? data.socialLinks : [],
 
+            adImages: {
+                ...defaultSiteConfig.adImages,
+                ...(data.adImages || {})
+            },
+
             pages: data.pages || {},
             customPages: data.customPages || {},
 
@@ -111,6 +124,15 @@ export async function getSiteConfig() {
 
 export async function saveSiteConfig(config) {
     const configRef = doc(db, "settings", "main");
+    const customPages = Object.fromEntries(
+        Object.entries(config.customPages || {}).map(([slug, page]) => [
+            slug,
+            {
+                ...page,
+                content: sanitizeHtml(page?.content || '')
+            }
+        ])
+    );
 
     const cleanConfig = {
         ...defaultSiteConfig,
@@ -124,8 +146,13 @@ export async function saveSiteConfig(config) {
         internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
 
+        adImages: {
+            ...defaultSiteConfig.adImages,
+            ...(config.adImages || {})
+        },
+
         pages: config.pages || {},
-        customPages: config.customPages || {},
+        customPages,
 
         mainSEO: {
             ...defaultSiteConfig.mainSEO,

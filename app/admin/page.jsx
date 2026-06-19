@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { sanitizeHtml } from '../sanitizeHtml';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -138,6 +139,56 @@ export default function AdminPage() {
         }
     };
 
+    const uploadMediaFile = async (file, category) => {
+        const firebaseApi = firebaseApiRef.current;
+        const currentUser = firebaseApi?.auth?.currentUser;
+
+        if (!currentUser) {
+            throw new Error('not_authenticated');
+        }
+
+        const token = await currentUser.getIdToken();
+        const formData = new FormData();
+        formData.append('category', category);
+        formData.append('file', file);
+
+        const response = await fetch('/api/media/upload', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result.ok) {
+            throw new Error(result.error || 'upload_failed');
+        }
+
+        return result.url;
+    };
+
+    const handleMediaUpload = async (event, category, applyUrl, label) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) return;
+
+        showMessage(`جاري رفع ${label}...`, 'info');
+
+        try {
+            const url = await uploadMediaFile(file, category);
+            applyUrl(url);
+            showMessage(`✅ تم رفع ${label}. اضغط حفظ القسم لتثبيت الرابط.`, 'success');
+        } catch (error) {
+            const message = error.message === 'media_storage_not_configured'
+                ? '❌ تخزين الصور غير مفعل بعد. فعّل R2 ثم أضف binding باسم MEDIA_BUCKET.'
+                : `❌ تعذر رفع ${label}.`;
+            console.error('Media upload error:', error);
+            showMessage(message, 'error');
+        }
+    };
+
     const handleArrayAdd = (key, defaultObj) => {
         setConfig({
             ...config,
@@ -161,6 +212,16 @@ export default function AdminPage() {
         setConfig({
             ...config,
             [key]: (config[key] || []).filter((_, i) => i !== index)
+        });
+    };
+
+    const handleAdImageChange = (slot, value) => {
+        setConfig({
+            ...config,
+            adImages: {
+                ...(config.adImages || {}),
+                [slot]: value
+            }
         });
     };
 
@@ -472,8 +533,87 @@ export default function AdminPage() {
                                             dir="ltr"
                                         />
                                     </div>
+                                    <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                        onChange={(e) => handleMediaUpload(
+                                            e,
+                                            'logo',
+                                            (url) => setConfig({ ...config, hasLogo: true, logoUrl: url }),
+                                            'الشعار'
+                                        )}
+                                    />
                                 </div>
                             )}
+
+                            <div className="input-group full-width">
+                                <label>رابط أيقونة المتصفح favicon</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-regular fa-image"></i>
+                                    <input
+                                        type="text"
+                                        value={config.faviconUrl || ''}
+                                        onChange={(e) => setConfig({ ...config, faviconUrl: e.target.value })}
+                                        placeholder="مثال: /api/media/favicon/..."
+                                        dir="ltr"
+                                    />
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                    onChange={(e) => handleMediaUpload(
+                                        e,
+                                        'favicon',
+                                        (url) => setConfig({ ...config, faviconUrl: url }),
+                                        'أيقونة المتصفح'
+                                    )}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="admin-section-card" id="media">
+                        <div className="section-header section-header-with-action">
+                            <div>
+                                <h3>
+                                    <i className="fa-regular fa-images"></i> صور الإعلانات
+                                </h3>
+                                <p className="section-hint">روابط أو رفع صور للمواضع الحالية. إدارة طلبات الإعلانات ستضاف لاحقًا كنظام منفصل.</p>
+                            </div>
+                            <SectionSaveButton label="صور الإعلانات" />
+                        </div>
+
+                        <div className="form-grid">
+                            {[
+                                ['top', 'إعلان أعلى الصفحة'],
+                                ['middle', 'إعلان منتصف الصفحة'],
+                                ['bottom1', 'إعلان أسفل الصفحة 1'],
+                                ['bottom2', 'إعلان أسفل الصفحة 2'],
+                            ].map(([slot, label]) => (
+                                <div className="input-group full-width" key={slot}>
+                                    <label>{label}</label>
+                                    <div className="input-with-icon">
+                                        <i className="fa-regular fa-image"></i>
+                                        <input
+                                            type="text"
+                                            value={config.adImages?.[slot] || ''}
+                                            onChange={(e) => handleAdImageChange(slot, e.target.value)}
+                                            placeholder="مثال: /api/media/ads/..."
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp,image/gif"
+                                        onChange={(e) => handleMediaUpload(
+                                            e,
+                                            'ads',
+                                            (url) => handleAdImageChange(slot, url),
+                                            label
+                                        )}
+                                    />
+                                </div>
+                            ))}
                         </div>
                     </section>
 
@@ -808,7 +948,7 @@ export default function AdminPage() {
                             ) : (
                                 <div className="page-content-preview">
                                     {selectedPageContent ? (
-                                        <div dangerouslySetInnerHTML={{ __html: selectedPageContent }} />
+                                        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedPageContent) }} />
                                     ) : (
                                         <p className="muted-text">لا يوجد محتوى لهذه الصفحة بعد.</p>
                                     )}

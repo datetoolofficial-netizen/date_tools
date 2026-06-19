@@ -77,6 +77,7 @@ https://www.date-tool.com
 15. إضافة SEO الأساسي وCanonical Redirect للدومين.
 16. تفعيل أسرار Firebase على Cloudflare وتشغيل endpoint الإحصائيات على الإنتاج.
 17. تنظيف Firebase Imports في الصفحات المحددة بدون تقسيم لوحة الإدارة.
+18. تأسيس تخزين صور Cloudflare R2 للّوقو وfavicon والإعلانات مع headers أمنية وتنظيف HTML.
 
 ---
 
@@ -1126,6 +1127,71 @@ npm run build نجح بعد السماح لـ Wrangler بكتابة سجلاته
 
 ---
 
+### التعديل 18: تأسيس تخزين صور Cloudflare R2 والتهيئة الأمنية
+
+تمت إضافة:
+
+```txt
+app/api/media/upload/route.js
+app/api/media/[...key]/route.js
+app/sanitizeHtml.js
+```
+
+وتم تعديل:
+
+```txt
+app/admin/page.jsx
+app/page.jsx
+app/firebase.js
+app/[slug]/PageClient.jsx
+middleware.js
+```
+
+ما تم إنجازه:
+
+```txt
+إضافة endpoint رفع إداري للصور عبر /api/media/upload.
+إضافة endpoint عرض عام للصور من /api/media/{key}.
+تجهيز تصنيفات الصور الحالية: logo و favicon و ads.
+منع SVG والاقتصار على png / jpg / webp / gif / ico.
+تحديد حجم الصورة بحد أقصى 5MB.
+التحقق من Firebase Auth ID token ثم admins/{uid}.active قبل السماح بالرفع.
+إضافة حقول رفع في لوحة الإدارة للّوقو وfavicon وأربع صور إعلانية.
+عرض صور الإعلانات من إعدادات Firestore عند وجودها مع fallback للوضع الحالي.
+تحديث favicon من إعدادات الموقع من جهة العميل.
+إضافة تنظيف HTML بسيط قبل حفظ محتوى الصفحات وقبل عرضه.
+إضافة Security Headers عبر middleware.
+```
+
+حالة R2:
+
+```txt
+لم يتم تفعيل R2 في حساب Cloudflare بعد.
+أمر npx wrangler r2 bucket list رجع code 10042:
+Please enable R2 through the Cloudflare Dashboard.
+لذلك لم تتم إضافة r2_buckets إلى wrangler.jsonc حتى لا يفشل النشر.
+endpoint الصور يرجع media_storage_not_configured إلى أن يتم تفعيل R2 وإضافة binding باسم MEDIA_BUCKET.
+```
+
+التصميم المستقبلي:
+
+```txt
+المرحلة الحالية مخصصة للصور العامة: logo / favicon / ads.
+نظام التذاكر وطلبات الإعلانات لاحقًا يجب أن يستخدم تصنيفات ومسارات خاصة غير عامة، ولا تُعرض عبر /api/media العام إلا للصور المصرح بعرضها.
+```
+
+الحالة:
+
+```txt
+npm run lint نجح.
+npm run build نجح.
+npm run deploy نجح.
+Security Headers ظهرت على الإنتاج.
+/api/media/logo/test.png يرجع media_storage_not_configured بشكل متوقع حتى تفعيل R2.
+```
+
+---
+
 ## 6. الأوامر المستخدمة
 
 ### تثبيت OpenNext و Wrangler
@@ -1270,6 +1336,18 @@ npm run lint
 npm run build
 ```
 
+### تأسيس تخزين الصور عبر Cloudflare R2
+
+```powershell
+npx wrangler r2 bucket list
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+curl.exe -s -i https://date-tool.com/api/media/logo/test.png
+```
+
 ---
 
 ## 7. إعدادات Cloudflare / Firebase / GitHub
@@ -1372,6 +1450,7 @@ Firebase يجب أن يعمل من Client فقط أو عبر dynamic import.
 الأسرار المعتمدة حاليًا هي FIREBASE_SERVICE_ACCOUNT_EMAIL و FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY.
 تم حذف FIREBASE_SERVICE_ACCOUNT_JSON لأنه أُدخل بتنسيق غير صالح.
 لا توجد أسرار محفوظة داخل المستودع.
+تمت إضافة endpoints لتخزين الصور عبر R2 لكن R2 غير مفعل بعد في حساب Cloudflare.
 ```
 
 ---
@@ -1797,6 +1876,47 @@ https://date-tool.com/privacy -> 200 OK
 
 ---
 
+### اختبار تأسيس تخزين الصور والheaders الأمنية
+
+تم تشغيل:
+
+```powershell
+npx wrangler r2 bucket list
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+curl.exe -s -i https://date-tool.com/api/media/logo/test.png
+```
+
+والنتيجة:
+
+```txt
+npx wrangler r2 bucket list -> فشل لأن R2 غير مفعل في حساب Cloudflare بعد.
+Cloudflare API code: 10042
+Please enable R2 through the Cloudflare Dashboard.
+npm run lint -> نجح.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: 086374a8-9ae0-4c77-9976-d73193273432
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+/api/media/logo/test.png -> 503 {"ok":false,"error":"media_storage_not_configured"}
+```
+
+Headers ظهرت على الإنتاج:
+
+```txt
+Strict-Transport-Security
+Permissions-Policy
+Referrer-Policy
+X-Content-Type-Options
+X-Frame-Options
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -1841,6 +1961,11 @@ https://date-tool.com/privacy -> 200 OK
 ✅ /api/statistics يعمل على الإنتاج ويحدث Firestore عبر جهة الخادم
 ✅ تم تنظيف Firebase Imports في app/page.jsx و app/[slug]/PageClient.jsx و app/admin/page.jsx و app/admin_login/page.jsx و app/Header.jsx و app/Footer.jsx
 ✅ لم يتم تقسيم لوحة الإدارة في مهمة تنظيف Firebase Imports
+✅ تمت إضافة endpoints آمنة مبدئيًا لتخزين وعرض صور R2
+✅ تمت إضافة حقول رفع/روابط للّوقو وfavicon وصور الإعلانات في لوحة الإدارة
+✅ تمت إضافة Security Headers أساسية عبر middleware
+✅ تمت إضافة تنظيف HTML مبدئي لمحتوى الصفحات
+⚠️ R2 غير مفعل بعد في حساب Cloudflare، لذلك رفع الصور ينتظر تفعيل R2 وإضافة binding
 ✅ npm run lint ينجح
 ✅ npm run build ينجح
 ```
@@ -1849,7 +1974,31 @@ https://date-tool.com/privacy -> 200 OK
 
 ## 10. المتبقي
 
-### 1. لوحة الإدارة
+### 1. تفعيل Cloudflare R2 وإضافة binding الصور
+
+يجب تنفيذ الخطوات التالية بعد تفعيل R2 من Cloudflare Dashboard:
+
+```txt
+إنشاء bucket باسم datetools-media أو اسم واضح مشابه.
+إضافة binding في wrangler.jsonc باسم MEDIA_BUCKET.
+تشغيل npm run deploy.
+اختبار رفع logo وfavicon وصور الإعلانات من لوحة الإدارة.
+```
+
+إعداد binding المتوقع لاحقًا:
+
+```jsonc
+"r2_buckets": [
+  {
+    "binding": "MEDIA_BUCKET",
+    "bucket_name": "datetools-media"
+  }
+]
+```
+
+---
+
+### 2. لوحة الإدارة
 
 المتبقي من خطة الإدارة:
 
@@ -1876,7 +2025,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 2. إصلاح تحذير ESLint
+### 3. إصلاح تحذير ESLint
 
 ظهر التحذير:
 
@@ -1888,7 +2037,7 @@ The Next.js plugin was not detected in your ESLint configuration
 
 ---
 
-### 3. مراجعة npm audit
+### 4. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -1976,3 +2125,11 @@ FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
 ```
 
 11. تم بناء `/api/statistics` وإضافة SEO الأساسي و Canonical Redirect وتفعيل أسرار Firebase على Cloudflare وتنظيف Firebase Imports. المهمة القادمة المباشرة هي تنظيم لوحة الإدارة في مهمة منفصلة. لا تعيد فتح كتابة عامة على `statistics/main` من المتصفح.
+
+12. لتفعيل تخزين الصور يجب أولًا تفعيل R2 من Cloudflare Dashboard، ثم إنشاء bucket وإضافة binding باسم:
+
+```txt
+MEDIA_BUCKET
+```
+
+لا تضف binding إلى `wrangler.jsonc` قبل وجود bucket فعلي حتى لا يفشل النشر. المسار العام `/api/media/{key}` مخصص للصور العامة فقط مثل logo وfavicon والإعلانات، وليس للتذاكر أو مرفقات خاصة.
