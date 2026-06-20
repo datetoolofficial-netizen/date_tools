@@ -82,6 +82,7 @@ https://www.date-tool.com
 20. إصلاح إعداد ESLint وتحذيراته ومنع تكرار slug في لوحة الإدارة.
 21. تحسين رفع صور اللوقو وfavicon وتوحيد رسائل الخطأ والنجاح في واجهة الموقع.
 22. تنظيم صفحة الإدارة بدون تقسيمها إلى ملفات، وفصل حفظ الأقسام، وإضافة جدول/نافذة إدارة الإعلانات.
+23. تأسيس بوابة المعلنين والدعم داخل `app` بتصميم مستوحى من المشروع القديم وباستخدام إعدادات المشروع الحالية.
 
 ---
 
@@ -2159,6 +2160,68 @@ https://date-tool.com/admin_login -> 200 OK.
 
 ---
 
+### اختبار تأسيس بوابة المعلنين والدعم
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx firebase deploy --only firestore:rules
+npx -p firebase-tools firebase deploy --only firestore:rules
+npm run deploy
+curl.exe -I https://date-tool.com/client
+curl.exe -I https://date-tool.com/client/register
+curl.exe -I https://date-tool.com/support
+curl.exe -s -X POST https://date-tool.com/api/support -H "Content-Type: application/json" -d "{}"
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> ظهر خطأ واحد بسبب استخدام <a> لمسار /client ثم تم إصلاحه باستخدام next/link.
+npm run lint بعد الإصلاح -> نجح.
+git diff --check -> لا توجد أخطاء whitespace، فقط تحذير CRLF المعتاد في ويندوز.
+npm run build -> نجح وظهرت 17 صفحة/مسار.
+npx firebase deploy --only firestore:rules -> فشل لأن Firebase CLI غير متاح بهذه الصيغة داخل المشروع.
+npx -p firebase-tools firebase deploy --only firestore:rules -> نجح وتم نشر قواعد Firestore.
+npm run deploy -> المحاولة الأولى انتهت بمهلة زمنية بدون نتيجة مؤكدة.
+npm run deploy بمهلة أطول -> نجح.
+Current Version ID: 81a3bbc2-b905-4b28-8424-58dea977129e
+https://date-tool.com/client -> 200 OK
+https://date-tool.com/client/register -> 200 OK
+https://date-tool.com/support -> 200 OK
+/api/support ببيانات فارغة -> {"ok":false,"error":"invalid_support_payload"}
+```
+
+التغييرات التي تمت:
+
+```txt
+تمت إضافة /client لتسجيل دخول المعلنين.
+تمت إضافة /client/register لإنشاء حساب معلن.
+تمت إضافة /client/reset-password لاستعادة كلمة المرور.
+تمت إضافة /client/dashboard لعرض الحملات والإحصائيات والفلاتر والنافبار والسايدبار.
+تمت إضافة /client/create-campaign لإنشاء حملة جديدة وإرسالها للمراجعة.
+تمت إضافة /support كواجهة دعم عامة.
+تمت إضافة /api/support لحفظ تذاكر الدعم من جهة الخادم باستخدام أسرار Firebase الحالية.
+تمت إضافة تصميم مشترك ClientPortal.css ومكون ClientShell للنافبار والسايدبار.
+تم تحديث رابط إعلان الوسط في الصفحة الرئيسية ليفتح /client بدل الرابط الخارجي القديم.
+تم تحديث firestore.rules لدعم advertisers و campaigns و support_tickets بصلاحيات محددة.
+```
+
+ملاحظة أمنية:
+
+```txt
+لم يتم نقل أسرار Google Script القديمة إلى العميل.
+لم يتم فتح كتابة عامة مباشرة إلى support_tickets.
+إنشاء تذاكر الدعم يتم عبر /api/support من جهة الخادم.
+المعلن يستطيع قراءة حملاته فقط، وإنشاء حملة بحالة "قيد المراجعة"، وتعديل حالة حملته فقط إلى "قيد المراجعة" أو "متوقف مؤقتاً".
+اختبار إنشاء حساب معلن أو حملة فعلية يحتاج حساب بريد/كلمة مرور وتجربة من المتصفح حتى لا ننشئ بيانات اختبار غير مرغوبة.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2228,6 +2291,13 @@ https://date-tool.com/admin_login -> 200 OK.
 ✅ أصبح زر اللوقو يخفي/يظهر اللوقو فقط ولا يخفي اسم الموقع
 ✅ تمت إضافة جدول الإعلانات ونافذة إضافة/تعديل إعلان مع معاينة ونصائح وحالة الإعلان
 ✅ تم نشر نسخة Cloudflare Version ID: 71eb7127-8d4c-47e8-8e9e-e7feabf0ec37
+✅ تمت إضافة بوابة المعلنين داخل app عبر /client
+✅ تمت إضافة تسجيل معلن جديد واستعادة كلمة المرور
+✅ تمت إضافة لوحة معلن بسايدبار ونافبار وإحصائيات وجدول حملات وفلاتر
+✅ تمت إضافة صفحة طلب إعلان جديد وحفظ الحملات في Firestore بحالة قيد المراجعة
+✅ تمت إضافة صفحة دعم عامة و endpoint آمن /api/support لحفظ التذاكر من جهة الخادم
+✅ تم نشر قواعد Firestore بعد إضافة advertisers و campaigns و support_tickets
+✅ تم نشر نسخة Cloudflare Version ID: 81a3bbc2-b905-4b28-8424-58dea977129e
 ```
 
 ---
@@ -2276,7 +2346,23 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 3. مراجعة npm audit
+### 3. بوابة المعلنين والدعم
+
+المتبقي بعد تأسيس البوابة:
+
+```txt
+اختبار إنشاء حساب معلن فعلي من /client/register.
+اختبار إنشاء حملة فعلية من /client/create-campaign.
+اختبار ظهور الحملة في /client/dashboard لصاحبها فقط.
+إضافة إدارة حملات Firestore داخل لوحة الإدارة بدل جدول adCampaigns المحلي فقط.
+إضافة إدارة تذاكر support_tickets داخل لوحة الإدارة.
+إضافة نظام مرفقات خاص وآمن للتذاكر بدل استخدام R2 العام.
+تحديد سياسة تفعيل الحملات من الإدارة وربط الحملات المقبولة بمواقع الإعلان على الصفحة الرئيسية.
+```
+
+---
+
+### 4. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
@@ -2378,3 +2464,5 @@ MEDIA_BUCKET
 ```
 
 المسار العام `/api/media/{key}` مخصص للصور العامة فقط مثل logo وfavicon والإعلانات، وليس للتذاكر أو مرفقات خاصة.
+
+13. بوابة المعلنين أضيفت داخل `app/client` وصفحة الدعم داخل `app/support`. لا تجعل `support_tickets` قابلة للكتابة مباشرة من المتصفح؛ المسار المعتمد هو `/api/support` من جهة الخادم. حملات المعلنين محفوظة في `campaigns` وقواعد Firestore الحالية تسمح لصاحب الحملة برؤيتها وتغيير حالتها المحددة فقط، بينما الإدارة تحتاج واجهة لاحقة لإدارة الحملات والتذاكر.

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import Script from 'next/script';
 import Toast from './components/Toast';
 import Header from './Header';
@@ -572,7 +573,7 @@ export default function Home() {
                 </div>
 
                 <div id="customAdContainer" data-ad-location="middle-banner" onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}>
-                    <a href="https://ads-tools-official.com" target="_blank" style={{textDecoration: 'none', display: 'block'}}>
+                    <Link href="/client" style={{textDecoration: 'none', display: 'block'}}>
                         <div className="ad-placeholder custom-ad-promo">
                             {renderAdImage('middle', i18n[lang].adPortal) || (
                                 <>
@@ -580,7 +581,7 @@ export default function Home() {
                                 </>
                             )}
                         </div>
-                    </a>
+                    </Link>
                 </div>
 
                 <div className="card">
