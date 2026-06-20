@@ -83,6 +83,7 @@ https://www.date-tool.com
 21. تحسين رفع صور اللوقو وfavicon وتوحيد رسائل الخطأ والنجاح في واجهة الموقع.
 22. تنظيم صفحة الإدارة بدون تقسيمها إلى ملفات، وفصل حفظ الأقسام، وإضافة جدول/نافذة إدارة الإعلانات.
 23. تأسيس بوابة المعلنين والدعم داخل `app` بتصميم مستوحى من المشروع القديم وباستخدام إعدادات المشروع الحالية.
+24. بدء تقسيم الصفحة الرئيسية إلى مكونات أصغر وملف أدوات للتواريخ، مع إبقاء أنماط الصفحة الرئيسية المشتركة في ملف CSS العام.
 
 ---
 
@@ -2222,6 +2223,62 @@ https://date-tool.com/support -> 200 OK
 
 ---
 
+### اختبار تقسيم الصفحة الرئيسية
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/client
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://date-tool.com/support
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> لا توجد أخطاء whitespace، فقط تحذير CRLF المعتاد في ويندوز.
+npm run build -> نجح بعد استئناف المهمة.
+npm run deploy -> نجح.
+Current Version ID: bf7bd30b-4b7d-4d7c-b391-85e2403338a9
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/client -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://date-tool.com/support -> 200 OK
+```
+
+التغييرات التي تمت:
+
+```txt
+تم إنشاء app/components/home/HomeSections.jsx لتقسيم واجهة الصفحة الرئيسية إلى أقسام.
+تم إنشاء app/components/home/homeDateUtils.js لنقل النصوص والثوابت ودوال التاريخ الأساسية.
+تم تقليل app/page.jsx وإبقاؤه مسؤولًا عن الحالة والمنطق وربط الأقسام.
+تم إبقاء أنماط الصفحة الرئيسية في app/globals.css لأن الأنماط مشتركة ومترابطة بين أقسام الصفحة.
+```
+
+ملاحظة مهمة جدًا:
+
+```txt
+⚠️ مهم جدًا:
+بعد تأسيس بوابة المعلنين، الحملات الجديدة تحفظ في collection باسم campaigns.
+أما جدول الإعلانات داخل لوحة الإدارة الحالية فما زال يعتمد على settings/main.adCampaigns.
+هذا ليس كسرًا في الصفحة الرئيسية، لكنه تعارض معماري يجب حله في المهمة القادمة بربط لوحة الإدارة بـ campaigns أو توحيد المصدرين قبل إطلاق إدارة الإعلانات فعليًا.
+```
+
+حالة النشر:
+
+```txt
+تم استئناف المهمة بعد توفر حد الاستخدام.
+تم البناء والنشر وفحص الإنتاج بنجاح.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2298,6 +2355,10 @@ https://date-tool.com/support -> 200 OK
 ✅ تمت إضافة صفحة دعم عامة و endpoint آمن /api/support لحفظ التذاكر من جهة الخادم
 ✅ تم نشر قواعد Firestore بعد إضافة advertisers و campaigns و support_tickets
 ✅ تم نشر نسخة Cloudflare Version ID: 81a3bbc2-b905-4b28-8424-58dea977129e
+✅ تم بدء تقسيم الصفحة الرئيسية إلى مكونات أصغر وملف أدوات للتواريخ
+✅ npm run lint ينجح بعد تقسيم الصفحة الرئيسية
+✅ npm run build ينجح بعد استئناف تقسيم الصفحة الرئيسية
+✅ تم نشر تقسيم الصفحة الرئيسية على Cloudflare Version ID: bf7bd30b-4b7d-4d7c-b391-85e2403338a9
 ```
 
 ---
@@ -2331,6 +2392,7 @@ ads top / middle / bottom1 / bottom2
 تحسين إدارة الإحصائيات
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 ربط إعلان أعلى الصفحة لاحقًا بكود Google المخصص داخل الإطار
+مهم جدًا: توحيد مصدر الإعلانات بين campaigns و settings/main.adCampaigns
 ```
 
 تقسيم مقترح:
