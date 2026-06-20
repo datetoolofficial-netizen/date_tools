@@ -1,6 +1,12 @@
+import { Cairo } from 'next/font/google';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
+const cairo = Cairo({
+    subsets: ['arabic', 'latin'],
+    weight: ['400', '600', '700', '800'],
+    display: 'swap',
+});
 
 export const metadata = {
     metadataBase: new URL(siteUrl),
@@ -36,12 +42,8 @@ export default function RootLayout({ children }) {
                     rel="stylesheet"
                     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
                 />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"
-                    rel="stylesheet"
-                />
             </head>
-            <body>
+            <body className={cairo.className}>
                 {children}
             </body>
         </html>

@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navLinks = [];
@@ -71,16 +73,19 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
             {config?.hasLogo && config?.logoUrl ? (
                 <div className="logo-container" style={{ textAlign: 'center', marginBottom: '15px' }}>
-                    <a href="/">
-                        <img
+                    <Link href="/">
+                        <Image
                             src={config.logoUrl}
                             alt={toolName}
-                            style={{ maxHeight: '80px', objectFit: 'contain' }}
+                            width={180}
+                            height={80}
+                            unoptimized
+                            style={{ maxHeight: '80px', width: 'auto', objectFit: 'contain' }}
                         />
-                    </a>
+                    </Link>
                 </div>
             ) : (
-                <a href="/" style={{ textDecoration: 'none' }}>
+                <Link href="/" style={{ textDecoration: 'none' }}>
                     <h1
                         className="tool-title"
                         style={{
@@ -91,7 +96,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     >
                         {toolName}
                     </h1>
-                </a>
+                </Link>
             )}
 
             {toolSlogan && (
@@ -121,26 +126,26 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
                 }}
             >
-                <a href="/" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}>
+                <Link href="/" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}>
                     <i className="fa-solid fa-house" style={{ marginInlineEnd: '5px' }}></i>
                     {lang === 'ar' ? 'الرئيسية' : 'Home'}
-                </a>
+                </Link>
 
                 {navLinks.map((link, idx) => (
-                    <a
-                        key={idx}
-                        href={link.url}
-                        target={link.isExternal ? '_blank' : '_self'}
-                        rel={link.isExternal ? 'noopener noreferrer' : ''}
-                        style={{
-                            color: 'var(--text-main)',
-                            textDecoration: 'none',
-                            fontWeight: '600',
-                            transition: '0.2s'
-                        }}
-                    >
-                        {link.title}
-                        {link.isExternal && (
+                    link.isExternal ? (
+                        <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                color: 'var(--text-main)',
+                                textDecoration: 'none',
+                                fontWeight: '600',
+                                transition: '0.2s'
+                            }}
+                        >
+                            {link.title}
                             <i
                                 className="fa-solid fa-arrow-up-right-from-square"
                                 style={{
@@ -149,8 +154,21 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                                     color: 'var(--text-sub)'
                                 }}
                             ></i>
-                        )}
-                    </a>
+                        </a>
+                    ) : (
+                        <Link
+                            key={idx}
+                            href={link.url}
+                            style={{
+                                color: 'var(--text-main)',
+                                textDecoration: 'none',
+                                fontWeight: '600',
+                                transition: '0.2s'
+                            }}
+                        >
+                            {link.title}
+                        </Link>
+                    )
                 ))}
             </nav>
         </div>

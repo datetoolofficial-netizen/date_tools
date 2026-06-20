@@ -105,6 +105,12 @@ export default function AdminPage() {
             return;
         }
 
+        const slugValidation = validatePageSlugs(config?.internalPages || []);
+        if (!slugValidation.isValid) {
+            showMessage(slugValidation.message, 'error');
+            return;
+        }
+
         setSavingSection(sectionName);
         showMessage(`جاري حفظ ${sectionName}...`, 'info');
 
@@ -233,8 +239,48 @@ export default function AdminPage() {
             .replace(/[^a-zA-Z0-9-_ء-ي]/g, '');
     };
 
+    const validatePageSlugs = (pages = []) => {
+        const seen = new Set();
+
+        for (const page of pages) {
+            const slug = normalizeSlug(page?.slug);
+
+            if (!slug) {
+                return {
+                    isValid: false,
+                    message: '❌ يوجد مسار صفحة فارغ. الرجاء إدخال slug قبل الحفظ.'
+                };
+            }
+
+            if (seen.has(slug)) {
+                return {
+                    isValid: false,
+                    message: `❌ المسار "${slug}" مكرر. لا يمكن حفظ صفحتين بنفس slug.`
+                };
+            }
+
+            seen.add(slug);
+        }
+
+        return { isValid: true, message: '' };
+    };
+
+    const createUniqueSlug = (baseSlug, pages = []) => {
+        const usedSlugs = new Set(pages.map((page) => normalizeSlug(page?.slug)).filter(Boolean));
+        const base = normalizeSlug(baseSlug) || 'page';
+        let candidate = base;
+        let counter = 2;
+
+        while (usedSlugs.has(candidate)) {
+            candidate = `${base}-${counter}`;
+            counter += 1;
+        }
+
+        return candidate;
+    };
+
     const handlePageAdd = () => {
-        const newSlug = `page-${Date.now()}`;
+        const newSlug = createUniqueSlug('page', config.internalPages || []);
 
         setConfig({
             ...config,
@@ -263,6 +309,17 @@ export default function AdminPage() {
         const customPages = { ...(config.customPages || {}) };
 
         const newValue = field === 'slug' ? normalizeSlug(value) : value;
+        if (field === 'slug') {
+            const duplicateIndex = pagesArr.findIndex((page, pageIndex) => (
+                pageIndex !== index && normalizeSlug(page?.slug) === newValue
+            ));
+
+            if (newValue && duplicateIndex !== -1) {
+                showMessage(`❌ المسار "${newValue}" مستخدم في صفحة أخرى.`, 'error');
+                return;
+            }
+        }
+
         const updatedPage = {
             ...oldPage,
             [field]: newValue

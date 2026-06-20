@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
@@ -127,10 +128,10 @@ export default function AdminLogin() {
                     </button>
                 </form>
 
-                <a href="/" className="back-link">
+                <Link href="/" className="back-link">
                     <i className="fa-solid fa-arrow-right"></i>
                     العودة للموقع العام
-                </a>
+                </Link>
             </div>
         </div>
     );

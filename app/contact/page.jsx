@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import configData from '../../config.json'; // استيراد ملف الإعدادات لقراءة الإيميل
 
 export default function ContactUs() {
@@ -23,9 +24,9 @@ export default function ContactUs() {
     return (
         <div className="container">
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <a href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
+                <Link href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
                     <i className="fa-solid fa-arrow-right"></i> {lang === 'ar' ? 'العودة' : 'Back'}
-                </a>
+                </Link>
                 <h1>{lang === 'ar' ? 'اتصل بنا' : 'Contact Us'}</h1>
                 <div style={{ width: '80px' }}></div>
             </div>

@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import Script from 'next/script';
 import Header from './Header';
 import Footer from './Footer';
@@ -35,6 +36,30 @@ const monthNames = {
 };
 
 const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+const getHijriParts = (dateObj) => {
+    const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(dateObj);
+    let y = 0, m = 0, d = 0;
+    parts.forEach(p => { if (p.type === 'year') y = parseInt(p.value); if (p.type === 'month') m = parseInt(p.value); if (p.type === 'day') d = parseInt(p.value); });
+    return { y, m, d };
+};
+
+const hijriToGregorian = (hY, hM, hD) => {
+    let target = hY * 10000 + hM * 100 + hD;
+    let minDays = Math.floor(new Date(1900, 0, 1).getTime() / 86400000);
+    let maxDays = Math.floor(new Date(2100, 11, 31).getTime() / 86400000);
+    let resultDays = minDays;
+    for (let i = 0; i < 20; i++) {
+        let midDays = Math.floor((minDays + maxDays) / 2);
+        let midDate = new Date(midDays * 86400000);
+        let p = getHijriParts(midDate);
+        let midVal = p.y * 10000 + p.m * 100 + p.d;
+        if (midVal === target) { resultDays = midDays; break; }
+        else if (midVal < target) { minDays = midDays + 1; }
+        else { maxDays = midDays - 1; }
+    }
+    return new Date(resultDays * 86400000);
+};
 
 export default function Home() {
     const [lang, setLang] = useState('ar');
@@ -119,10 +144,6 @@ export default function Home() {
     }, []);
 
     useEffect(() => {
-        if (configData) generateTodayAndEvents();
-    }, [configData]);
-
-    useEffect(() => {
         if (!configData?.faviconUrl) return;
 
         let icon = document.querySelector("link[rel='icon']");
@@ -166,31 +187,7 @@ export default function Home() {
         setTimeout(() => setAlertConfig({ show: false, msg: '', type: '' }), 3000);
     };
 
-    const getHijriParts = (dateObj) => {
-        const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(dateObj);
-        let y = 0, m = 0, d = 0;
-        parts.forEach(p => { if(p.type === 'year') y = parseInt(p.value); if(p.type === 'month') m = parseInt(p.value); if(p.type === 'day') d = parseInt(p.value); });
-        return { y, m, d };
-    };
-
-    const hijriToGregorian = (hY, hM, hD) => {
-        let target = hY * 10000 + hM * 100 + hD; 
-        let minDays = Math.floor(new Date(1900, 0, 1).getTime() / 86400000); 
-        let maxDays = Math.floor(new Date(2100, 11, 31).getTime() / 86400000);
-        let resultDays = minDays;
-        for (let i = 0; i < 20; i++) {
-            let midDays = Math.floor((minDays + maxDays) / 2); 
-            let midDate = new Date(midDays * 86400000); 
-            let p = getHijriParts(midDate); 
-            let midVal = p.y * 10000 + p.m * 100 + p.d;
-            if (midVal === target) { resultDays = midDays; break; } 
-            else if (midVal < target) { minDays = midDays + 1; } 
-            else { maxDays = midDays - 1; }
-        }
-        return new Date(resultDays * 86400000);
-    };
-
-    const generateTodayAndEvents = () => {
+    const generateTodayAndEvents = useCallback(() => {
         const today = new Date();
         const hParts = getHijriParts(today);
         const currentDayName = daysAr[today.getDay()];
@@ -238,7 +235,11 @@ export default function Home() {
 
         events.sort((a, b) => a.days - b.days);
         setUpcomingEvents(events);
-    };
+    }, [configData]);
+
+    useEffect(() => {
+        if (configData) generateTodayAndEvents();
+    }, [configData, generateTodayAndEvents]);
 
     const handleShareEvents = async () => {
         if (upcomingEvents.length === 0) return;
@@ -455,11 +456,15 @@ export default function Home() {
         if (!src) return null;
 
         return (
-            <img
+            <Image
                 src={src}
                 alt={altText}
+                width={728}
+                height={180}
+                unoptimized
                 style={{
                     maxWidth: '100%',
+                    width: 'auto',
                     maxHeight: '180px',
                     objectFit: 'contain',
                     display: 'block',

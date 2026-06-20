@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export default function PrivacyPolicy() {
     const [lang, setLang] = useState('ar');
@@ -19,9 +20,9 @@ export default function PrivacyPolicy() {
     return (
         <div className="container">
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <a href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
+                <Link href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
                     <i className="fa-solid fa-arrow-right"></i> {lang === 'ar' ? 'العودة' : 'Back'}
-                </a>
+                </Link>
                 <h1>{lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}</h1>
                 <div style={{ width: '80px' }}></div> {/* توازن بصري */}
             </div>

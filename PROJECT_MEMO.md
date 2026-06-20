@@ -79,6 +79,7 @@ https://www.date-tool.com
 17. تنظيف Firebase Imports في الصفحات المحددة بدون تقسيم لوحة الإدارة.
 18. تأسيس تخزين صور Cloudflare R2 للّوقو وfavicon والإعلانات مع headers أمنية وتنظيف HTML.
 19. تفعيل Cloudflare R2 فعليًا وربط bucket الصور بالـ Worker.
+20. إصلاح إعداد ESLint وتحذيراته ومنع تكرار slug في لوحة الإدارة.
 
 ---
 
@@ -2011,6 +2012,51 @@ Current Version ID: 74c58791-b937-4942-bdfe-d46e6520429c
 
 ---
 
+### اختبار إصلاح تحذيرات ESLint ومنع تكرار slug
+
+تم تشغيل:
+
+```powershell
+npm run lint
+npm run build
+git diff --check
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح بدون تحذيرات.
+npm run build -> توقف داخل sandbox بسبب عدم السماح لـ Wrangler/OpenNext بإنشاء سجلات داخل AppData.
+محاولة إعادة البناء بصلاحية أعلى -> رُفضت تلقائيًا بسبب حد استخدام Codex، وليس بسبب خطأ في الكود.
+git diff --check -> لا توجد أخطاء whitespace، فقط تحذير CRLF المعتاد في ويندوز.
+npm run build بعد استئناف المهمة -> نجح.
+npm run deploy بعد استئناف المهمة -> نجح.
+Current Version ID: 4bcff349-5677-4973-8457-dcf0c823706c
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://date-tool.com/privacy -> 200 OK
+/api/media/logo/codex-r2-test.png -> {"ok":false,"error":"media_not_found"} لأن صورة الاختبار حُذفت سابقًا.
+```
+
+التغييرات التي تمت:
+
+```txt
+تم تفعيل إعداد Next.js ESLint core-web-vitals عبر FlatCompat.
+تم تحويل روابط الصفحات الداخلية إلى next/link.
+تم تحويل صور اللوقو والإعلانات من img إلى next/image.
+تم نقل خط Cairo إلى next/font بدل رابط Google Fonts اليدوي.
+تم إصلاح اعتماد useEffect الخاص بأحداث اليوم.
+تم منع تكرار slug داخل لوحة الإدارة قبل الحفظ وأثناء تعديل slug.
+```
+
+ملاحظة:
+
+```txt
+تم استئناف المهمة بعد توفر حد الاستخدام، وتم البناء والنشر والتحقق من الإنتاج.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2062,8 +2108,15 @@ Current Version ID: 74c58791-b937-4942-bdfe-d46e6520429c
 ✅ R2 مفعل وتم إنشاء bucket datetools-media
 ✅ تم ربط R2 بالـ Worker عبر MEDIA_BUCKET
 ✅ تم اختبار قراءة صورة من R2 عبر /api/media بنجاح
+✅ تم إصلاح إعداد ESLint لاستخدام Next.js core-web-vitals
+✅ npm run lint ينجح بدون تحذيرات
+✅ تم منع تكرار slug في لوحة الإدارة قبل الحفظ وأثناء تعديل slug
+✅ تم تحويل صور اللوقو والإعلانات إلى next/image
+✅ تم نقل خط Cairo إلى next/font
 ✅ npm run lint ينجح
-✅ npm run build ينجح
+✅ npm run build ينجح بعد استئناف المهمة
+✅ npm run deploy ينجح بعد استئناف المهمة
+✅ تم نشر نسخة Cloudflare Version ID: 4bcff349-5677-4973-8457-dcf0c823706c
 ```
 
 ---
@@ -2092,8 +2145,6 @@ ads top / middle / bottom1 / bottom2
 تقسيم app/admin/page.jsx إلى مكونات أصغر
 تحسين محرر الصفحات
 تحسين معاينة الصفحات
-التحقق من slug قبل الحفظ
-منع تكرار slug
 تحسين رسائل الخطأ والنجاح
 تحسين إدارة الإحصائيات
 ```
@@ -2111,19 +2162,7 @@ app/admin/components/SaveButton.jsx
 
 ---
 
-### 3. إصلاح تحذير ESLint
-
-ظهر التحذير:
-
-```txt
-The Next.js plugin was not detected in your ESLint configuration
-```
-
-هذا لا يمنع النشر، لكنه يحتاج تنظيف لاحقًا.
-
----
-
-### 4. مراجعة npm audit
+### 3. مراجعة npm audit
 
 ظهرت تحذيرات أمنية من npm.
 
