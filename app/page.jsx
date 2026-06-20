@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Script from 'next/script';
+import Toast from './components/Toast';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -184,7 +185,7 @@ export default function Home() {
 
     const showNotification = (messageKey, type = 'error') => {
         setAlertConfig({ show: true, msg: i18n[lang][messageKey] || messageKey, type });
-        setTimeout(() => setAlertConfig({ show: false, msg: '', type: '' }), 3000);
+        setTimeout(() => setAlertConfig({ show: false, msg: '', type: '' }), 4500);
     };
 
     const generateTodayAndEvents = useCallback(() => {
@@ -476,10 +477,12 @@ export default function Home() {
 
     return (
         <>
-            <div className={`custom-alert ${alertConfig.show ? 'show' : ''} ${alertConfig.type === 'info' ? 'info' : ''}`}>
-                <i className={alertConfig.type === 'error' ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-check"}></i>
-                {alertConfig.msg}
-            </div>
+            <Toast
+                message={alertConfig.msg}
+                type={alertConfig.type}
+                visible={alertConfig.show}
+                onClose={() => setAlertConfig({ show: false, msg: '', type: '' })}
+            />
 
             <div className="container">
                 <Header

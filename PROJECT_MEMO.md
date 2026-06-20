@@ -80,6 +80,7 @@ https://www.date-tool.com
 18. تأسيس تخزين صور Cloudflare R2 للّوقو وfavicon والإعلانات مع headers أمنية وتنظيف HTML.
 19. تفعيل Cloudflare R2 فعليًا وربط bucket الصور بالـ Worker.
 20. إصلاح إعداد ESLint وتحذيراته ومنع تكرار slug في لوحة الإدارة.
+21. تحسين رفع صور اللوقو وfavicon وتوحيد رسائل الخطأ والنجاح في واجهة الموقع.
 
 ---
 
@@ -2057,6 +2058,55 @@ https://date-tool.com/privacy -> 200 OK
 
 ---
 
+### اختبار تحسين رفع صور اللوقو وfavicon وتوحيد الرسائل
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://date-tool.com/admin_login
+curl.exe -s -X POST https://date-tool.com/api/media/upload
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح بدون تحذيرات.
+git diff --check -> لا توجد أخطاء whitespace، فقط تحذير CRLF المعتاد في ويندوز.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: adb3c119-f33f-4638-b08c-7259dcf2a24b
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://date-tool.com/admin_login -> 200 OK
+/api/media/upload بدون توكن مدير -> {"ok":false,"error":"unauthorized"}
+```
+
+التغييرات التي تمت:
+
+```txt
+تم إضافة Toast موحد لرسائل النجاح والخطأ والتحذير والمعلومات.
+تم استخدام Toast في الصفحة الرئيسية ولوحة الإدارة وصفحة تسجيل الدخول.
+تم تحسين رسائل رفع الصور في لوحة الإدارة لتوضيح سبب الفشل.
+تم دعم ملفات .ico حتى إذا أرسلها المتصفح كـ application/octet-stream.
+تم إبقاء SVG مرفوضًا لأسباب أمنية.
+تم تحسين accept لحقول رفع اللوقو وfavicon والإعلانات.
+```
+
+ملاحظة:
+
+```txt
+تم اختبار أمان endpoint الرفع بدون توكن مدير وتأكد أنه يرفض الطلب.
+اختبار رفع لوقو وfavicon فعلي من لوحة الإدارة يحتاج جلسة مدير نشطة وملفات صور حقيقية.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2117,6 +2167,9 @@ https://date-tool.com/privacy -> 200 OK
 ✅ npm run build ينجح بعد استئناف المهمة
 ✅ npm run deploy ينجح بعد استئناف المهمة
 ✅ تم نشر نسخة Cloudflare Version ID: 4bcff349-5677-4973-8457-dcf0c823706c
+✅ تم توحيد رسائل الخطأ والنجاح عبر Toast أنيق في الموقع ولوحة الإدارة وتسجيل الدخول
+✅ تم تحسين رفع favicon بصيغة .ico حتى عند وصول نوع الملف كـ application/octet-stream
+✅ تم نشر نسخة Cloudflare Version ID: adb3c119-f33f-4638-b08c-7259dcf2a24b
 ```
 
 ---
@@ -2133,7 +2186,7 @@ favicon
 ads top / middle / bottom1 / bottom2
 ```
 
-ثم حفظ الأقسام والتأكد من ظهور الصور على الإنتاج.
+ثم حفظ الأقسام والتأكد من ظهور الصور على الإنتاج. هذا الاختبار يحتاج جلسة مدير نشطة وملفات صور حقيقية.
 
 ---
 
@@ -2145,7 +2198,6 @@ ads top / middle / bottom1 / bottom2
 تقسيم app/admin/page.jsx إلى مكونات أصغر
 تحسين محرر الصفحات
 تحسين معاينة الصفحات
-تحسين رسائل الخطأ والنجاح
 تحسين إدارة الإحصائيات
 ```
 

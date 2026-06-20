@@ -15,6 +15,14 @@ const ALLOWED_TYPES = new Map([
     ['image/x-icon', 'ico'],
     ['image/vnd.microsoft.icon', 'ico'],
 ]);
+const FALLBACK_EXTENSION_TYPES = new Map([
+    ['png', 'image/png'],
+    ['jpg', 'image/jpeg'],
+    ['jpeg', 'image/jpeg'],
+    ['webp', 'image/webp'],
+    ['gif', 'image/gif'],
+    ['ico', 'image/x-icon'],
+]);
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +232,38 @@ function getSafeFileName(name) {
         .slice(0, 40) || 'image';
 }
 
+function getFileExtension(name) {
+    return String(name || '')
+        .toLowerCase()
+        .split('.')
+        .pop()
+        ?.replace(/[^a-z0-9]/g, '') || '';
+}
+
+function getAllowedImageInfo(file) {
+    const extensionFromType = ALLOWED_TYPES.get(file.type);
+    if (extensionFromType) {
+        return {
+            extension: extensionFromType,
+            contentType: file.type,
+        };
+    }
+
+    if (file.type && file.type !== 'application/octet-stream') {
+        return null;
+    }
+
+    const extension = getFileExtension(file.name);
+    const contentType = FALLBACK_EXTENSION_TYPES.get(extension);
+
+    if (!contentType) return null;
+
+    return {
+        extension: extension === 'jpeg' ? 'jpg' : extension,
+        contentType,
+    };
+}
+
 function getMediaBucket(env) {
     return env?.MEDIA_BUCKET || null;
 }
@@ -256,8 +296,8 @@ export async function POST(request) {
         return jsonResponse({ ok: false, error: 'invalid_file_size' }, 400);
     }
 
-    const extension = ALLOWED_TYPES.get(file.type);
-    if (!extension) {
+    const imageInfo = getAllowedImageInfo(file);
+    if (!imageInfo) {
         return jsonResponse({ ok: false, error: 'unsupported_image_type' }, 400);
     }
 
@@ -265,12 +305,12 @@ export async function POST(request) {
     const year = now.getUTCFullYear();
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const safeName = getSafeFileName(file.name);
-    const key = `${category}/${year}/${month}/${crypto.randomUUID()}-${safeName}.${extension}`;
+    const key = `${category}/${year}/${month}/${crypto.randomUUID()}-${safeName}.${imageInfo.extension}`;
     const bytes = await file.arrayBuffer();
 
     await bucket.put(key, bytes, {
         httpMetadata: {
-            contentType: file.type,
+            contentType: imageInfo.contentType,
             cacheControl: 'public, max-age=31536000, immutable',
         },
         customMetadata: {
@@ -283,7 +323,7 @@ export async function POST(request) {
         ok: true,
         key,
         url: `/api/media/${key}`,
-        contentType: file.type,
+        contentType: imageInfo.contentType,
         size: file.size,
     });
 }

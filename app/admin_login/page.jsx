@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Toast from '../components/Toast';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
@@ -65,6 +66,13 @@ export default function AdminLogin() {
 
     return (
         <div className="login-page-wrapper" dir="rtl">
+            <Toast
+                message={errorMsg}
+                type="error"
+                visible={Boolean(errorMsg)}
+                onClose={() => setErrorMsg('')}
+            />
+
             <div className="login-container">
                 <div className="lock-icon">
                     <i className="fa-solid fa-shield-halved"></i>
@@ -74,13 +82,6 @@ export default function AdminLogin() {
                     <h1>بوابة الإدارة</h1>
                     <p>الوصول مقتصر على المصرح لهم فقط</p>
                 </div>
-
-                {errorMsg && (
-                    <div className="error-message">
-                        <i className="fa-solid fa-circle-exclamation"></i>
-                        <span>{errorMsg}</span>
-                    </div>
-                )}
 
                 <form onSubmit={handleLogin}>
                     <div className="form-group">

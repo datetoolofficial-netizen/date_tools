@@ -1,8 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Toast from '../components/Toast';
 import { sanitizeHtml } from '../sanitizeHtml';
 import './AdminPage.css';
+
+const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_MEDIA_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'ico']);
+const SUPPORTED_MEDIA_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'image/gif',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'application/octet-stream',
+    '',
+]);
 
 export default function AdminPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -15,6 +29,7 @@ export default function AdminPage() {
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
     const firebaseApiRef = useRef(null);
+    const messageTimerRef = useRef(null);
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -93,9 +108,17 @@ export default function AdminPage() {
     }, []);
 
     const showMessage = (text, type = 'info') => {
+        if (messageTimerRef.current) {
+            clearTimeout(messageTimerRef.current);
+        }
+
         setMsg({ text, type });
-        setTimeout(() => setMsg({ text: '', type: '' }), 3500);
+        messageTimerRef.current = setTimeout(() => setMsg({ text: '', type: '' }), 4500);
     };
+
+    useEffect(() => () => {
+        if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
+    }, []);
 
     const saveSection = async (sectionName = 'الإعدادات') => {
         const firebaseApi = firebaseApiRef.current;
@@ -174,11 +197,50 @@ export default function AdminPage() {
         return result.url;
     };
 
+    const getMediaUploadErrorMessage = (errorCode, label) => {
+        const messages = {
+            not_authenticated: 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى ثم أعد المحاولة.',
+            unauthorized: 'لا تملك صلاحية رفع الصور. تأكد من أن حسابك الإداري مفعّل.',
+            media_storage_not_configured: 'تخزين الصور غير مفعل أو غير مربوط. تأكد من binding باسم MEDIA_BUCKET.',
+            invalid_category: 'نوع مساحة الرفع غير معروف. حدّث الصفحة ثم أعد المحاولة.',
+            missing_file: 'لم يتم اختيار ملف للرفع.',
+            invalid_file_size: 'حجم الصورة غير مقبول. الحد الأقصى 5MB.',
+            unsupported_image_type: 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF أو ICO. لا يتم قبول SVG لأسباب أمنية.',
+            upload_failed: 'تعذر رفع الصورة بسبب خطأ غير متوقع.',
+        };
+
+        return messages[errorCode] || `تعذر رفع ${label}.`;
+    };
+
+    const validateMediaFileBeforeUpload = (file) => {
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+        if (file.size <= 0 || file.size > MAX_MEDIA_FILE_BYTES) {
+            return 'invalid_file_size';
+        }
+
+        if (!SUPPORTED_MEDIA_EXTENSIONS.has(extension)) {
+            return 'unsupported_image_type';
+        }
+
+        if (file.type && !SUPPORTED_MEDIA_TYPES.has(file.type)) {
+            return 'unsupported_image_type';
+        }
+
+        return '';
+    };
+
     const handleMediaUpload = async (event, category, applyUrl, label) => {
         const file = event.target.files?.[0];
         event.target.value = '';
 
         if (!file) return;
+
+        const validationError = validateMediaFileBeforeUpload(file);
+        if (validationError) {
+            showMessage(getMediaUploadErrorMessage(validationError, label), 'error');
+            return;
+        }
 
         showMessage(`جاري رفع ${label}...`, 'info');
 
@@ -187,11 +249,8 @@ export default function AdminPage() {
             applyUrl(url);
             showMessage(`✅ تم رفع ${label}. اضغط حفظ القسم لتثبيت الرابط.`, 'success');
         } catch (error) {
-            const message = error.message === 'media_storage_not_configured'
-                ? '❌ تخزين الصور غير مفعل بعد. فعّل R2 ثم أضف binding باسم MEDIA_BUCKET.'
-                : `❌ تعذر رفع ${label}.`;
             console.error('Media upload error:', error);
-            showMessage(message, 'error');
+            showMessage(getMediaUploadErrorMessage(error.message, label), 'error');
         }
     };
 
@@ -472,11 +531,12 @@ export default function AdminPage() {
             </nav>
 
             <div className="admin-main-container">
-                {msg.text && (
-                    <div className={`admin-msg admin-global-msg ${msg.type}`}>
-                        {msg.text}
-                    </div>
-                )}
+                <Toast
+                    message={msg.text}
+                    type={msg.type}
+                    visible={Boolean(msg.text)}
+                    onClose={() => setMsg({ text: '', type: '' })}
+                />
 
                 <section className="admin-section-card stats-top-section">
                     <div className="section-header compact-header">
@@ -592,7 +652,7 @@ export default function AdminPage() {
                                     </div>
                                     <input
                                         type="file"
-                                        accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                        accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
                                         onChange={(e) => handleMediaUpload(
                                             e,
                                             'logo',
@@ -617,7 +677,7 @@ export default function AdminPage() {
                                 </div>
                                 <input
                                     type="file"
-                                    accept="image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                    accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
                                     onChange={(e) => handleMediaUpload(
                                         e,
                                         'favicon',
@@ -661,7 +721,7 @@ export default function AdminPage() {
                                     </div>
                                     <input
                                         type="file"
-                                        accept="image/png,image/jpeg,image/webp,image/gif"
+                                        accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
                                         onChange={(e) => handleMediaUpload(
                                             e,
                                             'ads',
