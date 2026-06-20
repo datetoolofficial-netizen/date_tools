@@ -172,11 +172,112 @@
         .custom-alert.show { top: 30px; }
         .custom-alert.info { background-color: var(--primary); }
 
-        footer { text-align: center; margin-top: 40px; padding: 25px 20px 15px 20px; color: var(--text-sub); border-top: 1px solid var(--border-color); font-size: 13px; }
-        .footer-links { margin-bottom: 15px; display: flex; justify-content: center; gap: 20px;}
-        .footer-links a { color: var(--text-main); text-decoration: none; font-weight: 600; transition: 0.2s; display: flex; align-items: center; gap: 5px;}
-        .footer-links a i { color: var(--primary); font-size: 15px;}
+        .site-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px 20px 18px;
+            color: var(--text-sub);
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-card);
+            font-size: 13px;
+        }
+        .footer-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .footer-brand {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .footer-brand i {
+            color: var(--primary);
+            font-size: 18px;
+        }
+        .footer-links {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 700;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .footer-links a i {
+            color: var(--primary);
+            font-size: 11px;
+        }
         .footer-links a:hover { color: var(--primary); }
+        .footer-social {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .footer-social a {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--input-bg);
+            color: var(--text-sub);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            font-size: 17px;
+            transition: 0.2s;
+        }
+        .footer-social a:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .footer-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--text-sub);
+        }
+        .footer-meta p { margin: 0; }
+        .footer-version {
+            direction: ltr;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            border-radius: 999px;
+            padding: 3px 10px;
+            color: var(--text-sub);
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 600px) {
+            .site-footer { padding: 26px 14px 16px; }
+            .footer-links { gap: 12px; }
+            .footer-meta {
+                flex-direction: column;
+                gap: 6px;
+            }
+        }
 
 
         /* تنسيقات نصوص الهيدر (الاسم والسلوقن) */

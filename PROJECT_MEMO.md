@@ -50,6 +50,8 @@ https://www.date-tool.com
 الصفحات الثابتة تعمل.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
+الإصدار الحالي للتطبيق هو 0.2.1.
+يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
 ---
@@ -84,6 +86,7 @@ https://www.date-tool.com
 22. تنظيم صفحة الإدارة بدون تقسيمها إلى ملفات، وفصل حفظ الأقسام، وإضافة جدول/نافذة إدارة الإعلانات.
 23. تأسيس بوابة المعلنين والدعم داخل `app` بتصميم مستوحى من المشروع القديم وباستخدام إعدادات المشروع الحالية.
 24. بدء تقسيم الصفحة الرئيسية إلى مكونات أصغر وملف أدوات للتواريخ، مع إبقاء أنماط الصفحة الرئيسية المشتركة في ملف CSS العام.
+25. تحديث فوتر الموقع ليتبع ستايل الفوتر القديم مع روابط المشروع الحالية وإضافة رقم الإصدار وسجل النسخ.
 
 ---
 
@@ -2261,6 +2264,49 @@ https://date-tool.com/support -> 200 OK
 تم إبقاء أنماط الصفحة الرئيسية في app/globals.css لأن الأنماط مشتركة ومترابطة بين أقسام الصفحة.
 ```
 
+---
+
+### اختبار تحديث الفوتر ورقم الإصدار 0.2.1
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/privacy
+curl.exe -I https://date-tool.com/client
+curl.exe -I https://www.date-tool.com/
+curl.exe -L "https://date-tool.com/?v=0.2.1"
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> لا توجد أخطاء whitespace، فقط تحذير CRLF المعتاد في ويندوز.
+npm run build -> نجح بعد إعادة التشغيل خارج sandbox بسبب حاجة Wrangler للكتابة في AppData.
+npm run deploy -> نجح.
+Current Version ID: c5e8b8a5-f047-4b04-aec3-af842afe9c47
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/privacy -> 200 OK
+https://date-tool.com/client -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+تم التحقق من ظهور footer-version ورقم الإصدار 0.2.1 في HTML المنشور عند طلب الصفحة مع cache-bust.
+```
+
+التغييرات التي تمت:
+
+```txt
+تم تحديث app/Footer.jsx ليستخدم بنية فوتر مكتملة وروابط افتراضية ثابتة مع روابط الإعدادات.
+تم نقل تنسيقات الفوتر من inline styles إلى app/globals.css مع دعم روابط التواصل ورقم الإصدار.
+تم إنشاء app/version.js كمصدر رقم الإصدار داخل الواجهة.
+تم رفع package.json و package-lock.json إلى الإصدار 0.2.1.
+تم إنشاء VERSION_LOG.md كسجل رسمي لإصدارات المشروع.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2359,6 +2405,10 @@ https://date-tool.com/support -> 200 OK
 ✅ npm run lint ينجح بعد تقسيم الصفحة الرئيسية
 ✅ npm run build ينجح بعد استئناف تقسيم الصفحة الرئيسية
 ✅ تم نشر تقسيم الصفحة الرئيسية على Cloudflare Version ID: bf7bd30b-4b7d-4d7c-b391-85e2403338a9
+✅ تم تحديث فوتر الموقع وإضافة رقم الإصدار v0.2.1
+✅ تم إنشاء VERSION_LOG.md وتوثيق الإصدار 0.2.1
+✅ npm run lint و npm run build ينجحان بعد تحديث الفوتر ورقم الإصدار
+✅ تم نشر تحديث الفوتر ورقم الإصدار على Cloudflare Version ID: c5e8b8a5-f047-4b04-aec3-af842afe9c47
 ```
 
 ---
@@ -2528,3 +2578,5 @@ MEDIA_BUCKET
 المسار العام `/api/media/{key}` مخصص للصور العامة فقط مثل logo وfavicon والإعلانات، وليس للتذاكر أو مرفقات خاصة.
 
 13. بوابة المعلنين أضيفت داخل `app/client` وصفحة الدعم داخل `app/support`. لا تجعل `support_tickets` قابلة للكتابة مباشرة من المتصفح؛ المسار المعتمد هو `/api/support` من جهة الخادم. حملات المعلنين محفوظة في `campaigns` وقواعد Firestore الحالية تسمح لصاحب الحملة برؤيتها وتغيير حالتها المحددة فقط، بينما الإدارة تحتاج واجهة لاحقة لإدارة الحملات والتذاكر.
+
+14. عند إصدار نسخة جديدة يجب تحديث `app/version.js` و `package.json` و `package-lock.json` و `VERSION_LOG.md` معًا، ثم توثيق الإصدار في هذه المذكرة.

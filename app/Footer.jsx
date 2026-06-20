@@ -1,15 +1,42 @@
 'use client';
 
-import React from 'react';
+import Link from 'next/link';
+import { APP_VERSION } from './version';
+
+const defaultFooterLinks = {
+    ar: [
+        { title: 'سياسة الخصوصية', url: '/privacy', isExternal: false },
+        { title: 'الشروط والأحكام', url: '/terms', isExternal: false },
+        { title: 'تواصل معنا', url: '/contact', isExternal: false },
+        { title: 'الدعم الفني', url: '/support', isExternal: false },
+        { title: 'بوابة المعلنين', url: '/client', isExternal: false },
+    ],
+    en: [
+        { title: 'Privacy', url: '/privacy', isExternal: false },
+        { title: 'Terms', url: '/terms', isExternal: false },
+        { title: 'Contact', url: '/contact', isExternal: false },
+        { title: 'Support', url: '/support', isExternal: false },
+        { title: 'Advertisers Portal', url: '/client', isExternal: false },
+    ],
+};
 
 export default function Footer({ lang, config }) {
-    const footerLinks = [];
+    const footerLinks = [...(defaultFooterLinks[lang] || defaultFooterLinks.ar)];
+    const seenLinks = new Set(footerLinks.map((link) => `${link.url}|${link.title}`));
+
+    const addFooterLink = (link) => {
+        const key = `${link.url}|${link.title}`;
+        if (!link.title || !link.url || seenLinks.has(key)) return;
+
+        seenLinks.add(key);
+        footerLinks.push(link);
+    };
 
     if (config) {
         if (Array.isArray(config.internalPages)) {
-            config.internalPages.forEach(page => {
+            config.internalPages.forEach((page) => {
                 if (page.location === 'footer' || page.location === 'both') {
-                    footerLinks.push({
+                    addFooterLink({
                         title: page.title,
                         url: `/${page.slug}`,
                         isExternal: false
@@ -19,9 +46,9 @@ export default function Footer({ lang, config }) {
         }
 
         if (Array.isArray(config.externalLinks)) {
-            config.externalLinks.forEach(link => {
+            config.externalLinks.forEach((link) => {
                 if (link.location === 'footer' || link.location === 'both') {
-                    footerLinks.push({
+                    addFooterLink({
                         title: link.title,
                         url: link.url,
                         isExternal: true
@@ -34,88 +61,46 @@ export default function Footer({ lang, config }) {
     const currentYear = new Date().getFullYear();
     const copyrightText = config?.copyrightText || 'جميع الحقوق محفوظة';
     const copyrightName = config?.copyrightName ? `لـ ${config.copyrightName}` : '';
+    const brandName = config?.toolDisplayName || (lang === 'en' ? 'Date Tools' : 'أدوات التاريخ');
 
     return (
-        <footer
-            className="footer"
-            style={{
-                padding: '30px 20px',
-                textAlign: 'center',
-                marginTop: '50px',
-                borderTop: '1px solid var(--border-color)',
-                background: 'var(--bg-card)'
-            }}
-        >
-            {footerLinks.length > 0 && (
-                <nav
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '20px',
-                        flexWrap: 'wrap',
-                        marginBottom: '20px'
-                    }}
-                >
+        <footer className="footer site-footer">
+            <div className="footer-inner">
+                <div className="footer-brand">
+                    <i className="fa-regular fa-calendar-check"></i>
+                    <span>{brandName}</span>
+                </div>
+
+                <nav className="footer-links" aria-label={lang === 'en' ? 'Footer links' : 'روابط الفوتر'}>
                     {footerLinks.map((link, idx) => (
-                        <a
-                            key={idx}
-                            href={link.url}
-                            target={link.isExternal ? '_blank' : '_self'}
-                            rel={link.isExternal ? 'noopener noreferrer' : ''}
-                            style={{
-                                color: 'var(--text-main)',
-                                textDecoration: 'none',
-                                fontWeight: 'bold',
-                                fontSize: '14px'
-                            }}
-                        >
-                            {link.title}
-                            {link.isExternal && (
-                                <i
-                                    className="fa-solid fa-arrow-up-right-from-square"
-                                    style={{
-                                        fontSize: '10px',
-                                        marginInlineStart: '4px',
-                                        color: 'var(--text-sub)'
-                                    }}
-                                ></i>
-                            )}
-                        </a>
+                        link.isExternal ? (
+                            <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer">
+                                {link.title}
+                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                        ) : (
+                            <Link key={`${link.url}-${idx}`} href={link.url}>
+                                {link.title}
+                            </Link>
+                        )
                     ))}
                 </nav>
-            )}
 
-            {config?.socialLinks && config.socialLinks.length > 0 && (
-                <div
-                    className="social-icons"
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '15px',
-                        marginBottom: '20px'
-                    }}
-                >
-                    {config.socialLinks.map((social, idx) => (
-                        <a
-                            key={idx}
-                            href={social.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                color: 'var(--text-sub)',
-                                fontSize: '22px',
-                                transition: '0.3s'
-                            }}
-                        >
-                            <i className={`fa-brands ${social.icon}`}></i>
-                        </a>
-                    ))}
+                {Array.isArray(config?.socialLinks) && config.socialLinks.length > 0 && (
+                    <div className="footer-social" aria-label={lang === 'en' ? 'Social links' : 'روابط التواصل'}>
+                        {config.socialLinks.map((social, idx) => (
+                            <a key={`${social.url}-${idx}`} href={social.url} target="_blank" rel="noopener noreferrer">
+                                <i className={`fa-brands ${social.icon}`}></i>
+                            </a>
+                        ))}
+                    </div>
+                )}
+
+                <div className="footer-meta">
+                    <p>© {currentYear} {copyrightText} {copyrightName}</p>
+                    <span className="footer-version">v{APP_VERSION}</span>
                 </div>
-            )}
-
-            <p style={{ color: 'var(--text-sub)', fontSize: '14px', margin: '0' }}>
-                © {currentYear} {copyrightText} {copyrightName}
-            </p>
+            </div>
         </footer>
     );
 }
