@@ -17,6 +17,16 @@ const SUPPORTED_MEDIA_TYPES = new Set([
     'application/octet-stream',
     '',
 ]);
+const EMPTY_AD_CAMPAIGN = {
+    name: '',
+    slot: 'middle',
+    startAt: '',
+    endAt: '',
+    googleDriveUrl: '',
+    targetUrl: '',
+    status: 'draft',
+    notes: '',
+};
 
 export default function AdminPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -28,6 +38,9 @@ export default function AdminPage() {
     const [savingSection, setSavingSection] = useState('');
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
+    const [isAdModalOpen, setIsAdModalOpen] = useState(false);
+    const [adModalIndex, setAdModalIndex] = useState(null);
+    const [adForm, setAdForm] = useState(EMPTY_AD_CAMPAIGN);
     const firebaseApiRef = useRef(null);
     const messageTimerRef = useRef(null);
 
@@ -37,7 +50,7 @@ export default function AdminPage() {
 
         async function loadAdminData() {
             try {
-                const [{ auth, getAdminProfile, getAdminStats, getSiteConfig, saveSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ auth, getAdminProfile, getAdminStats, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../firebase'),
                     import('firebase/auth'),
                 ]);
@@ -50,7 +63,7 @@ export default function AdminPage() {
                     getSiteConfig,
                     getAdminProfile,
                     signOut,
-                    saveSiteConfig,
+                    saveSiteConfigSection,
                 };
 
                 unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -120,26 +133,33 @@ export default function AdminPage() {
         if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
     }, []);
 
-    const saveSection = async (sectionName = 'الإعدادات') => {
+    const saveSection = async (sectionName = 'الإعدادات', sectionPatch = null) => {
         const firebaseApi = firebaseApiRef.current;
 
-        if (!firebaseApi?.saveSiteConfig) {
+        if (!firebaseApi?.saveSiteConfigSection) {
             showMessage('❌ لم تكتمل تهيئة Firebase بعد.', 'error');
             return;
         }
 
-        const slugValidation = validatePageSlugs(config?.internalPages || []);
-        if (!slugValidation.isValid) {
-            showMessage(slugValidation.message, 'error');
-            return;
+        const patch = sectionPatch || config;
+
+        if ('internalPages' in patch || 'customPages' in patch) {
+            const slugValidation = validatePageSlugs(config?.internalPages || []);
+            if (!slugValidation.isValid) {
+                showMessage(slugValidation.message, 'error');
+                return;
+            }
         }
 
         setSavingSection(sectionName);
         showMessage(`جاري حفظ ${sectionName}...`, 'info');
 
         try {
-            const savedConfig = await firebaseApi.saveSiteConfig(config);
-            setConfig(savedConfig);
+            const savedPatch = await firebaseApi.saveSiteConfigSection(patch);
+            setConfig((currentConfig) => ({
+                ...currentConfig,
+                ...savedPatch,
+            }));
             showMessage(`✅ تم حفظ ${sectionName} بنجاح.`, 'success');
         } catch (error) {
             console.error('Error saving section:', error);
@@ -288,6 +308,108 @@ export default function AdminPage() {
                 [slot]: value
             }
         });
+    };
+
+    const getAdSlotLabel = (slot) => {
+        const labels = {
+            top: 'إعلان أعلى الصفحة',
+            middle: 'إعلان مميز',
+            bottom1: 'إعلان أسفل الصفحة 1',
+            bottom2: 'إعلان أسفل الصفحة 2',
+        };
+
+        return labels[slot] || 'إعلان';
+    };
+
+    const getAdStatus = (ad) => {
+        if (ad.status === 'paused') return { label: 'متوقف', className: 'status-paused' };
+        if (ad.status === 'draft') return { label: 'مسودة', className: 'status-draft' };
+
+        const now = Date.now();
+        const start = ad.startAt ? new Date(ad.startAt).getTime() : 0;
+        const end = ad.endAt ? new Date(ad.endAt).getTime() : 0;
+
+        if (end && now > end) return { label: 'منتهي', className: 'status-ended' };
+        if (start && now < start) return { label: 'مجدول', className: 'status-pending' };
+        return { label: 'نشط', className: 'status-active' };
+    };
+
+    const formatAdDateTime = (value) => {
+        if (!value) return 'غير محدد';
+        return new Intl.DateTimeFormat('ar-SA', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        }).format(new Date(value));
+    };
+
+    const openAdModal = (index = null) => {
+        setIsAdModalOpen(true);
+        setAdModalIndex(index);
+        setAdForm(index === null ? EMPTY_AD_CAMPAIGN : {
+            ...EMPTY_AD_CAMPAIGN,
+            ...((config.adCampaigns || [])[index] || {}),
+        });
+    };
+
+    const closeAdModal = () => {
+        setIsAdModalOpen(false);
+        setAdModalIndex(null);
+        setAdForm(EMPTY_AD_CAMPAIGN);
+    };
+
+    const updateAdForm = (field, value) => {
+        setAdForm((current) => ({
+            ...current,
+            [field]: value,
+        }));
+    };
+
+    const saveAdCampaign = () => {
+        if (!adForm.name.trim()) {
+            showMessage('اكتب اسم الإعلان قبل الحفظ.', 'error');
+            return;
+        }
+
+        if (!adForm.googleDriveUrl.trim()) {
+            showMessage('أضف رابط ملف الإعلان من Google Drive قبل الحفظ.', 'error');
+            return;
+        }
+
+        if (adForm.startAt && adForm.endAt && new Date(adForm.startAt) >= new Date(adForm.endAt)) {
+            showMessage('وقت نهاية الإعلان يجب أن يكون بعد وقت البداية.', 'error');
+            return;
+        }
+
+        const nextAd = {
+            ...adForm,
+            id: adForm.id || `ad-${Date.now()}`,
+            updatedAt: new Date().toISOString(),
+        };
+        const campaigns = [...(config.adCampaigns || [])];
+
+        if (adModalIndex === null) {
+            campaigns.unshift({
+                ...nextAd,
+                createdAt: new Date().toISOString(),
+            });
+        } else {
+            campaigns[adModalIndex] = nextAd;
+        }
+
+        setConfig({
+            ...config,
+            adCampaigns: campaigns,
+        });
+        closeAdModal();
+        showMessage('تم تجهيز الإعلان. اضغط حفظ قسم الإعلانات لتثبيت التغيير.', 'success');
+    };
+
+    const removeAdCampaign = (index) => {
+        setConfig({
+            ...config,
+            adCampaigns: (config.adCampaigns || []).filter((_, adIndex) => adIndex !== index),
+        });
+        showMessage('تم حذف الإعلان من الجدول. اضغط حفظ قسم الإعلانات لتثبيت الحذف.', 'info');
     };
 
     const normalizeSlug = (value) => {
@@ -471,17 +593,26 @@ export default function AdminPage() {
         setIsPageModalEditing(false);
     };
 
-    const SectionSaveButton = ({ label }) => (
+    const SectionSaveButton = ({ label, fields }) => (
         <button
             type="button"
             className="section-save-btn"
-            onClick={() => saveSection(label)}
+            onClick={() => saveSection(label, pickConfigFields(fields))}
             disabled={savingSection === label}
         >
             <i className={savingSection === label ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-floppy-disk'}></i>
             {savingSection === label ? 'جاري الحفظ...' : 'حفظ القسم'}
         </button>
     );
+
+    const pickConfigFields = (fields = []) => {
+        if (!Array.isArray(fields) || fields.length === 0) return config;
+
+        return fields.reduce((patch, field) => ({
+            ...patch,
+            [field]: config?.[field],
+        }), {});
+    };
 
     const selectedPage = pageModalIndex !== null ? (config?.internalPages || [])[pageModalIndex] : null;
     const selectedPageSlug = normalizeSlug(selectedPage?.slug);
@@ -595,7 +726,10 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">اسم الموقع، الوصف المختصر، والشعار.</p>
                             </div>
-                            <SectionSaveButton label="الهوية" />
+                            <SectionSaveButton
+                                label="الهوية"
+                                fields={['toolDisplayName', 'toolSlogan', 'hasLogo', 'logoUrl', 'faviconUrl', 'copyrightName', 'copyrightText']}
+                            />
                         </div>
 
                         <div className="form-grid">
@@ -633,7 +767,7 @@ export default function AdminPage() {
                                         onChange={(e) => setConfig({ ...config, hasLogo: e.target.checked })}
                                         className="toggle-checkbox"
                                     />
-                                    <span>استخدام صورة الشعار بدل النص</span>
+                                    <span>إظهار اللوقو أعلى اسم الموقع</span>
                                 </label>
                             </div>
 
@@ -662,6 +796,35 @@ export default function AdminPage() {
                                     />
                                 </div>
                             )}
+
+                            <div className="input-group full-width">
+                                <label>صاحب الحقوق</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-regular fa-copyright"></i>
+                                    <input
+                                        type="text"
+                                        value={config.copyrightName || ''}
+                                        onChange={(e) => setConfig({ ...config, copyrightName: e.target.value })}
+                                        placeholder="مثال: أدوات التاريخ"
+                                    />
+                                </div>
+                                <div className="preview-text">
+                                    © {new Date().getFullYear()} {config.copyrightText || 'جميع الحقوق محفوظة'} {config.copyrightName ? `لـ ${config.copyrightName}` : ''}
+                                </div>
+                            </div>
+
+                            <div className="input-group full-width">
+                                <label>نص الحقوق</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-solid fa-scale-balanced"></i>
+                                    <input
+                                        type="text"
+                                        value={config.copyrightText || ''}
+                                        onChange={(e) => setConfig({ ...config, copyrightText: e.target.value })}
+                                        placeholder="مثال: جميع الحقوق محفوظة"
+                                    />
+                                </div>
+                            </div>
 
                             <div className="input-group full-width">
                                 <label>رابط أيقونة المتصفح favicon</label>
@@ -697,13 +860,13 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">روابط أو رفع صور للمواضع الحالية. إدارة طلبات الإعلانات ستضاف لاحقًا كنظام منفصل.</p>
                             </div>
-                            <SectionSaveButton label="صور الإعلانات" />
+                            <SectionSaveButton label="الإعلانات" fields={['adImages', 'adCampaigns']} />
                         </div>
 
                         <div className="form-grid">
                             {[
-                                ['top', 'إعلان أعلى الصفحة'],
-                                ['middle', 'إعلان منتصف الصفحة'],
+                                ['top', 'إعلان أعلى الصفحة (Google داخل الإطار لاحقًا)'],
+                                ['middle', 'إعلان مميز'],
                                 ['bottom1', 'إعلان أسفل الصفحة 1'],
                                 ['bottom2', 'إعلان أسفل الصفحة 2'],
                             ].map(([slot, label]) => (
@@ -732,6 +895,81 @@ export default function AdminPage() {
                                 </div>
                             ))}
                         </div>
+
+                        <div className="ads-management-panel">
+                            <div className="ads-table-header">
+                                <div>
+                                    <h4>جدول الإعلانات</h4>
+                                    <p className="section-hint">
+                                        إعلان أعلى الصفحة مخصص لاحقًا لكود Google داخل الإطار، وإعلان المنتصف يظهر كإعلان مميز.
+                                    </p>
+                                </div>
+                                <button type="button" className="section-save-btn" onClick={() => openAdModal()}>
+                                    <i className="fa-solid fa-plus"></i> إضافة إعلان
+                                </button>
+                            </div>
+
+                            <div className="admin-table-wrap">
+                                <table className="admin-data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>اسم الإعلان</th>
+                                            <th>الموضع</th>
+                                            <th>البداية</th>
+                                            <th>النهاية</th>
+                                            <th>رابط العميل</th>
+                                            <th>الحالة</th>
+                                            <th>إجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(config.adCampaigns || []).length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="empty-table-cell">
+                                                    لا توجد إعلانات مضافة بعد. اضغط “إضافة إعلان” لإنشاء أول إعلان.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            (config.adCampaigns || []).map((ad, index) => {
+                                                const status = getAdStatus(ad);
+
+                                                return (
+                                                    <tr key={ad.id || index}>
+                                                        <td>
+                                                            <strong>{ad.name || 'إعلان بدون اسم'}</strong>
+                                                            {ad.notes && <span className="table-muted">{ad.notes}</span>}
+                                                        </td>
+                                                        <td>{getAdSlotLabel(ad.slot)}</td>
+                                                        <td>{formatAdDateTime(ad.startAt)}</td>
+                                                        <td>{formatAdDateTime(ad.endAt)}</td>
+                                                        <td>
+                                                            {ad.googleDriveUrl ? (
+                                                                <a href={ad.googleDriveUrl} target="_blank" rel="noopener noreferrer" className="table-link">
+                                                                    فتح الملف
+                                                                </a>
+                                                            ) : (
+                                                                <span className="table-muted">لا يوجد</span>
+                                                            )}
+                                                        </td>
+                                                        <td><span className={`status-pill ${status.className}`}>{status.label}</span></td>
+                                                        <td>
+                                                            <div className="table-actions">
+                                                                <button type="button" className="preview-btn" onClick={() => openAdModal(index)} title="تعديل الإعلان">
+                                                                    <i className="fa-solid fa-pen"></i>
+                                                                </button>
+                                                                <button type="button" className="del-btn" onClick={() => removeAdCampaign(index)} title="حذف الإعلان">
+                                                                    <i className="fa-solid fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </section>
 
                     <section className="admin-section-card" id="pages">
@@ -742,7 +980,7 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">إدارة الصفحات، مكان ظهورها، ومعاينة محتواها.</p>
                             </div>
-                            <SectionSaveButton label="الصفحات" />
+                            <SectionSaveButton label="الصفحات" fields={['internalPages', 'customPages']} />
                         </div>
 
                         <div className="dynamic-list-container">
@@ -821,30 +1059,12 @@ export default function AdminPage() {
                         <div className="section-header section-header-with-action">
                             <div>
                                 <h3>
-                                    <i className="fa-solid fa-hashtag"></i> السوشيال ميديا والحقوق
+                                    <i className="fa-solid fa-hashtag"></i> السوشيال ميديا
                                 </h3>
-                                <p className="section-hint">حقوق الفوتر وروابط الحسابات الاجتماعية.</p>
+                                <p className="section-hint">روابط الحسابات الاجتماعية التي تظهر في الفوتر.</p>
                             </div>
-                            <SectionSaveButton label="السوشيال والحقوق" />
+                            <SectionSaveButton label="السوشيال" fields={['socialLinks']} />
                         </div>
-
-                        <div className="input-group admin-narrow-field">
-                            <label>صاحب الحقوق</label>
-                            <div className="input-with-icon">
-                                <i className="fa-regular fa-copyright"></i>
-                                <input
-                                    type="text"
-                                    value={config.copyrightName || ''}
-                                    onChange={(e) => setConfig({ ...config, copyrightName: e.target.value })}
-                                    placeholder="مثال: أدوات التاريخ"
-                                />
-                            </div>
-                            <div className="preview-text">
-                                © {new Date().getFullYear()} جميع الحقوق محفوظة لـ {config.copyrightName || 'أدوات التاريخ'}
-                            </div>
-                        </div>
-
-                        <hr className="admin-divider" />
 
                         <div className="dynamic-list-container">
                             {(config.socialLinks || []).map((social, idx) => (
@@ -893,7 +1113,7 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">روابط تظهر في الهيدر أو الفوتر وتفتح خارج الموقع.</p>
                             </div>
-                            <SectionSaveButton label="الروابط الخارجية" />
+                            <SectionSaveButton label="الروابط الخارجية" fields={['externalLinks']} />
                         </div>
 
                         <div className="dynamic-list-container">
@@ -947,7 +1167,7 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">إدارة المواعيد التي تظهر في الصفحة الرئيسية.</p>
                             </div>
-                            <SectionSaveButton label="الأحداث" />
+                            <SectionSaveButton label="الأحداث" fields={['events']} />
                         </div>
 
                         <div className="dynamic-list-container">
@@ -1038,6 +1258,145 @@ export default function AdminPage() {
                 </div>
             </div>
 
+            {isAdModalOpen && (
+                <div className="admin-modal-backdrop" onClick={closeAdModal}>
+                    <div className="admin-modal ad-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="admin-modal-header">
+                            <div>
+                                <h3>{adModalIndex === null ? 'إضافة إعلان جديد' : 'تعديل إعلان'}</h3>
+                                <p>أضف التفاصيل الأساسية ورابط ملف العميل، ثم احفظ قسم الإعلانات لتثبيت التغيير.</p>
+                            </div>
+                            <button className="modal-close-btn" onClick={closeAdModal}>
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div className="admin-modal-body">
+                            <div className="ad-modal-grid">
+                                <div className="ad-modal-form">
+                                    <div className="input-group">
+                                        <label>اسم الإعلان</label>
+                                        <input
+                                            type="text"
+                                            value={adForm.name}
+                                            onChange={(e) => updateAdForm('name', e.target.value)}
+                                            placeholder="مثال: حملة خصومات الصيف"
+                                        />
+                                    </div>
+
+                                    <div className="input-group">
+                                        <label>موضع العرض</label>
+                                        <select value={adForm.slot} onChange={(e) => updateAdForm('slot', e.target.value)}>
+                                            <option value="top">إعلان أعلى الصفحة - كود Google لاحقًا</option>
+                                            <option value="middle">إعلان مميز</option>
+                                            <option value="bottom1">إعلان أسفل الصفحة 1</option>
+                                            <option value="bottom2">إعلان أسفل الصفحة 2</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="ad-dates-grid">
+                                        <div className="input-group">
+                                            <label>بداية الإعلان</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={adForm.startAt}
+                                                onChange={(e) => updateAdForm('startAt', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="input-group">
+                                            <label>نهاية الإعلان</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={adForm.endAt}
+                                                onChange={(e) => updateAdForm('endAt', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="input-group">
+                                        <label>رابط ملف الإعلان من Google Drive للعميل</label>
+                                        <input
+                                            type="url"
+                                            dir="ltr"
+                                            value={adForm.googleDriveUrl}
+                                            onChange={(e) => updateAdForm('googleDriveUrl', e.target.value)}
+                                            placeholder="https://drive.google.com/..."
+                                        />
+                                    </div>
+
+                                    <div className="input-group">
+                                        <label>رابط الوجهة عند الضغط على الإعلان</label>
+                                        <input
+                                            type="url"
+                                            dir="ltr"
+                                            value={adForm.targetUrl}
+                                            onChange={(e) => updateAdForm('targetUrl', e.target.value)}
+                                            placeholder="https://example.com"
+                                        />
+                                    </div>
+
+                                    <div className="input-group">
+                                        <label>حالة الإعلان</label>
+                                        <select
+                                            value={adForm.status}
+                                            onChange={(e) => updateAdForm('status', e.target.value)}
+                                        >
+                                            <option value="draft">مسودة</option>
+                                            <option value="active">تفعيل حسب وقت البداية والنهاية</option>
+                                            <option value="paused">متوقف مؤقتًا</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="input-group">
+                                        <label>ملاحظات داخلية</label>
+                                        <textarea
+                                            value={adForm.notes}
+                                            onChange={(e) => updateAdForm('notes', e.target.value)}
+                                            placeholder="ملاحظات للفريق فقط..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <aside className="ad-preview-panel">
+                                    <h4>معاينة الإعلان</h4>
+                                    <div className="ad-preview-frame">
+                                        {adForm.googleDriveUrl ? (
+                                            <a href={adForm.googleDriveUrl} target="_blank" rel="noopener noreferrer">
+                                                <i className="fa-brands fa-google-drive"></i>
+                                                <span>{adForm.name || 'ملف الإعلان'}</span>
+                                            </a>
+                                        ) : (
+                                            <span>ستظهر هنا معاينة رابط Google Drive بعد إضافته.</span>
+                                        )}
+                                    </div>
+
+                                    <div className="ad-advice-box">
+                                        <strong>الحجم المفضل</strong>
+                                        <p>العرض 728px إلى 1200px، الارتفاع 90px إلى 250px حسب الموضع. استخدم صورة واضحة وخفيفة أقل من 500KB عند الإمكان.</p>
+                                        <strong>نصائح لإعلان ناجح</strong>
+                                        <ul>
+                                            <li>رسالة قصيرة وواضحة خلال أول ثانيتين.</li>
+                                            <li>زر دعوة لاتخاذ إجراء مثل “اطلب الآن”.</li>
+                                            <li>تجنب النصوص الصغيرة أو الصور المزدحمة.</li>
+                                        </ul>
+                                    </div>
+                                </aside>
+                            </div>
+                        </div>
+
+                        <div className="admin-modal-actions">
+                            <button type="button" className="secondary-action-btn" onClick={closeAdModal}>
+                                إلغاء
+                            </button>
+                            <button type="button" className="section-save-btn" onClick={saveAdCampaign}>
+                                <i className="fa-solid fa-check"></i> حفظ الإعلان في الجدول
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {selectedPage && (
                 <div className="admin-modal-backdrop" onClick={closePageModal}>
                     <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
@@ -1087,7 +1446,11 @@ export default function AdminPage() {
                                 {isPageModalEditing ? 'معاينة' : 'تعديل'}
                             </button>
 
-                            <button type="button" className="section-save-btn" onClick={() => saveSection('الصفحات')}>
+                            <button
+                                type="button"
+                                className="section-save-btn"
+                                onClick={() => saveSection('الصفحات', pickConfigFields(['internalPages', 'customPages']))}
+                            >
                                 <i className="fa-solid fa-floppy-disk"></i> حفظ الصفحات
                             </button>
                         </div>

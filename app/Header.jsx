@@ -71,9 +71,9 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                 </button>
             </div>
 
-            {config?.hasLogo && config?.logoUrl ? (
-                <div className="logo-container" style={{ textAlign: 'center', marginBottom: '15px' }}>
-                    <Link href="/">
+            <div className="logo-container" style={{ textAlign: 'center', marginBottom: '15px' }}>
+                {config?.hasLogo && config?.logoUrl && (
+                    <Link href="/" style={{ display: 'inline-flex', marginBottom: '10px' }}>
                         <Image
                             src={config.logoUrl}
                             alt={toolName}
@@ -83,9 +83,9 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                             style={{ maxHeight: '80px', width: 'auto', objectFit: 'contain' }}
                         />
                     </Link>
-                </div>
-            ) : (
-                <Link href="/" style={{ textDecoration: 'none' }}>
+                )}
+
+                <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
                     <h1
                         className="tool-title"
                         style={{
@@ -97,7 +97,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                         {toolName}
                     </h1>
                 </Link>
-            )}
+            </div>
 
             {toolSlogan && (
                 <p

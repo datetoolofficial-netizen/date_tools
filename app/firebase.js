@@ -63,6 +63,7 @@ export const defaultSiteConfig = {
         bottom1: "",
         bottom2: ""
     },
+    adCampaigns: [],
     copyrightName: "",
     copyrightText: "جميع الحقوق محفوظة",
     internalPages: [],
@@ -102,6 +103,7 @@ export async function getSiteConfig() {
             externalLinks: Array.isArray(data.externalLinks) ? data.externalLinks : [],
             internalPages: Array.isArray(data.internalPages) ? data.internalPages : [],
             socialLinks: Array.isArray(data.socialLinks) ? data.socialLinks : [],
+            adCampaigns: Array.isArray(data.adCampaigns) ? data.adCampaigns : [],
 
             adImages: {
                 ...defaultSiteConfig.adImages,
@@ -145,6 +147,7 @@ export async function saveSiteConfig(config) {
         externalLinks: Array.isArray(config.externalLinks) ? config.externalLinks : [],
         internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
+        adCampaigns: Array.isArray(config.adCampaigns) ? config.adCampaigns : [],
 
         adImages: {
             ...defaultSiteConfig.adImages,
@@ -163,6 +166,47 @@ export async function saveSiteConfig(config) {
     await setDoc(configRef, cleanConfig, { merge: true });
 
     return cleanConfig;
+}
+
+export async function saveSiteConfigSection(sectionPatch) {
+    const configRef = doc(db, "settings", "main");
+    const cleanPatch = { ...sectionPatch, hasError: false };
+
+    if ('events' in cleanPatch && !Array.isArray(cleanPatch.events)) cleanPatch.events = [];
+    if ('externalLinks' in cleanPatch && !Array.isArray(cleanPatch.externalLinks)) cleanPatch.externalLinks = [];
+    if ('internalPages' in cleanPatch && !Array.isArray(cleanPatch.internalPages)) cleanPatch.internalPages = [];
+    if ('socialLinks' in cleanPatch && !Array.isArray(cleanPatch.socialLinks)) cleanPatch.socialLinks = [];
+    if ('adCampaigns' in cleanPatch && !Array.isArray(cleanPatch.adCampaigns)) cleanPatch.adCampaigns = [];
+
+    if ('adImages' in cleanPatch) {
+        cleanPatch.adImages = {
+            ...defaultSiteConfig.adImages,
+            ...(cleanPatch.adImages || {})
+        };
+    }
+
+    if ('customPages' in cleanPatch) {
+        cleanPatch.customPages = Object.fromEntries(
+            Object.entries(cleanPatch.customPages || {}).map(([slug, page]) => [
+                slug,
+                {
+                    ...page,
+                    content: sanitizeHtml(page?.content || '')
+                }
+            ])
+        );
+    }
+
+    if ('mainSEO' in cleanPatch) {
+        cleanPatch.mainSEO = {
+            ...defaultSiteConfig.mainSEO,
+            ...(cleanPatch.mainSEO || {})
+        };
+    }
+
+    await setDoc(configRef, cleanPatch, { merge: true });
+
+    return cleanPatch;
 }
 
 /* =========================
