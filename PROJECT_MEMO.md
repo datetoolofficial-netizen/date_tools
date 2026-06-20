@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات الثابتة تعمل.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.1.
+الإصدار الحالي للتطبيق هو 0.2.2.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -2307,6 +2307,47 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 تم إنشاء VERSION_LOG.md كسجل رسمي لإصدارات المشروع.
 ```
 
+---
+
+### اختبار تصحيح الفوتر وربطه بروابط قاعدة البيانات فقط 0.2.2
+
+تم تشغيل:
+
+```powershell
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/privacy
+curl.exe -I https://www.date-tool.com/
+curl.exe -L "https://date-tool.com/?v=0.2.2"
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: 20b8701d-8941-4e32-85cb-a1d9eec0590b
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/privacy -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+تم التحقق من أن الفوتر المنشور لا يحتوي footer-brand.
+تم التحقق من ظهور رقم الإصدار 0.2.2 في الفوتر.
+عند عدم وجود روابط footer من قاعدة البيانات لا يتم حقن روابط افتراضية ثابتة من الكود.
+```
+
+التغييرات التي تمت:
+
+```txt
+تم حذف روابط الفوتر الافتراضية الثابتة من app/Footer.jsx.
+أصبحت روابط الفوتر تأتي فقط من config.internalPages و config.externalLinks عند اختيار location footer أو both.
+تم حذف عرض اسم الأداة من الفوتر.
+تم تصغير خط الفوتر وتقليل المسافات في app/globals.css.
+تم رفع الإصدار إلى 0.2.2 وتحديث VERSION_LOG.md.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2409,6 +2450,10 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم إنشاء VERSION_LOG.md وتوثيق الإصدار 0.2.1
 ✅ npm run lint و npm run build ينجحان بعد تحديث الفوتر ورقم الإصدار
 ✅ تم نشر تحديث الفوتر ورقم الإصدار على Cloudflare Version ID: c5e8b8a5-f047-4b04-aec3-af842afe9c47
+✅ تم تصحيح الفوتر في الإصدار v0.2.2 ليعرض روابط قاعدة البيانات فقط بدون اسم الأداة وبدون روابط افتراضية ثابتة
+✅ تم تصغير خط الفوتر وتقليل المسافات
+✅ npm run lint و npm run build ينجحان بعد تصحيح الفوتر
+✅ تم نشر تصحيح الفوتر على Cloudflare Version ID: 20b8701d-8941-4e32-85cb-a1d9eec0590b
 ```
 
 ---
