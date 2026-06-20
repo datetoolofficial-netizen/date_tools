@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات الثابتة تعمل.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.2.
+الإصدار الحالي للتطبيق هو 0.2.3.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -2348,6 +2348,43 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 تم رفع الإصدار إلى 0.2.2 وتحديث VERSION_LOG.md.
 ```
 
+---
+
+### اختبار توحيد أزرار الهيدر واستبدال نص اللغة بأيقونة 0.2.3
+
+تم تشغيل:
+
+```powershell
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://www.date-tool.com/
+curl.exe -L "https://date-tool.com/?v=0.2.3"
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: aa6dab5d-f402-42fe-95a2-69d883c3a166
+https://date-tool.com/ -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+تم التحقق من أن زر اللغة يستخدم fa-language ولا يعرض نص English/عربي داخل الزر.
+تم التحقق من أن زر اللغة وزر الوضع الليلي يستخدمان نفس class: control-btn.
+```
+
+التغييرات التي تمت:
+
+```txt
+تم تحديث app/Header.jsx لإزالة inline styles المختلفة من زري التحكم.
+تم استبدال نص زر اللغة بأيقونة الترجمة.
+تم تحسين aria-label و title لزر اللغة وزر الوضع.
+تم رفع الإصدار إلى 0.2.3 وتحديث VERSION_LOG.md.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2454,6 +2491,8 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم تصغير خط الفوتر وتقليل المسافات
 ✅ npm run lint و npm run build ينجحان بعد تصحيح الفوتر
 ✅ تم نشر تصحيح الفوتر على Cloudflare Version ID: 20b8701d-8941-4e32-85cb-a1d9eec0590b
+✅ تم توحيد نمط زر اللغة وزر الوضع الليلي في الهيدر واستبدال نص اللغة بأيقونة ترجمة
+✅ تم نشر تحديث الهيدر على Cloudflare Version ID: aa6dab5d-f402-42fe-95a2-69d883c3a166
 ```
 
 ---

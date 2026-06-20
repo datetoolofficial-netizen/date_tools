@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -9,7 +8,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
     if (config) {
         if (Array.isArray(config.internalPages)) {
-            config.internalPages.forEach(page => {
+            config.internalPages.forEach((page) => {
                 if (page.location === 'header' || page.location === 'both') {
                     navLinks.push({
                         title: page.title,
@@ -21,7 +20,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
         }
 
         if (Array.isArray(config.externalLinks)) {
-            config.externalLinks.forEach(link => {
+            config.externalLinks.forEach((link) => {
                 if (link.location === 'header' || link.location === 'both') {
                     navLinks.push({
                         title: link.title,
@@ -43,31 +42,18 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     onClick={toggleTheme}
                     className="control-btn"
                     title={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        fontSize: '20px',
-                        cursor: 'pointer',
-                        color: 'var(--text-main)'
-                    }}
+                    aria-label={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
                 >
-                    <i className={isDarkMode ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
+                    <i className={isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
                 </button>
 
                 <button
                     onClick={toggleLang}
                     className="control-btn lang-btn"
-                    style={{
-                        background: 'var(--primary)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '5px 15px',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
-                    }}
+                    title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                    aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
                 >
-                    {lang === 'ar' ? 'English' : 'عربي'}
+                    <i className="fa-solid fa-language"></i>
                 </button>
             </div>
 
