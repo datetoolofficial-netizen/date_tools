@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.10.
+الإصدار الحالي للتطبيق هو 0.2.11.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -94,6 +94,7 @@ https://www.date-tool.com
 30. حصر تحميل سكربت Google AdSense ووحدة الإعلان داخل موضع إعلان أعلى الصفحة `adBanner1` فقط، وعدم تحميل AdSense من مكون التكاملات الخارجية العام.
 31. تحويل أدوات الصفحة الرئيسية من عرض هجري/ميلادي مكرر في عمودين إلى نموذج واحد مع زر اختيار `ميلادي / هجري` داخل نفس مكان الأداة.
 32. إصلاح تداخل أزرار اللغة والوضع مع اسم الأداة في الهيدر على الشاشات الصغيرة مع الحفاظ على الهوية البصرية.
+33. إزالة خانات روابط ورفع صور الإعلانات من قسم إدارة الإعلانات في لوحة الإدارة والاكتفاء بزر إضافة إعلان فوق الجدول.
 
 ---
 
@@ -2705,6 +2706,35 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 تم نشر الإصدار 0.2.10 على Cloudflare Version ID: a6e85097-e51d-41c5-a02c-a0b7b2b4fb76.
 ```
 
+### اختبار إزالة خانات صور الإعلانات من لوحة الإدارة 0.2.11
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://date-tool.com/
+```
+
+والنتيجة:
+
+```txt
+تم حذف خانات روابط ورفع صور الإعلانات من قسم إدارة الإعلانات.
+تم إبقاء إعداد Google للإعلان العلوي وجدول الإعلانات وزر إضافة إعلان.
+تم تعديل زر حفظ قسم الإعلانات ليحفظ googleAdSlots و adCampaigns فقط.
+تم تحديث عنوان القسم ونصه حتى لا يشير إلى رفع صور الإعلانات.
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات، مع تحذيرات LF/CRLF المعتادة في Windows.
+npm run build -> نجح.
+npm run deploy -> نجح.
+https://date-tool.com/admin -> 200 OK.
+https://date-tool.com/ -> 200 OK.
+تم نشر الإصدار 0.2.11 على Cloudflare Version ID: e9fb6e72-98b0-487a-83d5-cf2d9786e073.
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -2816,6 +2846,7 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم نشر الإصدار 0.2.8 وحصر تحميل Google AdSense داخل موضع `adBanner1` فقط على Cloudflare Version ID: 4b06e953-925a-409c-b442-2b8c0d6c6e1c
 ✅ تم نشر الإصدار 0.2.9 وتحويل أدوات العمر والتحويل والمدة إلى نموذج واحد مع زر اختيار `ميلادي / هجري` على Cloudflare Version ID: 8f89fb12-6968-429e-8aa1-397da78e61ef
 ✅ تم نشر الإصدار 0.2.10 وإصلاح تداخل أزرار الهيدر مع اسم الأداة على الشاشات الصغيرة على Cloudflare Version ID: a6e85097-e51d-41c5-a02c-a0b7b2b4fb76
+✅ تم نشر الإصدار 0.2.11 وإزالة خانات صور الإعلانات من لوحة الإدارة والاكتفاء بزر إضافة إعلان فوق الجدول على Cloudflare Version ID: e9fb6e72-98b0-487a-83d5-cf2d9786e073
 ```
 
 ---

@@ -300,16 +300,6 @@ export default function AdminPage() {
         });
     };
 
-    const handleAdImageChange = (slot, value) => {
-        setConfig({
-            ...config,
-            adImages: {
-                ...(config.adImages || {}),
-                [slot]: value
-            }
-        });
-    };
-
     const handleGoogleAdSlotChange = (slot, field, value) => {
         setConfig({
             ...config,
@@ -883,44 +873,11 @@ export default function AdminPage() {
                         <div className="section-header section-header-with-action">
                             <div>
                                 <h3>
-                                    <i className="fa-regular fa-images"></i> صور الإعلانات
+                                    <i className="fa-regular fa-images"></i> إدارة الإعلانات
                                 </h3>
-                                <p className="section-hint">روابط أو رفع صور للمواضع الحالية. إدارة طلبات الإعلانات ستضاف لاحقًا كنظام منفصل.</p>
+                                <p className="section-hint">إدارة إعلان Google العلوي وجدول الإعلانات من مكان واحد. إضافة الإعلانات تتم من زر إضافة إعلان فوق الجدول فقط.</p>
                             </div>
-                            <SectionSaveButton label="الإعلانات" fields={['adImages', 'googleAdSlots', 'adCampaigns']} />
-                        </div>
-
-                        <div className="form-grid">
-                            {[
-                                ['top', 'إعلان أعلى الصفحة (Google داخل الإطار لاحقًا)'],
-                                ['middle', 'إعلان مميز'],
-                                ['bottom1', 'إعلان أسفل الصفحة 1'],
-                                ['bottom2', 'إعلان أسفل الصفحة 2'],
-                            ].map(([slot, label]) => (
-                                <div className="input-group full-width" key={slot}>
-                                    <label>{label}</label>
-                                    <div className="input-with-icon">
-                                        <i className="fa-regular fa-image"></i>
-                                        <input
-                                            type="text"
-                                            value={config.adImages?.[slot] || ''}
-                                            onChange={(e) => handleAdImageChange(slot, e.target.value)}
-                                            placeholder="مثال: /api/media/ads/..."
-                                            dir="ltr"
-                                        />
-                                    </div>
-                                    <input
-                                        type="file"
-                                        accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
-                                        onChange={(e) => handleMediaUpload(
-                                            e,
-                                            'ads',
-                                            (url) => handleAdImageChange(slot, url),
-                                            label
-                                        )}
-                                    />
-                                </div>
-                            ))}
+                            <SectionSaveButton label="الإعلانات" fields={['googleAdSlots', 'adCampaigns']} />
                         </div>
 
                         <div className="ads-management-panel google-ad-slot-panel">
