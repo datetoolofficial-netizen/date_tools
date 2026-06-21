@@ -2403,6 +2403,9 @@ curl.exe -I https://date-tool.com/
 curl.exe -I https://date-tool.com/admin
 curl.exe -I https://date-tool.com/support
 curl.exe -I https://www.date-tool.com/
+git add PROJECT_MEMO.md VERSION_LOG.md PAGE_HTML_TEMPLATES.md app/[slug]/PageClient.jsx app/admin/AdminPage.css app/admin/page.jsx app/contact/page.jsx app/firebase.js app/privacy/page.jsx app/terms/page.jsx app/version.js package.json package-lock.json
+git commit -m "move info pages to database"
+git push origin master
 ```
 
 والنتيجة:
@@ -2419,6 +2422,8 @@ https://date-tool.com/ -> 200 OK
 https://date-tool.com/admin -> 200 OK
 https://date-tool.com/support -> 200 OK
 https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+git commit -> نجح، commit: f246c04
+git push origin master -> نجح، تم رفع master إلى GitHub.
 ```
 
 التغييرات التي تمت:
@@ -2550,6 +2555,7 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ npm run lint و git diff --check و npm run build ينجحون بعد تحويل الصفحات التعريفية إلى قاعدة البيانات
 ✅ تم حفظ تعديل app/admin/AdminPage.css الذي أزال min-height من حقول لوحة الإدارة
 ✅ تم نشر الإصدار 0.2.4 على Cloudflare Version ID: 3929e38a-ea6d-49fb-bd6d-5913ffd6e93a
+✅ تم رفع التغييرات إلى GitHub على commit: f246c04
 ```
 
 ---
