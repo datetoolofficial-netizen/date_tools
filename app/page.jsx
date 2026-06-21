@@ -21,6 +21,9 @@ export default function Home() {
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
     const [configData, setConfigData] = useState(null);
+    const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
+    const [conversionCalendarMode, setConversionCalendarMode] = useState('gregorian');
+    const [durationCalendarMode, setDurationCalendarMode] = useState('gregorian');
 
     const [gAgeInput, setGAgeInput] = useState({ d: '', m: '', y: '' });
     const [hAgeInput, setHAgeInput] = useState({ d: '', m: '', y: '' });
@@ -136,6 +139,11 @@ export default function Home() {
         setResGregConv(null); setResDiffGreg(null); setResDiffHijri(null);
         setEnteredDateInfo(null);
     }
+
+    const setToolCalendarMode = (setter, mode) => {
+        setter(mode);
+        clearResults();
+    };
 
     const showNotification = (messageKey, type = 'error') => {
         setAlertConfig({ show: true, msg: i18n[lang][messageKey] || messageKey, type });
@@ -462,6 +470,8 @@ export default function Home() {
                 <AgeCalculatorSection
                     labels={i18n[lang]}
                     lang={lang}
+                    calendarMode={ageCalendarMode}
+                    onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
                     options={homeOptions}
                     values={homeValues}
                     setters={homeSetters}
@@ -480,6 +490,8 @@ export default function Home() {
                 <DateConversionSection
                     labels={i18n[lang]}
                     lang={lang}
+                    calendarMode={conversionCalendarMode}
+                    onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
                     options={homeOptions}
                     values={homeValues}
                     setters={homeSetters}
@@ -492,6 +504,8 @@ export default function Home() {
                 <DurationSection
                     labels={i18n[lang]}
                     lang={lang}
+                    calendarMode={durationCalendarMode}
+                    onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
                     options={homeOptions}
                     values={homeValues}
                     setters={homeSetters}

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.8.
+الإصدار الحالي للتطبيق هو 0.2.9.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -92,6 +92,7 @@ https://www.date-tool.com
 28. إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة لتفعيل Google tag وGTM وAdSense وGoogle site verification من معرفات منظمة بدل كود خام.
 29. إضافة إعداد منظم لإعلان Google AdSense العلوي داخل قسم الإعلانات، بحيث يحفظ `Publisher / Client ID` و `Ad Slot` ويعرض الإعلان تحت خانة اليوم بدون لصق JavaScript خام.
 30. حصر تحميل سكربت Google AdSense ووحدة الإعلان داخل موضع إعلان أعلى الصفحة `adBanner1` فقط، وعدم تحميل AdSense من مكون التكاملات الخارجية العام.
+31. تحويل أدوات الصفحة الرئيسية من عرض هجري/ميلادي مكرر في عمودين إلى نموذج واحد مع زر اختيار `ميلادي / هجري` داخل نفس مكان الأداة.
 
 ---
 
@@ -2635,6 +2636,45 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 
 ---
 
+### اختبار تبسيط أدوات التاريخ بمفتاح ميلادي/هجري 0.2.9
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: 8f89fb12-6968-429e-8aa1-397da78e61ef
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تمت إضافة حالة اختيار مستقلة لكل أداة: حساب العمر، تحويل التاريخ، حساب المدة.
+تم استبدال عرض العمودين المتكرر بمكون واحد لكل أداة يعرض نموذج ميلادي أو هجري حسب الاختيار.
+تمت إضافة زر اختيار أنيق `ميلادي / هجري` مطابق لألوان الموقع ويدعم العربية والإنجليزية.
+يتم مسح النتائج عند تبديل نوع التقويم حتى لا تبقى نتيجة قديمة من الوضع السابق.
+تم رفع الإصدار إلى 0.2.9 وتحديث VERSION_LOG.md.
+تم نشر الإصدار 0.2.9 على Cloudflare Version ID: 8f89fb12-6968-429e-8aa1-397da78e61ef.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2742,6 +2782,7 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تمت إضافة إعداد Google AdSense المنظم للإعلان العلوي داخل قسم الإعلانات
 ✅ تم نشر الإصدار 0.2.7 على Cloudflare Version ID: 0c1583f0-90fd-4882-960a-1cdb0ff2556d
 ✅ تم نشر الإصدار 0.2.8 وحصر تحميل Google AdSense داخل موضع `adBanner1` فقط على Cloudflare Version ID: 4b06e953-925a-409c-b442-2b8c0d6c6e1c
+✅ تم نشر الإصدار 0.2.9 وتحويل أدوات العمر والتحويل والمدة إلى نموذج واحد مع زر اختيار `ميلادي / هجري` على Cloudflare Version ID: 8f89fb12-6968-429e-8aa1-397da78e61ef
 ```
 
 ---

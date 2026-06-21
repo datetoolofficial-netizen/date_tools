@@ -129,9 +129,35 @@ function ToolResult({ value, enteredDateInfo, lang, onShareResult }) {
     );
 }
 
+function CalendarModeSwitch({ labels, value, onChange }) {
+    const options = [
+        { value: 'gregorian', label: labels.modeGregorian },
+        { value: 'hijri', label: labels.modeHijri },
+    ];
+
+    return (
+        <div className="calendar-mode-switch" role="tablist" aria-label={labels.calendarMode}>
+            {options.map((option) => (
+                <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={value === option.value}
+                    className={`calendar-mode-btn ${value === option.value ? 'active' : ''}`}
+                    onClick={() => onChange(option.value)}
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 export function AgeCalculatorSection({
     labels,
     lang,
+    calendarMode,
+    onCalendarModeChange,
     options,
     values,
     setters,
@@ -140,12 +166,16 @@ export function AgeCalculatorSection({
     onShareResult,
     actions,
 }) {
+    const isGregorian = calendarMode === 'gregorian';
+    const result = isGregorian ? results.resAgeGreg : results.resAgeHijri;
+
     return (
         <div className="card">
             <h2>{labels.hCalcAge}</h2>
-            <div className="split-section">
-                <div>
-                    <h3>{labels.hGreg}</h3>
+            <div className="tool-mode-card">
+                <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
+                {isGregorian ? (
+                    <>
                     <label>{labels.lblBirth}</label>
                     <DateDropdowns
                         values={values.gAgeInput}
@@ -158,10 +188,9 @@ export function AgeCalculatorSection({
                     <button className="action-btn" onClick={actions.calculateAgeGreg}>
                         <i className="fa-solid fa-calculator"></i> <span>{labels.btnCalc}</span>
                     </button>
-                    <ToolResult value={results.resAgeGreg} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
-                <div>
-                    <h3>{labels.hHijri}</h3>
+                    </>
+                ) : (
+                    <>
                     <label>{labels.lblBirth}</label>
                     <DateDropdowns
                         values={values.hAgeInput}
@@ -174,8 +203,9 @@ export function AgeCalculatorSection({
                     <button className="action-btn" onClick={actions.calculateAgeHijri}>
                         <i className="fa-solid fa-calculator"></i> <span>{labels.btnCalc}</span>
                     </button>
-                    <ToolResult value={results.resAgeHijri} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
+                    </>
+                )}
+                <ToolResult value={result} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
             </div>
         </div>
     );
@@ -184,6 +214,8 @@ export function AgeCalculatorSection({
 export function DateConversionSection({
     labels,
     lang,
+    calendarMode,
+    onCalendarModeChange,
     options,
     values,
     setters,
@@ -192,28 +224,32 @@ export function DateConversionSection({
     onShareResult,
     actions,
 }) {
+    const isGregorian = calendarMode === 'gregorian';
+    const result = isGregorian ? results.resHijriConv : results.resGregConv;
+
     return (
         <div className="card">
             <h2>{labels.hConv}</h2>
-            <div className="split-section">
-                <div>
-                    <h3>{labels.hG2H}</h3>
+            <div className="tool-mode-card">
+                <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
+                {isGregorian ? (
+                    <>
                     <label>{labels.lblGreg}</label>
                     <DateDropdowns values={values.gConvInput} onChange={setters.setGConvInput} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} />
                     <button className="action-btn" onClick={actions.convertGregToHijri}>
                         <i className="fa-solid fa-rotate"></i> <span>{labels.btnG2H}</span>
                     </button>
-                    <ToolResult value={results.resHijriConv} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
-                <div>
-                    <h3>{labels.hH2G}</h3>
+                    </>
+                ) : (
+                    <>
                     <label>{labels.lblHijri}</label>
                     <DateDropdowns values={values.hConvInput} onChange={setters.setHConvInput} dayMax={30} months={options.hijriMonths} years={options.hijriAgeYears} labels={labels} />
                     <button className="action-btn" onClick={actions.convertHijriToGreg}>
                         <i className="fa-solid fa-rotate"></i> <span>{labels.btnH2G}</span>
                     </button>
-                    <ToolResult value={results.resGregConv} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
+                    </>
+                )}
+                <ToolResult value={result} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
             </div>
         </div>
     );
@@ -222,6 +258,8 @@ export function DateConversionSection({
 export function DurationSection({
     labels,
     lang,
+    calendarMode,
+    onCalendarModeChange,
     options,
     values,
     setters,
@@ -230,12 +268,16 @@ export function DurationSection({
     onShareResult,
     actions,
 }) {
+    const isGregorian = calendarMode === 'gregorian';
+    const result = isGregorian ? results.resDiffGreg : results.resDiffHijri;
+
     return (
         <div className="card">
             <h2>{labels.hDiff}</h2>
-            <div className="split-section">
-                <div>
-                    <h3>{labels.hDiffGreg}</h3>
+            <div className="tool-mode-card">
+                <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
+                {isGregorian ? (
+                    <>
                     <label>{labels.lblDate1}</label>
                     <DateDropdowns values={values.gDiffInput1} onChange={setters.setGDiffInput1} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} />
                     <label>{labels.lblDate2}</label>
@@ -243,10 +285,9 @@ export function DurationSection({
                     <button className="action-btn" onClick={actions.calcDiffGreg}>
                         <i className="fa-solid fa-clock-rotate-left"></i> <span>{labels.btnDiff}</span>
                     </button>
-                    <ToolResult value={results.resDiffGreg} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
-                <div>
-                    <h3>{labels.hDiffHijri}</h3>
+                    </>
+                ) : (
+                    <>
                     <label>{labels.lblDate1}</label>
                     <DateDropdowns values={values.hDiffInput1} onChange={setters.setHDiffInput1} dayMax={30} months={options.hijriMonths} years={options.hijriAgeYears} labels={labels} />
                     <label>{labels.lblDate2}</label>
@@ -254,8 +295,9 @@ export function DurationSection({
                     <button className="action-btn" onClick={actions.calcDiffHijri}>
                         <i className="fa-solid fa-clock-rotate-left"></i> <span>{labels.btnDiff}</span>
                     </button>
-                    <ToolResult value={results.resDiffHijri} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
-                </div>
+                    </>
+                )}
+                <ToolResult value={result} enteredDateInfo={enteredDateInfo} lang={lang} onShareResult={onShareResult} />
             </div>
         </div>
     );

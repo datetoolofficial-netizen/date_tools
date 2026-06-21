@@ -1,6 +1,6 @@
 export const i18n = {
     ar: {
-        pageTitle: "أدوات التاريخ الشاملة", hCalcAge: "احسب عمرك بدقة", hGreg: "بالتاريخ الميلادي", hHijri: "بالتاريخ الهجري",
+        pageTitle: "أدوات التاريخ الشاملة", hCalcAge: "احسب عمرك بدقة", hGreg: "بالتاريخ الميلادي", hHijri: "بالتاريخ الهجري", calendarMode: "اختيار نوع التاريخ", modeGregorian: "ميلادي", modeHijri: "هجري",
         lblBirth: "أدخل تاريخ ميلادك:", btnCalc: "احسب العمر", hConv: "تحويل التاريخ", hG2H: "ميلادي إلى هجري", hH2G: "هجري إلى ميلادي",
         lblGreg: "التاريخ الميلادي:", lblHijri: "التاريخ الهجري:", btnG2H: "تحويل لهجري", btnH2G: "تحويل لميلادي",
         hDiff: "حساب المدة بين تاريخين", hDiffGreg: "بالميلادي", hDiffHijri: "بالهجري", lblDate1: "التاريخ الأول:", lblDate2: "التاريخ الثاني:",
@@ -11,7 +11,7 @@ export const i18n = {
         y1: "سنة", y2: "سنتين", y3: "سنوات", y4: "سنة", m1: "شهر", m2: "شهرين", m3: "أشهر", m4: "شهر", d1: "يوم", d2: "يومين", d3: "أيام", d4: "يوم", and: " و "
     },
     en: {
-        pageTitle: "Comprehensive Date Tools", hCalcAge: "Calculate Your Age", hGreg: "Gregorian Date", hHijri: "Hijri Date",
+        pageTitle: "Comprehensive Date Tools", hCalcAge: "Calculate Your Age", hGreg: "Gregorian Date", hHijri: "Hijri Date", calendarMode: "Choose calendar type", modeGregorian: "Gregorian", modeHijri: "Hijri",
         lblBirth: "Enter your birth date:", btnCalc: "Calculate Age", hConv: "Date Conversion", hG2H: "Gregorian to Hijri", hH2G: "Hijri to Gregorian",
         lblGreg: "Gregorian Date:", lblHijri: "Hijri Date:", btnG2H: "Convert to Hijri", btnH2G: "Convert to Gregorian",
         hDiff: "Duration Between Dates", hDiffGreg: "In Gregorian", hDiffHijri: "In Hijri", lblDate1: "First Date:", lblDate2: "Second Date:",
