@@ -286,8 +286,17 @@ export function AdImage({ src, altText }) {
 function GoogleAdsenseUnit({ ad, scriptId }) {
     if (!ad) return null;
 
+    const encodedClient = encodeURIComponent(ad.client);
+
     return (
         <>
+            <Script
+                id={`${scriptId}-loader`}
+                strategy="afterInteractive"
+                async
+                crossOrigin="anonymous"
+                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodedClient}`}
+            />
             <ins
                 className="adsbygoogle"
                 style={{ display: 'block' }}

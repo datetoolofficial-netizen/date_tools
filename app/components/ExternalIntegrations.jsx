@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 const GOOGLE_TAG_PATTERN = /^(G|AW|DC)-[A-Z0-9-]+$/i;
 const GOOGLE_TAG_MANAGER_PATTERN = /^GTM-[A-Z0-9-]+$/i;
-const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
 const GOOGLE_VERIFICATION_PATTERN = /^[A-Za-z0-9_-]{10,120}$/;
 const INTEGRATION_ATTRIBUTE = 'data-date-tools-integration';
 
@@ -74,17 +73,6 @@ function appendGoogleTagManager(containerId) {
     });
 }
 
-function appendAdsense(clientId) {
-    if (!ADSENSE_CLIENT_PATTERN.test(clientId)) return;
-
-    const encodedClientId = encodeURIComponent(clientId);
-    appendHeadScript({
-        src: `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodedClientId}`,
-        async: true,
-        crossOrigin: 'anonymous',
-    });
-}
-
 export default function ExternalIntegrations() {
     useEffect(() => {
         let isMounted = true;
@@ -94,8 +82,6 @@ export default function ExternalIntegrations() {
                 const { getSiteConfig } = await import('../firebase');
                 const siteConfig = await getSiteConfig();
                 const integrations = siteConfig?.externalIntegrations || {};
-                const topAdClient = siteConfig?.googleAdSlots?.top?.client || '';
-                const adsenseClient = clean(integrations.googleAdsenseClient || topAdClient).toLowerCase();
 
                 if (!isMounted) return;
 
@@ -103,7 +89,6 @@ export default function ExternalIntegrations() {
                 appendGoogleSiteVerification(clean(integrations.googleSiteVerification));
                 appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
                 appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
-                appendAdsense(adsenseClient);
             } catch (error) {
                 console.warn('External integrations were skipped:', error);
             }

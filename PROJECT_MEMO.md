@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.7.
+الإصدار الحالي للتطبيق هو 0.2.8.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -91,6 +91,7 @@ https://www.date-tool.com
 27. إعادة قالب عرض صفحات slug الديناميكية إلى نفس هيكل الصفحات القديمة وحذف ملف قوالب HTML من المشروع.
 28. إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة لتفعيل Google tag وGTM وAdSense وGoogle site verification من معرفات منظمة بدل كود خام.
 29. إضافة إعداد منظم لإعلان Google AdSense العلوي داخل قسم الإعلانات، بحيث يحفظ `Publisher / Client ID` و `Ad Slot` ويعرض الإعلان تحت خانة اليوم بدون لصق JavaScript خام.
+30. حصر تحميل سكربت Google AdSense ووحدة الإعلان داخل موضع إعلان أعلى الصفحة `adBanner1` فقط، وعدم تحميل AdSense من مكون التكاملات الخارجية العام.
 
 ---
 
@@ -2592,6 +2593,48 @@ full-width responsive = مفعل
 
 ---
 
+### اختبار حصر AdSense في البانر العلوي 0.2.8
+
+تم تشغيل:
+
+```powershell
+rg -n "adsbygoogle|pagead2.googlesyndication.com|googleAdsenseClient|googleAdSlots" app
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+```
+
+والنتيجة:
+
+```txt
+تم التأكد أن وحدة `adsbygoogle` وسكربت `pagead2.googlesyndication.com` موجودان داخل app/components/home/HomeSections.jsx فقط.
+مكون ExternalIntegrations لم يعد يحمل سكربت AdSense عامًّا.
+Google Analytics وGTM وGoogle site verification بقوا داخل ExternalIntegrations.
+الإعلان الخاص بـ Google يظهر برمجيًّا فقط في TopAdSlot داخل موضع إعلان أعلى الصفحة `adBanner1`، ولا يظهر في الإعلان المميز أو إعلانات الأسفل.
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> نجح بعد إعادة التشغيل مع XDG_CONFIG_HOME داخل مساحة العمل لأن المحاولة الأولى فشلت بسبب صلاحية كتابة سجلات Wrangler في AppData.
+npm run deploy -> نجح.
+Current Version ID: 4b06e953-925a-409c-b442-2b8c0d6c6e1c
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تم حصر تحميل سكربت Google AdSense داخل GoogleAdsenseUnit في TopAdSlot فقط.
+تم حذف تحميل AdSense العام من app/components/ExternalIntegrations.jsx حتى لا تتدخل Auto Ads خارج البانر العلوي.
+تم رفع الإصدار إلى 0.2.8 وتحديث VERSION_LOG.md.
+تم نشر الإصدار 0.2.8 على Cloudflare Version ID: 4b06e953-925a-409c-b442-2b8c0d6c6e1c.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2698,6 +2741,7 @@ full-width responsive = مفعل
 ✅ تم نشر الإصدار 0.2.6 على Cloudflare Version ID: 31692154-654a-45cb-93a4-7992a834370f
 ✅ تمت إضافة إعداد Google AdSense المنظم للإعلان العلوي داخل قسم الإعلانات
 ✅ تم نشر الإصدار 0.2.7 على Cloudflare Version ID: 0c1583f0-90fd-4882-960a-1cdb0ff2556d
+✅ تم نشر الإصدار 0.2.8 وحصر تحميل Google AdSense داخل موضع `adBanner1` فقط على Cloudflare Version ID: 4b06e953-925a-409c-b442-2b8c0d6c6e1c
 ```
 
 ---
