@@ -33,6 +33,22 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
+const defaultExternalIntegrations = {
+    googleTagId: "",
+    googleTagManagerId: "",
+    googleAdsenseClient: "",
+    googleSiteVerification: ""
+};
+
+function normalizeExternalIntegrations(value = {}) {
+    return {
+        googleTagId: String(value.googleTagId || "").trim(),
+        googleTagManagerId: String(value.googleTagManagerId || "").trim(),
+        googleAdsenseClient: String(value.googleAdsenseClient || "").trim(),
+        googleSiteVerification: String(value.googleSiteVerification || "").trim()
+    };
+}
+
 // App Check يعمل فقط في المتصفح
 if (typeof window !== "undefined") {
     try {
@@ -65,6 +81,7 @@ export const defaultSiteConfig = {
         bottom2: ""
     },
     adCampaigns: [],
+    externalIntegrations: defaultExternalIntegrations,
     copyrightName: "",
     copyrightText: "جميع الحقوق محفوظة",
     internalPages: [],
@@ -111,6 +128,11 @@ export async function getSiteConfig() {
                 ...(data.adImages || {})
             },
 
+            externalIntegrations: {
+                ...defaultExternalIntegrations,
+                ...normalizeExternalIntegrations(data.externalIntegrations || {})
+            },
+
             pages: data.pages || {},
             customPages: data.customPages || {},
 
@@ -155,6 +177,11 @@ export async function saveSiteConfig(config) {
             ...(config.adImages || {})
         },
 
+        externalIntegrations: {
+            ...defaultExternalIntegrations,
+            ...normalizeExternalIntegrations(config.externalIntegrations || {})
+        },
+
         pages: config.pages || {},
         customPages,
 
@@ -183,6 +210,13 @@ export async function saveSiteConfigSection(sectionPatch) {
         cleanPatch.adImages = {
             ...defaultSiteConfig.adImages,
             ...(cleanPatch.adImages || {})
+        };
+    }
+
+    if ('externalIntegrations' in cleanPatch) {
+        cleanPatch.externalIntegrations = {
+            ...defaultExternalIntegrations,
+            ...normalizeExternalIntegrations(cleanPatch.externalIntegrations || {})
         };
     }
 

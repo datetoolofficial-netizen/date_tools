@@ -986,6 +986,106 @@ export default function AdminPage() {
                         </div>
                     </section>
 
+                    <section className="admin-section-card" id="integrations">
+                        <div className="section-header section-header-with-action">
+                            <div>
+                                <h3>
+                                    <i className="fa-solid fa-code"></i> التكاملات الخارجية الآمنة
+                                </h3>
+                                <p className="section-hint">
+                                    أضف معرفات Google فقط، وسيقوم الموقع بتوليد الأكواد بشكل آمن بدل لصق سكربتات خام.
+                                </p>
+                            </div>
+                            <SectionSaveButton label="التكاملات الخارجية" fields={['externalIntegrations']} />
+                        </div>
+
+                        <div className="form-grid">
+                            <div className="input-group">
+                                <label>Google Analytics / Google tag ID</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-brands fa-google"></i>
+                                    <input
+                                        type="text"
+                                        value={config.externalIntegrations?.googleTagId || ''}
+                                        onChange={(e) => setConfig({
+                                            ...config,
+                                            externalIntegrations: {
+                                                ...(config.externalIntegrations || {}),
+                                                googleTagId: e.target.value,
+                                            },
+                                        })}
+                                        placeholder="G-XXXXXXXXXX أو AW-XXXXXXXXXX"
+                                        dir="ltr"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label>Google Tag Manager ID</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-solid fa-tags"></i>
+                                    <input
+                                        type="text"
+                                        value={config.externalIntegrations?.googleTagManagerId || ''}
+                                        onChange={(e) => setConfig({
+                                            ...config,
+                                            externalIntegrations: {
+                                                ...(config.externalIntegrations || {}),
+                                                googleTagManagerId: e.target.value,
+                                            },
+                                        })}
+                                        placeholder="GTM-XXXXXXX"
+                                        dir="ltr"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label>Google AdSense publisher ID</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-solid fa-rectangle-ad"></i>
+                                    <input
+                                        type="text"
+                                        value={config.externalIntegrations?.googleAdsenseClient || ''}
+                                        onChange={(e) => setConfig({
+                                            ...config,
+                                            externalIntegrations: {
+                                                ...(config.externalIntegrations || {}),
+                                                googleAdsenseClient: e.target.value,
+                                            },
+                                        })}
+                                        placeholder="ca-pub-0000000000000000"
+                                        dir="ltr"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label>Google site verification</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-solid fa-shield-halved"></i>
+                                    <input
+                                        type="text"
+                                        value={config.externalIntegrations?.googleSiteVerification || ''}
+                                        onChange={(e) => setConfig({
+                                            ...config,
+                                            externalIntegrations: {
+                                                ...(config.externalIntegrations || {}),
+                                                googleSiteVerification: e.target.value,
+                                            },
+                                        })}
+                                        placeholder="رمز التحقق من Search Console"
+                                        dir="ltr"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="section-hint">
+                            لأسباب أمنية لا يتم قبول JavaScript خام هنا. إذا احتجت مزودًا آخر لاحقًا نضيفه كحقل منظم ومتحقق منه.
+                        </p>
+                    </section>
+
                     <section className="admin-section-card" id="pages">
                         <div className="section-header section-header-with-action">
                             <div>

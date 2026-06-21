@@ -1,4 +1,5 @@
 import { Cairo } from 'next/font/google';
+import ExternalIntegrations from './components/ExternalIntegrations';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
@@ -44,6 +45,7 @@ export default function RootLayout({ children }) {
                 />
             </head>
             <body className={cairo.className}>
+                <ExternalIntegrations />
                 {children}
             </body>
         </html>

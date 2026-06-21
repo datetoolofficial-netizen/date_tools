@@ -1,5 +1,11 @@
 # سجل إصدارات date_tools
 
+## 0.2.6 - 2026-06-21
+
+- إضافة قسم "التكاملات الخارجية الآمنة" في لوحة الإدارة.
+- دعم Google tag / Analytics و Google Tag Manager و Google AdSense و Google site verification من معرفات منظمة بدل لصق JavaScript خام.
+- إضافة مكون عميل يحقن سكربتات Google المعروفة بعد جلب إعدادات الموقع من Firestore.
+
 ## 0.2.5 - 2026-06-21
 
 - تعديل قالب صفحات slug الديناميكية ليستخدم نفس هيكل وشكل الصفحات السابقة: `container` و `header` و `card` و زر الرجوع.

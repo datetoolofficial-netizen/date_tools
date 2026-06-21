@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.5.
+الإصدار الحالي للتطبيق هو 0.2.6.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -89,6 +89,7 @@ https://www.date-tool.com
 25. تحديث فوتر الموقع ليتبع ستايل الفوتر القديم مع روابط المشروع الحالية وإضافة رقم الإصدار وسجل النسخ.
 26. تحويل صفحات `privacy` و `terms` و `contact` من ملفات ثابتة إلى صفحات ديناميكية من قاعدة البيانات مع دعم متغير إيميل التواصل.
 27. إعادة قالب عرض صفحات slug الديناميكية إلى نفس هيكل الصفحات القديمة وحذف ملف قوالب HTML من المشروع.
+28. إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة لتفعيل Google tag وGTM وAdSense وGoogle site verification من معرفات منظمة بدل كود خام.
 
 ---
 
@@ -2480,6 +2481,47 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 تم رفع الإصدار إلى 0.2.5 وتحديث VERSION_LOG.md.
 ```
 
+---
+
+### اختبار التكاملات الخارجية الآمنة 0.2.6
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://www.date-tool.com/
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: 31692154-654a-45cb-93a4-7992a834370f
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تمت إضافة app/components/ExternalIntegrations.jsx كمكون عميل يجلب إعدادات الموقع ويحقن سكربتات Google المعروفة فقط.
+تم ربط ExternalIntegrations داخل app/layout.jsx بدون استيراد Firebase في Server Component.
+تمت إضافة externalIntegrations إلى إعدادات Firebase الافتراضية وحفظ الأقسام.
+تمت إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة بحفظ مستقل.
+تم دعم Google tag / Analytics و Google Tag Manager و Google AdSense و Google site verification من معرفات منظمة.
+لم يتم فتح حقل JavaScript خام لأسباب أمنية.
+تم رفع الإصدار إلى 0.2.6 وتحديث VERSION_LOG.md.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2599,6 +2641,9 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم تعديل قالب صفحات slug الديناميكية ليستخدم نفس شكل الصفحات القديمة بدل الشكل الجديد المختلف
 ✅ تم حذف `PAGE_HTML_TEMPLATES.md` من المشروع بناءً على طلب المستخدم
 ✅ تم نشر الإصدار 0.2.5 على Cloudflare Version ID: 4b6664cb-3c33-4928-b829-fc7b9c0dcb75
+✅ تم إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة
+✅ تم دعم Google tag / Analytics و Google Tag Manager و Google AdSense و Google site verification من معرفات منظمة بدل كود خام
+✅ تم نشر الإصدار 0.2.6 على Cloudflare Version ID: 31692154-654a-45cb-93a4-7992a834370f
 ```
 
 ---
@@ -2611,6 +2656,7 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 إنشاء الصفحات من لوحة الإدارة بالمسارات الدقيقة: privacy و terms و contact.
 نسخ قوالب HTML التي يرسلها Codex في الرد داخل محرر الصفحات في لوحة الإدارة.
 ضبط إيميل التواصل من قسم الهوية البصرية حتى يظهر بدل {{contactEmail}} في صفحة contact.
+اختبار حفظ معرفات التكاملات الخارجية من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهور السكربتات في المتصفح.
 ```
 
 ---
@@ -2788,3 +2834,5 @@ MEDIA_BUCKET
 ```
 
 ويتم ضبط قيمته من قسم الهوية البصرية في لوحة الإدارة.
+
+16. قسم التكاملات الخارجية في لوحة الإدارة يقبل معرفات منظمة فقط مثل `G-...` و `GTM-...` و `ca-pub-...`. لا تضف حقل JavaScript خام إلا بعد مراجعة أمنية صريحة، لأنه يفتح باب XSS حتى لو كان الحفظ محصورًا بالمدير.
