@@ -47,10 +47,10 @@ https://www.date-tool.com
 الدومين الأساسي يعمل.
 دومين www يعمل.
 الصفحة الرئيسية تعمل.
-الصفحات الثابتة تعمل.
+الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.3.
+الإصدار الحالي للتطبيق هو 0.2.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -87,6 +87,7 @@ https://www.date-tool.com
 23. تأسيس بوابة المعلنين والدعم داخل `app` بتصميم مستوحى من المشروع القديم وباستخدام إعدادات المشروع الحالية.
 24. بدء تقسيم الصفحة الرئيسية إلى مكونات أصغر وملف أدوات للتواريخ، مع إبقاء أنماط الصفحة الرئيسية المشتركة في ملف CSS العام.
 25. تحديث فوتر الموقع ليتبع ستايل الفوتر القديم مع روابط المشروع الحالية وإضافة رقم الإصدار وسجل النسخ.
+26. تحويل صفحات `privacy` و `terms` و `contact` من ملفات ثابتة إلى صفحات ديناميكية من قاعدة البيانات مع دعم متغير إيميل التواصل.
 
 ---
 
@@ -2385,6 +2386,55 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 تم رفع الإصدار إلى 0.2.3 وتحديث VERSION_LOG.md.
 ```
 
+---
+
+### اختبار تحويل الصفحات التعريفية إلى قاعدة البيانات 0.2.4
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run build
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run deploy
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/admin
+curl.exe -I https://date-tool.com/support
+curl.exe -I https://www.date-tool.com/
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> فشل داخل الساندبوكس بسبب محاولة Wrangler الكتابة في AppData.
+تشغيل build مع XDG_CONFIG_HOME داخل مجلد المشروع -> نجح.
+npm run deploy داخل الساندبوكس -> فشل لأن OpenNext على ويندوز حاول قراءة مسار أعلى من مساحة العمل.
+npm run deploy خارج الساندبوكس -> نجح بعد إعادة التشغيل بمهلة أطول.
+Current Version ID: 3929e38a-ea6d-49fb-bd6d-5913ffd6e93a
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://date-tool.com/support -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تم حذف ملفات app/contact/page.jsx و app/privacy/page.jsx و app/terms/page.jsx.
+تم الإبقاء على app/support لأنه صفحة دعم وظيفية وليست صفحة تعريفية ثابتة.
+تمت إضافة contactEmail إلى إعدادات الموقع الافتراضية.
+تمت إضافة خانة إيميل التواصل داخل قسم الهوية البصرية في لوحة الإدارة.
+أصبح زر حفظ الهوية يحفظ contactEmail مع حقول الهوية فقط.
+تم دعم المتغير {{contactEmail}} داخل صفحات slug الديناميكية.
+تمت إضافة PAGE_HTML_TEMPLATES.md لقوالب HTML بسيطة للصفحات الثلاث.
+تم حفظ تعديل app/admin/AdminPage.css الذي أزال min-height من حقول لوحة الإدارة.
+تم رفع الإصدار إلى 0.2.4 وتحديث VERSION_LOG.md.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2493,11 +2543,28 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم نشر تصحيح الفوتر على Cloudflare Version ID: 20b8701d-8941-4e32-85cb-a1d9eec0590b
 ✅ تم توحيد نمط زر اللغة وزر الوضع الليلي في الهيدر واستبدال نص اللغة بأيقونة ترجمة
 ✅ تم نشر تحديث الهيدر على Cloudflare Version ID: aa6dab5d-f402-42fe-95a2-69d883c3a166
+✅ تم حذف صفحات `contact` و `privacy` و `terms` الثابتة من الكود حتى تدار من قاعدة البيانات عبر صفحات slug
+✅ تم دعم متغير `{{contactEmail}}` داخل محتوى الصفحات الديناميكية
+✅ تم إضافة خانة إيميل التواصل إلى قسم الهوية البصرية في لوحة الإدارة وحفظها ضمن زر حفظ الهوية فقط
+✅ تم إضافة `PAGE_HTML_TEMPLATES.md` لقوالب HTML بسيطة للخصوصية والشروط واتصل بنا
+✅ npm run lint و git diff --check و npm run build ينجحون بعد تحويل الصفحات التعريفية إلى قاعدة البيانات
+✅ تم حفظ تعديل app/admin/AdminPage.css الذي أزال min-height من حقول لوحة الإدارة
+✅ تم نشر الإصدار 0.2.4 على Cloudflare Version ID: 3929e38a-ea6d-49fb-bd6d-5913ffd6e93a
 ```
 
 ---
 
 ## 10. المتبقي
+
+### 0. إكمال صفحات قاعدة البيانات للإصدار 0.2.4
+
+```txt
+إنشاء الصفحات من لوحة الإدارة بالمسارات الدقيقة: privacy و terms و contact.
+نسخ قوالب PAGE_HTML_TEMPLATES.md داخل محرر الصفحات في لوحة الإدارة.
+ضبط إيميل التواصل من قسم الهوية البصرية حتى يظهر بدل {{contactEmail}} في صفحة contact.
+```
+
+---
 
 ### 1. اختبار رفع الصور من لوحة الإدارة
 
@@ -2664,3 +2731,11 @@ MEDIA_BUCKET
 13. بوابة المعلنين أضيفت داخل `app/client` وصفحة الدعم داخل `app/support`. لا تجعل `support_tickets` قابلة للكتابة مباشرة من المتصفح؛ المسار المعتمد هو `/api/support` من جهة الخادم. حملات المعلنين محفوظة في `campaigns` وقواعد Firestore الحالية تسمح لصاحب الحملة برؤيتها وتغيير حالتها المحددة فقط، بينما الإدارة تحتاج واجهة لاحقة لإدارة الحملات والتذاكر.
 
 14. عند إصدار نسخة جديدة يجب تحديث `app/version.js` و `package.json` و `package-lock.json` و `VERSION_LOG.md` معًا، ثم توثيق الإصدار في هذه المذكرة.
+
+15. صفحات `privacy` و `terms` و `contact` أزيلت عمدًا من `app` كملفات ثابتة. يجب إنشاؤها وإدارتها من لوحة الإدارة عبر `internalPages/customPages` بالمسارات نفسها. صفحة `contact` يمكن أن تستخدم المتغير:
+
+```txt
+{{contactEmail}}
+```
+
+ويتم ضبط قيمته من قسم الهوية البصرية في لوحة الإدارة.

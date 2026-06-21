@@ -523,7 +523,6 @@ textarea {
 
 .admin-row input,
 .admin-row select {
-    min-height: 46px;
     padding: 11px 13px;
 }
 
@@ -1195,7 +1194,6 @@ textarea:focus {
     .admin-row input,
     .admin-row select,
     .input-with-icon input {
-        min-height: 48px;
         font-size: 15px;
     }
 

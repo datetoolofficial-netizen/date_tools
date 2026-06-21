@@ -98,6 +98,14 @@ function getPageContent(page) {
     );
 }
 
+function applyConfigVariables(content, config) {
+    const replacements = {
+        contactEmail: config?.contactEmail || '',
+    };
+
+    return String(content || '').replace(/\{\{\s*(contactEmail)\s*\}\}/g, (_, key) => replacements[key]);
+}
+
 export default function PageClient({ slug }) {
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -183,7 +191,7 @@ export default function PageClient({ slug }) {
 
     const title = getPageTitle(page);
     const description = getPageDescription(page);
-    const content = sanitizeHtml(getPageContent(page));
+    const content = sanitizeHtml(applyConfigVariables(getPageContent(page), config));
 
     return (
         <main style={styles.page}>

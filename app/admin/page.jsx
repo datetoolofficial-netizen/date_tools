@@ -728,7 +728,7 @@ export default function AdminPage() {
                             </div>
                             <SectionSaveButton
                                 label="الهوية"
-                                fields={['toolDisplayName', 'toolSlogan', 'hasLogo', 'logoUrl', 'faviconUrl', 'copyrightName', 'copyrightText']}
+                                fields={['toolDisplayName', 'toolSlogan', 'contactEmail', 'hasLogo', 'logoUrl', 'faviconUrl', 'copyrightName', 'copyrightText']}
                             />
                         </div>
 
@@ -755,6 +755,20 @@ export default function AdminPage() {
                                         value={config.toolSlogan || ''}
                                         onChange={(e) => setConfig({ ...config, toolSlogan: e.target.value })}
                                         placeholder="مثال: دليلك الشامل للمواعيد"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group">
+                                <label>إيميل التواصل</label>
+                                <div className="input-with-icon">
+                                    <i className="fa-regular fa-envelope"></i>
+                                    <input
+                                        type="email"
+                                        value={config.contactEmail || ''}
+                                        onChange={(e) => setConfig({ ...config, contactEmail: e.target.value })}
+                                        placeholder="contact@example.com"
+                                        dir="ltr"
                                     />
                                 </div>
                             </div>

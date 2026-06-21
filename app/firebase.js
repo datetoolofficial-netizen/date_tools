@@ -54,6 +54,7 @@ if (typeof window !== "undefined") {
 export const defaultSiteConfig = {
     toolDisplayName: "أدوات التاريخ الشاملة",
     toolSlogan: "احسب عمرك وحول التواريخ بدقة",
+    contactEmail: "",
     hasLogo: false,
     logoUrl: "",
     faviconUrl: "",
