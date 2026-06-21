@@ -106,10 +106,42 @@ function applyConfigVariables(content, config) {
     return String(content || '').replace(/\{\{\s*(contactEmail)\s*\}\}/g, (_, key) => replacements[key]);
 }
 
+function PageFrame({ lang, title, children, align = 'right' }) {
+    return (
+        <div className="container">
+            <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Link href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
+                    <i className="fa-solid fa-arrow-right"></i> {lang === 'ar' ? 'العودة' : 'Back'}
+                </Link>
+                <h1>{title}</h1>
+                <div style={{ width: '80px' }}></div>
+            </div>
+
+            <div className="card" style={{ lineHeight: '1.8', textAlign: align }}>
+                {children}
+            </div>
+        </div>
+    );
+}
+
 export default function PageClient({ slug }) {
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [lang, setLang] = useState('ar');
+
+    useEffect(() => {
+        const savedLang = localStorage.getItem('site_lang') || 'ar';
+        setLang(savedLang);
+        document.documentElement.lang = savedLang;
+        document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+
+        const savedTheme = localStorage.getItem('site_theme');
+        const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        if (isDark) document.body.classList.add('dark-mode');
+        else document.body.classList.remove('dark-mode');
+    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -151,146 +183,54 @@ export default function PageClient({ slug }) {
 
     if (loading) {
         return (
-            <main style={styles.page}>
-                <section style={styles.card}>
-                    <p style={styles.loading}>جاري تحميل الصفحة...</p>
-                </section>
-            </main>
+            <div className="container">
+                <div className="card" style={{ lineHeight: '1.8', textAlign: 'center' }}>
+                    <p style={{ color: 'var(--text-sub)', margin: 0 }}>جاري تحميل الصفحة...</p>
+                </div>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <main style={styles.page}>
-                <section style={styles.card}>
-                    <h1 style={styles.title}>حدث خطأ</h1>
-                    <p style={styles.text}>{error}</p>
-                    <Link href="/" style={styles.button}>
-                        العودة للرئيسية
-                    </Link>
-                </section>
-            </main>
+            <PageFrame lang={lang} title={lang === 'ar' ? 'حدث خطأ' : 'Error'} align="center">
+                <p style={{ color: 'var(--text-sub)' }}>{error}</p>
+            </PageFrame>
         );
     }
 
     if (!page || page?.isActive === false || page?.enabled === false) {
         return (
-            <main style={styles.page}>
-                <section style={styles.card}>
-                    <h1 style={styles.title}>الصفحة غير موجودة</h1>
-                    <p style={styles.text}>
-                        لم يتم العثور على الصفحة المطلوبة أو أنها غير مفعّلة.
-                    </p>
-                    <Link href="/" style={styles.button}>
-                        العودة للرئيسية
-                    </Link>
-                </section>
-            </main>
+            <PageFrame lang={lang} title={lang === 'ar' ? 'الصفحة غير موجودة' : 'Page not found'} align="center">
+                <p style={{ color: 'var(--text-sub)' }}>
+                    {lang === 'ar'
+                        ? 'لم يتم العثور على الصفحة المطلوبة أو أنها غير مفعلة.'
+                        : 'The requested page was not found or is not enabled.'}
+                </p>
+            </PageFrame>
         );
     }
 
     const title = getPageTitle(page);
     const description = getPageDescription(page);
     const content = sanitizeHtml(applyConfigVariables(getPageContent(page), config));
+    const align = lang === 'ar' ? 'right' : 'left';
 
     return (
-        <main style={styles.page}>
-            <article style={styles.article}>
-                <header style={styles.header}>
-                    <Link href="/" style={styles.homeLink}>
-                        الرئيسية
-                    </Link>
+        <PageFrame lang={lang} title={title} align={align}>
+            {description ? (
+                <p style={{ color: 'var(--text-sub)', marginBottom: '25px' }}>{description}</p>
+            ) : null}
 
-                    <h1 style={styles.title}>{title}</h1>
-
-                    {description ? (
-                        <p style={styles.description}>{description}</p>
-                    ) : null}
-                </header>
-
-                {content ? (
-                    <div
-                        style={styles.content}
-                        dangerouslySetInnerHTML={{ __html: content }}
-                    />
-                ) : (
-                    <p style={styles.text}>لا يوجد محتوى لهذه الصفحة حاليًا.</p>
-                )}
-            </article>
-        </main>
+            {content ? (
+                <div dangerouslySetInnerHTML={{ __html: content }} />
+            ) : (
+                <p style={{ color: 'var(--text-sub)' }}>
+                    {lang === 'ar'
+                        ? 'لا يوجد محتوى لهذه الصفحة حاليًا.'
+                        : 'This page does not have content yet.'}
+                </p>
+            )}
+        </PageFrame>
     );
 }
-
-const styles = {
-    page: {
-        minHeight: '100vh',
-        background: '#f5f7fb',
-        padding: '40px 16px',
-        fontFamily: 'Cairo, sans-serif',
-    },
-    article: {
-        maxWidth: '950px',
-        margin: '0 auto',
-        background: '#ffffff',
-        borderRadius: '18px',
-        padding: '32px',
-        boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
-        lineHeight: '1.9',
-    },
-    card: {
-        maxWidth: '650px',
-        margin: '0 auto',
-        background: '#ffffff',
-        borderRadius: '18px',
-        padding: '32px',
-        textAlign: 'center',
-        boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
-        fontFamily: 'Cairo, sans-serif',
-    },
-    header: {
-        borderBottom: '1px solid #e5e7eb',
-        paddingBottom: '20px',
-        marginBottom: '24px',
-    },
-    homeLink: {
-        display: 'inline-block',
-        marginBottom: '14px',
-        color: '#004877',
-        textDecoration: 'none',
-        fontWeight: '700',
-    },
-    title: {
-        margin: '0 0 12px',
-        color: '#0f172a',
-        fontSize: '32px',
-        fontWeight: '800',
-    },
-    description: {
-        margin: 0,
-        color: '#64748b',
-        fontSize: '17px',
-    },
-    content: {
-        color: '#1f2937',
-        fontSize: '17px',
-    },
-    text: {
-        color: '#475569',
-        fontSize: '17px',
-        marginBottom: '24px',
-    },
-    loading: {
-        color: '#475569',
-        fontSize: '17px',
-        margin: 0,
-    },
-    button: {
-        display: 'inline-block',
-        background: '#004877',
-        color: '#ffffff',
-        padding: '12px 22px',
-        borderRadius: '10px',
-        textDecoration: 'none',
-        fontWeight: '700',
-    },
-};

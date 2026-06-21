@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.4.
+الإصدار الحالي للتطبيق هو 0.2.5.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -88,6 +88,7 @@ https://www.date-tool.com
 24. بدء تقسيم الصفحة الرئيسية إلى مكونات أصغر وملف أدوات للتواريخ، مع إبقاء أنماط الصفحة الرئيسية المشتركة في ملف CSS العام.
 25. تحديث فوتر الموقع ليتبع ستايل الفوتر القديم مع روابط المشروع الحالية وإضافة رقم الإصدار وسجل النسخ.
 26. تحويل صفحات `privacy` و `terms` و `contact` من ملفات ثابتة إلى صفحات ديناميكية من قاعدة البيانات مع دعم متغير إيميل التواصل.
+27. إعادة قالب عرض صفحات slug الديناميكية إلى نفس هيكل الصفحات القديمة وحذف ملف قوالب HTML من المشروع.
 
 ---
 
@@ -2440,6 +2441,45 @@ git push origin master -> نجح، تم رفع master إلى GitHub.
 تم رفع الإصدار إلى 0.2.4 وتحديث VERSION_LOG.md.
 ```
 
+---
+
+### اختبار إعادة شكل صفحات slug وحذف ملف القوالب 0.2.5
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/privacy
+curl.exe -I https://date-tool.com/contact
+curl.exe -I https://www.date-tool.com/
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> نجح.
+npm run deploy -> نجح.
+Current Version ID: 4b6664cb-3c33-4928-b829-fc7b9c0dcb75
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/privacy -> 200 OK
+https://date-tool.com/contact -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تم تعديل app/[slug]/PageClient.jsx ليستخدم نفس هيكل الصفحات القديمة: container + header + card + control-btn.
+تم حذف PAGE_HTML_TEMPLATES.md من المشروع لأن قوالب HTML سترسل للمستخدم كنص فقط ولا تحفظ داخل المستودع.
+تم رفع الإصدار إلى 0.2.5 وتحديث VERSION_LOG.md.
+```
+
 ملاحظة مهمة جدًا:
 
 ```txt
@@ -2556,6 +2596,9 @@ git push origin master -> نجح، تم رفع master إلى GitHub.
 ✅ تم حفظ تعديل app/admin/AdminPage.css الذي أزال min-height من حقول لوحة الإدارة
 ✅ تم نشر الإصدار 0.2.4 على Cloudflare Version ID: 3929e38a-ea6d-49fb-bd6d-5913ffd6e93a
 ✅ تم رفع التغييرات إلى GitHub على commit: f246c04
+✅ تم تعديل قالب صفحات slug الديناميكية ليستخدم نفس شكل الصفحات القديمة بدل الشكل الجديد المختلف
+✅ تم حذف `PAGE_HTML_TEMPLATES.md` من المشروع بناءً على طلب المستخدم
+✅ تم نشر الإصدار 0.2.5 على Cloudflare Version ID: 4b6664cb-3c33-4928-b829-fc7b9c0dcb75
 ```
 
 ---
@@ -2566,7 +2609,7 @@ git push origin master -> نجح، تم رفع master إلى GitHub.
 
 ```txt
 إنشاء الصفحات من لوحة الإدارة بالمسارات الدقيقة: privacy و terms و contact.
-نسخ قوالب PAGE_HTML_TEMPLATES.md داخل محرر الصفحات في لوحة الإدارة.
+نسخ قوالب HTML التي يرسلها Codex في الرد داخل محرر الصفحات في لوحة الإدارة.
 ضبط إيميل التواصل من قسم الهوية البصرية حتى يظهر بدل {{contactEmail}} في صفحة contact.
 ```
 
