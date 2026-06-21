@@ -49,8 +49,10 @@ export default function Home() {
         initAndTrackVisit: async () => {},
         trackToolUsage: async () => {},
         trackAdClick: async () => {},
+        trackAdImpression: async () => {},
         getSiteConfig: async () => null,
     });
+    const trackedAdImpressionsRef = useRef(new Set());
 
     useEffect(() => {
         let isMounted = true;
@@ -71,6 +73,7 @@ export default function Home() {
                     initAndTrackVisit: firebaseApi.initAndTrackVisit || (async () => {}),
                     trackToolUsage: firebaseApi.trackToolUsage || (async () => {}),
                     trackAdClick: firebaseApi.trackAdClick || (async () => {}),
+                    trackAdImpression: firebaseApi.trackAdImpression || (async () => {}),
                     getSiteConfig: firebaseApi.getSiteConfig || (async () => null),
                 };
 
@@ -100,6 +103,30 @@ export default function Home() {
             window.removeEventListener('blur', handleBlur);
         };
     }, []);
+
+    useEffect(() => {
+        if (!configData || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+        const adNodes = Array.from(document.querySelectorAll('[data-ad-id]'));
+        if (adNodes.length === 0) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+
+                const adId = entry.target.getAttribute('data-ad-id');
+                if (!adId || trackedAdImpressionsRef.current.has(adId)) return;
+
+                trackedAdImpressionsRef.current.add(adId);
+                firebaseApiRef.current.trackAdImpression(adId);
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.5 });
+
+        adNodes.forEach((node) => observer.observe(node));
+
+        return () => observer.disconnect();
+    }, [configData]);
 
     useEffect(() => {
         if (!configData?.faviconUrl) return;

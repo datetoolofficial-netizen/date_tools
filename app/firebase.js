@@ -329,6 +329,10 @@ export async function trackAdClick(adId) {
     return sendStatisticEvent({ event: "adClick", adId });
 }
 
+export async function trackAdImpression(adId) {
+    return sendStatisticEvent({ event: "adImpression", adId });
+}
+
 async function sendStatisticEvent(payload) {
     if (typeof window === "undefined") return null;
 
@@ -359,7 +363,8 @@ export async function getAdminStats() {
                 ageCalc: 0,
                 dateConverter: 0,
                 durationCalc: 0,
-                adClicks: 0
+                adClicks: 0,
+                adImpressions: 0
             };
         }
 
@@ -372,7 +377,8 @@ export async function getAdminStats() {
             ageCalc: 0,
             dateConverter: 0,
             durationCalc: 0,
-            adClicks: 0
+            adClicks: 0,
+            adImpressions: 0
         };
     }
 }

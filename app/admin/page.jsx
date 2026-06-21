@@ -28,6 +28,28 @@ const EMPTY_AD_CAMPAIGN = {
     notes: '',
 };
 
+const AD_BANNER_METRICS = [
+    { id: 'google_top', label: 'إعلان أعلى الصفحة', icon: 'fa-rectangle-ad' },
+    { id: 'custom_promo_middle', label: 'الإعلان المميز', icon: 'fa-star' },
+    { id: 'google_bottom_1', label: 'إعلان أسفل الصفحة 1', icon: 'fa-panorama' },
+    { id: 'google_bottom_2', label: 'إعلان أسفل الصفحة 2', icon: 'fa-panorama' },
+];
+
+function getStatValue(stats, key) {
+    return Number(stats?.[key] || 0);
+}
+
+function formatStatNumber(value) {
+    return Number(value || 0).toLocaleString('ar-SA');
+}
+
+function formatPercent(part, total) {
+    const safeTotal = Number(total || 0);
+    if (safeTotal <= 0) return '0%';
+
+    return `${((Number(part || 0) / safeTotal) * 100).toFixed(1)}%`;
+}
+
 export default function AdminPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [config, setConfig] = useState(null);
@@ -43,6 +65,22 @@ export default function AdminPage() {
     const [adForm, setAdForm] = useState(EMPTY_AD_CAMPAIGN);
     const firebaseApiRef = useRef(null);
     const messageTimerRef = useRef(null);
+    const totalAdClicks = getStatValue(stats, 'adClicks');
+    const totalAdImpressions = getStatValue(stats, 'adImpressions');
+    const totalVisits = getStatValue(stats, 'visits');
+    const adCtr = formatPercent(totalAdClicks, totalAdImpressions);
+    const adImpressionRate = formatPercent(totalAdImpressions, totalVisits);
+    const adBannerStats = AD_BANNER_METRICS.map((banner) => {
+        const clicks = getStatValue(stats, `ad_${banner.id}`);
+        const impressions = getStatValue(stats, `adImpression_${banner.id}`);
+
+        return {
+            ...banner,
+            clicks,
+            impressions,
+            ctr: formatPercent(clicks, impressions),
+        };
+    });
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -687,29 +725,81 @@ export default function AdminPage() {
                             <div className="stat-card">
                                 <i className="fa-solid fa-users"></i>
                                 <h4>إجمالي الزيارات</h4>
-                                <span>{stats.visits || 0}</span>
+                                <span>{formatStatNumber(stats.visits)}</span>
                             </div>
 
                             <div className="stat-card">
                                 <i className="fa-solid fa-calculator"></i>
                                 <h4>حساب العمر</h4>
-                                <span>{stats.ageCalc || 0}</span>
+                                <span>{formatStatNumber(stats.ageCalc)}</span>
                             </div>
 
                             <div className="stat-card">
                                 <i className="fa-solid fa-rotate"></i>
                                 <h4>تحويل التواريخ</h4>
-                                <span>{stats.dateConverter || 0}</span>
+                                <span>{formatStatNumber(stats.dateConverter)}</span>
                             </div>
 
-                            <div className="stat-card highlight-stat">
-                                <i className="fa-solid fa-mouse-pointer"></i>
-                                <h4>نقرات الإعلانات</h4>
-                                <span>{stats.adClicks || 0}</span>
+                            <div className="stat-card">
+                                <i className="fa-solid fa-hourglass-half"></i>
+                                <h4>حساب فترتين</h4>
+                                <span>{formatStatNumber(stats.durationCalc)}</span>
                             </div>
                         </div>
                     ) : (
                         <p className="loading-text">جاري سحب البيانات من السيرفر...</p>
+                    )}
+                </section>
+
+                <section className="admin-section-card ads-stats-section">
+                    <div className="section-header compact-header">
+                        <div>
+                            <h3>
+                                <i className="fa-solid fa-chart-line"></i> إحصائيات الإعلانات
+                            </h3>
+                            <p className="section-hint">ملخص مختصر للنقرات والظهور، مع تفصيل خفيف لكل موضع إعلاني.</p>
+                        </div>
+                    </div>
+
+                    {stats ? (
+                        <>
+                            <div className="ad-stats-summary-grid">
+                                <div className="ad-summary-card">
+                                    <span>نقرات الإعلانات</span>
+                                    <strong>{formatStatNumber(totalAdClicks)}</strong>
+                                </div>
+                                <div className="ad-summary-card">
+                                    <span>مرات الظهور</span>
+                                    <strong>{formatStatNumber(totalAdImpressions)}</strong>
+                                </div>
+                                <div className="ad-summary-card">
+                                    <span>نسبة النقر للظهور</span>
+                                    <strong>{adCtr}</strong>
+                                </div>
+                                <div className="ad-summary-card">
+                                    <span>نسبة الظهور للزيارات</span>
+                                    <strong>{adImpressionRate}</strong>
+                                </div>
+                            </div>
+
+                            <div className="ad-banner-metrics-grid">
+                                {adBannerStats.map((banner) => (
+                                    <div className="ad-banner-metric-card" key={banner.id}>
+                                        <div className="ad-banner-metric-head">
+                                            <i className={`fa-solid ${banner.icon}`}></i>
+                                            <strong>{banner.label}</strong>
+                                        </div>
+                                        <div className="ad-banner-metric-values">
+                                            <span>ظهور <b>{formatStatNumber(banner.impressions)}</b></span>
+                                            <span>نقرات <b>{formatStatNumber(banner.clicks)}</b></span>
+                                            <span>CTR <b>{banner.ctr}</b></span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    ) : (
+                        <p className="loading-text">جاري سحب بيانات الإعلانات...</p>
                     )}
                 </section>
 

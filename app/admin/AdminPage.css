@@ -374,6 +374,100 @@ body.dark-mode .admin-top-navbar {
     background: rgba(255, 255, 255, 0.16);
 }
 
+.ads-stats-section {
+    margin-bottom: 22px;
+}
+
+.ad-stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.ad-summary-card,
+.ad-banner-metric-card {
+    min-width: 0;
+    background: var(--admin-surface-soft);
+    border: 1px solid var(--admin-border);
+    border-radius: 16px;
+}
+
+.ad-summary-card {
+    padding: 14px;
+}
+
+.ad-summary-card span {
+    display: block;
+    color: var(--admin-text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.6;
+}
+
+.ad-summary-card strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--admin-text);
+    font-size: clamp(18px, 2.4vw, 24px);
+    font-weight: 950;
+}
+
+.ad-banner-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ad-banner-metric-card {
+    padding: 13px;
+}
+
+.ad-banner-metric-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 10px;
+    color: var(--admin-text);
+    font-size: 13px;
+}
+
+.ad-banner-metric-head i {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    flex: 0 0 auto;
+}
+
+.ad-banner-metric-values {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.ad-banner-metric-values span {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 8px;
+    color: var(--admin-text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.ad-banner-metric-values b {
+    display: block;
+    margin-top: 2px;
+    color: var(--admin-text);
+    font-size: 14px;
+}
+
 /* ================= الأقسام ================= */
 .admin-sections-wrapper {
     display: flex;
@@ -1098,6 +1192,10 @@ textarea:focus {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .ad-stats-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .page-row {
         grid-template-columns: minmax(180px, 1fr) minmax(150px, 1fr) minmax(145px, 170px) minmax(96px, auto);
     }
@@ -1114,6 +1212,10 @@ textarea:focus {
     }
 
     .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ad-banner-metrics-grid {
         grid-template-columns: 1fr;
     }
 
@@ -1210,6 +1312,11 @@ textarea:focus {
     .admin-section-card {
         border-radius: 18px;
         padding: 16px;
+    }
+
+    .ad-stats-summary-grid,
+    .ad-banner-metric-values {
+        grid-template-columns: 1fr;
     }
 
     .section-header-with-action {

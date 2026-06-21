@@ -361,6 +361,7 @@ export function TopAdSlot({ configData, labels }) {
             onMouseEnter={() => { window.hoveredAdId = 'google_top'; }}
             onMouseLeave={() => { window.hoveredAdId = null; }}
             data-ad-location="top-banner"
+            data-ad-id="google_top"
         >
             <AdImage src={configData?.adImages?.top} altText={labels.adBanner1} />
             {!configData?.adImages?.top && googleTopAd && (
@@ -373,7 +374,7 @@ export function TopAdSlot({ configData, labels }) {
 
 export function FeaturedAdSlot({ configData, labels, onClick }) {
     return (
-        <div id="customAdContainer" data-ad-location="middle-banner" onClick={onClick}>
+        <div id="customAdContainer" data-ad-location="middle-banner" data-ad-id="custom_promo_middle" onClick={onClick}>
             <Link href="/client" style={{ textDecoration: 'none', display: 'block' }}>
                 <div className="ad-placeholder custom-ad-promo">
                     <AdImage src={configData?.adImages?.middle} altText={labels.adPortal} />
@@ -396,6 +397,7 @@ export function BottomAdSlots({ configData, labels }) {
                 onMouseEnter={() => { window.hoveredAdId = 'google_bottom_1'; }}
                 onMouseLeave={() => { window.hoveredAdId = null; }}
                 data-ad-location="bottom-banner-1"
+                data-ad-id="google_bottom_1"
             >
                 <AdImage src={configData?.adImages?.bottom1} altText={labels.adBanner1} />
                 {!configData?.adImages?.bottom1 && labels.adBanner1}
@@ -405,6 +407,7 @@ export function BottomAdSlots({ configData, labels }) {
                 onMouseEnter={() => { window.hoveredAdId = 'google_bottom_2'; }}
                 onMouseLeave={() => { window.hoveredAdId = null; }}
                 data-ad-location="bottom-banner-2"
+                data-ad-id="google_bottom_2"
             >
                 <AdImage src={configData?.adImages?.bottom2} altText={labels.adBanner2} />
                 {!configData?.adImages?.bottom2 && labels.adBanner2}

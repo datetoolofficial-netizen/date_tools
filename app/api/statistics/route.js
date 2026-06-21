@@ -247,6 +247,13 @@ function getFieldTransforms(payload) {
         return ['adClicks', `ad_${adId}`];
     }
 
+    if (payload.event === 'adImpression') {
+        const adId = normalizeAdId(payload.adId);
+        if (!adId) return [];
+
+        return ['adImpressions', `adImpression_${adId}`];
+    }
+
     return [];
 }
 
