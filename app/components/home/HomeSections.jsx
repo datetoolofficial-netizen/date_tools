@@ -4,6 +4,30 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
 
+const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
+const ADSENSE_SLOT_PATTERN = /^\d{4,20}$/;
+
+function clean(value = '') {
+    return String(value || '').trim();
+}
+
+function getGoogleAdSlot(configData, slotName) {
+    const slotConfig = configData?.googleAdSlots?.[slotName] || {};
+    const client = clean(slotConfig.client || configData?.externalIntegrations?.googleAdsenseClient).toLowerCase();
+    const slot = clean(slotConfig.slot);
+
+    if (!ADSENSE_CLIENT_PATTERN.test(client) || !ADSENSE_SLOT_PATTERN.test(slot)) {
+        return null;
+    }
+
+    return {
+        client,
+        slot,
+        format: clean(slotConfig.format) || 'auto',
+        fullWidthResponsive: slotConfig.fullWidthResponsive !== false,
+    };
+}
+
 export function TodayBanner({ lang, todayInfo }) {
     if (lang !== 'ar') return null;
 
@@ -259,7 +283,27 @@ export function AdImage({ src, altText }) {
     );
 }
 
+function GoogleAdsenseUnit({ ad, scriptId }) {
+    if (!ad) return null;
+
+    return (
+        <>
+            <ins
+                className="adsbygoogle"
+                style={{ display: 'block' }}
+                data-ad-client={ad.client}
+                data-ad-slot={ad.slot}
+                data-ad-format={ad.format}
+                data-full-width-responsive={String(ad.fullWidthResponsive)}
+            ></ins>
+            <Script id={scriptId} strategy="afterInteractive">{`(adsbygoogle = window.adsbygoogle || []).push({});`}</Script>
+        </>
+    );
+}
+
 export function TopAdSlot({ configData, labels }) {
+    const googleTopAd = getGoogleAdSlot(configData, 'top');
+
     return (
         <div
             className="ad-placeholder"
@@ -268,12 +312,10 @@ export function TopAdSlot({ configData, labels }) {
             data-ad-location="top-banner"
         >
             <AdImage src={configData?.adImages?.top} altText={labels.adBanner1} />
-            {!configData?.adImages?.top && (
-                <>
-                    <ins className="adsbygoogle" style={{ display: 'block' }} data-ad-client="ca-pub-1147243690926079" data-ad-slot="7882868833" data-ad-format="auto" data-full-width-responsive="true"></ins>
-                    <Script id="adsbygoogle-init" strategy="afterInteractive">{`(adsbygoogle = window.adsbygoogle || []).push({});`}</Script>
-                </>
+            {!configData?.adImages?.top && googleTopAd && (
+                <GoogleAdsenseUnit ad={googleTopAd} scriptId="adsbygoogle-top-init" />
             )}
+            {!configData?.adImages?.top && !googleTopAd && labels.adBanner1}
         </div>
     );
 }

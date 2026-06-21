@@ -745,6 +745,54 @@ textarea:focus {
     border-top: 1px solid var(--admin-border);
 }
 
+.google-ad-slot-panel {
+    padding: 18px;
+    border: 1px solid var(--admin-border);
+    border-radius: 18px;
+    background: var(--admin-surface-soft);
+}
+
+.compact-form-grid {
+    gap: 14px;
+}
+
+.ad-slot-toggle {
+    min-height: 46px;
+    align-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--admin-border);
+    border-radius: 14px;
+    background: var(--admin-surface);
+    color: var(--admin-text);
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ad-slot-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--admin-primary);
+}
+
+.ad-slot-note {
+    margin-top: 14px;
+}
+
+.ad-slot-note code {
+    direction: ltr;
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 8px;
+    background: var(--admin-surface);
+    color: var(--admin-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+}
+
 .ads-table-header {
     display: flex;
     align-items: flex-start;

@@ -40,12 +40,36 @@ const defaultExternalIntegrations = {
     googleSiteVerification: ""
 };
 
+const defaultGoogleAdSlots = {
+    top: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true
+    }
+};
+
 function normalizeExternalIntegrations(value = {}) {
     return {
         googleTagId: String(value.googleTagId || "").trim(),
         googleTagManagerId: String(value.googleTagManagerId || "").trim(),
         googleAdsenseClient: String(value.googleAdsenseClient || "").trim(),
         googleSiteVerification: String(value.googleSiteVerification || "").trim()
+    };
+}
+
+function normalizeGoogleAdSlot(value = {}) {
+    return {
+        client: String(value.client || "").trim(),
+        slot: String(value.slot || "").trim(),
+        format: String(value.format || "auto").trim() || "auto",
+        fullWidthResponsive: value.fullWidthResponsive !== false
+    };
+}
+
+function normalizeGoogleAdSlots(value = {}) {
+    return {
+        top: normalizeGoogleAdSlot(value.top || {})
     };
 }
 
@@ -80,6 +104,7 @@ export const defaultSiteConfig = {
         bottom1: "",
         bottom2: ""
     },
+    googleAdSlots: defaultGoogleAdSlots,
     adCampaigns: [],
     externalIntegrations: defaultExternalIntegrations,
     copyrightName: "",
@@ -126,6 +151,11 @@ export async function getSiteConfig() {
             adImages: {
                 ...defaultSiteConfig.adImages,
                 ...(data.adImages || {})
+            },
+
+            googleAdSlots: {
+                ...defaultGoogleAdSlots,
+                ...normalizeGoogleAdSlots(data.googleAdSlots || {})
             },
 
             externalIntegrations: {
@@ -177,6 +207,11 @@ export async function saveSiteConfig(config) {
             ...(config.adImages || {})
         },
 
+        googleAdSlots: {
+            ...defaultGoogleAdSlots,
+            ...normalizeGoogleAdSlots(config.googleAdSlots || {})
+        },
+
         externalIntegrations: {
             ...defaultExternalIntegrations,
             ...normalizeExternalIntegrations(config.externalIntegrations || {})
@@ -210,6 +245,13 @@ export async function saveSiteConfigSection(sectionPatch) {
         cleanPatch.adImages = {
             ...defaultSiteConfig.adImages,
             ...(cleanPatch.adImages || {})
+        };
+    }
+
+    if ('googleAdSlots' in cleanPatch) {
+        cleanPatch.googleAdSlots = {
+            ...defaultGoogleAdSlots,
+            ...normalizeGoogleAdSlots(cleanPatch.googleAdSlots || {})
         };
     }
 

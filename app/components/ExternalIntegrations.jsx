@@ -94,6 +94,8 @@ export default function ExternalIntegrations() {
                 const { getSiteConfig } = await import('../firebase');
                 const siteConfig = await getSiteConfig();
                 const integrations = siteConfig?.externalIntegrations || {};
+                const topAdClient = siteConfig?.googleAdSlots?.top?.client || '';
+                const adsenseClient = clean(integrations.googleAdsenseClient || topAdClient).toLowerCase();
 
                 if (!isMounted) return;
 
@@ -101,7 +103,7 @@ export default function ExternalIntegrations() {
                 appendGoogleSiteVerification(clean(integrations.googleSiteVerification));
                 appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
                 appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
-                appendAdsense(clean(integrations.googleAdsenseClient).toLowerCase());
+                appendAdsense(adsenseClient);
             } catch (error) {
                 console.warn('External integrations were skipped:', error);
             }

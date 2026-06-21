@@ -310,6 +310,19 @@ export default function AdminPage() {
         });
     };
 
+    const handleGoogleAdSlotChange = (slot, field, value) => {
+        setConfig({
+            ...config,
+            googleAdSlots: {
+                ...(config.googleAdSlots || {}),
+                [slot]: {
+                    ...((config.googleAdSlots || {})[slot] || {}),
+                    [field]: value
+                }
+            }
+        });
+    };
+
     const getAdSlotLabel = (slot) => {
         const labels = {
             top: 'إعلان أعلى الصفحة',
@@ -874,7 +887,7 @@ export default function AdminPage() {
                                 </h3>
                                 <p className="section-hint">روابط أو رفع صور للمواضع الحالية. إدارة طلبات الإعلانات ستضاف لاحقًا كنظام منفصل.</p>
                             </div>
-                            <SectionSaveButton label="الإعلانات" fields={['adImages', 'adCampaigns']} />
+                            <SectionSaveButton label="الإعلانات" fields={['adImages', 'googleAdSlots', 'adCampaigns']} />
                         </div>
 
                         <div className="form-grid">
@@ -908,6 +921,73 @@ export default function AdminPage() {
                                     />
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="ads-management-panel google-ad-slot-panel">
+                            <div className="ads-table-header">
+                                <div>
+                                    <h4>كود Google للإعلان العلوي</h4>
+                                    <p className="section-hint">
+                                        لا تلصق كود JavaScript كاملًا. ضع Publisher ID ورقم Ad Slot فقط، وسيولد الموقع كود AdSense بشكل آمن داخل مربع الإعلان العلوي تحت خانة اليوم.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="form-grid compact-form-grid">
+                                <div className="input-group">
+                                    <label>Publisher / Client ID</label>
+                                    <div className="input-with-icon">
+                                        <i className="fa-solid fa-rectangle-ad"></i>
+                                        <input
+                                            type="text"
+                                            value={config.googleAdSlots?.top?.client || config.externalIntegrations?.googleAdsenseClient || ''}
+                                            onChange={(e) => handleGoogleAdSlotChange('top', 'client', e.target.value)}
+                                            placeholder="ca-pub-1147243690926079"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label>Ad Slot</label>
+                                    <div className="input-with-icon">
+                                        <i className="fa-solid fa-hashtag"></i>
+                                        <input
+                                            type="text"
+                                            value={config.googleAdSlots?.top?.slot || ''}
+                                            onChange={(e) => handleGoogleAdSlotChange('top', 'slot', e.target.value)}
+                                            placeholder="7882868833"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="input-group">
+                                    <label>Ad Format</label>
+                                    <select
+                                        value={config.googleAdSlots?.top?.format || 'auto'}
+                                        onChange={(e) => handleGoogleAdSlotChange('top', 'format', e.target.value)}
+                                    >
+                                        <option value="auto">auto</option>
+                                        <option value="horizontal">horizontal</option>
+                                        <option value="rectangle">rectangle</option>
+                                        <option value="vertical">vertical</option>
+                                    </select>
+                                </div>
+
+                                <label className="ad-slot-toggle">
+                                    <input
+                                        type="checkbox"
+                                        checked={config.googleAdSlots?.top?.fullWidthResponsive !== false}
+                                        onChange={(e) => handleGoogleAdSlotChange('top', 'fullWidthResponsive', e.target.checked)}
+                                    />
+                                    <span>تفعيل full-width responsive</span>
+                                </label>
+                            </div>
+
+                            <p className="section-hint ad-slot-note">
+                                من الكود الذي أرسلته: Publisher / Client هو <code>ca-pub-1147243690926079</code> و Ad Slot هو <code>7882868833</code>. إذا كانت خانة صورة إعلان أعلى الصفحة تحتوي رابط صورة، ستظهر الصورة بدل إعلان Google.
+                            </p>
                         </div>
 
                         <div className="ads-management-panel">

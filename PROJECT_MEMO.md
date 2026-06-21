@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.6.
+الإصدار الحالي للتطبيق هو 0.2.7.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -90,6 +90,7 @@ https://www.date-tool.com
 26. تحويل صفحات `privacy` و `terms` و `contact` من ملفات ثابتة إلى صفحات ديناميكية من قاعدة البيانات مع دعم متغير إيميل التواصل.
 27. إعادة قالب عرض صفحات slug الديناميكية إلى نفس هيكل الصفحات القديمة وحذف ملف قوالب HTML من المشروع.
 28. إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة لتفعيل Google tag وGTM وAdSense وGoogle site verification من معرفات منظمة بدل كود خام.
+29. إضافة إعداد منظم لإعلان Google AdSense العلوي داخل قسم الإعلانات، بحيث يحفظ `Publisher / Client ID` و `Ad Slot` ويعرض الإعلان تحت خانة اليوم بدون لصق JavaScript خام.
 
 ---
 
@@ -2540,6 +2541,57 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 
 ---
 
+### اختبار إعلان Google العلوي المنظم 0.2.7
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+$env:XDG_CONFIG_HOME=(Join-Path (Get-Location) '.wrangler-xdg'); npm run build
+```
+
+والنتيجة:
+
+```txt
+npm run lint -> نجح.
+git diff --check -> نجح بدون أخطاء فراغات.
+npm run build -> نجح بعد إعادة التشغيل بمهلة أطول؛ التشغيل الأول وصل إلى نجاح التجميع ثم انتهى بمهلة الأداة قبل اكتمال فحص Next النهائي.
+npm run deploy -> نجح.
+Current Version ID: 0c1583f0-90fd-4882-960a-1cdb0ff2556d
+https://date-tool.com/ -> 200 OK
+https://date-tool.com/admin -> 200 OK
+https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.com/
+```
+
+التغييرات التي تمت:
+
+```txt
+تمت إضافة googleAdSlots إلى إعدادات Firebase الافتراضية والحفظ الجزئي للأقسام.
+تمت إضافة لوحة "كود Google للإعلان العلوي" داخل قسم الإعلانات في /admin.
+أصبح زر حفظ الإعلانات يحفظ adImages و googleAdSlots و adCampaigns فقط.
+أصبح مربع الإعلان العلوي تحت خانة اليوم يستخدم Publisher / Client ID و Ad Slot المحفوظين بدل قيم ثابتة داخل الكود.
+تمت إزالة كود AdSense الثابت من TopAdSlot واستبداله بقراءة آمنة من configData.
+أصبح ExternalIntegrations يحمل سكربت AdSense من Google AdSense publisher ID أو من client الخاص بالإعلان العلوي إذا كان هو المدخل.
+لم يتم فتح أي خانة JavaScript خام داخل قاعدة البيانات لأسباب أمنية.
+تم رفع الإصدار إلى 0.2.7 وتحديث VERSION_LOG.md.
+تم نشر الإصدار 0.2.7 على Cloudflare Version ID: 0c1583f0-90fd-4882-960a-1cdb0ff2556d.
+```
+
+ملاحظة تشغيل مهمة:
+
+```txt
+لإضافة الكود الذي أرسله المستخدم:
+Publisher / Client ID = ca-pub-1147243690926079
+Ad Slot = 7882868833
+Ad Format = auto
+full-width responsive = مفعل
+إذا كانت خانة صورة إعلان أعلى الصفحة تحتوي رابط صورة، ستظهر الصورة بدل إعلان Google.
+اختبار حفظ هذه القيم فعليًا من لوحة الإدارة يحتاج جلسة مدير نشطة.
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -2644,6 +2696,8 @@ https://www.date-tool.com/ -> 308 Permanent Redirect إلى https://date-tool.co
 ✅ تم إضافة قسم التكاملات الخارجية الآمنة في لوحة الإدارة
 ✅ تم دعم Google tag / Analytics و Google Tag Manager و Google AdSense و Google site verification من معرفات منظمة بدل كود خام
 ✅ تم نشر الإصدار 0.2.6 على Cloudflare Version ID: 31692154-654a-45cb-93a4-7992a834370f
+✅ تمت إضافة إعداد Google AdSense المنظم للإعلان العلوي داخل قسم الإعلانات
+✅ تم نشر الإصدار 0.2.7 على Cloudflare Version ID: 0c1583f0-90fd-4882-960a-1cdb0ff2556d
 ```
 
 ---
@@ -2687,7 +2741,7 @@ ads top / middle / bottom1 / bottom2
 تحسين معاينة الصفحات
 تحسين إدارة الإحصائيات
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
-ربط إعلان أعلى الصفحة لاحقًا بكود Google المخصص داخل الإطار
+اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
 مهم جدًا: توحيد مصدر الإعلانات بين campaigns و settings/main.adCampaigns
 ```
 
