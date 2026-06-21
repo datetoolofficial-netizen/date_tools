@@ -339,6 +339,56 @@
     margin: 5px 0 0 0;
     opacity: 0.8;
 }
+
+@media (max-width: 520px) {
+    .header {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .top-controls {
+        position: static;
+        width: 100%;
+        justify-content: center !important;
+        gap: 10px;
+        order: 0;
+        padding: 0 0 12px !important;
+        margin: 0 auto 4px;
+    }
+
+    .control-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .logo-container {
+        order: 1;
+        margin-bottom: 10px !important;
+    }
+
+    .tool-title {
+        max-width: 100%;
+        font-size: clamp(26px, 9vw, 34px);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+        padding-inline: 6px;
+    }
+
+    .tool-slogan {
+        order: 2;
+        font-size: 14px;
+        line-height: 1.7;
+        margin-bottom: 16px !important;
+    }
+
+    .nav-links {
+        order: 3;
+        margin-top: 8px !important;
+    }
+}
 /* =========================================================
    تنسيقات الإضافات الجديدة (الأحداث، المشاركة، والسيو)
    ========================================================= */
