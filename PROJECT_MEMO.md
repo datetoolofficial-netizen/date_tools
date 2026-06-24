@@ -2767,6 +2767,43 @@ https://date-tool.com/ -> 200 OK.
 
 ---
 
+### اختبار استعادة النسخة 0.2.12 بعد الرجوع
+
+تم تنفيذ:
+
+```powershell
+git rev-parse HEAD
+git diff --stat bececd41b3daa57565a30dd16f4627dad71ff610 --
+npm run lint
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+npx firebase-tools deploy --only firestore:rules
+```
+
+النتيجة:
+
+```txt
+✅ HEAD كان على bececd41b3daa57565a30dd16f4627dad71ff610 قبل الإصلاح.
+✅ ملفات Firebase وCloudflare المتتبعة كانت مطابقة للنسخة.
+✅ تم إصلاح next.config.mjs حتى لا يشغل initOpenNextCloudflareForDev أثناء production build.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ OpenNext build نجح.
+✅ تم نشر Worker datetools على Cloudflare Version ID: 0dbea0db-38a7-4f7b-b2d1-00d1b091fe88.
+✅ تم نشر Firestore Rules، وكانت already up to date.
+✅ فحص الإنتاج: / = 200، /admin = 200، /admin_login = 200.
+```
+
+الملفات المتأثرة:
+
+```txt
+next.config.mjs
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
