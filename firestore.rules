@@ -41,14 +41,17 @@ service cloud.firestore {
       allow read: if isActiveAdmin()
         || (isSignedIn() && resource.data.advertiserId == request.auth.uid);
 
-      allow create: if isSignedIn()
-        && request.resource.data.advertiserId == request.auth.uid
-        && request.resource.data.status == "قيد المراجعة"
-        && request.resource.data.campaignName is string
-        && request.resource.data.targetUrl is string
-        && request.resource.data.imageUrl is string
-        && request.resource.data.startTime is string
-        && request.resource.data.endTime is string;
+      allow create: if isActiveAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.advertiserId == request.auth.uid
+          && request.resource.data.status == "قيد المراجعة"
+          && request.resource.data.campaignName is string
+          && request.resource.data.targetUrl is string
+          && request.resource.data.imageUrl is string
+          && request.resource.data.startTime is string
+          && request.resource.data.endTime is string
+        );
 
       allow update: if isActiveAdmin()
         || (

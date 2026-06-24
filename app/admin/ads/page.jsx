@@ -1,52 +1,69 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import '../AdminDashboard.css';
 
-const EMPTY_AD = {
-    name: '',
-    slot: 'top',
-    startAt: '',
-    endAt: '',
-    googleDriveUrl: '',
+const EMPTY_CAMPAIGN = {
+    campaignName: '',
     targetUrl: '',
-    status: 'draft',
+    imageUrl: '',
+    targetTool: 'date_tool',
+    adLocation: 'top',
+    startTime: '',
+    endTime: '',
+    status: 'قيد المراجعة',
     notes: ''
 };
 
-const AD_SLOTS = [
-    { value: 'top', label: 'إعلان أعلى الصفحة' },
-    { value: 'middle', label: 'الإعلان المميز' },
-    { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
-    { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' }
-];
+const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_MEDIA_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif']);
+const SUPPORTED_MEDIA_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'image/gif',
+    'application/octet-stream',
+    ''
+]);
 
 const STATUS_OPTIONS = [
-    { value: 'draft', label: 'مسودة' },
-    { value: 'active', label: 'نشط' },
-    { value: 'paused', label: 'متوقف' },
-    { value: 'ended', label: 'منتهي' }
+    'قيد المراجعة',
+    'نشط',
+    'متوقف مؤقتاً',
+    'مرفوض',
+    'تم تعديله',
+    'منتهي'
 ];
 
-function getSlotLabel(slot) {
-    return AD_SLOTS.find((item) => item.value === slot)?.label || slot || '-';
+const TOOL_NAMES = {
+    date_tool: 'أداة التاريخ والعمر'
+};
+
+const LOCATION_NAMES = {
+    top: 'إعلان أعلى الصفحة',
+    middle: 'الإعلان المميز',
+    bottom1: 'إعلان أسفل الصفحة 1',
+    bottom2: 'إعلان أسفل الصفحة 2'
+};
+
+function getStatusClass(status) {
+    if (status === 'نشط') return 'active';
+    if (status === 'مرفوض') return 'rejected';
+    if (status === 'متوقف مؤقتاً') return 'paused';
+    if (status === 'منتهي') return 'ended';
+    if (status === 'تم تعديله') return 'modified';
+    return 'pending';
 }
 
-function getCampaignRuntimeStatus(ad) {
-    const now = Date.now();
-    const start = ad?.startAt ? new Date(ad.startAt).getTime() : null;
-    const end = ad?.endAt ? new Date(ad.endAt).getTime() : null;
-
-    if (ad?.status === 'paused') return 'متوقف يدويًا';
-    if (ad?.status === 'draft') return 'مسودة';
-    if (end && end < now) return 'منتهي';
-    if (start && start > now) return 'مجدول';
-    return 'يعرض الآن';
+function getDisplayStatus(campaign) {
+    const status = campaign?.status || 'قيد المراجعة';
+    if (status === 'تم تعديله') return 'بانتظار المعلن';
+    return status;
 }
 
 function formatDateTime(value) {
-    if (!value) return '-';
+    if (!value) return '---';
 
     try {
         return new Intl.DateTimeFormat('ar-SA', {
@@ -56,6 +73,28 @@ function formatDateTime(value) {
     } catch {
         return value;
     }
+}
+
+function getDurationDays(startTime, endTime) {
+    if (!startTime || !endTime) return '---';
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return '---';
+    return `${Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)))} يوم`;
+}
+
+function getCampaignNumber(campaign) {
+    return campaign.campaignNumber || campaign.campaignId || campaign.id?.slice(0, 8) || '---';
+}
+
+function toInputDateTime(value) {
+    if (!value) return '';
+    if (typeof value === 'string' && value.includes('T')) return value.slice(0, 16);
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
 function AdminNav({ active = 'ads' }) {
@@ -74,7 +113,7 @@ function AdminNav({ active = 'ads' }) {
                 </Link>
             </li>
             <li>
-                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
+                <Link href="/admin/tools">
                     <i className="fa-solid fa-screwdriver-wrench"></i>
                     <span className="nav-text">إعدادات الأداة</span>
                 </Link>
@@ -97,7 +136,6 @@ function AdminNav({ active = 'ads' }) {
 
 export default function AdminAdsPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-    const [config, setConfig] = useState(null);
     const [adminName, setAdminName] = useState('أيها المدير');
     const [adminRole, setAdminRole] = useState('مدير');
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -105,30 +143,70 @@ export default function AdminAdsPage() {
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [message, setMessage] = useState(null);
-    const [isSaving, setIsSaving] = useState(false);
-    const [filters, setFilters] = useState({ search: '', slot: 'all', status: 'all' });
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingIndex, setEditingIndex] = useState(null);
-    const [adForm, setAdForm] = useState(EMPTY_AD);
+    const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
+    const [campaigns, setCampaigns] = useState([]);
+    const [filters, setFilters] = useState({ search: '', adder: '', date: '', status: 'all' });
+    const [modalMode, setModalMode] = useState(null);
+    const [selectedCampaign, setSelectedCampaign] = useState(null);
+    const [campaignForm, setCampaignForm] = useState(EMPTY_CAMPAIGN);
+    const [reason, setReason] = useState('');
+    const [isUploadingMedia, setIsUploadingMedia] = useState(false);
     const firebaseApiRef = useRef(null);
 
-    const campaigns = useMemo(() => config?.adCampaigns || [], [config?.adCampaigns]);
-    const googleTopSlot = config?.googleAdSlots?.top || {};
-
     const filteredCampaigns = useMemo(() => {
-        return campaigns
-            .map((ad, index) => ({ ...ad, originalIndex: index }))
-            .filter((ad) => {
-                const search = filters.search.trim().toLowerCase();
-                const matchesSearch = !search || [ad.name, ad.googleDriveUrl, ad.targetUrl, ad.notes]
-                    .filter(Boolean)
-                    .some((value) => String(value).toLowerCase().includes(search));
-                const matchesSlot = filters.slot === 'all' || ad.slot === filters.slot;
-                const matchesStatus = filters.status === 'all' || ad.status === filters.status;
+        return campaigns.filter((campaign) => {
+            const search = filters.search.trim().toLowerCase();
+            const adder = filters.adder.trim().toLowerCase();
+            const date = filters.date;
+            const status = filters.status;
 
-                return matchesSearch && matchesSlot && matchesStatus;
-            });
+            const matchesSearch = !search
+                || String(getCampaignNumber(campaign)).toLowerCase().includes(search)
+                || String(campaign.campaignName || '').toLowerCase().includes(search);
+            const matchesAdder = !adder
+                || String(campaign.addedByName || campaign.storeName || campaign.advertiserEmail || '').toLowerCase().includes(adder)
+                || String(campaign.addedById || campaign.advertiserId || '').toLowerCase().includes(adder);
+            const matchesDate = !date
+                || String(campaign.startTime || '').includes(date)
+                || String(campaign.endTime || '').includes(date);
+            const matchesStatus = status === 'all' || (campaign.status || 'قيد المراجعة') === status;
+
+            return matchesSearch && matchesAdder && matchesDate && matchesStatus;
+        });
     }, [campaigns, filters]);
+
+    const totals = useMemo(() => {
+        return campaigns.reduce((acc, campaign) => {
+            acc.views += Number(campaign.views || 0);
+            acc.clicks += Number(campaign.clicks || 0);
+            if ((campaign.status || 'قيد المراجعة') === 'قيد المراجعة') acc.pending += 1;
+            return acc;
+        }, { views: 0, clicks: 0, pending: 0 });
+    }, [campaigns]);
+
+    const fetchCampaigns = useCallback(async () => {
+        const firebaseApi = firebaseApiRef.current;
+        if (!firebaseApi?.db) return;
+
+        setIsLoadingCampaigns(true);
+        try {
+            const { collection, getDocs } = await import('firebase/firestore');
+            const snapshot = await getDocs(collection(firebaseApi.db, 'campaigns'));
+            const nextCampaigns = snapshot.docs
+                .map((item) => ({ id: item.id, ...item.data() }))
+                .sort((a, b) => {
+                    const aNumber = Number(a.campaignId || String(a.campaignNumber || '').replace(/\D/g, '')) || 0;
+                    const bNumber = Number(b.campaignId || String(b.campaignNumber || '').replace(/\D/g, '')) || 0;
+                    return bNumber - aNumber;
+                });
+            setCampaigns(nextCampaigns);
+        } catch (error) {
+            console.error('Error fetching campaigns:', error);
+            showMessage('error', 'تعذر جلب الإعلانات من قاعدة البيانات.');
+        } finally {
+            setIsLoadingCampaigns(false);
+        }
+    }, []);
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -136,19 +214,17 @@ export default function AdminAdsPage() {
 
         async function loadAdminAds() {
             try {
-                const [{ auth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ auth, db, getAdminProfile }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../../firebase'),
                     import('firebase/auth')
                 ]);
 
                 if (!isMounted) return;
 
-                firebaseApiRef.current = { auth, signOut, saveSiteConfigSection };
+                firebaseApiRef.current = { auth, db, signOut };
 
                 if (document.body.classList.contains('dark-mode')) setIsDarkMode(true);
-
-                const savedSidebar = window.localStorage.getItem('admin_sidebar_collapsed');
-                if (savedSidebar === 'true') setIsSidebarCollapsed(true);
+                if (window.localStorage.getItem('admin_sidebar_collapsed') === 'true') setIsSidebarCollapsed(true);
 
                 unsubscribe = onAuthStateChanged(auth, async (user) => {
                     if (!user) {
@@ -158,23 +234,20 @@ export default function AdminAdsPage() {
 
                     try {
                         const adminProfile = await getAdminProfile(user.uid);
-
                         if (!adminProfile || adminProfile.active !== true) {
                             await signOut(auth);
                             window.location.replace('/admin_login');
                             return;
                         }
 
-                        const siteConfig = await getSiteConfig();
-
                         if (!isMounted) return;
 
                         setAdminName(adminProfile.name || adminProfile.email || 'أيها المدير');
                         setAdminRole(adminProfile.role === 'super_admin' ? 'المدير العام' : 'مدير');
-                        setConfig(siteConfig);
+                        await fetchCampaigns();
                     } catch (error) {
                         console.error('Error loading ads admin page:', error);
-                        if (isMounted) setLoadError('حدث خطأ في قراءة إعدادات الإعلانات.');
+                        if (isMounted) setLoadError('حدث خطأ في قراءة حملات الإعلانات.');
                     } finally {
                         if (isMounted) setIsCheckingAuth(false);
                     }
@@ -194,7 +267,7 @@ export default function AdminAdsPage() {
             isMounted = false;
             unsubscribe();
         };
-    }, []);
+    }, [fetchCampaigns]);
 
     const showMessage = (type, text) => {
         setMessage({ type, text });
@@ -216,7 +289,6 @@ export default function AdminAdsPage() {
 
     const handleLogout = async () => {
         const firebaseApi = firebaseApiRef.current;
-
         try {
             if (firebaseApi?.signOut && firebaseApi?.auth) await firebaseApi.signOut(firebaseApi.auth);
         } finally {
@@ -224,86 +296,227 @@ export default function AdminAdsPage() {
         }
     };
 
-    const updateGoogleTopSlot = (field, value) => {
-        setConfig((current) => ({
-            ...current,
-            googleAdSlots: {
-                ...(current?.googleAdSlots || {}),
-                top: {
-                    ...(current?.googleAdSlots?.top || {}),
-                    [field]: value
-                }
-            }
-        }));
+    const openCreateModal = (campaign = null) => {
+        setSelectedCampaign(campaign);
+        setCampaignForm(campaign ? {
+            campaignName: campaign.campaignName || '',
+            targetUrl: campaign.targetUrl || '',
+            imageUrl: campaign.imageUrl || '',
+            targetTool: campaign.targetTool || 'date_tool',
+            adLocation: campaign.adLocation || 'top',
+            startTime: toInputDateTime(campaign.startTime),
+            endTime: toInputDateTime(campaign.endTime),
+            status: campaign.status || 'قيد المراجعة',
+            notes: campaign.notes || campaign.editReason || ''
+        } : EMPTY_CAMPAIGN);
+        setModalMode(campaign ? 'edit' : 'create');
     };
 
-    const openAdModal = (index = null) => {
-        setEditingIndex(index);
-        setAdForm(index === null ? EMPTY_AD : { ...EMPTY_AD, ...(campaigns[index] || {}) });
-        setIsModalOpen(true);
-    };
-
-    const closeAdModal = () => {
-        setIsModalOpen(false);
-        setEditingIndex(null);
-        setAdForm(EMPTY_AD);
-    };
-
-    const saveAdLocally = () => {
-        if (!adForm.name.trim()) {
-            showMessage('error', 'اكتب اسم الإعلان أولًا.');
-            return;
-        }
-
-        if (adForm.startAt && adForm.endAt && new Date(adForm.startAt).getTime() > new Date(adForm.endAt).getTime()) {
-            showMessage('error', 'تاريخ بداية الإعلان يجب أن يكون قبل تاريخ النهاية.');
-            return;
-        }
-
-        const cleanAd = {
-            ...adForm,
-            name: adForm.name.trim(),
-            googleDriveUrl: adForm.googleDriveUrl.trim(),
-            targetUrl: adForm.targetUrl.trim(),
-            notes: adForm.notes.trim()
-        };
-
-        setConfig((current) => {
-            const nextCampaigns = [...(current?.adCampaigns || [])];
-            if (editingIndex === null) nextCampaigns.unshift(cleanAd);
-            else nextCampaigns[editingIndex] = cleanAd;
-            return { ...current, adCampaigns: nextCampaigns };
+    const openCopyModal = (campaign) => {
+        setSelectedCampaign(null);
+        setCampaignForm({
+            ...EMPTY_CAMPAIGN,
+            campaignName: `${campaign.campaignName || 'إعلان'} (نسخة)`,
+            targetUrl: campaign.targetUrl || '',
+            imageUrl: campaign.imageUrl || '',
+            targetTool: campaign.targetTool || 'date_tool',
+            adLocation: campaign.adLocation || 'top',
+            startTime: toInputDateTime(campaign.startTime),
+            endTime: toInputDateTime(campaign.endTime)
         });
-
-        closeAdModal();
-        showMessage('success', 'تم تجهيز الإعلان محليًا. اضغط حفظ الإعلانات لتثبيته.');
+        setModalMode('create');
     };
 
-    const removeCampaign = (index) => {
-        setConfig((current) => ({
-            ...current,
-            adCampaigns: (current?.adCampaigns || []).filter((_, itemIndex) => itemIndex !== index)
-        }));
-        showMessage('success', 'تم حذف الإعلان محليًا. اضغط حفظ الإعلانات لتثبيت الحذف.');
+    const openReasonModal = (campaign, nextStatus) => {
+        setSelectedCampaign(campaign);
+        setReason('');
+        setModalMode(nextStatus === 'مرفوض' ? 'reject' : 'pause');
     };
 
-    const saveAdsSection = async () => {
-        const firebaseApi = firebaseApiRef.current;
-        if (!firebaseApi?.saveSiteConfigSection || !config) return;
+    const closeModal = () => {
+        setModalMode(null);
+        setSelectedCampaign(null);
+        setCampaignForm(EMPTY_CAMPAIGN);
+        setReason('');
+        setIsUploadingMedia(false);
+    };
 
-        setIsSaving(true);
-        try {
-            await firebaseApi.saveSiteConfigSection({
-                googleAdSlots: config.googleAdSlots || {},
-                adCampaigns: config.adCampaigns || []
-            });
-            showMessage('success', 'تم حفظ إعدادات الإعلانات بنجاح.');
-        } catch (error) {
-            console.error('Error saving ads section:', error);
-            showMessage('error', 'تعذر حفظ إعدادات الإعلانات. تحقق من صلاحيات المدير.');
-        } finally {
-            setIsSaving(false);
+    const validateMediaFileBeforeUpload = (file) => {
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+        if (file.size <= 0 || file.size > MAX_MEDIA_FILE_BYTES) {
+            return 'حجم الصورة غير مقبول. الحد الأقصى 5MB.';
         }
+
+        if (!SUPPORTED_MEDIA_EXTENSIONS.has(extension)) {
+            return 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF.';
+        }
+
+        if (file.type && !SUPPORTED_MEDIA_TYPES.has(file.type)) {
+            return 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF.';
+        }
+
+        return '';
+    };
+
+    const uploadCampaignMedia = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) return;
+
+        const validationError = validateMediaFileBeforeUpload(file);
+        if (validationError) {
+            showMessage('error', validationError);
+            return;
+        }
+
+        const currentUser = firebaseApiRef.current?.auth?.currentUser;
+        if (!currentUser) {
+            showMessage('error', 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى.');
+            return;
+        }
+
+        setIsUploadingMedia(true);
+        showMessage('success', 'جاري رفع صورة الإعلان إلى R2...');
+
+        try {
+            const token = await currentUser.getIdToken();
+            const formData = new FormData();
+            formData.append('category', 'ads');
+            formData.append('file', file);
+
+            const response = await fetch('/api/media/upload', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                body: formData
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok || !result.ok) {
+                throw new Error(result.error || 'upload_failed');
+            }
+
+            setCampaignForm((current) => ({ ...current, imageUrl: result.url }));
+            showMessage('success', 'تم رفع الصورة إلى R2 وربطها بالإعلان.');
+        } catch (error) {
+            console.error('Campaign media upload error:', error);
+            const messages = {
+                unauthorized: 'لا تملك صلاحية رفع الصور. تأكد من أن حسابك الإداري مفعّل.',
+                media_storage_not_configured: 'تخزين الصور غير مفعل أو غير مربوط.',
+                invalid_category: 'نوع مساحة الرفع غير معروف.',
+                missing_file: 'لم يتم اختيار ملف للرفع.',
+                invalid_file_size: 'حجم الصورة غير مقبول. الحد الأقصى 5MB.',
+                unsupported_image_type: 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF.',
+                upload_failed: 'تعذر رفع الصورة بسبب خطأ غير متوقع.'
+            };
+            showMessage('error', messages[error.message] || 'تعذر رفع صورة الإعلان.');
+        } finally {
+            setIsUploadingMedia(false);
+        }
+    };
+
+    const saveCampaign = async () => {
+        if (!campaignForm.campaignName.trim() || !campaignForm.targetUrl.trim() || !campaignForm.imageUrl.trim()) {
+            showMessage('error', 'اسم الإعلان والرابط والمرفق مطلوبة.');
+            return;
+        }
+
+        if (campaignForm.startTime && campaignForm.endTime && new Date(campaignForm.endTime) <= new Date(campaignForm.startTime)) {
+            showMessage('error', 'وقت نهاية الإعلان يجب أن يكون بعد وقت البداية.');
+            return;
+        }
+
+        try {
+            const { addDoc, collection, doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
+            const firebaseApi = firebaseApiRef.current;
+            const payload = {
+                campaignName: campaignForm.campaignName.trim(),
+                targetUrl: campaignForm.targetUrl.trim(),
+                imageUrl: campaignForm.imageUrl.trim(),
+                mediaType: campaignForm.imageUrl.includes('.mp4') ? 'video' : 'image',
+                targetTool: campaignForm.targetTool,
+                adLocation: campaignForm.adLocation,
+                startTime: campaignForm.startTime,
+                endTime: campaignForm.endTime,
+                status: campaignForm.status,
+                notes: campaignForm.notes.trim(),
+                updatedAt: serverTimestamp()
+            };
+
+            if (modalMode === 'edit' && selectedCampaign?.id) {
+                await updateDoc(doc(firebaseApi.db, 'campaigns', selectedCampaign.id), {
+                    ...payload,
+                    editReason: campaignForm.notes.trim(),
+                    status: campaignForm.status === selectedCampaign.status ? 'تم تعديله' : campaignForm.status
+                });
+                showMessage('success', 'تم تعديل الإعلان بنجاح.');
+            } else {
+                const campaignNumber = `AD-${Date.now().toString().slice(-8)}`;
+                await addDoc(collection(firebaseApi.db, 'campaigns'), {
+                    ...payload,
+                    campaignNumber,
+                    views: 0,
+                    clicks: 0,
+                    addedByType: adminRole,
+                    addedByName: adminName,
+                    addedById: firebaseApi.auth?.currentUser?.uid || '',
+                    createdAt: serverTimestamp()
+                });
+                showMessage('success', `تمت إضافة الإعلان رقم ${campaignNumber} وهو بانتظار المراجعة.`);
+            }
+
+            closeModal();
+            await fetchCampaigns();
+        } catch (error) {
+            console.error('Error saving campaign:', error);
+            showMessage('error', 'تعذر حفظ الإعلان. تحقق من صلاحيات المدير.');
+        }
+    };
+
+    const updateCampaignStatus = async (campaign, status, extra = {}) => {
+        try {
+            const { doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
+            const firebaseApi = firebaseApiRef.current;
+            await updateDoc(doc(firebaseApi.db, 'campaigns', campaign.id), {
+                status,
+                ...extra,
+                updatedAt: serverTimestamp()
+            });
+            showMessage('success', `تم تغيير حالة الإعلان إلى: ${status}`);
+            closeModal();
+            await fetchCampaigns();
+        } catch (error) {
+            console.error('Error updating campaign status:', error);
+            showMessage('error', 'تعذر تحديث حالة الإعلان.');
+        }
+    };
+
+    const deleteCampaign = async (campaign) => {
+        if (!window.confirm('هل تريد حذف هذا الإعلان نهائيًا؟')) return;
+
+        try {
+            const { deleteDoc, doc } = await import('firebase/firestore');
+            await deleteDoc(doc(firebaseApiRef.current.db, 'campaigns', campaign.id));
+            showMessage('success', 'تم حذف الإعلان.');
+            await fetchCampaigns();
+        } catch (error) {
+            console.error('Error deleting campaign:', error);
+            showMessage('error', 'تعذر حذف الإعلان.');
+        }
+    };
+
+    const submitReason = () => {
+        if (!reason.trim()) {
+            showMessage('error', 'اكتب السبب أولًا.');
+            return;
+        }
+
+        const status = modalMode === 'reject' ? 'مرفوض' : 'متوقف مؤقتاً';
+        const key = modalMode === 'reject' ? 'rejectReason' : 'pauseReason';
+        updateCampaignStatus(selectedCampaign, status, { [key]: reason.trim() });
     };
 
     if (isCheckingAuth) {
@@ -319,10 +532,7 @@ export default function AdminAdsPage() {
 
     return (
         <div className={`legacy-admin-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`} dir="rtl">
-            <div
-                className={`legacy-sidebar-overlay ${isMobileSidebarOpen ? 'active' : ''}`}
-                onClick={() => setIsMobileSidebarOpen(false)}
-            ></div>
+            <div className={`legacy-sidebar-overlay ${isMobileSidebarOpen ? 'active' : ''}`} onClick={() => setIsMobileSidebarOpen(false)}></div>
 
             <aside className={`legacy-sidebar ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
                 <div className="legacy-sidebar-header">
@@ -334,7 +544,6 @@ export default function AdminAdsPage() {
                         <i className="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
-
                 <AdminNav active="ads" />
             </aside>
 
@@ -354,7 +563,6 @@ export default function AdminAdsPage() {
                             </div>
                         </div>
                     </div>
-
                     <div className="legacy-nav-controls">
                         <button className="legacy-theme-toggle" onClick={toggleDarkMode} aria-label="تبديل المظهر">
                             <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
@@ -373,247 +581,276 @@ export default function AdminAdsPage() {
                     </div>
                 )}
 
-                <section className="legacy-welcome-banner">
-                    <div className="welcome-text">
-                        <h1>إدارة الإعلانات</h1>
-                        <p>صفحة مخصصة للحملات وموضع Google العلوي، بنفس روح لوحة الإعلانات القديمة ومرتبطة بإعدادات الموقع الحالية.</p>
+                <section className="legacy-ads-hero">
+                    <div>
+                        <h1>
+                            <i className="fa-solid fa-bullhorn"></i>
+                            إدارة الحملات الإعلانية
+                        </h1>
+                        <p>متابعة الطلبات، الإحصائيات، وحالة الإعلانات المخصصة</p>
                     </div>
-                    <i className="fa-solid fa-rectangle-ad"></i>
+                    <button className="legacy-primary-btn" onClick={() => openCreateModal()}>
+                        <i className="fa-solid fa-plus"></i>
+                        إضافة إعلان جديد
+                    </button>
                 </section>
 
-                <section className="legacy-dashboard-section">
-                    <div className="legacy-page-heading">
-                        <div>
-                            <h3 className="legacy-section-title">
-                                <i className="fa-solid fa-list-check"></i>
-                                الحملات الإعلانية
-                            </h3>
-                            <p>أضف إعلانًا، حدد موضعه وفترته، ثم احفظ القسم ليظهر ضمن إعدادات الموقع.</p>
-                        </div>
-                        <button className="legacy-primary-btn" onClick={() => openAdModal()}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة إعلان
-                        </button>
-                    </div>
+                <section className="legacy-ad-kpis">
+                    <div><span>إجمالي الحملات</span><strong>{campaigns.length}</strong></div>
+                    <div><span>قيد المراجعة</span><strong>{totals.pending}</strong></div>
+                    <div><span>الزيارات</span><strong>{totals.views.toLocaleString('ar-SA')}</strong></div>
+                    <div><span>النقرات</span><strong>{totals.clicks.toLocaleString('ar-SA')}</strong></div>
+                </section>
 
-                    <div className="legacy-filter-bar">
-                        <div className="legacy-field compact">
-                            <label>بحث</label>
-                            <input
-                                value={filters.search}
-                                onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))}
-                                placeholder="اسم الإعلان أو الرابط"
-                            />
-                        </div>
-                        <div className="legacy-field compact">
-                            <label>الموضع</label>
-                            <select value={filters.slot} onChange={(event) => setFilters((current) => ({ ...current, slot: event.target.value }))}>
-                                <option value="all">كل المواضع</option>
-                                {AD_SLOTS.map((slot) => (
-                                    <option key={slot.value} value={slot.value}>{slot.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="legacy-field compact">
-                            <label>الحالة</label>
-                            <select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
-                                <option value="all">كل الحالات</option>
-                                {STATUS_OPTIONS.map((status) => (
-                                    <option key={status.value} value={status.value}>{status.label}</option>
-                                ))}
-                            </select>
-                        </div>
+                <section className="legacy-filter-bar old-ads-filters">
+                    <div className="legacy-field compact">
+                        <label>بحث برقم الإعلان أو اسم الحملة</label>
+                        <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="أدخل رقم الإعلان أو الاسم..." />
                     </div>
+                    <div className="legacy-field compact">
+                        <label>اسم أو رقم مضيف الإعلان</label>
+                        <input value={filters.adder} onChange={(event) => setFilters((current) => ({ ...current, adder: event.target.value }))} placeholder="ابحث هنا..." />
+                    </div>
+                    <div className="legacy-field compact">
+                        <label>تاريخ البدء أو الانتهاء</label>
+                        <input type="date" value={filters.date} onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value }))} />
+                    </div>
+                    <div className="legacy-field compact">
+                        <label>حالة الإعلان</label>
+                        <select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
+                            <option value="all">جميع الحالات</option>
+                            {STATUS_OPTIONS.map((status) => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
+                        </select>
+                    </div>
+                </section>
 
-                    <div className="legacy-table-card">
-                        <table className="legacy-ads-table">
-                            <thead>
+                <section className="legacy-table-card old-ads-table-card">
+                    <table className="legacy-ads-table old-ads-table">
+                        <thead>
+                            <tr>
+                                <th>جهة وتفاصيل الإعلان</th>
+                                <th>تاريخ ووقت العرض</th>
+                                <th>المدة</th>
+                                <th>الزيارات (أثناء العرض)</th>
+                                <th>النقرات</th>
+                                <th>الحالة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {isLoadingCampaigns ? (
                                 <tr>
-                                    <th>#</th>
-                                    <th>اسم الإعلان</th>
-                                    <th>الموضع</th>
-                                    <th>الفترة</th>
-                                    <th>الحالة</th>
-                                    <th>إجراءات</th>
+                                    <td colSpan="7" className="legacy-empty-table">
+                                        <i className="fa-solid fa-spinner fa-spin"></i> جاري جلب البيانات...
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {filteredCampaigns.length ? filteredCampaigns.map((ad, index) => (
-                                    <tr key={`${ad.name}-${ad.originalIndex}`}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <strong>{ad.name || '-'}</strong>
-                                            <small>{ad.targetUrl || ad.googleDriveUrl || 'لا يوجد رابط'}</small>
-                                        </td>
-                                        <td>{getSlotLabel(ad.slot)}</td>
-                                        <td>
-                                            <span>{formatDateTime(ad.startAt)}</span>
-                                            <small>{formatDateTime(ad.endAt)}</small>
-                                        </td>
-                                        <td>
-                                            <span className={`legacy-status-pill ${ad.status || 'draft'}`}>
-                                                {getCampaignRuntimeStatus(ad)}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="legacy-row-actions">
-                                                <button onClick={() => openAdModal(ad.originalIndex)} aria-label="تعديل الإعلان">
+                            ) : filteredCampaigns.length ? filteredCampaigns.map((campaign) => (
+                                <tr key={campaign.id}>
+                                    <td className="legacy-ad-details-cell">
+                                        <strong>{campaign.campaignName || 'إعلان بدون اسم'}</strong>
+                                        <small>رقم: {getCampaignNumber(campaign)} | {TOOL_NAMES[campaign.targetTool] || 'أداة التاريخ والعمر'} - {LOCATION_NAMES[campaign.adLocation] || 'غير محدد'}</small>
+                                        <div className="legacy-ad-links">
+                                            {campaign.imageUrl && <a href={campaign.imageUrl} target="_blank" rel="noreferrer"><i className="fa-solid fa-image"></i> المرفق</a>}
+                                            {campaign.targetUrl && <a href={campaign.targetUrl} target="_blank" rel="noreferrer"><i className="fa-solid fa-arrow-up-right-from-square"></i> الرابط</a>}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span>{formatDateTime(campaign.startTime)}</span>
+                                        <small>{formatDateTime(campaign.endTime)}</small>
+                                    </td>
+                                    <td>{getDurationDays(campaign.startTime, campaign.endTime)}</td>
+                                    <td>{Number(campaign.views || 0).toLocaleString('ar-SA')}</td>
+                                    <td>{Number(campaign.clicks || 0).toLocaleString('ar-SA')}</td>
+                                    <td>
+                                        <span className={`legacy-status-pill ${getStatusClass(campaign.status)}`}>
+                                            {getDisplayStatus(campaign)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="legacy-row-actions old-action-btns">
+                                            <button title="التفاصيل السريعة" onClick={() => { setSelectedCampaign(campaign); setModalMode('view'); }}>
+                                                <i className="fa-solid fa-eye"></i>
+                                            </button>
+                                            {(campaign.status === 'قيد المراجعة' || !campaign.status) && (
+                                                <>
+                                                    <button className="approve" title="قبول ونشر مباشر" onClick={() => updateCampaignStatus(campaign, 'نشط')}>
+                                                        <i className="fa-solid fa-check"></i>
+                                                    </button>
+                                                    <button title="تعديل الإعلان" onClick={() => openCreateModal(campaign)}>
+                                                        <i className="fa-solid fa-pen"></i>
+                                                    </button>
+                                                    <button className="danger" title="رفض الإعلان" onClick={() => openReasonModal(campaign, 'مرفوض')}>
+                                                        <i className="fa-solid fa-ban"></i>
+                                                    </button>
+                                                </>
+                                            )}
+                                            {campaign.status === 'نشط' && (
+                                                <>
+                                                    <button className="pause" title="إيقاف مؤقت" onClick={() => openReasonModal(campaign, 'متوقف مؤقتاً')}>
+                                                        <i className="fa-solid fa-pause"></i>
+                                                    </button>
+                                                    <button title="تعديل الإعلان" onClick={() => openCreateModal(campaign)}>
+                                                        <i className="fa-solid fa-pen"></i>
+                                                    </button>
+                                                </>
+                                            )}
+                                            {campaign.status === 'متوقف مؤقتاً' && (
+                                                <>
+                                                    <button className="approve" title="استئناف ونشر" onClick={() => updateCampaignStatus(campaign, 'نشط')}>
+                                                        <i className="fa-solid fa-play"></i>
+                                                    </button>
+                                                    <button title="تعديل الإعلان" onClick={() => openCreateModal(campaign)}>
+                                                        <i className="fa-solid fa-pen"></i>
+                                                    </button>
+                                                </>
+                                            )}
+                                            {(campaign.status === 'مرفوض' || campaign.status === 'تم تعديله' || campaign.status === 'منتهي') && (
+                                                <button title="تعديل الإعلان" onClick={() => openCreateModal(campaign)}>
                                                     <i className="fa-solid fa-pen"></i>
                                                 </button>
-                                                <button className="danger" onClick={() => removeCampaign(ad.originalIndex)} aria-label="حذف الإعلان">
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )) : (
-                                    <tr>
-                                        <td colSpan="6" className="legacy-empty-table">
-                                            لا توجد إعلانات مطابقة. ابدأ بإضافة إعلان جديد.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                            )}
+                                            <button title="نسخ كإعلان جديد" onClick={() => openCopyModal(campaign)}>
+                                                <i className="fa-solid fa-copy"></i>
+                                            </button>
+                                            <button className="danger" title="حذف الإعلان" onClick={() => deleteCampaign(campaign)}>
+                                                <i className="fa-solid fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="7" className="legacy-empty-table">لا توجد إعلانات مطابقة لمعايير البحث.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
                 </section>
-
-                <section className="legacy-dashboard-section">
-                    <h3 className="legacy-section-title">
-                        <i className="fa-brands fa-google"></i>
-                        إعلان Google العلوي
-                    </h3>
-                    <div className="legacy-google-card">
-                        <p>هذا الموضع يستخدم إعدادات Google الحالية للإعلان أعلى الصفحة. لا نلصق JavaScript خام هنا حفاظًا على الأمان.</p>
-                        <div className="legacy-form-grid">
-                            <div className="legacy-field">
-                                <label>Publisher / Client ID</label>
-                                <input
-                                    value={googleTopSlot.client || ''}
-                                    onChange={(event) => updateGoogleTopSlot('client', event.target.value)}
-                                    placeholder="ca-pub-xxxxxxxxxxxxxxxx"
-                                />
-                            </div>
-                            <div className="legacy-field">
-                                <label>Ad Slot</label>
-                                <input
-                                    value={googleTopSlot.slot || ''}
-                                    onChange={(event) => updateGoogleTopSlot('slot', event.target.value)}
-                                    placeholder="7882868833"
-                                />
-                            </div>
-                            <div className="legacy-field">
-                                <label>Ad Format</label>
-                                <select
-                                    value={googleTopSlot.format || 'auto'}
-                                    onChange={(event) => updateGoogleTopSlot('format', event.target.value)}
-                                >
-                                    <option value="auto">auto</option>
-                                    <option value="rectangle">rectangle</option>
-                                    <option value="horizontal">horizontal</option>
-                                    <option value="vertical">vertical</option>
-                                </select>
-                            </div>
-                            <label className="legacy-check-row">
-                                <input
-                                    type="checkbox"
-                                    checked={googleTopSlot.fullWidthResponsive !== false}
-                                    onChange={(event) => updateGoogleTopSlot('fullWidthResponsive', event.target.checked)}
-                                />
-                                إعلان متجاوب بكامل العرض
-                            </label>
-                        </div>
-                    </div>
-                </section>
-
-                <div className="legacy-sticky-save">
-                    <button className="legacy-primary-btn wide" onClick={saveAdsSection} disabled={isSaving}>
-                        <i className={`fa-solid ${isSaving ? 'fa-spinner fa-spin' : 'fa-floppy-disk'}`}></i>
-                        {isSaving ? 'جاري الحفظ...' : 'حفظ الإعلانات'}
-                    </button>
-                </div>
 
                 <footer className="legacy-admin-footer">
-                    <div>
-                        جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong>
-                    </div>
-                    <div className="legacy-version-badge">
-                        <i className="fa-solid fa-bullhorn"></i> إدارة الإعلانات
-                    </div>
+                    <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>
+                    <div className="legacy-version-badge"><i className="fa-solid fa-bullhorn"></i> إدارة الإعلانات</div>
                 </footer>
             </main>
 
-            {isModalOpen && (
+            {(modalMode === 'create' || modalMode === 'edit') && (
                 <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
                     <div className="legacy-modal-card">
                         <div className="legacy-modal-head">
                             <div>
-                                <h3>{editingIndex === null ? 'إضافة إعلان' : 'تعديل إعلان'}</h3>
-                                <p>الحجم المقترح للبانر العلوي 970x250 أو نسخة متجاوبة واضحة وخفيفة.</p>
+                                <h3><i className="fa-solid fa-copy"></i> {modalMode === 'edit' ? 'تعديل الإعلان' : 'إضافة إعلان جديد'}</h3>
+                                <p>رقم الإعلان يُنشأ تلقائيًا، والحالة الافتراضية تكون قيد المراجعة.</p>
                             </div>
-                            <button onClick={closeAdModal} aria-label="إغلاق">
-                                <i className="fa-solid fa-xmark"></i>
-                            </button>
+                            <button onClick={closeModal} aria-label="إغلاق"><i className="fa-solid fa-xmark"></i></button>
                         </div>
 
                         <div className="legacy-form-grid">
                             <div className="legacy-field">
-                                <label>اسم الإعلان</label>
-                                <input value={adForm.name} onChange={(event) => setAdForm((current) => ({ ...current, name: event.target.value }))} />
+                                <label>اسم الحملة</label>
+                                <input value={campaignForm.campaignName} onChange={(event) => setCampaignForm((current) => ({ ...current, campaignName: event.target.value }))} />
                             </div>
                             <div className="legacy-field">
-                                <label>موضع الإعلان</label>
-                                <select value={adForm.slot} onChange={(event) => setAdForm((current) => ({ ...current, slot: event.target.value }))}>
-                                    {AD_SLOTS.map((slot) => (
-                                        <option key={slot.value} value={slot.value}>{slot.label}</option>
-                                    ))}
+                                <label>رابط التوجيه</label>
+                                <input dir="ltr" value={campaignForm.targetUrl} onChange={(event) => setCampaignForm((current) => ({ ...current, targetUrl: event.target.value }))} />
+                            </div>
+                            <div className="legacy-field">
+                                <label>صورة الإعلان من R2</label>
+                                <div className="legacy-upload-row">
+                                    <input dir="ltr" value={campaignForm.imageUrl} onChange={(event) => setCampaignForm((current) => ({ ...current, imageUrl: event.target.value }))} placeholder="/api/media/ads/..." />
+                                    <label className={`legacy-upload-btn ${isUploadingMedia ? 'disabled' : ''}`}>
+                                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadCampaignMedia} disabled={isUploadingMedia} />
+                                        <i className={`fa-solid ${isUploadingMedia ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}`}></i>
+                                        {isUploadingMedia ? 'يرفع...' : 'رفع صورة'}
+                                    </label>
+                                </div>
+                                <span className="legacy-field-hint">سيتم رفع الصورة إلى Cloudflare R2 وحفظ رابطها هنا.</span>
+                            </div>
+                            <div className="legacy-field">
+                                <label>مكان العرض</label>
+                                <select value={campaignForm.adLocation} onChange={(event) => setCampaignForm((current) => ({ ...current, adLocation: event.target.value }))}>
+                                    {Object.entries(LOCATION_NAMES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                                 </select>
                             </div>
                             <div className="legacy-field">
-                                <label>بداية الإعلان</label>
-                                <input type="datetime-local" value={adForm.startAt} onChange={(event) => setAdForm((current) => ({ ...current, startAt: event.target.value }))} />
+                                <label>تاريخ ووقت البداية</label>
+                                <input type="datetime-local" value={campaignForm.startTime} onChange={(event) => setCampaignForm((current) => ({ ...current, startTime: event.target.value }))} />
                             </div>
                             <div className="legacy-field">
-                                <label>نهاية الإعلان</label>
-                                <input type="datetime-local" value={adForm.endAt} onChange={(event) => setAdForm((current) => ({ ...current, endAt: event.target.value }))} />
-                            </div>
-                            <div className="legacy-field">
-                                <label>رابط ملف الإعلان من Google Drive</label>
-                                <input value={adForm.googleDriveUrl} onChange={(event) => setAdForm((current) => ({ ...current, googleDriveUrl: event.target.value }))} placeholder="https://drive.google.com/..." />
-                            </div>
-                            <div className="legacy-field">
-                                <label>رابط انتقال العميل</label>
-                                <input value={adForm.targetUrl} onChange={(event) => setAdForm((current) => ({ ...current, targetUrl: event.target.value }))} placeholder="https://example.com" />
+                                <label>تاريخ ووقت النهاية</label>
+                                <input type="datetime-local" value={campaignForm.endTime} onChange={(event) => setCampaignForm((current) => ({ ...current, endTime: event.target.value }))} />
                             </div>
                             <div className="legacy-field">
                                 <label>الحالة</label>
-                                <select value={adForm.status} onChange={(event) => setAdForm((current) => ({ ...current, status: event.target.value }))}>
-                                    {STATUS_OPTIONS.map((status) => (
-                                        <option key={status.value} value={status.value}>{status.label}</option>
-                                    ))}
+                                <select value={campaignForm.status} onChange={(event) => setCampaignForm((current) => ({ ...current, status: event.target.value }))}>
+                                    {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
                                 </select>
                             </div>
                             <div className="legacy-field">
-                                <label>ملاحظات</label>
-                                <textarea value={adForm.notes} onChange={(event) => setAdForm((current) => ({ ...current, notes: event.target.value }))} rows="4" />
-                            </div>
-                        </div>
-
-                        <div className="legacy-ad-preview">
-                            <i className="fa-solid fa-image"></i>
-                            <div>
-                                <strong>معاينة الإعلان</strong>
-                                <span>{adForm.googleDriveUrl ? 'تم إدخال رابط الملف. تأكد أن الملف قابل للعرض للعميل.' : 'ستظهر المعاينة الفعلية بعد ربط عرض الملفات لاحقًا.'}</span>
+                                <label>سبب التعديل / ملاحظات</label>
+                                <textarea rows="4" value={campaignForm.notes} onChange={(event) => setCampaignForm((current) => ({ ...current, notes: event.target.value }))} />
                             </div>
                         </div>
 
                         <div className="legacy-modal-actions">
-                            <button className="legacy-secondary-btn" onClick={closeAdModal}>إلغاء</button>
-                            <button className="legacy-primary-btn" onClick={saveAdLocally}>
-                                <i className="fa-solid fa-check"></i>
-                                حفظ الإعلان
-                            </button>
+                            <button className="legacy-secondary-btn" onClick={closeModal}>إلغاء</button>
+                            <button className="legacy-primary-btn" onClick={saveCampaign}><i className="fa-solid fa-check"></i> حفظ الإعلان</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {(modalMode === 'reject' || modalMode === 'pause') && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
+                    <div className="legacy-modal-card small">
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3>{modalMode === 'reject' ? 'رفض الإعلان' : 'إيقاف الإعلان مؤقتًا'}</h3>
+                                <p>{selectedCampaign?.campaignName}</p>
+                            </div>
+                            <button onClick={closeModal} aria-label="إغلاق"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div className="legacy-field">
+                            <label>السبب</label>
+                            <textarea rows="5" value={reason} onChange={(event) => setReason(event.target.value)} />
+                        </div>
+                        <div className="legacy-modal-actions">
+                            <button className="legacy-secondary-btn" onClick={closeModal}>إلغاء</button>
+                            <button className="legacy-primary-btn" onClick={submitReason}>تأكيد</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {modalMode === 'view' && selectedCampaign && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
+                    <div className="legacy-modal-card small">
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3><i className="fa-solid fa-circle-info"></i> تفاصيل الإعلان</h3>
+                                <p>رقم الإعلان: {getCampaignNumber(selectedCampaign)}</p>
+                            </div>
+                            <button onClick={closeModal} aria-label="إغلاق"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div className="legacy-details-list">
+                            <div><strong>مضاف بواسطة:</strong> {selectedCampaign.addedByName || selectedCampaign.storeName || selectedCampaign.advertiserEmail || '---'}</div>
+                            <div><strong>مكان العرض:</strong> {LOCATION_NAMES[selectedCampaign.adLocation] || 'غير محدد'}</div>
+                            <div><strong>رابط التوجيه:</strong> <a href={selectedCampaign.targetUrl || '#'} target="_blank" rel="noreferrer">{selectedCampaign.targetUrl || 'لا يوجد'}</a></div>
+                            <div><strong>الإحصائيات:</strong> {selectedCampaign.clicks || 0} نقرة / {selectedCampaign.views || 0} مشاهدة</div>
+                            {selectedCampaign.rejectReason && <div><strong>سبب الرفض:</strong> {selectedCampaign.rejectReason}</div>}
+                            {selectedCampaign.pauseReason && <div><strong>سبب الإيقاف:</strong> {selectedCampaign.pauseReason}</div>}
+                            {selectedCampaign.editReason && <div><strong>سبب التعديل:</strong> {selectedCampaign.editReason}</div>}
+                        </div>
+                        {selectedCampaign.imageUrl && (
+                            <div className="legacy-ad-preview">
+                                <i className="fa-solid fa-image"></i>
+                                <div>
+                                    <strong>الوسائط المرفقة</strong>
+                                    <a href={selectedCampaign.imageUrl} target="_blank" rel="noreferrer">{selectedCampaign.imageUrl}</a>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

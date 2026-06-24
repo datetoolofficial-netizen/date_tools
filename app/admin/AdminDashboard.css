@@ -697,6 +697,17 @@ body.dark-mode .legacy-admin-shell {
     color: var(--success-text) !important;
 }
 
+.legacy-status-pill.pending,
+.legacy-status-pill.modified {
+    background: var(--warning-bg);
+    color: var(--warning-text) !important;
+}
+
+.legacy-status-pill.rejected {
+    background: var(--danger-bg);
+    color: var(--danger-text) !important;
+}
+
 .legacy-status-pill.paused,
 .legacy-status-pill.ended {
     background: var(--danger-bg);
@@ -837,6 +848,178 @@ body.dark-mode .legacy-admin-shell {
     margin-top: 18px;
 }
 
+.legacy-modal-card.small {
+    width: min(520px, 100%);
+}
+
+.legacy-ads-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.legacy-ads-hero h1 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: clamp(24px, 3vw, 34px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.legacy-ads-hero h1 i {
+    color: var(--primary-color);
+}
+
+.legacy-ads-hero p {
+    margin: 8px 0 0;
+    color: var(--text-sub);
+    font-weight: 700;
+}
+
+.legacy-ad-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.legacy-ad-kpis div {
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.legacy-ad-kpis span {
+    display: block;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.legacy-ad-kpis strong {
+    color: var(--text-main);
+    font-size: 24px;
+}
+
+.old-ads-filters {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.old-ads-table-card {
+    margin-bottom: 40px;
+    overflow-x: auto;
+}
+
+.old-ads-table {
+    min-width: 1050px;
+}
+
+.old-ads-table th {
+    color: var(--text-sub);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.old-ads-table tr:hover {
+    background: rgba(59, 130, 246, 0.04);
+}
+
+.legacy-ad-details-cell strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.legacy-ad-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.legacy-ad-links a,
+.legacy-details-list a,
+.legacy-ad-preview a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 800;
+    word-break: break-all;
+}
+
+.old-action-btns {
+    flex-wrap: wrap;
+}
+
+.old-action-btns button {
+    color: #64748b;
+}
+
+.old-action-btns button.approve {
+    color: var(--success-text);
+}
+
+.old-action-btns button.pause {
+    color: var(--warning-text);
+}
+
+.legacy-details-list {
+    display: grid;
+    gap: 10px;
+    color: var(--text-main);
+    font-size: 14px;
+}
+
+.legacy-details-list div {
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 10px;
+    line-height: 1.8;
+}
+
+.legacy-upload-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.legacy-upload-btn {
+    min-height: 46px;
+    border-radius: 12px;
+    padding: 0 14px;
+    background: var(--primary-color);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.legacy-upload-btn.disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.legacy-upload-btn input {
+    display: none;
+}
+
+.legacy-field-hint {
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .legacy-admin-footer {
     margin-top: auto;
     padding: 12px 0;
@@ -934,6 +1117,19 @@ body.dark-mode .legacy-admin-shell {
     }
 
     .legacy-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .legacy-ad-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .legacy-ads-hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .legacy-upload-row {
         grid-template-columns: 1fr;
     }
 

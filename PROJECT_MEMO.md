@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.14.
+الإصدار الحالي للتطبيق هو 0.2.15.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -97,6 +97,7 @@ https://www.date-tool.com
 33. إزالة خانات روابط ورفع صور الإعلانات من قسم إدارة الإعلانات في لوحة الإدارة والاكتفاء بزر إضافة إعلان فوق الجدول.
 34. فصل إحصائيات الإعلانات عن إحصائيات الأدوات، وإضافة تتبع ظهور الإعلانات وحساب CTR ونسبة الظهور لكل بانر.
 35. إضافة صفحة إدارة إعلانات مستقلة داخل لوحة الإدارة الجديدة وربطها من السايد بار مع الإبقاء على صفحة إعدادات الأداة القديمة كمرجع.
+36. تحويل صفحة إدارة الإعلانات إلى جدول حملات متقدم قريب من الصفحة القديمة وربطه بـ Firestore campaigns مع رفع صور الإعلانات إلى R2.
 
 ---
 
@@ -2812,6 +2813,11 @@ PROJECT_MEMO.md
 ```powershell
 npm run lint
 npm run build
+npx firebase-tools deploy --only firestore:rules
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+npx wrangler versions list --config wrangler.jsonc
+npx wrangler whoami
 ```
 
 النتيجة:
@@ -2879,6 +2885,49 @@ npx wrangler deploy --config wrangler.jsonc
 app/admin/page.jsx
 app/admin/ads/page.jsx
 app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار جدول إدارة الإعلانات المتقدم ورفع R2 0.2.15
+
+تم تنفيذ:
+
+```powershell
+npm run lint
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم تحويل صفحة `/admin/ads` إلى جدول إدارة حملات قريب من صفحة `admin_ads.html` القديمة.
+✅ تم حذف قسم إعداد Google/الأكواد من صفحة إدارة الإعلانات الجديدة.
+✅ أصبحت الصفحة تقرأ حملات الإعلانات من Firestore collection باسم `campaigns`.
+✅ تمت إضافة فلاتر البحث القديمة: رقم/اسم الإعلان، اسم أو رقم المضيف، التاريخ، والحالة.
+✅ تمت إضافة حالات وإجراءات الإدارة: قيد المراجعة، نشط، مرفوض، متوقف مؤقتاً، تم تعديله، منتهي.
+✅ تمت إضافة أزرار: عرض التفاصيل، قبول، رفض، إيقاف، استئناف، تعديل، نسخ كإعلان جديد، حذف.
+✅ تمت إضافة رفع صورة الإعلان إلى Cloudflare R2 عبر `/api/media/upload` بفئة `ads` بدل الاعتماد على Google Drive.
+✅ تم تعديل `firestore.rules` للسماح للمدير النشط بإنشاء حملات من لوحة الإدارة مع إبقاء إنشاء المعلن محصورًا بحالته الآمنة.
+✅ npm run lint نجح بدون تحذيرات.
+✅ npm run build نجح وظهر المسار `/admin/ads`.
+✅ تم نشر Firestore Rules بنجاح على مشروع `date-tool-official`.
+✅ OpenNext build نجح للإصدار 0.2.15.
+⚠️ لم يتم تأكيد نشر Worker عبر Wrangler لأن أوامر `wrangler deploy` و `wrangler versions list` و `wrangler whoami` علقت حتى انتهاء المهلة بدون إخراج.
+⚠️ فحص `https://date-tool.com/admin/ads` أعطى 200، لكن لا يثبت وصول نسخة 0.2.15 لأن Wrangler لم يرجع Version ID.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/ads/page.jsx
+app/admin/AdminDashboard.css
+firestore.rules
 app/version.js
 package.json
 package-lock.json
@@ -3003,6 +3052,10 @@ PROJECT_MEMO.md
 ✅ أصبح السايد بار يفتح إدارة الإعلانات الجديدة ويُبقي إعدادات الأداة القديمة على `/admin/tools`
 ✅ تم تحديث الإصدار إلى 0.2.14 وتحديث سجل النسخ
 ✅ تم نشر الإصدار 0.2.14 على Cloudflare Version ID: 937d6fe4-4735-420e-b77d-ece654d4eefb
+✅ تم تحويل `/admin/ads` إلى جدول حملات متقدم مرتبط بـ `campaigns`
+✅ تم دعم رفع صورة الإعلان إلى R2 من نافذة إضافة/تعديل الإعلان
+✅ تم تحديث الإصدار إلى 0.2.15
+⚠️ تم نشر قواعد Firestore للإصدار 0.2.15، لكن نشر Worker يحتاج إعادة محاولة لأن Wrangler علق بدون نتيجة
 ```
 
 ---
@@ -3047,7 +3100,7 @@ ads top / middle / bottom1 / bottom2
 تحسين إدارة الإحصائيات
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
-مهم جدًا: توحيد مصدر الإعلانات بين campaigns و settings/main.adCampaigns
+مهم جدًا: بعد تحويل `/admin/ads` إلى `campaigns`، يجب لاحقًا ربط عرض الإعلانات في الصفحة الرئيسية بالحملات النشطة من `campaigns` بدل الاعتماد النهائي على `settings/main.adCampaigns`
 ```
 
 تقسيم مقترح:
