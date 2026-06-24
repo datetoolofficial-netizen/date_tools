@@ -47,6 +47,21 @@ const LOCATION_NAMES = {
     bottom2: 'إعلان أسفل الصفحة 2'
 };
 
+const STATS_PLACEMENT_OPTIONS = [
+    { value: 'all', label: 'كل أماكن العرض' },
+    { value: 'top', label: 'إعلان أعلى الصفحة' },
+    { value: 'middle', label: 'الإعلان المميز' },
+    { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
+    { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' },
+    { value: 'google', label: 'قوقل فقط' },
+    { value: 'advertisers', label: 'المعلنين فقط' }
+];
+
+const TOOL_FILTER_OPTIONS = [
+    { value: 'all', label: 'كل الأدوات' },
+    { value: 'date_tool', label: 'أداة التاريخ الشاملة' }
+];
+
 function getStatusClass(status) {
     if (status === 'نشط') return 'active';
     if (status === 'مرفوض') return 'rejected';
@@ -85,6 +100,16 @@ function getDurationDays(startTime, endTime) {
 
 function getCampaignNumber(campaign) {
     return campaign.campaignNumber || campaign.campaignId || campaign.id?.slice(0, 8) || '---';
+}
+
+function getCampaignSource(campaign) {
+    const source = String(campaign.sourceType || campaign.adProvider || campaign.provider || '').toLowerCase();
+
+    if (source.includes('google')) return 'google';
+    if (campaign.googleAdSlot || campaign.googleSlotId) return 'google';
+    if (campaign.advertiserId || campaign.advertiserEmail) return 'advertisers';
+
+    return 'admin';
 }
 
 function toInputDateTime(value) {
@@ -146,6 +171,7 @@ export default function AdminAdsPage() {
     const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
     const [campaigns, setCampaigns] = useState([]);
     const [filters, setFilters] = useState({ search: '', adder: '', date: '', status: 'all' });
+    const [statsFilters, setStatsFilters] = useState({ tool: 'date_tool', date: '', placement: 'all' });
     const [modalMode, setModalMode] = useState(null);
     const [selectedCampaign, setSelectedCampaign] = useState(null);
     const [campaignForm, setCampaignForm] = useState(EMPTY_CAMPAIGN);
@@ -175,14 +201,33 @@ export default function AdminAdsPage() {
         });
     }, [campaigns, filters]);
 
+    const statsCampaigns = useMemo(() => {
+        return campaigns.filter((campaign) => {
+            const tool = statsFilters.tool;
+            const date = statsFilters.date;
+            const placement = statsFilters.placement;
+            const source = getCampaignSource(campaign);
+
+            const matchesTool = tool === 'all' || (campaign.targetTool || 'date_tool') === tool;
+            const matchesDate = !date
+                || String(campaign.startTime || '').includes(date)
+                || String(campaign.endTime || '').includes(date);
+            const matchesPlacement = placement === 'all'
+                || campaign.adLocation === placement
+                || source === placement;
+
+            return matchesTool && matchesDate && matchesPlacement;
+        });
+    }, [campaigns, statsFilters]);
+
     const totals = useMemo(() => {
-        return campaigns.reduce((acc, campaign) => {
+        return statsCampaigns.reduce((acc, campaign) => {
             acc.views += Number(campaign.views || 0);
             acc.clicks += Number(campaign.clicks || 0);
             if ((campaign.status || 'قيد المراجعة') === 'قيد المراجعة') acc.pending += 1;
             return acc;
         }, { views: 0, clicks: 0, pending: 0 });
-    }, [campaigns]);
+    }, [statsCampaigns]);
 
     const fetchCampaigns = useCallback(async () => {
         const firebaseApi = firebaseApiRef.current;
@@ -596,10 +641,33 @@ export default function AdminAdsPage() {
                 </section>
 
                 <section className="legacy-ad-kpis">
-                    <div><span>إجمالي الحملات</span><strong>{campaigns.length}</strong></div>
+                    <div><span>إجمالي الحملات</span><strong>{statsCampaigns.length}</strong></div>
                     <div><span>قيد المراجعة</span><strong>{totals.pending}</strong></div>
                     <div><span>الزيارات</span><strong>{totals.views.toLocaleString('ar-SA')}</strong></div>
                     <div><span>النقرات</span><strong>{totals.clicks.toLocaleString('ar-SA')}</strong></div>
+                </section>
+
+                <section className="legacy-stats-filter-bar">
+                    <div className="legacy-field compact">
+                        <label>الأداة</label>
+                        <select value={statsFilters.tool} onChange={(event) => setStatsFilters((current) => ({ ...current, tool: event.target.value }))}>
+                            {TOOL_FILTER_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="legacy-field compact">
+                        <label>التاريخ</label>
+                        <input type="date" value={statsFilters.date} onChange={(event) => setStatsFilters((current) => ({ ...current, date: event.target.value }))} />
+                    </div>
+                    <div className="legacy-field compact">
+                        <label>مكان العرض / المصدر</label>
+                        <select value={statsFilters.placement} onChange={(event) => setStatsFilters((current) => ({ ...current, placement: event.target.value }))}>
+                            {STATS_PLACEMENT_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                        </select>
+                    </div>
                 </section>
 
                 <section className="legacy-filter-bar old-ads-filters">
