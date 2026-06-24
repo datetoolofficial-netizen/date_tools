@@ -498,6 +498,345 @@ body.dark-mode .legacy-admin-shell {
     padding: 18px;
 }
 
+.legacy-inline-message {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    border: 1px solid transparent;
+}
+
+.legacy-inline-message.success {
+    color: var(--success-text);
+    background: var(--success-bg);
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+.legacy-inline-message.error {
+    color: var(--danger-text);
+    background: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.legacy-page-heading,
+.legacy-filter-bar,
+.legacy-sticky-save,
+.legacy-modal-head,
+.legacy-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.legacy-page-heading {
+    margin-bottom: 18px;
+}
+
+.legacy-page-heading p,
+.legacy-google-card p,
+.legacy-modal-head p {
+    margin: 6px 0 0;
+    color: var(--text-sub);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.legacy-primary-btn,
+.legacy-secondary-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-family: inherit;
+    font-weight: 900;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.25s;
+}
+
+.legacy-primary-btn {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+.legacy-primary-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.legacy-primary-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.legacy-primary-btn.wide {
+    min-width: 220px;
+}
+
+.legacy-secondary-btn {
+    background: var(--bg-body);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.legacy-filter-bar,
+.legacy-table-card,
+.legacy-google-card {
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+}
+
+.legacy-filter-bar {
+    padding: 14px;
+    margin-bottom: 16px;
+    align-items: end;
+}
+
+.legacy-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legacy-field.compact {
+    flex: 1;
+    min-width: 180px;
+}
+
+.legacy-field label,
+.legacy-check-row {
+    color: var(--text-main);
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.legacy-field input,
+.legacy-field select,
+.legacy-field textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-body);
+    color: var(--text-main);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-weight: 700;
+    outline: none;
+}
+
+.legacy-field textarea {
+    resize: vertical;
+}
+
+.legacy-field input:focus,
+.legacy-field select:focus,
+.legacy-field textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.legacy-table-card {
+    overflow: hidden;
+}
+
+.legacy-ads-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.legacy-ads-table th,
+.legacy-ads-table td {
+    padding: 14px 16px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.legacy-ads-table th {
+    background: var(--bg-body);
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.legacy-ads-table td {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.legacy-ads-table small,
+.legacy-ads-table td span {
+    display: block;
+    color: var(--text-sub);
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.legacy-status-pill {
+    display: inline-flex !important;
+    width: fit-content;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 12px !important;
+    font-weight: 900;
+    background: var(--warning-bg);
+    color: var(--warning-text) !important;
+}
+
+.legacy-status-pill.active {
+    background: var(--success-bg);
+    color: var(--success-text) !important;
+}
+
+.legacy-status-pill.paused,
+.legacy-status-pill.ended {
+    background: var(--danger-bg);
+    color: var(--danger-text) !important;
+}
+
+.legacy-row-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.legacy-row-actions button,
+.legacy-modal-head button {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-body);
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.legacy-row-actions button.danger {
+    color: var(--danger-text);
+}
+
+.legacy-empty-table {
+    text-align: center !important;
+    color: var(--text-sub) !important;
+    padding: 32px !important;
+}
+
+.legacy-google-card {
+    padding: 22px;
+}
+
+.legacy-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.legacy-check-row {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-body);
+}
+
+.legacy-check-row input {
+    width: 18px;
+    height: 18px;
+}
+
+.legacy-sticky-save {
+    position: sticky;
+    bottom: 14px;
+    z-index: 10;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg-container) 88%, transparent);
+    border: 1px solid rgba(100, 116, 139, 0.16);
+    backdrop-filter: blur(12px);
+    margin-bottom: 22px;
+}
+
+.legacy-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.68);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.legacy-modal-card {
+    width: min(860px, 100%);
+    max-height: min(92vh, 860px);
+    overflow-y: auto;
+    background: var(--bg-container);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.legacy-modal-head {
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.legacy-modal-head h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.legacy-ad-preview {
+    margin-top: 18px;
+    border: 1px dashed var(--border-color);
+    border-radius: 16px;
+    background: var(--bg-body);
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.legacy-ad-preview i {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.legacy-ad-preview span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-sub);
+    font-size: 13px;
+}
+
+.legacy-modal-actions {
+    justify-content: flex-start;
+    margin-top: 18px;
+}
+
 .legacy-admin-footer {
     margin-top: auto;
     padding: 12px 0;
@@ -585,5 +924,24 @@ body.dark-mode .legacy-admin-shell {
         flex-direction: column;
         gap: 6px;
         text-align: center;
+    }
+
+    .legacy-page-heading,
+    .legacy-filter-bar,
+    .legacy-modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .legacy-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .legacy-table-card {
+        overflow-x: auto;
+    }
+
+    .legacy-ads-table {
+        min-width: 760px;
     }
 }

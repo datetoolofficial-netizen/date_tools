@@ -202,9 +202,15 @@ export default function AdminDashboardPage() {
                         </Link>
                     </li>
                     <li>
+                        <Link href="/admin/ads">
+                            <i className="fa-solid fa-bullhorn"></i>
+                            <span className="nav-text">إدارة الإعلانات</span>
+                        </Link>
+                    </li>
+                    <li>
                         <Link href="/admin/tools">
                             <i className="fa-solid fa-screwdriver-wrench"></i>
-                            <span className="nav-text">إدارة الأداة</span>
+                            <span className="nav-text">إعدادات الأداة</span>
                         </Link>
                     </li>
                     <li>
