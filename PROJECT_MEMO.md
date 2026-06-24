@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.12.
+الإصدار الحالي للتطبيق هو 0.2.13.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -2799,6 +2799,43 @@ npx firebase-tools deploy --only firestore:rules
 
 ```txt
 next.config.mjs
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار تحويل الصفحة الرئيسية للإدارة 0.2.13
+
+تم تنفيذ:
+
+```powershell
+npm run lint
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم تحويل صفحة `app/1admin/admin.html` إلى صفحة React رئيسية جديدة في `/admin`.
+✅ أصبحت `/admin` تعرض هيكل السايدبار والنافبار والبنر الترحيبي مع سيكشن الإحصائيات وسيكشن إحصائيات الإعلانات.
+✅ تم نقل صفحة الإدارة الحالية إلى `/admin/tools` حتى تبقى مرجعًا لنقل السيكشنات لاحقًا.
+✅ تم عزل تنسيق الصفحة الرئيسية الجديدة في `app/admin/AdminDashboard.css`.
+✅ npm run lint نجح.
+✅ npm run build نجح وظهر المساران `/admin` و `/admin/tools`.
+✅ تم نشر الإصدار 0.2.13 على Cloudflare Workers. Version ID: dc368167-9006-493b-b6b5-5cf8dbafa6ff.
+✅ فحص الإنتاج: `/admin` = 200 و `/admin/tools` = 200 و `/admin_login` = 200.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/page.jsx
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
