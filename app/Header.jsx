@@ -1,9 +1,11 @@
 'use client';
 
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
+    const navRef = useRef(null);
     const navLinks = [];
 
     if (config) {
@@ -35,128 +37,88 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     const toolName = config?.toolDisplayName || 'أدوات التاريخ';
     const toolSlogan = config?.toolSlogan || '';
 
+    const scrollNav = (direction) => {
+        if (!navRef.current) return;
+        const dirMultiplier = document?.documentElement?.dir === 'rtl' ? -1 : 1;
+        navRef.current.scrollBy({
+            left: direction * dirMultiplier * 220,
+            behavior: 'smooth'
+        });
+    };
+
     return (
-        <div className="header" style={{ minHeight: '150px', position: 'relative', marginBottom: '30px' }}>
-            <div className="top-controls" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0' }}>
-                <button
-                    onClick={toggleTheme}
-                    className="control-btn"
-                    title={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
-                    aria-label={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
-                >
-                    <i className={isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
-                </button>
-
-                <button
-                    onClick={toggleLang}
-                    className="control-btn lang-btn"
-                    title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                    aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                >
-                    <i className="fa-solid fa-language"></i>
-                </button>
-            </div>
-
-            <div className="logo-container" style={{ textAlign: 'center', marginBottom: '15px' }}>
-                {config?.hasLogo && config?.logoUrl && (
-                    <Link href="/" style={{ display: 'inline-flex', marginBottom: '10px' }}>
-                        <Image
-                            src={config.logoUrl}
-                            alt={toolName}
-                            width={180}
-                            height={80}
-                            unoptimized
-                            style={{ maxHeight: '80px', width: 'auto', objectFit: 'contain' }}
-                        />
-                    </Link>
-                )}
-
-                <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
-                    <h1
-                        className="tool-title"
-                        style={{
-                            color: 'var(--primary)',
-                            textAlign: 'center',
-                            margin: '0 0 10px 0'
-                        }}
-                    >
-                        {toolName}
-                    </h1>
-                </Link>
-            </div>
-
-            {toolSlogan && (
-                <p
-                    className="tool-slogan"
-                    style={{
-                        textAlign: 'center',
-                        color: 'var(--text-sub)',
-                        margin: '0 0 20px 0'
-                    }}
-                >
-                    {toolSlogan}
-                </p>
-            )}
-
-            <nav
-                className="nav-links"
-                style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '20px',
-                    flexWrap: 'wrap',
-                    marginTop: '20px',
-                    background: 'var(--bg-card)',
-                    padding: '15px',
-                    borderRadius: '10px',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                }}
-            >
-                <Link href="/" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}>
-                    <i className="fa-solid fa-house" style={{ marginInlineEnd: '5px' }}></i>
-                    {lang === 'ar' ? 'الرئيسية' : 'Home'}
-                </Link>
-
-                {navLinks.map((link, idx) => (
-                    link.isExternal ? (
-                        <a
-                            key={idx}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                color: 'var(--text-main)',
-                                textDecoration: 'none',
-                                fontWeight: '600',
-                                transition: '0.2s'
-                            }}
-                        >
-                            {link.title}
-                            <i
-                                className="fa-solid fa-arrow-up-right-from-square"
-                                style={{
-                                    fontSize: '10px',
-                                    marginInlineStart: '4px',
-                                    color: 'var(--text-sub)'
-                                }}
-                            ></i>
-                        </a>
-                    ) : (
-                        <Link
-                            key={idx}
-                            href={link.url}
-                            style={{
-                                color: 'var(--text-main)',
-                                textDecoration: 'none',
-                                fontWeight: '600',
-                                transition: '0.2s'
-                            }}
-                        >
-                            {link.title}
+        <header className="header site-header">
+            <div className="site-header-panel">
+                <div className="site-brand">
+                    {config?.hasLogo && config?.logoUrl && (
+                        <Link href="/" className="site-logo-link" aria-label={toolName}>
+                            <Image
+                                src={config.logoUrl}
+                                alt={toolName}
+                                width={96}
+                                height={96}
+                                unoptimized
+                                className="site-logo-img"
+                            />
                         </Link>
-                    )
-                ))}
-            </nav>
-        </div>
+                    )}
+
+                    <Link href="/" className="site-brand-text">
+                        <h1 className="tool-title">{toolName}</h1>
+                        {toolSlogan && <p className="tool-slogan">{toolSlogan}</p>}
+                    </Link>
+                </div>
+
+                <div className="top-controls">
+                    <button
+                        onClick={toggleLang}
+                        className="control-btn lang-btn"
+                        title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                        aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                    >
+                        <i className="fa-solid fa-language"></i>
+                    </button>
+
+                    <button
+                        onClick={toggleTheme}
+                        className="control-btn"
+                        title={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
+                        aria-label={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
+                    >
+                        <i className={isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
+                    </button>
+                </div>
+            </div>
+
+            <div className="site-nav-shell">
+                <button type="button" className="nav-scroll-btn" onClick={() => scrollNav(-1)} aria-label={lang === 'ar' ? 'التمرير يمينًا' : 'Scroll left'}>
+                    <i className="fa-solid fa-chevron-right"></i>
+                </button>
+
+                <nav className="nav-links" ref={navRef} aria-label={lang === 'ar' ? 'روابط الموقع' : 'Site links'}>
+                    <Link href="/" className="nav-link active">
+                        <i className="fa-solid fa-house"></i>
+                        {lang === 'ar' ? 'الرئيسية' : 'Home'}
+                    </Link>
+
+                    {navLinks.map((link, idx) => (
+                        link.isExternal ? (
+                            <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="nav-link">
+                                {link.title}
+                                <i className="fa-solid fa-arrow-up-right-from-square external-icon"></i>
+                            </a>
+                        ) : (
+                            <Link key={idx} href={link.url} className="nav-link">
+                                {link.title}
+                            </Link>
+                        )
+                    ))}
+                </nav>
+
+                <button type="button" className="nav-scroll-btn" onClick={() => scrollNav(1)} aria-label={lang === 'ar' ? 'التمرير يسارًا' : 'Scroll right'}>
+                    <i className="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+        </header>
     );
 }
