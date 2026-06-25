@@ -120,6 +120,7 @@ export default function AdminAdSettingsPage() {
     const [message, setMessage] = useState(null);
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState(pickAdSettings());
+    const [activeSlotModal, setActiveSlotModal] = useState(null);
     const firebaseApiRef = useRef(null);
     const messageTimerRef = useRef(null);
 
@@ -269,6 +270,11 @@ export default function AdminAdSettingsPage() {
         }));
     };
 
+    const openSlotModal = (mode, slotId) => setActiveSlotModal({ mode, slotId });
+    const closeSlotModal = () => setActiveSlotModal(null);
+    const activeSlotItem = AD_SLOTS.find((item) => item.id === activeSlotModal?.slotId);
+    const activeSlot = activeSlotItem ? (settings.googleAdSlots[activeSlotItem.id] || EMPTY_SLOT) : EMPTY_SLOT;
+
     const saveAdSettings = async () => {
         const firebaseApi = firebaseApiRef.current;
         if (!firebaseApi?.saveSiteConfigSection) {
@@ -379,7 +385,7 @@ export default function AdminAdSettingsPage() {
                                 <th>#</th>
                                 <th>موضع الإعلان</th>
                                 <th>تفعيل Google عند عدم وجود معلنين</th>
-                                <th>إعدادات كود Google</th>
+                                <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -394,55 +400,26 @@ export default function AdminAdSettingsPage() {
                                             <small>{slotItem.hint}</small>
                                         </td>
                                         <td>
-                                            <label className="legacy-check-row compact-check">
+                                            <label className="ad-settings-toggle">
                                                 <input
                                                     type="checkbox"
                                                     checked={slot.enabledWhenNoAdvertiser}
                                                     onChange={(event) => updateSlot(slotItem.id, 'enabledWhenNoAdvertiser', event.target.checked)}
                                                 />
-                                                <span>يعرض Google عند غياب إعلان معلن نشط لهذا الموضع</span>
+                                                <span>{slot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</span>
                                             </label>
                                         </td>
                                         <td>
-                                            <div className="ad-slot-settings-grid">
-                                                <input
-                                                    type="text"
-                                                    dir="ltr"
-                                                    value={slot.client || ''}
-                                                    onChange={(event) => updateSlot(slotItem.id, 'client', event.target.value)}
-                                                    placeholder="ca-pub-0000000000000000"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    dir="ltr"
-                                                    value={slot.slot || ''}
-                                                    onChange={(event) => updateSlot(slotItem.id, 'slot', event.target.value)}
-                                                    placeholder="Ad Slot"
-                                                />
-                                                <select
-                                                    value={slot.format || 'auto'}
-                                                    onChange={(event) => updateSlot(slotItem.id, 'format', event.target.value)}
-                                                >
-                                                    <option value="auto">auto</option>
-                                                    <option value="horizontal">horizontal</option>
-                                                    <option value="rectangle">rectangle</option>
-                                                    <option value="vertical">vertical</option>
-                                                </select>
-                                                <label className="legacy-check-row compact-check">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={slot.fullWidthResponsive !== false}
-                                                        onChange={(event) => updateSlot(slotItem.id, 'fullWidthResponsive', event.target.checked)}
-                                                    />
-                                                    <span>full-width responsive</span>
-                                                </label>
-                                                <textarea
-                                                    dir="ltr"
-                                                    rows={4}
-                                                    value={slot.htmlSnippet || ''}
-                                                    onChange={(event) => updateSnippet(slotItem.id, event.target.value)}
-                                                    placeholder="الصق كود وحدة الإعلان من Google هنا لاستخراج Publisher و Ad Slot تلقائيًا"
-                                                />
+                                            <div className="legacy-row-actions ad-settings-actions">
+                                                <button type="button" onClick={() => openSlotModal('preview', slotItem.id)} title="عرض الإعلان المعروض">
+                                                    <i className="fa-solid fa-eye"></i>
+                                                </button>
+                                                <button type="button" onClick={() => openSlotModal('code', slotItem.id)} title="إضافة كود Google">
+                                                    <i className="fa-solid fa-code"></i>
+                                                </button>
+                                                <button type="button" onClick={() => openSlotModal('details', slotItem.id)} title="عرض الإعداد الحالي">
+                                                    <i className="fa-solid fa-circle-info"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -502,6 +479,132 @@ export default function AdminAdSettingsPage() {
                         </div>
                     </div>
                 </section>
+
+                {activeSlotModal && activeSlotItem && (
+                    <div className="legacy-modal-backdrop" onClick={closeSlotModal}>
+                        <div className="legacy-modal-card ad-settings-modal" onClick={(event) => event.stopPropagation()}>
+                            <div className="legacy-modal-head">
+                                <div>
+                                    <h3>{activeSlotItem.label}</h3>
+                                    <p>{activeSlotItem.hint}</p>
+                                </div>
+                                <button type="button" onClick={closeSlotModal} aria-label="إغلاق النافذة">
+                                    <i className="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+
+                            {activeSlotModal.mode === 'preview' && (
+                                <div className="ad-slot-preview-box">
+                                    <div className="ad-slot-preview-frame">
+                                        <i className="fa-solid fa-rectangle-ad"></i>
+                                        <strong>معاينة الموضع</strong>
+                                        <span>
+                                            {activeSlot.enabledWhenNoAdvertiser && activeSlot.client && activeSlot.slot
+                                                ? 'سيظهر إعلان Google هنا عند عدم وجود حملة معلن نشطة لهذا الموضع.'
+                                                : 'لن يظهر إعلان Google تلقائيًا لهذا الموضع حتى يتم تفعيل Google وإدخال Publisher و Ad Slot.'}
+                                        </span>
+                                    </div>
+                                    <p>إعلانات المعلنين النشطة لها الأولوية. هذا العرض يوضح إعداد fallback فقط ولا ينفذ كود Google داخل لوحة الإدارة.</p>
+                                </div>
+                            )}
+
+                            {activeSlotModal.mode === 'code' && (
+                                <>
+                                    <div className="legacy-form-grid ad-slot-settings-grid">
+                                        <div className="legacy-field">
+                                            <label>Publisher / Client ID</label>
+                                            <input
+                                                type="text"
+                                                dir="ltr"
+                                                value={activeSlot.client || ''}
+                                                onChange={(event) => updateSlot(activeSlotItem.id, 'client', event.target.value)}
+                                                placeholder="ca-pub-0000000000000000"
+                                            />
+                                        </div>
+                                        <div className="legacy-field">
+                                            <label>Ad Slot</label>
+                                            <input
+                                                type="text"
+                                                dir="ltr"
+                                                value={activeSlot.slot || ''}
+                                                onChange={(event) => updateSlot(activeSlotItem.id, 'slot', event.target.value)}
+                                                placeholder="7882868833"
+                                            />
+                                        </div>
+                                        <div className="legacy-field">
+                                            <label>Ad Format</label>
+                                            <select
+                                                value={activeSlot.format || 'auto'}
+                                                onChange={(event) => updateSlot(activeSlotItem.id, 'format', event.target.value)}
+                                            >
+                                                <option value="auto">auto</option>
+                                                <option value="horizontal">horizontal</option>
+                                                <option value="rectangle">rectangle</option>
+                                                <option value="vertical">vertical</option>
+                                            </select>
+                                        </div>
+                                        <div className="legacy-field">
+                                            <label>Responsive</label>
+                                            <label className="legacy-check-row compact-check">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={activeSlot.fullWidthResponsive !== false}
+                                                    onChange={(event) => updateSlot(activeSlotItem.id, 'fullWidthResponsive', event.target.checked)}
+                                                />
+                                                <span>full-width responsive</span>
+                                            </label>
+                                        </div>
+                                        <div className="legacy-field full-span">
+                                            <label>كود وحدة الإعلان من Google</label>
+                                            <textarea
+                                                dir="ltr"
+                                                rows={6}
+                                                value={activeSlot.htmlSnippet || ''}
+                                                onChange={(event) => updateSnippet(activeSlotItem.id, event.target.value)}
+                                                placeholder="الصق كود وحدة الإعلان هنا لاستخراج Publisher و Ad Slot تلقائيًا"
+                                            />
+                                            <span className="legacy-field-hint">لا يتم تنفيذ JavaScript الخام من قاعدة البيانات. نستخرج القيم المنظمة ونحفظها فقط.</span>
+                                        </div>
+                                    </div>
+                                    <div className="legacy-modal-actions">
+                                        <button type="button" className="legacy-primary-btn" onClick={closeSlotModal}>
+                                            تم
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {activeSlotModal.mode === 'details' && (
+                                <dl className="legacy-details-list ad-settings-details-list">
+                                    <div>
+                                        <dt>حالة Google fallback</dt>
+                                        <dd>{activeSlot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Publisher / Client ID</dt>
+                                        <dd dir="ltr">{activeSlot.client || 'غير مضاف'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Ad Slot</dt>
+                                        <dd dir="ltr">{activeSlot.slot || 'غير مضاف'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Ad Format</dt>
+                                        <dd dir="ltr">{activeSlot.format || 'auto'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Responsive</dt>
+                                        <dd>{activeSlot.fullWidthResponsive !== false ? 'نعم' : 'لا'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>مقتطف Google</dt>
+                                        <dd>{activeSlot.htmlSnippet ? 'مضاف' : 'غير مضاف'}</dd>
+                                    </div>
+                                </dl>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <footer className="legacy-admin-footer">
                     <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>

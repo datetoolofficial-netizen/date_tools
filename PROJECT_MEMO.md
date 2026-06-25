@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.20.
+الإصدار الحالي للتطبيق هو 0.2.21.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -103,6 +103,7 @@ https://www.date-tool.com
 39. تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتكون بطاقة اختيار ومعاينة مصغرة بدل زر رفع منفصل.
 40. تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة مثل النظام الحديث.
 41. إضافة صفحة مستقلة لإعدادات مواضع الإعلانات `/admin/ad-settings` مع دعم مقتطف AdSense وAds.txt.
+42. تبسيط جدول إعدادات مواضع الإعلانات في `/admin/ad-settings` ونقل تفاصيل الأكواد إلى نوافذ إجراءات.
 
 ---
 
@@ -3138,6 +3139,43 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار تبسيط جدول إعدادات الإعلانات - الإصدار 0.2.21
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/ad-settings
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/ad-settings`.
+✅ OpenNext build نجح للإصدار 0.2.21.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/ad-settings` أعاد 200.
+✅ Cloudflare Version ID: f28b034a-3733-400d-9ab9-7ac5da50278e
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/ad-settings/page.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3279,6 +3317,9 @@ PROJECT_MEMO.md
 ✅ تمت إضافة route ديناميكي `/ads.txt` يقرأ مقتطف Ads.txt من إعدادات قاعدة البيانات
 ✅ تم تحديث الإصدار إلى 0.2.20
 ✅ تم نشر الإصدار 0.2.20 على Cloudflare Version ID: a2df03ff-6602-4b0e-b713-be0b6ee010f2
+✅ تم تبسيط جدول `/admin/ad-settings` إلى أربعة أعمدة مع نقل تفاصيل كود Google إلى نوافذ إجراءات
+✅ تم تحديث الإصدار إلى 0.2.21
+✅ تم نشر الإصدار 0.2.21 على Cloudflare Version ID: f28b034a-3733-400d-9ab9-7ac5da50278e
 ```
 
 ---
