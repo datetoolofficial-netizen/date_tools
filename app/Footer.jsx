@@ -68,7 +68,13 @@ export default function Footer({ lang, config }) {
                 {Array.isArray(config?.socialLinks) && config.socialLinks.length > 0 && (
                     <div className="footer-social" aria-label={lang === 'en' ? 'Social links' : 'روابط التواصل'}>
                         {config.socialLinks.map((social, idx) => (
-                            <a key={`${social.url}-${idx}`} href={social.url} target="_blank" rel="noopener noreferrer">
+                            <a
+                                key={`${social.url}-${idx}`}
+                                href={social.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={social.color ? { color: social.color } : undefined}
+                            >
                                 <i className={`fa-brands ${social.icon}`}></i>
                             </a>
                         ))}

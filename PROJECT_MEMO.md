@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.22.
+الإصدار الحالي للتطبيق هو 0.2.23.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -105,6 +105,7 @@ https://www.date-tool.com
 41. إضافة صفحة مستقلة لإعدادات مواضع الإعلانات `/admin/ad-settings` مع دعم مقتطف AdSense وAds.txt.
 42. تبسيط جدول إعدادات مواضع الإعلانات في `/admin/ad-settings` ونقل تفاصيل الأكواد إلى نوافذ إجراءات.
 43. نقل التكاملات الخارجية إلى صفحة مستقلة `/admin/integrations` باسم الربط الخارجي مع استثناء AdSense.
+44. إعادة بناء صفحة `/admin/tools` بنمط الإدارة الحالية وإبقاؤها للصفحات والروابط والسوشيال والأحداث فقط.
 
 ---
 
@@ -3221,6 +3222,44 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار تبسيط إعدادات الأداة - الإصدار 0.2.23
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/tools
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/tools` بحجم أخف.
+✅ OpenNext build نجح للإصدار 0.2.23.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/tools` أعاد 200.
+✅ Cloudflare Version ID: d9f15483-6f0d-489b-b618-a5873fb23e36
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/Footer.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3370,6 +3409,10 @@ PROJECT_MEMO.md
 ✅ بقي AdSense و Ads.txt داخل `/admin/ad-settings` فقط
 ✅ تم تحديث الإصدار إلى 0.2.22
 ✅ تم نشر الإصدار 0.2.22 على Cloudflare Version ID: 50c45500-f799-468e-b237-f60218c0e8c8
+✅ تمت إعادة بناء `/admin/tools` بنمط الإدارة الحالي
+✅ أصبحت إعدادات الأداة محصورة في الصفحات والروابط والسوشيال ميديا والأحداث فقط
+✅ تم تحديث الإصدار إلى 0.2.23
+✅ تم نشر الإصدار 0.2.23 على Cloudflare Version ID: d9f15483-6f0d-489b-b618-a5873fb23e36
 ```
 
 ---
