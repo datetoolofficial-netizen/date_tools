@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.25.
+الإصدار الحالي للتطبيق هو 0.2.26.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -108,6 +108,7 @@ https://www.date-tool.com
 44. إعادة بناء صفحة `/admin/tools` بنمط الإدارة الحالية وإبقاؤها للصفحات والروابط والسوشيال والأحداث فقط.
 45. توحيد شكل أيقونات لوحة الإدارة وأزرار الإجراءات وحقول رفع الصور، وتحويل أرقام الإحصائيات إلى أرقام إنجليزية.
 46. إعادة بناء بوابة المعلنين بنمط الإدارة الحالي مع رقم نسخة مستقل وربط الحملات ورفع صور الإعلانات إلى R2.
+47. تحسين كروت إحصائيات صفحة `/admin` بأربعة أعمدة، أيقونات خلفية شفافة، وأرقام أساسية واضحة لمواضع الإعلانات.
 
 ---
 
@@ -3301,6 +3302,43 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار تحسين إحصائيات لوحة الإدارة - الإصدار 0.2.26
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهرت صفحة `/admin` ضمن البناء.
+✅ OpenNext build نجح بعد تشغيله بصلاحية موسعة بسبب قيود sandbox على ويندوز.
+✅ تم نشر الإصدار 0.2.26 على Cloudflare.
+✅ صفحة الإنتاج `/admin` أعادت 200.
+✅ Cloudflare Version ID: fa1f9f6c-43bd-4f4d-b7c0-c69c9e379636
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/AdminDashboard.css
+app/admin/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ### اختبار بوابة المعلنين - الإصدار 0.2.25
 
 تم تشغيل:
@@ -3515,6 +3553,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.25
 ✅ تم نشر قواعد Firestore للإصدار 0.2.25
 ✅ تم نشر الإصدار 0.2.25 على Cloudflare Version ID: c35f1d11-3f86-4529-8a44-ca05f9ea969b
+✅ تم تحسين كروت إحصائيات صفحة `/admin` بأربعة أعمدة وأيقونات خلفية شفافة
+✅ تم تحديث الإصدار إلى 0.2.26
+✅ تم نشر الإصدار 0.2.26 على Cloudflare Version ID: fa1f9f6c-43bd-4f4d-b7c0-c69c9e379636
 ```
 
 ---

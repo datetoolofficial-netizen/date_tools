@@ -334,6 +334,10 @@ export default function AdminDashboardPage() {
                                             <i className={`fa-solid ${banner.icon}`}></i>
                                             <strong>{banner.label}</strong>
                                         </div>
+                                        <div className="legacy-banner-main-number">
+                                            <span>إجمالي الظهور</span>
+                                            <strong>{formatStatNumber(banner.impressions)}</strong>
+                                        </div>
                                         <div className="legacy-banner-values">
                                             <span>
                                                 نقرات

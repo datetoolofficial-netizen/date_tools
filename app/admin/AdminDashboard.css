@@ -376,8 +376,8 @@ body.dark-mode .legacy-admin-shell {
 .legacy-stats-grid,
 .legacy-ad-summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
 }
 
 .legacy-stat-card,
@@ -386,14 +386,17 @@ body.dark-mode .legacy-admin-shell {
     background: var(--bg-container);
     border: 1px solid var(--border-color);
     border-radius: 16px;
+    position: relative;
+    overflow: hidden;
     transition: 0.25s;
 }
 
 .legacy-stat-card {
-    padding: 25px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
+    min-height: 140px;
+    padding: 20px 12px;
+    display: grid;
+    place-items: center;
+    text-align: center;
 }
 
 .legacy-stat-card:hover,
@@ -403,13 +406,22 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-stat-icon {
-    width: 54px;
-    height: 54px;
-    border-radius: 12px;
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 118px;
+    height: 118px;
+    border-radius: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 64px;
+    opacity: 0.14;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    pointer-events: none;
+}
+
+.legacy-stat-icon i {
+    line-height: 1;
 }
 
 .icon-blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
@@ -417,15 +429,25 @@ body.dark-mode .legacy-admin-shell {
 .icon-green { background: rgba(16, 185, 129, 0.14); color: #10b981; }
 .icon-orange { background: rgba(245, 158, 11, 0.16); color: #f59e0b; }
 
+.legacy-stat-info {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
 .legacy-stat-info h3 {
-    margin: 0 0 5px;
+    margin: 0;
     color: var(--text-sub);
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .legacy-stat-info .value {
     direction: ltr;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 900;
     color: var(--text-main);
     margin: 0;
@@ -437,75 +459,162 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-ad-summary-card {
-    padding: 22px;
+    min-height: 126px;
+    padding: 18px 10px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+.legacy-ad-summary-card::before {
+    content: "\f245";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    inset: 50% auto auto 50%;
+    color: var(--primary-color);
+    font-size: 62px;
+    opacity: 0.12;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    pointer-events: none;
+}
+
+.legacy-ad-summary-card:nth-child(2)::before {
+    content: "\f06e";
+    color: #10b981;
+}
+
+.legacy-ad-summary-card:nth-child(3)::before {
+    content: "\f201";
+    color: #8b5cf6;
+}
+
+.legacy-ad-summary-card:nth-child(4)::before {
+    content: "\f080";
+    color: #f59e0b;
 }
 
 .legacy-ad-summary-card span {
+    position: relative;
+    z-index: 1;
     display: block;
     color: var(--text-sub);
-    font-size: 13px;
-    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    margin-bottom: 6px;
     font-weight: 700;
 }
 
 .legacy-ad-summary-card strong {
+    position: relative;
+    z-index: 1;
     color: var(--text-main);
     direction: ltr;
-    font-size: 23px;
+    font-size: 26px;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
 }
 
 .legacy-banner-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
 }
 
 .legacy-banner-card {
-    padding: 18px;
+    min-height: 190px;
+    padding: 16px 10px;
+    display: grid;
+    align-content: space-between;
+    gap: 12px;
+    text-align: center;
 }
 
 .legacy-banner-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    margin-bottom: 0;
     color: var(--text-main);
+    position: relative;
+    z-index: 1;
 }
 
 .legacy-banner-head i {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(59, 130, 246, 0.12);
+    position: absolute;
+    inset: 42px auto auto 50%;
+    width: 120px;
+    height: 120px;
+    border-radius: 28px;
+    background: transparent;
     color: var(--primary-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 66px;
+    opacity: 0.11;
+    transform: translateX(-50%) rotate(-8deg);
+    pointer-events: none;
+}
+
+.legacy-banner-head strong {
+    position: relative;
+    z-index: 1;
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.legacy-banner-main-number {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+}
+
+.legacy-banner-main-number span {
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.legacy-banner-main-number strong {
+    direction: ltr;
+    color: var(--text-main);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
 }
 
 .legacy-banner-values {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 7px;
 }
 
 .legacy-banner-values span {
     background: var(--bg-body);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 8px 5px;
     color: var(--text-sub);
-    font-size: 12px;
+    font-size: 10.5px;
     font-weight: 700;
+    line-height: 1.35;
 }
 
 .legacy-banner-values b {
     display: block;
     direction: ltr;
-    margin-top: 4px;
+    margin-top: 3px;
     color: var(--text-main);
-    font-size: 16px;
+    font-size: 14px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -1954,10 +2063,9 @@ body.dark-mode .legacy-admin-shell {
     .legacy-stat-info .value,
     .legacy-ad-kpis strong,
     .legacy-ad-summary-card strong {
-        font-size: 20px;
+        font-size: 19px;
     }
 
-    .legacy-stat-icon,
     .tools-quick-card i,
     .tools-section-icon,
     .tools-event-icon,
@@ -1972,9 +2080,79 @@ body.dark-mode .legacy-admin-shell {
         display: none;
     }
 
+    .legacy-stats-grid,
+    .legacy-ad-summary-grid,
     .legacy-banner-grid,
+    .legacy-ad-kpis {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+    }
+
+    .legacy-stat-card {
+        min-height: 108px;
+        padding: 14px 6px;
+    }
+
+    .legacy-stat-icon {
+        width: 86px;
+        height: 86px;
+        border-radius: 22px;
+        font-size: 48px;
+    }
+
+    .legacy-stat-info h3,
+    .legacy-ad-summary-card span {
+        font-size: 10.5px;
+    }
+
+    .legacy-ad-summary-card {
+        min-height: 104px;
+        padding: 12px 5px;
+    }
+
+    .legacy-ad-summary-card::before {
+        font-size: 46px;
+    }
+
+    .legacy-banner-card {
+        min-height: 164px;
+        padding: 12px 5px;
+    }
+
+    .legacy-banner-head strong {
+        min-height: 38px;
+        font-size: 10.5px;
+        line-height: 1.45;
+    }
+
+    .legacy-banner-head i {
+        width: 84px;
+        height: 84px;
+        font-size: 48px;
+        top: 36px;
+    }
+
+    .legacy-banner-main-number span {
+        font-size: 9.5px;
+    }
+
+    .legacy-banner-main-number strong {
+        font-size: 20px;
+    }
+
     .legacy-banner-values {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .legacy-banner-values span {
+        border-radius: 8px;
+        padding: 6px 2px;
+        font-size: 9px;
+    }
+
+    .legacy-banner-values b {
+        font-size: 11px;
     }
 
     .legacy-admin-footer {
@@ -1992,10 +2170,6 @@ body.dark-mode .legacy-admin-shell {
 
     .legacy-form-grid {
         grid-template-columns: 1fr;
-    }
-
-    .legacy-ad-kpis {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .legacy-stats-filter-bar {
