@@ -25,6 +25,62 @@ import {
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
 
+function SkeletonBlock({ className = '' }) {
+    return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
+}
+
+function HomePageSkeleton() {
+    return (
+        <div className="home-skeleton" aria-busy="true" aria-label="جاري تحميل الصفحة">
+            <div className="skeleton-header-panel">
+                <div className="skeleton-brand-row">
+                    <SkeletonBlock className="skeleton-logo" />
+                    <div className="skeleton-title-stack">
+                        <SkeletonBlock className="skeleton-title-line" />
+                        <SkeletonBlock className="skeleton-subtitle-line" />
+                    </div>
+                </div>
+                <div className="skeleton-controls">
+                    <SkeletonBlock className="skeleton-icon-btn" />
+                    <SkeletonBlock className="skeleton-icon-btn" />
+                </div>
+            </div>
+
+            <div className="skeleton-nav-row">
+                <SkeletonBlock className="skeleton-pill is-wide" />
+                <SkeletonBlock className="skeleton-pill" />
+                <SkeletonBlock className="skeleton-pill" />
+            </div>
+
+            <SkeletonBlock className="skeleton-today-banner" />
+            <SkeletonBlock className="skeleton-ad-box" />
+
+            <div className="skeleton-events-head">
+                <SkeletonBlock className="skeleton-pill" />
+                <SkeletonBlock className="skeleton-section-title" />
+            </div>
+            <div className="skeleton-events-grid">
+                <SkeletonBlock className="skeleton-event-card" />
+                <SkeletonBlock className="skeleton-event-card" />
+            </div>
+
+            <div className="skeleton-tool-card">
+                <SkeletonBlock className="skeleton-section-title centered" />
+                <div className="skeleton-switch-row">
+                    <SkeletonBlock className="skeleton-pill" />
+                    <SkeletonBlock className="skeleton-pill" />
+                </div>
+                <div className="skeleton-input-row">
+                    <SkeletonBlock className="skeleton-input" />
+                    <SkeletonBlock className="skeleton-input" />
+                    <SkeletonBlock className="skeleton-input" />
+                </div>
+                <SkeletonBlock className="skeleton-action" />
+            </div>
+        </div>
+    );
+}
+
 export default function Home() {
     const [lang, setLang] = useState('ar');
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -480,6 +536,8 @@ export default function Home() {
         calcDiffHijri,
     };
 
+    const isPageLoading = configData === null;
+
     return (
         <>
             <Toast
@@ -490,70 +548,76 @@ export default function Home() {
             />
 
             <div className="container">
-                <Header
-                    lang={lang}
-                    isDarkMode={isDarkMode}
-                    toggleLang={toggleLang}
-                    toggleTheme={toggleTheme}
-                    config={configData}
-                />
+                {isPageLoading ? (
+                    <HomePageSkeleton />
+                ) : (
+                    <>
+                        <Header
+                            lang={lang}
+                            isDarkMode={isDarkMode}
+                            toggleLang={toggleLang}
+                            toggleTheme={toggleTheme}
+                            config={configData}
+                        />
 
-                <TodayBanner lang={lang} todayInfo={todayInfo} />
-                <TopAdSlot configData={configData} labels={i18n[lang]} />
-                <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />
+                        <TodayBanner lang={lang} todayInfo={todayInfo} />
+                        <TopAdSlot configData={configData} labels={i18n[lang]} />
+                        <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />
 
-                <AgeCalculatorSection
-                    labels={i18n[lang]}
-                    lang={lang}
-                    calendarMode={ageCalendarMode}
-                    onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
-                    options={homeOptions}
-                    values={homeValues}
-                    setters={homeSetters}
-                    results={homeResults}
-                    enteredDateInfo={enteredDateInfo}
-                    onShareResult={handleShareResult}
-                    actions={homeActions}
-                />
+                        <AgeCalculatorSection
+                            labels={i18n[lang]}
+                            lang={lang}
+                            calendarMode={ageCalendarMode}
+                            onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
+                            options={homeOptions}
+                            values={homeValues}
+                            setters={homeSetters}
+                            results={homeResults}
+                            enteredDateInfo={enteredDateInfo}
+                            onShareResult={handleShareResult}
+                            actions={homeActions}
+                        />
 
-                <FeaturedAdSlot
-                    configData={configData}
-                    labels={i18n[lang]}
-                    onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}
-                />
+                        <FeaturedAdSlot
+                            configData={configData}
+                            labels={i18n[lang]}
+                            onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}
+                        />
 
-                <DateConversionSection
-                    labels={i18n[lang]}
-                    lang={lang}
-                    calendarMode={conversionCalendarMode}
-                    onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
-                    options={homeOptions}
-                    values={homeValues}
-                    setters={homeSetters}
-                    results={homeResults}
-                    enteredDateInfo={enteredDateInfo}
-                    onShareResult={handleShareResult}
-                    actions={homeActions}
-                />
+                        <DateConversionSection
+                            labels={i18n[lang]}
+                            lang={lang}
+                            calendarMode={conversionCalendarMode}
+                            onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
+                            options={homeOptions}
+                            values={homeValues}
+                            setters={homeSetters}
+                            results={homeResults}
+                            enteredDateInfo={enteredDateInfo}
+                            onShareResult={handleShareResult}
+                            actions={homeActions}
+                        />
 
-                <DurationSection
-                    labels={i18n[lang]}
-                    lang={lang}
-                    calendarMode={durationCalendarMode}
-                    onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
-                    options={homeOptions}
-                    values={homeValues}
-                    setters={homeSetters}
-                    results={homeResults}
-                    enteredDateInfo={enteredDateInfo}
-                    onShareResult={handleShareResult}
-                    actions={homeActions}
-                />
+                        <DurationSection
+                            labels={i18n[lang]}
+                            lang={lang}
+                            calendarMode={durationCalendarMode}
+                            onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
+                            options={homeOptions}
+                            values={homeValues}
+                            setters={homeSetters}
+                            results={homeResults}
+                            enteredDateInfo={enteredDateInfo}
+                            onShareResult={handleShareResult}
+                            actions={homeActions}
+                        />
 
-                <BottomAdSlots configData={configData} labels={i18n[lang]} />
-                <SeoSections lang={lang} />
+                        <BottomAdSlots configData={configData} labels={i18n[lang]} />
+                        <SeoSections lang={lang} />
+                    </>
+                )}
             </div>
-            <Footer lang={lang} config={configData} />
+            {!isPageLoading && <Footer lang={lang} config={configData} />}
         </>
     );
 }
