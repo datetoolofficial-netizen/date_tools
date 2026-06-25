@@ -440,49 +440,57 @@ export default function AdminIdentityPage() {
 
                             <div className="legacy-field">
                                 <label>رابط اللوقو</label>
-                                <div className="legacy-upload-row">
+                                <label className={`legacy-media-picker ${uploadingTarget === 'logoUrl' ? 'is-uploading' : ''}`}>
+                                    <span className="legacy-media-picker-preview">
+                                        {identity.logoUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={identity.logoUrl} alt="معاينة اللوقو" />
+                                        ) : (
+                                            <i className="fa-regular fa-image"></i>
+                                        )}
+                                    </span>
+                                    <span className="legacy-media-picker-text">
+                                        <strong>{uploadingTarget === 'logoUrl' ? 'جاري رفع اللوقو...' : 'اختر أو استبدل اللوقو'}</strong>
+                                        <small dir="ltr">{identity.logoUrl || '/api/media/logo/...'}</small>
+                                    </span>
+                                    <span className="legacy-media-picker-action">
+                                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                                    </span>
                                     <input
-                                        type="text"
-                                        dir="ltr"
-                                        value={identity.logoUrl}
-                                        onChange={(event) => setField('logoUrl', event.target.value)}
-                                        placeholder="/api/media/logo/..."
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                        disabled={uploadingTarget === 'logoUrl'}
+                                        onChange={(event) => handleMediaUpload(event, 'logo', 'logoUrl', 'اللوقو')}
                                     />
-                                    <label className={`legacy-upload-btn ${uploadingTarget === 'logoUrl' ? 'disabled' : ''}`}>
-                                        <i className="fa-regular fa-image"></i>
-                                        {uploadingTarget === 'logoUrl' ? 'يرفع...' : 'رفع'}
-                                        <input
-                                            type="file"
-                                            accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
-                                            disabled={uploadingTarget === 'logoUrl'}
-                                            onChange={(event) => handleMediaUpload(event, 'logo', 'logoUrl', 'اللوقو')}
-                                        />
-                                    </label>
-                                </div>
+                                </label>
                                 <span className="legacy-field-hint">يفضل لوقو PNG أو WEBP بخلفية شفافة.</span>
                             </div>
 
                             <div className="legacy-field">
                                 <label>رابط أيقونة المتصفح favicon</label>
-                                <div className="legacy-upload-row">
+                                <label className={`legacy-media-picker ${uploadingTarget === 'faviconUrl' ? 'is-uploading' : ''}`}>
+                                    <span className="legacy-media-picker-preview small">
+                                        {identity.faviconUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={identity.faviconUrl} alt="معاينة favicon" />
+                                        ) : (
+                                            <i className="fa-regular fa-image"></i>
+                                        )}
+                                    </span>
+                                    <span className="legacy-media-picker-text">
+                                        <strong>{uploadingTarget === 'faviconUrl' ? 'جاري رفع الأيقونة...' : 'اختر أو استبدل أيقونة المتصفح'}</strong>
+                                        <small dir="ltr">{identity.faviconUrl || '/api/media/favicon/...'}</small>
+                                    </span>
+                                    <span className="legacy-media-picker-action">
+                                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                                    </span>
                                     <input
-                                        type="text"
-                                        dir="ltr"
-                                        value={identity.faviconUrl}
-                                        onChange={(event) => setField('faviconUrl', event.target.value)}
-                                        placeholder="/api/media/favicon/..."
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                        disabled={uploadingTarget === 'faviconUrl'}
+                                        onChange={(event) => handleMediaUpload(event, 'favicon', 'faviconUrl', 'أيقونة المتصفح')}
                                     />
-                                    <label className={`legacy-upload-btn ${uploadingTarget === 'faviconUrl' ? 'disabled' : ''}`}>
-                                        <i className="fa-regular fa-image"></i>
-                                        {uploadingTarget === 'faviconUrl' ? 'يرفع...' : 'رفع'}
-                                        <input
-                                            type="file"
-                                            accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
-                                            disabled={uploadingTarget === 'faviconUrl'}
-                                            onChange={(event) => handleMediaUpload(event, 'favicon', 'faviconUrl', 'أيقونة المتصفح')}
-                                        />
-                                    </label>
-                                </div>
+                                </label>
                                 <span className="legacy-field-hint">يدعم ICO أو PNG، والحفظ النهائي يتم بزر حفظ الهوية.</span>
                             </div>
 

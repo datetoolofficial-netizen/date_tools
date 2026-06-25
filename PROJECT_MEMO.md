@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.17.
+الإصدار الحالي للتطبيق هو 0.2.18.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -100,6 +100,7 @@ https://www.date-tool.com
 36. تحويل صفحة إدارة الإعلانات إلى جدول حملات متقدم قريب من الصفحة القديمة وربطه بـ Firestore campaigns مع رفع صور الإعلانات إلى R2.
 37. إضافة فلاتر أعلى إحصائيات الإعلانات في صفحة `/admin/ads` حسب الأداة والتاريخ ومكان العرض/المصدر.
 38. إضافة صفحة مستقلة لإدارة الهوية البصرية `/admin/identity` بنفس هيكل لوحة الإدارة الجديدة وروح الإدارة القديمة.
+39. تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتكون بطاقة اختيار ومعاينة مصغرة بدل زر رفع منفصل.
 
 ---
 
@@ -3016,6 +3017,43 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار تحسين رفع صور الهوية - الإصدار 0.2.18
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/identity
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/identity`.
+✅ OpenNext build نجح للإصدار 0.2.18.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/identity` أعاد 200.
+✅ Cloudflare Version ID: 7f74ee6b-6722-4592-9edb-6583858bc348
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/identity/page.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3145,6 +3183,9 @@ PROJECT_MEMO.md
 ✅ رفع اللوقو وfavicon في صفحة الهوية يستخدم Cloudflare R2 عبر `/api/media/upload`
 ✅ تم تحديث الإصدار إلى 0.2.17
 ✅ تم نشر الإصدار 0.2.17 على Cloudflare Version ID: 5d115ce5-a75f-42fb-8542-fa08ff6c6b2f
+✅ تم تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتعرض معاينة مصغرة داخل نفس خانة الاختيار
+✅ تم تحديث الإصدار إلى 0.2.18
+✅ تم نشر الإصدار 0.2.18 على Cloudflare Version ID: 7f74ee6b-6722-4592-9edb-6583858bc348
 ```
 
 ---
