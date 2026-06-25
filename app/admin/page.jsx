@@ -202,6 +202,12 @@ export default function AdminDashboardPage() {
                         </Link>
                     </li>
                     <li>
+                        <Link href="/admin/identity">
+                            <i className="fa-solid fa-palette"></i>
+                            <span className="nav-text">إدارة الهوية</span>
+                        </Link>
+                    </li>
+                    <li>
                         <Link href="/admin/ads">
                             <i className="fa-solid fa-bullhorn"></i>
                             <span className="nav-text">إدارة الإعلانات</span>

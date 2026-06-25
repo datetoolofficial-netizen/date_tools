@@ -132,6 +132,12 @@ function AdminNav({ active = 'ads' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/identity" className={active === 'identity' ? 'active' : ''}>
+                    <i className="fa-solid fa-palette"></i>
+                    <span className="nav-text">إدارة الهوية</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/admin/ads" className={active === 'ads' ? 'active' : ''}>
                     <i className="fa-solid fa-bullhorn"></i>
                     <span className="nav-text">إدارة الإعلانات</span>

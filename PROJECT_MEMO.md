@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.16.
+الإصدار الحالي للتطبيق هو 0.2.17.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -99,6 +99,7 @@ https://www.date-tool.com
 35. إضافة صفحة إدارة إعلانات مستقلة داخل لوحة الإدارة الجديدة وربطها من السايد بار مع الإبقاء على صفحة إعدادات الأداة القديمة كمرجع.
 36. تحويل صفحة إدارة الإعلانات إلى جدول حملات متقدم قريب من الصفحة القديمة وربطه بـ Firestore campaigns مع رفع صور الإعلانات إلى R2.
 37. إضافة فلاتر أعلى إحصائيات الإعلانات في صفحة `/admin/ads` حسب الأداة والتاريخ ومكان العرض/المصدر.
+38. إضافة صفحة مستقلة لإدارة الهوية البصرية `/admin/identity` بنفس هيكل لوحة الإدارة الجديدة وروح الإدارة القديمة.
 
 ---
 
@@ -2976,6 +2977,45 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار صفحة إدارة الهوية البصرية - الإصدار 0.2.17
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/identity
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/identity`.
+✅ OpenNext build نجح للإصدار 0.2.17.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/identity` أعاد 200.
+✅ Cloudflare Version ID: 5d115ce5-a75f-42fb-8542-fa08ff6c6b2f
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/identity/page.jsx
+app/admin/AdminDashboard.css
+app/admin/page.jsx
+app/admin/ads/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3100,6 +3140,11 @@ PROJECT_MEMO.md
 ✅ تمت إضافة فلاتر إحصائيات الإعلانات في `/admin/ads`
 ✅ تم تحديث الإصدار إلى 0.2.16
 ⚠️ OpenNext build نجح للإصدار 0.2.16، لكن نشر Worker يحتاج إعادة محاولة لأن Wrangler علق بدون نتيجة
+✅ تمت إضافة صفحة `/admin/identity` لإدارة الهوية البصرية داخل هيكل لوحة الإدارة الجديدة
+✅ صفحة الهوية تحفظ حقول الهوية فقط: الاسم والوصف والإيميل واللوقو وfavicon والحقوق
+✅ رفع اللوقو وfavicon في صفحة الهوية يستخدم Cloudflare R2 عبر `/api/media/upload`
+✅ تم تحديث الإصدار إلى 0.2.17
+✅ تم نشر الإصدار 0.2.17 على Cloudflare Version ID: 5d115ce5-a75f-42fb-8542-fa08ff6c6b2f
 ```
 
 ---
@@ -3130,6 +3175,16 @@ ads top / middle / bottom1 / bottom2
 ثم حفظ الأقسام والتأكد من ظهور الصور على الإنتاج. هذا الاختبار يحتاج جلسة مدير نشطة وملفات صور حقيقية.
 
 كذلك يجب اختبار حفظ جدول الإعلانات فعليًا من لوحة الإدارة بعد تسجيل الدخول كمدير، لأن اختبار الإنتاج الحالي تحقق من تحميل الصفحات وأمان endpoint فقط.
+
+يجب أيضًا اختبار صفحة `/admin/identity` بجلسة مدير فعلية عبر:
+
+```txt
+رفع لوقو حقيقي إلى R2.
+رفع favicon حقيقي إلى R2.
+تعديل إيميل التواصل والحقوق.
+الضغط على حفظ الهوية.
+التأكد من انعكاس القيم على الصفحة الرئيسية والفوتر والصفحات التي تستخدم {{contactEmail}}.
+```
 
 ---
 
