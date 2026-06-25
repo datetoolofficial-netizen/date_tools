@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import Toast from '../../components/Toast';
 import ClientShell from '../ClientShell';
 import '../ClientPortal.css';
+
+const STATUS_OPTIONS = ['قيد المراجعة', 'نشط', 'متوقف مؤقتاً', 'مرفوض', 'منتهي', 'تم تعديله'];
 
 function getStatusClass(status) {
     if (status === 'نشط' || status === 'مقبول') return 'active';
@@ -14,9 +16,18 @@ function getStatusClass(status) {
     return 'pending';
 }
 
+function formatNumber(value) {
+    return Number(value || 0).toLocaleString('en-US');
+}
+
 function formatDate(value) {
     if (!value) return '-';
-    return new Intl.DateTimeFormat('ar-SA', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+
+    try {
+        return new Intl.DateTimeFormat('ar-SA', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+    } catch {
+        return '-';
+    }
 }
 
 export default function ClientDashboardPage() {
@@ -26,50 +37,49 @@ export default function ClientDashboardPage() {
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(true);
 
-    const loadClientData = async () => {
-        const [{ auth, db }, { onAuthStateChanged }, { collection, doc, getDoc, getDocs, query, where }] = await Promise.all([
-            import('../../firebase'),
-            import('firebase/auth'),
-            import('firebase/firestore'),
-        ]);
+    useEffect(() => {
+        let unsubscribe = () => {};
 
-        return onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.replace('/client');
-                return;
-            }
+        async function loadClientData() {
+            const [{ auth, db }, { onAuthStateChanged }, { collection, doc, getDoc, getDocs, query, where }] = await Promise.all([
+                import('../../firebase'),
+                import('firebase/auth'),
+                import('firebase/firestore'),
+            ]);
 
-            try {
-                const profileSnap = await getDoc(doc(db, 'advertisers', user.uid));
-                if (!profileSnap.exists()) {
-                    window.location.replace('/client/register');
+            unsubscribe = onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.replace('/client');
                     return;
                 }
 
-                setProfile({ id: user.uid, ...profileSnap.data() });
+                try {
+                    const profileSnap = await getDoc(doc(db, 'advertisers', user.uid));
+                    if (!profileSnap.exists()) {
+                        window.location.replace('/client/register');
+                        return;
+                    }
 
-                const adsQuery = query(collection(db, 'campaigns'), where('advertiserId', '==', user.uid));
-                const adsSnap = await getDocs(adsQuery);
-                const nextCampaigns = adsSnap.docs
-                    .map((item) => ({ id: item.id, ...item.data() }))
-                    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+                    const nextProfile = { id: user.uid, ...profileSnap.data() };
+                    setProfile(nextProfile);
 
-                setCampaigns(nextCampaigns);
-            } catch (error) {
-                console.error(error);
-                setMessage({ text: 'تعذر تحميل بيانات حملاتك الآن.', type: 'error' });
-            } finally {
-                setIsLoading(false);
-            }
-        });
-    };
+                    const adsQuery = query(collection(db, 'campaigns'), where('advertiserId', '==', user.uid));
+                    const adsSnap = await getDocs(adsQuery);
+                    const nextCampaigns = adsSnap.docs
+                        .map((item) => ({ id: item.id, ...item.data() }))
+                        .sort((a, b) => String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')));
 
-    useEffect(() => {
-        let unsubscribe = () => {};
-        loadClientData().then((fn) => {
-            unsubscribe = fn;
-        });
+                    setCampaigns(nextCampaigns);
+                } catch (error) {
+                    console.error(error);
+                    setMessage({ text: 'تعذر تحميل بيانات حملاتك الآن.', type: 'error' });
+                } finally {
+                    setIsLoading(false);
+                }
+            });
+        }
 
+        loadClientData();
         return () => unsubscribe();
     }, []);
 
@@ -78,7 +88,7 @@ export default function ClientDashboardPage() {
 
         return campaigns.filter((campaign) => {
             const name = String(campaign.campaignName || '').toLowerCase();
-            const id = String(campaign.campaignNumber || campaign.campaignId || '').toLowerCase();
+            const id = String(campaign.campaignNumber || campaign.campaignId || campaign.id || '').toLowerCase();
             const status = campaign.status || 'قيد المراجعة';
             const dateMatch = !filters.date
                 || String(campaign.startTime || '').startsWith(filters.date)
@@ -91,11 +101,12 @@ export default function ClientDashboardPage() {
     }, [campaigns, filters]);
 
     const stats = useMemo(() => {
-        const views = campaigns.reduce((sum, item) => sum + Number(item.views || 0), 0);
+        const views = campaigns.reduce((sum, item) => sum + Number(item.views || item.impressions || 0), 0);
         const clicks = campaigns.reduce((sum, item) => sum + Number(item.clicks || 0), 0);
+        const active = campaigns.filter((item) => item.status === 'نشط').length;
         const ctr = views > 0 ? `${((clicks / views) * 100).toFixed(1)}%` : '0%';
 
-        return { views, clicks, ctr };
+        return { views, clicks, active, ctr };
     }, [campaigns]);
 
     const updateCampaignStatus = async (campaignId, status) => {
@@ -113,7 +124,7 @@ export default function ClientDashboardPage() {
             setCampaigns((current) => current.map((item) => item.id === campaignId ? { ...item, status } : item));
             setMessage({ text: 'تم تحديث حالة الإعلان.', type: 'success' });
         } catch {
-            setMessage({ text: 'تعذر تحديث الإعلان. تأكد من صلاحية الحساب.', type: 'error' });
+            setMessage({ text: 'تعذر تحديث الإعلان. القواعد تسمح للمعلن بتغيير الحالة المحددة فقط.', type: 'error' });
         }
     };
 
@@ -123,30 +134,39 @@ export default function ClientDashboardPage() {
 
             <section className="client-welcome">
                 <div>
-                    <h2>أهلاً بك، {profile?.storeName || 'جاري التحميل'} 👋</h2>
-                    <p>تابع حملاتك الإعلانية، نسب النقر، وحالات المراجعة من مكان واحد.</p>
+                    <h2>أهلًا بك، {profile?.storeName || 'جاري التحميل'}</h2>
+                    <p>تابع حملاتك الإعلانية، حالة المراجعة، الظهور، والنقرات من لوحة واحدة مرتبطة ببيانات الحملات الحالية.</p>
                 </div>
-                <i className="fa-solid fa-chart-line" style={{ fontSize: 48, opacity: 0.35 }}></i>
+                <i className="fa-solid fa-chart-line"></i>
             </section>
 
             <section className="client-stats-grid">
                 <div className="client-stat-card blue">
-                    <span>إجمالي الظهور</span>
-                    <strong>{isLoading ? '...' : stats.views.toLocaleString()}</strong>
+                    <span className="client-stat-icon"><i className="fa-solid fa-eye"></i></span>
+                    <div>
+                        <span>إجمالي الظهور</span>
+                        <strong>{isLoading ? '...' : formatNumber(stats.views)}</strong>
+                    </div>
                 </div>
                 <div className="client-stat-card green">
-                    <span>إجمالي النقرات</span>
-                    <strong>{isLoading ? '...' : stats.clicks.toLocaleString()}</strong>
+                    <span className="client-stat-icon"><i className="fa-solid fa-arrow-pointer"></i></span>
+                    <div>
+                        <span>إجمالي النقرات</span>
+                        <strong>{isLoading ? '...' : formatNumber(stats.clicks)}</strong>
+                    </div>
                 </div>
                 <div className="client-stat-card orange">
-                    <span>متوسط CTR</span>
-                    <strong>{isLoading ? '...' : stats.ctr}</strong>
+                    <span className="client-stat-icon"><i className="fa-solid fa-bullhorn"></i></span>
+                    <div>
+                        <span>حملات نشطة / CTR</span>
+                        <strong>{isLoading ? '...' : `${formatNumber(stats.active)} / ${stats.ctr}`}</strong>
+                    </div>
                 </div>
             </section>
 
             <section className="client-panel">
                 <div className="client-panel-header">
-                    <h2>حملاتك الإعلانية</h2>
+                    <h2><i className="fa-solid fa-rectangle-ad"></i> حملاتك الإعلانية</h2>
                     <Link className="client-primary-btn" href="/client/create-campaign">
                         <i className="fa-solid fa-plus"></i>
                         طلب إعلان جديد
@@ -162,11 +182,7 @@ export default function ClientDashboardPage() {
                         <label>الحالة</label>
                         <select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
                             <option value="all">كل الحالات</option>
-                            <option value="قيد المراجعة">قيد المراجعة</option>
-                            <option value="نشط">نشط</option>
-                            <option value="متوقف مؤقتاً">متوقف مؤقتاً</option>
-                            <option value="مرفوض">مرفوض</option>
-                            <option value="منتهي">منتهي</option>
+                            {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
                         </select>
                     </div>
                     <div className="client-form-group">
@@ -198,33 +214,36 @@ export default function ClientDashboardPage() {
                                     <td>
                                         <strong>{campaign.campaignName || 'حملة بدون اسم'}</strong>
                                         <small>رقم الإعلان: {campaign.campaignNumber || campaign.campaignId || campaign.id.slice(0, 8)}</small>
-                                        {campaign.imageUrl && <small><a href={campaign.imageUrl} target="_blank" rel="noopener noreferrer">عرض البانر</a></small>}
+                                        {campaign.imageUrl && <small><a href={campaign.imageUrl} target="_blank" rel="noopener noreferrer">عرض المرفق</a></small>}
                                     </td>
                                     <td>
                                         <small>من: {formatDate(campaign.startTime)}</small>
                                         <small>إلى: {formatDate(campaign.endTime)}</small>
                                     </td>
                                     <td>
-                                        <small>الظهور: {Number(campaign.views || 0).toLocaleString()}</small>
-                                        <small>النقرات: {Number(campaign.clicks || 0).toLocaleString()}</small>
+                                        <small>الظهور: {formatNumber(campaign.views || campaign.impressions)}</small>
+                                        <small>النقرات: {formatNumber(campaign.clicks)}</small>
                                     </td>
                                     <td>
                                         <span className={`client-status ${getStatusClass(campaign.status)}`}>
                                             {campaign.status || 'قيد المراجعة'}
                                         </span>
                                         {campaign.rejectReason && <small>{campaign.rejectReason}</small>}
+                                        {campaign.pauseReason && <small>{campaign.pauseReason}</small>}
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                            <a className="client-icon-btn" href={campaign.targetUrl || '#'} target="_blank" rel="noopener noreferrer" title="فتح الرابط">
-                                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
-                                            </a>
+                                            {campaign.targetUrl && (
+                                                <a className="client-icon-btn view" href={campaign.targetUrl} target="_blank" rel="noopener noreferrer" title="فتح الرابط">
+                                                    <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                                                </a>
+                                            )}
                                             {campaign.status === 'متوقف مؤقتاً' ? (
-                                                <button className="client-icon-btn" type="button" onClick={() => updateCampaignStatus(campaign.id, 'قيد المراجعة')} title="إعادة للمراجعة">
+                                                <button className="client-icon-btn play" type="button" onClick={() => updateCampaignStatus(campaign.id, 'قيد المراجعة')} title="إعادة للمراجعة">
                                                     <i className="fa-solid fa-play"></i>
                                                 </button>
                                             ) : (
-                                                <button className="client-icon-btn" type="button" onClick={() => updateCampaignStatus(campaign.id, 'متوقف مؤقتاً')} title="إيقاف مؤقت">
+                                                <button className="client-icon-btn pause" type="button" onClick={() => updateCampaignStatus(campaign.id, 'متوقف مؤقتاً')} title="إيقاف مؤقت">
                                                     <i className="fa-solid fa-pause"></i>
                                                 </button>
                                             )}

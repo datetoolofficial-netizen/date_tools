@@ -13,6 +13,7 @@ export default function ResetPasswordPage() {
     const handleReset = async (event) => {
         event.preventDefault();
         setIsLoading(true);
+        setMessage({ text: '', type: 'info' });
 
         try {
             const [{ auth }, { sendPasswordResetEmail }] = await Promise.all([
@@ -20,8 +21,8 @@ export default function ResetPasswordPage() {
                 import('firebase/auth'),
             ]);
 
-            await sendPasswordResetEmail(auth, email);
-            setMessage({ text: 'تم إرسال رابط استعادة كلمة المرور إلى بريدك.', type: 'success' });
+            await sendPasswordResetEmail(auth, email.trim());
+            setMessage({ text: 'تم إرسال رابط استعادة كلمة المرور إلى بريدك إن كان الحساب موجودًا.', type: 'success' });
         } catch {
             setMessage({ text: 'تعذر إرسال رابط الاستعادة. تأكد من البريد وحاول مجددًا.', type: 'error' });
         } finally {
@@ -38,7 +39,7 @@ export default function ResetPasswordPage() {
                     <i className="fa-solid fa-key"></i>
                 </div>
                 <h1>استعادة كلمة المرور</h1>
-                <p>أدخل بريد حسابك وسنرسل لك رابطًا آمنًا لإعادة التعيين.</p>
+                <p>أدخل بريد حسابك، وسنرسل رابطًا آمنًا لإعادة تعيين كلمة المرور.</p>
 
                 <form onSubmit={handleReset}>
                     <div className="client-form-group">
@@ -46,7 +47,11 @@ export default function ResetPasswordPage() {
                         <input type="email" required dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} />
                     </div>
 
-                    <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%' }}>
+                    <div className="client-turnstile-note">
+                        ستتم إضافة تحقق Turnstile هنا عند توفير بيانات Cloudflare الخاصة به.
+                    </div>
+
+                    <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%', marginTop: 14 }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-regular fa-paper-plane"></i>}
                         {isLoading ? 'جاري الإرسال...' : 'إرسال رابط الاستعادة'}
                     </button>
@@ -54,6 +59,7 @@ export default function ResetPasswordPage() {
 
                 <div className="client-auth-links">
                     <Link href="/client">العودة لتسجيل الدخول</Link>
+                    <Link href="/">الموقع العام</Link>
                 </div>
             </div>
         </div>

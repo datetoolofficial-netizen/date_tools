@@ -3,16 +3,20 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Toast from '../../components/Toast';
+import { CLIENT_PORTAL_VERSION } from '../ClientVersion';
 import '../ClientPortal.css';
 
+const initialForm = {
+    storeName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    password: '',
+    acceptedTerms: false,
+};
+
 export default function ClientRegisterPage() {
-    const [form, setForm] = useState({
-        storeName: '',
-        contactName: '',
-        email: '',
-        phone: '',
-        password: '',
-    });
+    const [form, setForm] = useState(initialForm);
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -28,6 +32,11 @@ export default function ClientRegisterPage() {
             return;
         }
 
+        if (!form.acceptedTerms) {
+            setMessage({ text: 'يجب الموافقة على الشروط وسياسة الخصوصية قبل إنشاء الحساب.', type: 'error' });
+            return;
+        }
+
         setIsLoading(true);
         setMessage({ text: '', type: 'info' });
 
@@ -38,18 +47,23 @@ export default function ClientRegisterPage() {
                 import('firebase/firestore'),
             ]);
 
-            const credential = await createUserWithEmailAndPassword(auth, form.email, form.password);
-            await updateProfile(credential.user, { displayName: form.storeName });
+            const cleanEmail = form.email.trim().toLowerCase();
+            const credential = await createUserWithEmailAndPassword(auth, cleanEmail, form.password);
+
+            await updateProfile(credential.user, { displayName: form.storeName.trim() });
             await setDoc(doc(db, 'advertisers', credential.user.uid), {
                 storeName: form.storeName.trim(),
                 contactName: form.contactName.trim(),
-                email: form.email.trim().toLowerCase(),
+                email: cleanEmail,
                 phone: form.phone.trim(),
                 status: 'active',
+                portalVersion: CLIENT_PORTAL_VERSION,
+                acceptedTermsAt: new Date().toISOString(),
                 createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
             });
 
-            setMessage({ text: 'تم إنشاء الحساب بنجاح. سيتم تحويلك للوحة التحكم.', type: 'success' });
+            setMessage({ text: 'تم إنشاء الحساب بنجاح. سيتم تحويلك إلى لوحة المعلن.', type: 'success' });
             window.setTimeout(() => window.location.replace('/client/dashboard'), 900);
         } catch (error) {
             const friendly = error.code === 'auth/email-already-in-use'
@@ -69,7 +83,7 @@ export default function ClientRegisterPage() {
                     <i className="fa-solid fa-store"></i>
                 </div>
                 <h1>إنشاء حساب معلن</h1>
-                <p>أنشئ حسابك لإرسال حملاتك ومتابعة النتائج من لوحة واحدة.</p>
+                <p>أنشئ حسابك لإرسال الحملات ومتابعة نتائجها وحالات المراجعة داخل بوابة واحدة.</p>
 
                 <form onSubmit={handleRegister}>
                     <div className="client-form-row">
@@ -96,9 +110,21 @@ export default function ClientRegisterPage() {
                     <div className="client-form-group">
                         <label>كلمة المرور</label>
                         <input type="password" required dir="ltr" value={form.password} onChange={(event) => updateField('password', event.target.value)} />
+                        <span className="client-hint">استخدم 8 أحرف على الأقل، ويفضل خلط حروف وأرقام ورموز.</span>
                     </div>
 
-                    <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%' }}>
+                    <label className="client-check-row">
+                        <input type="checkbox" checked={form.acceptedTerms} onChange={(event) => updateField('acceptedTerms', event.target.checked)} />
+                        <span>
+                            أوافق على <Link href="/terms">الشروط والأحكام</Link> و<Link href="/privacy">سياسة الخصوصية</Link>.
+                        </span>
+                    </label>
+
+                    <div className="client-turnstile-note">
+                        <strong>ملاحظة أمنية:</strong> تفعيل Turnstile الحقيقي يحتاج إنشاء Widget وسر تحقق في Cloudflare، ثم ربط الإرسال عبر الخادم.
+                    </div>
+
+                    <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%', marginTop: 14 }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-user-plus"></i>}
                         {isLoading ? 'جاري إنشاء الحساب...' : 'إنشاء الحساب'}
                     </button>

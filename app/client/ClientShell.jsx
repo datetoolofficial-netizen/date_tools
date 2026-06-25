@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { CLIENT_PORTAL_VERSION } from './ClientVersion';
 
 const navItems = [
     { href: '/client/dashboard', icon: 'fa-chart-line', label: 'لوحة التحكم', key: 'dashboard' },
@@ -13,12 +14,18 @@ const navItems = [
 
 export default function ClientShell({ active = 'dashboard', title = 'بوابة المعلنين', userProfile, children }) {
     const router = useRouter();
+    const pathname = usePathname();
     const [isDark, setIsDark] = useState(false);
+    const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     useEffect(() => {
         const storedTheme = window.localStorage.getItem('client-theme');
-        if (storedTheme === 'dark') setIsDark(true);
+        setIsDark(storedTheme === 'dark');
     }, []);
+
+    useEffect(() => {
+        setIsMobileOpen(false);
+    }, [pathname]);
 
     const toggleTheme = () => {
         setIsDark((current) => {
@@ -45,12 +52,28 @@ export default function ClientShell({ active = 'dashboard', title = 'بوابة 
     return (
         <div className={`client-portal ${isDark ? 'dark' : ''}`} dir="rtl">
             <div className="client-shell">
-                <aside className="client-sidebar">
+                <button
+                    type="button"
+                    className="client-mobile-menu"
+                    onClick={() => setIsMobileOpen(true)}
+                    aria-label="فتح القائمة"
+                >
+                    <i className="fa-solid fa-bars"></i>
+                </button>
+
+                <button
+                    type="button"
+                    className={`client-sidebar-overlay ${isMobileOpen ? 'active' : ''}`}
+                    onClick={() => setIsMobileOpen(false)}
+                    aria-label="إغلاق القائمة"
+                />
+
+                <aside className={`client-sidebar ${isMobileOpen ? 'mobile-open' : ''}`}>
                     <div className="client-sidebar-brand">
-                        <i className="fa-solid fa-bullseye"></i>
+                        <i className="fa-solid fa-layer-group"></i>
                         <div>
                             <strong>بوابة المعلنين</strong>
-                            <span>إدارة إعلانات Date Tool</span>
+                            <span>إدارة حملات Date Tool</span>
                         </div>
                     </div>
 
@@ -64,17 +87,25 @@ export default function ClientShell({ active = 'dashboard', title = 'بوابة 
                             </li>
                         ))}
                         <li>
-                            <button type="button" onClick={logout}>
+                            <button type="button" onClick={logout} className="danger-link">
                                 <i className="fa-solid fa-arrow-right-from-bracket"></i>
                                 <span>تسجيل الخروج</span>
                             </button>
                         </li>
                     </ul>
+
+                    <div className="client-sidebar-version">
+                        <span>إصدار البوابة</span>
+                        <strong>v{CLIENT_PORTAL_VERSION}</strong>
+                    </div>
                 </aside>
 
                 <main className="client-main">
                     <header className="client-topbar">
-                        <h1>{title}</h1>
+                        <div className="client-topbar-title">
+                            <h1>{title}</h1>
+                            <span>إدارة الإعلانات والطلبات من مكان واحد</span>
+                        </div>
                         <div className="client-topbar-user">
                             <button type="button" className="client-icon-btn" onClick={toggleTheme} title="تبديل المظهر">
                                 <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i>

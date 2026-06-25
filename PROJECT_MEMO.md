@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.24.
+الإصدار الحالي للتطبيق هو 0.2.25.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -107,6 +107,7 @@ https://www.date-tool.com
 43. نقل التكاملات الخارجية إلى صفحة مستقلة `/admin/integrations` باسم الربط الخارجي مع استثناء AdSense.
 44. إعادة بناء صفحة `/admin/tools` بنمط الإدارة الحالية وإبقاؤها للصفحات والروابط والسوشيال والأحداث فقط.
 45. توحيد شكل أيقونات لوحة الإدارة وأزرار الإجراءات وحقول رفع الصور، وتحويل أرقام الإحصائيات إلى أرقام إنجليزية.
+46. إعادة بناء بوابة المعلنين بنمط الإدارة الحالي مع رقم نسخة مستقل وربط الحملات ورفع صور الإعلانات إلى R2.
 
 ---
 
@@ -3300,6 +3301,56 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار بوابة المعلنين - الإصدار 0.2.25
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+firebase deploy --only firestore:rules
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/client
+Invoke-WebRequest https://date-tool.com/client/register
+Invoke-WebRequest https://date-tool.com/client/dashboard
+Invoke-WebRequest https://date-tool.com/client/create-campaign
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهرت صفحات `/client` و`/client/register` و`/client/dashboard` و`/client/create-campaign`.
+✅ تم نشر Firestore Rules بنجاح عبر `npx firebase-tools deploy --only firestore:rules`.
+✅ OpenNext build نجح للإصدار 0.2.25.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ صفحات الإنتاج `/client` و`/client/register` و`/client/dashboard` و`/client/create-campaign` أعادت 200.
+✅ Cloudflare Version ID: c35f1d11-3f86-4529-8a44-ca05f9ea969b
+⚠️ لم يتم تفعيل Turnstile فعليًا لأن ذلك يحتاج إنشاء Widget وSecret/Worker تحقق بصلاحية Cloudflare مخصصة. تم توضيح ذلك داخل صفحات الكلاينت بدل إضافة حماية شكلية غير متحققة من الخادم.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/client/ClientPortal.css
+app/client/ClientShell.jsx
+app/client/ClientVersion.js
+app/client/page.jsx
+app/client/register/page.jsx
+app/client/reset-password/page.jsx
+app/client/dashboard/page.jsx
+app/client/create-campaign/page.jsx
+firestore.rules
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3457,6 +3508,13 @@ PROJECT_MEMO.md
 ✅ تم تحويل أرقام إحصائيات الإدارة والحملات إلى أرقام إنجليزية
 ✅ تم تحديث الإصدار إلى 0.2.24
 ✅ تم نشر الإصدار 0.2.24 على Cloudflare Version ID: ee732f31-bd57-49dc-a03f-921148dd7d92
+✅ تم إعادة بناء بوابة المعلنين بنمط الإدارة الحالي ونص عربي صحيح
+✅ تم إضافة رقم نسخة مستقل لبوابة المعلنين: 1.0.0
+✅ تم ربط طلبات الإعلانات بالحملات الحالية ورفع صور الإعلانات إلى R2
+✅ تم تصحيح قيم حالات الحملات في Firestore Rules
+✅ تم تحديث الإصدار إلى 0.2.25
+✅ تم نشر قواعد Firestore للإصدار 0.2.25
+✅ تم نشر الإصدار 0.2.25 على Cloudflare Version ID: c35f1d11-3f86-4529-8a44-ca05f9ea969b
 ```
 
 ---
@@ -3540,6 +3598,7 @@ app/admin/components/SaveButton.jsx
 إضافة إدارة تذاكر support_tickets داخل لوحة الإدارة.
 إضافة نظام مرفقات خاص وآمن للتذاكر بدل استخدام R2 العام.
 تحديد سياسة تفعيل الحملات من الإدارة وربط الحملات المقبولة بمواقع الإعلان على الصفحة الرئيسية.
+تفعيل Cloudflare Turnstile فعليًا لصفحات تسجيل/دخول/استعادة كلمة مرور الكلاينت بعد توفير صلاحية إنشاء Widget وSecret/Worker تحقق، وعدم الاكتفاء بواجهة شكلية.
 ```
 
 ---
