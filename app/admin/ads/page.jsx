@@ -661,8 +661,8 @@ export default function AdminAdsPage() {
                 <section className="legacy-ad-kpis">
                     <div><span>إجمالي الحملات</span><strong>{statsCampaigns.length}</strong></div>
                     <div><span>قيد المراجعة</span><strong>{totals.pending}</strong></div>
-                    <div><span>الزيارات</span><strong>{totals.views.toLocaleString('ar-SA')}</strong></div>
-                    <div><span>النقرات</span><strong>{totals.clicks.toLocaleString('ar-SA')}</strong></div>
+                    <div><span>الزيارات</span><strong>{totals.views.toLocaleString('en-US')}</strong></div>
+                    <div><span>النقرات</span><strong>{totals.clicks.toLocaleString('en-US')}</strong></div>
                 </section>
 
                 <section className="legacy-stats-filter-bar">
@@ -747,8 +747,8 @@ export default function AdminAdsPage() {
                                         <small>{formatDateTime(campaign.endTime)}</small>
                                     </td>
                                     <td>{getDurationDays(campaign.startTime, campaign.endTime)}</td>
-                                    <td>{Number(campaign.views || 0).toLocaleString('ar-SA')}</td>
-                                    <td>{Number(campaign.clicks || 0).toLocaleString('ar-SA')}</td>
+                                    <td>{Number(campaign.views || 0).toLocaleString('en-US')}</td>
+                                    <td>{Number(campaign.clicks || 0).toLocaleString('en-US')}</td>
                                     <td>
                                         <span className={`legacy-status-pill ${getStatusClass(campaign.status)}`}>
                                             {getDisplayStatus(campaign)}

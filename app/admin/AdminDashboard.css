@@ -19,6 +19,7 @@
     color: var(--text-main);
     display: flex;
     direction: rtl;
+    font-size: 14px;
 }
 
 body.dark-mode .legacy-admin-shell {
@@ -100,10 +101,16 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-sidebar-logo i {
-    font-size: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(59, 130, 246, 0.12);
+    font-size: 22px;
     color: var(--primary-color);
-    min-width: 30px;
-    text-align: center;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .legacy-sidebar-logo h2 {
@@ -168,10 +175,18 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-nav-links a i {
-    min-width: 30px;
-    font-size: 18px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 11px;
+    background: rgba(59, 130, 246, 0.1);
+    color: currentColor;
+    font-size: 16px;
     text-align: center;
     margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .legacy-nav-links .nav-text {
@@ -248,7 +263,7 @@ body.dark-mode .legacy-admin-shell {
     height: 40px;
     background: rgba(59, 130, 246, 0.12);
     color: var(--primary-color);
-    border-radius: 50%;
+    border-radius: 13px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -284,8 +299,8 @@ body.dark-mode .legacy-admin-shell {
     color: var(--text-main);
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    font-size: 18px;
+    border-radius: 13px;
+    font-size: 16px;
 }
 
 .legacy-theme-toggle:hover {
@@ -388,20 +403,19 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-stat-icon {
-    width: 60px;
-    height: 60px;
+    width: 54px;
+    height: 54px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: #ffffff;
+    font-size: 22px;
 }
 
-.icon-blue { background: #3b82f6; }
-.icon-purple { background: #8b5cf6; }
-.icon-green { background: #10b981; }
-.icon-orange { background: #f59e0b; }
+.icon-blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+.icon-purple { background: rgba(139, 92, 246, 0.14); color: #8b5cf6; }
+.icon-green { background: rgba(16, 185, 129, 0.14); color: #10b981; }
+.icon-orange { background: rgba(245, 158, 11, 0.16); color: #f59e0b; }
 
 .legacy-stat-info h3 {
     margin: 0 0 5px;
@@ -410,10 +424,12 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-stat-info .value {
-    font-size: 26px;
+    direction: ltr;
+    font-size: 24px;
     font-weight: 900;
     color: var(--text-main);
     margin: 0;
+    font-variant-numeric: tabular-nums;
 }
 
 .legacy-ad-summary-grid {
@@ -434,7 +450,9 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-ad-summary-card strong {
     color: var(--text-main);
-    font-size: 25px;
+    direction: ltr;
+    font-size: 23px;
+    font-variant-numeric: tabular-nums;
 }
 
 .legacy-banner-grid {
@@ -484,9 +502,11 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-banner-values b {
     display: block;
+    direction: ltr;
     margin-top: 4px;
     color: var(--text-main);
     font-size: 16px;
+    font-variant-numeric: tabular-nums;
 }
 
 .legacy-loading-text {
@@ -725,13 +745,48 @@ body.dark-mode .legacy-admin-shell {
     height: 36px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
-    background: var(--bg-body);
+    background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.legacy-row-actions button.danger {
+.legacy-row-actions button.danger,
+.tools-item-actions button.danger,
+.tools-color-row button {
+    background: var(--danger-bg);
     color: var(--danger-text);
+}
+
+.legacy-row-actions button.approve,
+.old-action-btns button.approve {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border-color: color-mix(in srgb, var(--success-text) 28%, var(--border-color));
+}
+
+.legacy-row-actions button.pause,
+.old-action-btns button.pause {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+    border-color: color-mix(in srgb, var(--warning-text) 28%, var(--border-color));
+}
+
+.legacy-row-actions button[title*="تعديل"],
+.tools-item-actions button[title*="تعديل"] {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+    border-color: color-mix(in srgb, var(--warning-text) 28%, var(--border-color));
+}
+
+.legacy-row-actions button[title*="نسخ"],
+.legacy-row-actions button[title*="عرض"],
+.tools-item-actions button[title*="عرض"] {
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    border-color: color-mix(in srgb, #8b5cf6 26%, var(--border-color));
 }
 
 .legacy-empty-table {
@@ -902,8 +957,10 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .legacy-ad-kpis strong {
+    direction: ltr;
     color: var(--text-main);
-    font-size: 24px;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
 }
 
 .legacy-stats-filter-bar {
@@ -1002,10 +1059,11 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-upload-btn {
     min-height: 46px;
+    border: 1px dashed var(--primary-color);
     border-radius: 12px;
     padding: 0 14px;
-    background: var(--primary-color);
-    color: #ffffff;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1033,7 +1091,7 @@ body.dark-mode .legacy-admin-shell {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    border: 1px solid var(--border-color);
+    border: 1px dashed var(--border-color);
     border-radius: 12px;
     background: var(--bg-body);
     color: var(--text-main);
@@ -1060,7 +1118,7 @@ body.dark-mode .legacy-admin-shell {
     width: 52px;
     height: 52px;
     border-radius: 14px;
-    border: 1px solid var(--border-color);
+    border: 1px dashed var(--border-color);
     background: var(--bg-container);
     color: var(--primary-color);
     display: inline-flex;
@@ -1110,6 +1168,7 @@ body.dark-mode .legacy-admin-shell {
     border-radius: 12px;
     background: rgba(59, 130, 246, 0.12);
     color: var(--primary-color);
+    border: 1px dashed rgba(59, 130, 246, 0.3);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1544,13 +1603,16 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tools-item-actions button {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    background: var(--bg-container);
+    background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tools-item-actions button.danger {
@@ -1595,11 +1657,11 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tools-color-row button {
-    width: 42px;
-    height: 40px;
+    width: 40px;
+    height: 38px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    background: var(--bg-container);
+    background: var(--danger-bg);
     color: var(--danger-text);
     cursor: pointer;
 }
@@ -1807,6 +1869,10 @@ body.dark-mode .legacy-admin-shell {
 }
 
 @media (max-width: 900px) {
+    .legacy-admin-shell {
+        font-size: 13.5px;
+    }
+
     .legacy-sidebar {
         transform: translateX(100%);
         width: 280px !important;
@@ -1875,6 +1941,33 @@ body.dark-mode .legacy-admin-shell {
 }
 
 @media (max-width: 700px) {
+    .legacy-admin-shell {
+        font-size: 13px;
+    }
+
+    .legacy-page-heading h1,
+    .legacy-ads-hero h1,
+    .tools-section-title h2 {
+        font-size: 18px;
+    }
+
+    .legacy-stat-info .value,
+    .legacy-ad-kpis strong,
+    .legacy-ad-summary-card strong {
+        font-size: 20px;
+    }
+
+    .legacy-stat-icon,
+    .tools-quick-card i,
+    .tools-section-icon,
+    .tools-event-icon,
+    .tools-social-preview {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        font-size: 18px;
+    }
+
     .legacy-welcome-banner > i {
         display: none;
     }

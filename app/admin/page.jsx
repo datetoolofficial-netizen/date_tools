@@ -16,7 +16,7 @@ function getStatValue(stats, key) {
 }
 
 function formatStatNumber(value) {
-    return Number(value || 0).toLocaleString('ar-SA');
+    return Number(value || 0).toLocaleString('en-US');
 }
 
 function formatPercent(part, total) {
