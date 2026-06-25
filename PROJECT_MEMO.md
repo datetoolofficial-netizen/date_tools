@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.34.
+الإصدار الحالي للتطبيق هو 0.2.35.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -3587,6 +3587,50 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار توحيد الاستجابة لكل المنصات - الإصدار 0.2.35
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+Invoke-WebRequest https://date-tool.com/?v=0.2.35
+Invoke-WebRequest https://date-tool.com/ads.txt?v=0.2.35
+```
+
+النتيجة:
+
+```txt
+✅ تم توحيد متغيرات قياسات الهيدر والسكيلتون في الصفحة الرئيسية.
+✅ تم تصغير عنوان وسلوغن الهيدر للشاشات الصغيرة بدون تغيير الهوية العامة.
+✅ تم إصلاح تعارض `.header h1` مع `.tool-title` الذي كان يمنع تطبيق مقاسات الجوال الصحيحة.
+✅ تم حذف CSS إدارة قديم غير مستخدم من `globals.css`.
+✅ تم تحسين نقاط الاستجابة في صفحات الإدارة الحالية والقديمة وبوابة الكلاينت.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run lint نجح بدون أخطاء.
+✅ npm run build نجح وظهرت الصفحة الرئيسية والإدارة والكلاينت ضمن البناء.
+✅ تم نشر الإصدار 0.2.35 على Cloudflare.
+✅ صفحة الإنتاج أعادت 200 وظهر رقم الإصدار 0.2.35.
+✅ `/ads.txt` أعاد 200.
+✅ Cloudflare Version ID: 5dc52627-e705-4290-87b7-f67d9062f603
+```
+
+الملفات المتأثرة:
+
+```txt
+app/globals.css
+app/admin/AdminDashboard.css
+app/admin/AdminPage.css
+app/client/ClientPortal.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3768,6 +3812,9 @@ PROJECT_MEMO.md
 ✅ تم إضافة Skeleton لامع وخفيف أثناء تحميل الصفحة الرئيسية بدل النصوص المؤقتة
 ✅ تم تحديث الإصدار إلى 0.2.34
 ✅ تم نشر الإصدار 0.2.34 على Cloudflare Version ID: a4309318-03d5-4539-9288-77fd73e7daed
+✅ تم توحيد الاستجابة في واجهة الأداة والإدارة وبوابة الكلاينت
+✅ تم تحديث الإصدار إلى 0.2.35
+✅ تم نشر الإصدار 0.2.35 على Cloudflare Version ID: 5dc52627-e705-4290-87b7-f67d9062f603
 ```
 
 ---

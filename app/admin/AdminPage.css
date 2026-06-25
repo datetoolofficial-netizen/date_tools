@@ -1386,11 +1386,15 @@ textarea:focus {
         width: 100%;
     }
 
-    .stats-grid,
     .page-row,
     .dynamic-row,
     .event-list-card .dynamic-row {
         grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
     .admin-row input,
@@ -1476,6 +1480,22 @@ textarea:focus {
     }
 
     .stat-card {
-        padding: 15px 12px;
+        padding: 14px 10px;
+        border-radius: 15px;
+    }
+
+    .stat-card i {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        font-size: 16px;
+    }
+
+    .stat-card h4 {
+        font-size: 11px;
+    }
+
+    .stat-card span {
+        font-size: 18px;
     }
 }

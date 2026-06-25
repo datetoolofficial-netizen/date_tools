@@ -11,6 +11,22 @@
             --result-bg: #f0fdf4;
             --result-text: #166534;
             --ad-accent: #f59e0b;
+            --page-padding: 20px;
+            --header-panel-min: 84px;
+            --header-panel-pad-y: 14px;
+            --header-panel-pad-x: 18px;
+            --header-radius: 18px;
+            --brand-gap: 14px;
+            --logo-size: 56px;
+            --control-size: 52px;
+            --control-radius: 16px;
+            --title-size: clamp(24px, 4vw, 38px);
+            --title-leading: 1.15;
+            --slogan-size: 14px;
+            --nav-height: 42px;
+            --nav-font-size: 14px;
+            --section-gap: 25px;
+            --card-radius: 16px;
         }
 
         /* ================= الوضع المظلم ================= */
@@ -34,7 +50,7 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            padding: var(--page-padding);
             transition: background-color 0.4s ease, color 0.4s ease;
         }
 
@@ -83,14 +99,14 @@
         }
 
         .skeleton-header-panel {
-            min-height: 84px;
-            padding: 14px 18px;
-            border-radius: 18px;
+            min-height: var(--header-panel-min);
+            padding: var(--header-panel-pad-y) var(--header-panel-pad-x);
+            border-radius: var(--header-radius);
             background: var(--bg-card);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
+            gap: var(--brand-gap);
             box-shadow: 0 16px 45px rgba(15, 23, 42, 0.08);
         }
 
@@ -114,27 +130,27 @@
         }
 
         .skeleton-logo {
-            width: 56px;
-            height: 56px;
-            border-radius: 18px;
-            flex: 0 0 56px;
+            width: var(--logo-size);
+            height: var(--logo-size);
+            border-radius: var(--header-radius);
+            flex: 0 0 var(--logo-size);
         }
 
         .skeleton-title-line {
             width: min(280px, 46vw);
-            height: 24px;
+            height: calc(var(--title-size) * 0.82);
         }
 
         .skeleton-subtitle-line {
             width: min(190px, 34vw);
-            height: 13px;
+            height: var(--slogan-size);
             opacity: 0.75;
         }
 
         .skeleton-icon-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
+            width: var(--control-size);
+            height: var(--control-size);
+            border-radius: var(--control-radius);
         }
 
         .skeleton-nav-row {
@@ -146,7 +162,7 @@
 
         .skeleton-pill {
             width: 112px;
-            height: 42px;
+            height: var(--nav-height);
             border-radius: 14px;
         }
 
@@ -155,7 +171,7 @@
         }
 
         .skeleton-today-banner {
-            height: 58px;
+            min-height: 58px;
             border-radius: 15px;
             background:
                 linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent),
@@ -164,7 +180,7 @@
         }
 
         .skeleton-ad-box {
-            height: 120px;
+            min-height: 120px;
             border-radius: 16px;
             opacity: 0.82;
         }
@@ -198,7 +214,7 @@
 
         .skeleton-tool-card {
             padding: 25px 30px;
-            border-radius: 16px;
+            border-radius: var(--card-radius);
             background: var(--bg-card);
             display: grid;
             gap: 18px;
@@ -253,31 +269,12 @@
                 gap: 18px;
             }
 
-            .skeleton-header-panel {
-                min-height: 76px;
-                padding: 12px;
-            }
-
-            .skeleton-logo {
-                width: 50px;
-                height: 50px;
-                flex-basis: 50px;
-                border-radius: 15px;
-            }
-
             .skeleton-title-line {
-                width: 45vw;
-                height: 20px;
+                width: 43vw;
             }
 
             .skeleton-subtitle-line {
-                width: 36vw;
-            }
-
-            .skeleton-icon-btn {
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
+                width: 34vw;
             }
 
             .skeleton-nav-row {
@@ -286,7 +283,7 @@
 
             .skeleton-pill {
                 width: 96px;
-                height: 38px;
+                height: var(--nav-height);
                 border-radius: 12px;
             }
 
@@ -316,10 +313,10 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            min-height: 84px;
-            padding: 14px 18px;
-            border-radius: 18px;
+            gap: var(--brand-gap);
+            min-height: var(--header-panel-min);
+            padding: var(--header-panel-pad-y) var(--header-panel-pad-x);
+            border-radius: var(--header-radius);
             background: var(--bg-card);
             box-shadow: 0 16px 45px rgba(15, 23, 42, 0.08);
         }
@@ -330,17 +327,17 @@
             min-width: 0;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: var(--brand-gap);
             text-align: start;
         }
         .site-logo-link {
-            width: 56px;
-            height: 56px;
-            flex: 0 0 56px;
+            width: var(--logo-size);
+            height: var(--logo-size);
+            flex: 0 0 var(--logo-size);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 18px;
+            border-radius: var(--header-radius);
             background: rgba(59, 130, 246, 0.08);
             overflow: hidden;
         }
@@ -358,7 +355,7 @@
             text-decoration: none;
         }
         .logo { max-width: 120px; height: auto; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
-        .header h1 { font-size: 26px; margin: 0; color: var(--text-main); }
+        .header h1 { margin: 0; color: var(--text-main); }
         
         /* ================= أزرار التحكم (المظهر واللغة) ================= */
         .top-controls {
@@ -373,9 +370,9 @@
             background: rgba(59, 130, 246, 0.1);
             border: 0;
             color: var(--primary);
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
+            width: var(--control-size);
+            height: var(--control-size);
+            border-radius: var(--control-radius);
             cursor: pointer;
             font-size: 16px;
             display: flex;
@@ -425,7 +422,7 @@
             background: var(--bg-card);
             color: var(--text-main);
             text-decoration: none;
-            font-size: 14px;
+            font-size: var(--nav-font-size);
             font-weight: 800;
             box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
             transition: 0.22s ease;
@@ -703,64 +700,56 @@
 }
 
 .tool-title {
-    font-size: clamp(24px, 4vw, 38px);
+    font-size: var(--title-size);
     color: var(--primary);
     margin: 0;
     font-weight: 900;
-    line-height: 1.15;
+    line-height: var(--title-leading);
     overflow-wrap: anywhere;
 }
 
+.header .tool-title {
+    font-size: var(--title-size);
+    color: var(--primary);
+    line-height: var(--title-leading);
+}
+
 .tool-slogan {
-    font-size: 14px;
+    font-size: var(--slogan-size);
     color: var(--text-sub);
     margin: 0;
     opacity: 0.8;
     line-height: 1.6;
 }
 
-@media (max-width: 520px) {
-    body {
-        padding: 12px;
-    }
-
-    .site-header-panel {
-        min-height: 76px;
-        padding: 12px;
-        gap: 10px;
-        align-items: center;
+@media (max-width: 600px) {
+    :root {
+        --page-padding: 12px;
+        --header-panel-min: 76px;
+        --header-panel-pad-y: 11px;
+        --header-panel-pad-x: 12px;
+        --header-radius: 16px;
+        --brand-gap: 10px;
+        --logo-size: 50px;
+        --control-size: 44px;
+        --control-radius: 12px;
+        --title-size: clamp(18px, 5.6vw, 23px);
+        --title-leading: 1.08;
+        --slogan-size: 11px;
+        --nav-height: 38px;
+        --nav-font-size: 12px;
+        --section-gap: 22px;
     }
 
     .site-brand {
-        gap: 10px;
         align-items: center;
-    }
-
-    .site-logo-link {
-        width: 50px;
-        height: 50px;
-        flex-basis: 50px;
-        border-radius: 15px;
     }
 
     .top-controls {
         gap: 6px;
     }
 
-    .control-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        font-size: 14px;
-    }
-
-    .tool-title {
-        font-size: clamp(20px, 6.3vw, 27px);
-        line-height: 1.12;
-    }
-
     .tool-slogan {
-        font-size: 12px;
         line-height: 1.5;
     }
 
@@ -780,160 +769,50 @@
     }
 
     .nav-link {
-        min-height: 38px;
+        min-height: var(--nav-height);
         padding: 7px 12px;
         border-radius: 12px;
-        font-size: 12px;
+    }
+}
+
+@media (max-width: 420px) {
+    :root {
+        --page-padding: 10px;
+        --header-panel-min: 70px;
+        --header-panel-pad-y: 10px;
+        --header-panel-pad-x: 10px;
+        --header-radius: 15px;
+        --brand-gap: 8px;
+        --logo-size: 44px;
+        --control-size: 38px;
+        --control-radius: 11px;
+        --title-size: clamp(16px, 5.1vw, 20px);
+        --slogan-size: 10px;
+        --nav-height: 36px;
+        --nav-font-size: 11px;
+    }
+
+    .site-header {
+        gap: 10px;
+    }
+
+    .site-brand-text {
+        gap: 2px;
+    }
+
+    .site-logo-img {
+        padding: 5px;
+    }
+
+    .control-btn {
+        font-size: 13px;
+    }
+
+    .nav-link {
+        padding-inline: 11px;
     }
 }
 /* =========================================================
-   تنسيقات الإضافات الجديدة (الأحداث، المشاركة، والسيو)
-   ========================================================= */
-
-/* شريط معلومات اليوم */
-.today-info-banner {
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
-}
-.today-info-banner i { font-size: 18px; }
-
-/* شبكة الأحداث القادمة */
-.section-header-title {
-    color: var(--text-main);
-    font-size: 18px;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.events-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 30px;
-}
-.event-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-right-width: 4px;
-    border-right-style: solid;
-    border-radius: 10px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    transition: transform 0.3s;
-}
-.event-card:hover { transform: translateY(-3px); }
-.evt-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-.evt-name { font-weight: bold; color: var(--text-main); font-size: 14px; margin-bottom: 4px; }
-.evt-days { font-size: 12px; color: var(--text-sub); }
-
-/* كرت النتيجة مع زر المشاركة وقصة التاريخ */
-.result-container { margin-top: 15px; }
-.story-card {
-    background: var(--bg-body);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    margin-top: 10px;
-    text-align: right;
-    direction: rtl;
-}
-.story-content p {
-    margin: 5px 0 10px 0;
-    font-size: 13px;
-    color: var(--text-sub);
-    line-height: 1.5;
-}
-.share-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px dashed var(--primary);
-    color: var(--primary);
-    padding: 8px;
-    border-radius: 6px;
-    font-family: inherit;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 13px;
-}
-.share-btn:hover { background: var(--primary); color: white; }
-
-/* أقسام السيو (الدليل والأسئلة الشائعة) */
-.seo-sections-wrapper { margin-top: 40px; }
-.seo-card {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-    border: 1px solid var(--border-color);
-}
-.seo-title {
-    font-size: 20px;
-    color: var(--text-main);
-    margin-top: 0;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    justify-content: flex-start;
-}
-.seo-title::before, .seo-title::after { display: none; /* إخفاء الخطوط الجانبية هنا */ }
-.seo-title i { color: var(--primary); }
-.seo-text {
-    color: var(--text-sub);
-    line-height: 1.8;
-    font-size: 15px;
-    margin-bottom: 15px;
-}
-
-.faq-item {
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-}
-.faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.faq-q {
-    color: var(--text-main);
-    font-size: 16px;
-    margin: 0 0 8px 0;
-    position: relative;
-    padding-inline-start: 15px;
-}
-.faq-q::before {
-    content: "؟";
-    position: absolute;
-    right: 0;
-    color: var(--primary);
-    font-weight: bold;
-}
-.faq-a {
-    color: var(--text-sub);
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.7;
-}/* =========================================================
    تنسيقات الإضافات الجديدة (الأحداث، المشاركة، والسيو)
    ========================================================= */
 
@@ -1147,38 +1026,3 @@ body.dark-mode .event-card {
     font-size: 14px;
     line-height: 1.7;
 }
-/* ================== تنسيقات لوحة التحكم (Admin Dashboard) ================== */
-.admin-layout { display: flex; min-height: 100vh; background: var(--bg-body); }
-.admin-sidebar { width: 260px; background: var(--bg-card); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; }
-.admin-logo { padding: 25px 20px; border-bottom: 1px solid var(--border-color); color: var(--primary); text-align: center; }
-.admin-nav { display: flex; flex-direction: column; padding: 15px 10px; flex: 1; }
-.admin-nav button, .admin-nav a { padding: 15px; margin-bottom: 8px; border: none; background: transparent; color: var(--text-sub); text-align: right; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; transition: 0.3s; text-decoration: none; display: flex; gap: 12px; align-items: center;}
-.admin-nav button:hover, .admin-nav a:hover { background: var(--input-bg); color: var(--primary); }
-.admin-nav button.active { background: var(--primary); color: white; }
-.back-home { margin-top: auto; color: #ef4444 !important; }
-
-.admin-content { flex: 1; padding: 30px; overflow-y: auto; }
-.admin-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color); }
-.admin-header-bar h2 { margin: 0; color: var(--text-main); border: none; }
-.save-btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit;}
-
-.admin-section { background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 25px; }
-.input-group { margin-bottom: 20px; }
-.input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--text-sub); }
-.input-group input { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-family: inherit; }
-.checkbox-group { display: flex; align-items: center; gap: 15px; }
-.checkbox-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
-.admin-divider { border-color: var(--border-color); margin: 30px 0; opacity: 0.5; }
-
-.admin-row { display: flex; gap: 10px; align-items: center; }
-.admin-row input, .admin-row select { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-family: inherit; flex: 1; }
-.del-btn { background: #fee2e2; color: #ef4444; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-.add-btn { background: var(--input-bg); color: var(--primary); border: 2px dashed var(--primary); padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-family: inherit;}
-
-.admin-event-card { border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 15px; background: var(--bg-body); }
-
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-.stat-card { background: var(--input-bg); padding: 25px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); }
-.stat-card i { font-size: 30px; color: var(--primary); margin-bottom: 15px; }
-.stat-card h4 { margin: 0 0 10px 0; color: var(--text-sub); }
-.stat-card span { font-size: 24px; font-weight: bold; color: var(--text-main); }

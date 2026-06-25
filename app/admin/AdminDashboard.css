@@ -13,6 +13,11 @@
     --warning-text: #f59e0b;
     --sidebar-width: 260px;
     --sidebar-collapsed-width: 80px;
+    --legacy-content-pad: clamp(14px, 2.1vw, 30px);
+    --legacy-card-pad: clamp(14px, 2vw, 30px);
+    --legacy-radius: 16px;
+    --legacy-gap: clamp(8px, 1.3vw, 14px);
+    --legacy-heading-size: clamp(20px, 2.8vw, 30px);
 
     min-height: 100vh;
     background: var(--bg-body);
@@ -218,7 +223,7 @@ body.dark-mode .legacy-admin-shell {
     width: calc(100% - var(--sidebar-width));
     margin-right: var(--sidebar-width);
     min-height: 100vh;
-    padding: 20px 30px 0;
+    padding: 20px var(--legacy-content-pad) 0;
     display: flex;
     flex-direction: column;
     transition: margin-right 0.45s ease, width 0.45s ease;
@@ -328,8 +333,8 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-welcome-banner {
     background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-    border-radius: 16px;
-    padding: 30px;
+    border-radius: var(--legacy-radius);
+    padding: var(--legacy-card-pad);
     color: #ffffff;
     display: flex;
     justify-content: space-between;
@@ -340,7 +345,7 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-welcome-banner h1 {
     margin: 0 0 10px;
-    font-size: clamp(22px, 3vw, 30px);
+    font-size: var(--legacy-heading-size);
 }
 
 .legacy-welcome-banner p {
@@ -377,7 +382,7 @@ body.dark-mode .legacy-admin-shell {
 .legacy-ad-summary-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    gap: var(--legacy-gap);
 }
 
 .legacy-stat-card,
@@ -2191,7 +2196,7 @@ body.dark-mode .legacy-admin-shell {
     .legacy-admin-shell.sidebar-collapsed .legacy-main-wrapper {
         width: 100% !important;
         margin-right: 0 !important;
-        padding: 15px;
+        padding: var(--legacy-content-pad);
     }
 
     .legacy-toggle-sidebar-btn {
@@ -2435,5 +2440,80 @@ body.dark-mode .legacy-admin-shell {
         flex-direction: row;
         justify-content: flex-start;
         flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 520px) {
+    .legacy-admin-shell {
+        --legacy-content-pad: 10px;
+        --legacy-card-pad: 16px;
+        --legacy-radius: 15px;
+        --legacy-gap: 8px;
+        font-size: 12.5px;
+    }
+
+    .legacy-top-nav,
+    .legacy-welcome-banner,
+    .legacy-stat-card,
+    .legacy-ad-summary-card,
+    .legacy-banner-card,
+    .legacy-table-card,
+    .tools-section-card {
+        border-radius: var(--legacy-radius);
+    }
+
+    .legacy-top-nav {
+        padding: 9px 10px;
+    }
+
+    .legacy-welcome-banner {
+        margin-bottom: 22px;
+    }
+
+    .legacy-welcome-banner h1,
+    .legacy-page-heading h1,
+    .legacy-ads-hero h1,
+    .tools-section-title h2 {
+        font-size: clamp(17px, 5vw, 20px);
+        line-height: 1.35;
+    }
+
+    .legacy-welcome-banner p,
+    .legacy-page-heading p,
+    .legacy-ads-hero p {
+        font-size: 12px;
+    }
+
+    .legacy-stats-grid,
+    .legacy-ad-summary-grid,
+    .legacy-banner-grid,
+    .legacy-ad-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .legacy-stat-card,
+    .legacy-ad-summary-card,
+    .legacy-banner-card,
+    .legacy-ad-kpis div {
+        min-height: 104px;
+        padding: 12px 8px;
+    }
+
+    .legacy-stat-icon {
+        width: 78px;
+        height: 78px;
+        border-radius: 20px;
+        font-size: 42px;
+    }
+
+    .legacy-section-title {
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .legacy-form-grid,
+    .tools-social-grid,
+    .tools-quick-grid {
+        gap: 10px;
     }
 }

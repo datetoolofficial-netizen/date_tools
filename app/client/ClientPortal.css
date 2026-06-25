@@ -12,6 +12,10 @@
     --client-red: #ef4444;
     --client-purple: #8b5cf6;
     --client-shadow: 0 18px 45px rgba(15, 23, 42, 0.09);
+    --client-sidebar-width: 260px;
+    --client-content-pad: clamp(14px, 2vw, 24px);
+    --client-card-pad: clamp(16px, 2.1vw, 28px);
+    --client-radius: 16px;
     min-height: 100vh;
     background: var(--client-bg);
     color: var(--client-text);
@@ -39,7 +43,7 @@
     display: grid;
     place-items: center;
     min-height: 100vh;
-    padding: 28px;
+    padding: var(--client-content-pad);
 }
 
 .client-auth-card,
@@ -48,14 +52,14 @@
 .client-support-card {
     background: var(--client-card);
     border: 1px solid var(--client-border);
-    border-radius: 16px;
+    border-radius: var(--client-radius);
     box-shadow: var(--client-shadow);
 }
 
 .client-auth-card {
     width: min(560px, 100%);
     border-top: 5px solid var(--client-primary);
-    padding: 30px;
+    padding: var(--client-card-pad);
 }
 
 .client-auth-icon,
@@ -257,7 +261,7 @@
     position: fixed;
     inset-block: 0;
     right: 0;
-    width: 260px;
+    width: var(--client-sidebar-width);
     background: var(--client-card);
     color: var(--client-text);
     border-left: 1px solid var(--client-border);
@@ -356,8 +360,8 @@
 }
 
 .client-main {
-    width: calc(100% - 260px);
-    margin-right: 260px;
+    width: calc(100% - var(--client-sidebar-width));
+    margin-right: var(--client-sidebar-width);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -408,14 +412,14 @@
 }
 
 .client-content {
-    padding: 24px;
+    padding: var(--client-content-pad);
 }
 
 .client-welcome {
     background: linear-gradient(135deg, var(--client-primary), var(--client-primary-dark));
     color: white;
-    border-radius: 18px;
-    padding: 28px;
+    border-radius: calc(var(--client-radius) + 2px);
+    padding: var(--client-card-pad);
     display: flex;
     justify-content: space-between;
     gap: 20px;
@@ -485,7 +489,7 @@
 }
 
 .client-panel {
-    padding: 20px;
+    padding: var(--client-card-pad);
     margin-top: 18px;
 }
 
@@ -694,6 +698,8 @@
 
 @media (max-width: 900px) {
     .client-portal {
+        --client-content-pad: 14px;
+        --client-card-pad: 18px;
         font-size: 13px;
     }
 
@@ -762,5 +768,86 @@
 
     .client-welcome h2 {
         font-size: 20px;
+    }
+}
+
+@media (max-width: 520px) {
+    .client-portal {
+        --client-content-pad: 10px;
+        --client-card-pad: 16px;
+        --client-radius: 15px;
+        font-size: 12.5px;
+    }
+
+    .client-mobile-menu {
+        top: 10px;
+        right: 10px;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+    }
+
+    .client-sidebar {
+        width: min(280px, calc(100vw - 34px));
+    }
+
+    .client-content {
+        padding: 66px 10px 14px;
+    }
+
+    .client-topbar {
+        min-height: 64px;
+        gap: 8px;
+        padding: 14px 58px 14px 14px;
+    }
+
+    .client-topbar-title h1,
+    .client-panel-header h2 {
+        font-size: 17px;
+        line-height: 1.35;
+    }
+
+    .client-topbar-title span,
+    .client-stat-card span {
+        font-size: 11px;
+    }
+
+    .client-welcome {
+        gap: 14px;
+    }
+
+    .client-welcome h2 {
+        font-size: 18px;
+    }
+
+    .client-welcome p {
+        font-size: 12px;
+    }
+
+    .client-welcome i {
+        width: 52px;
+        height: 52px;
+        border-radius: 15px;
+        font-size: 23px;
+    }
+
+    .client-stat-card {
+        padding: 14px;
+        gap: 10px;
+    }
+
+    .client-stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        font-size: 18px;
+    }
+
+    .client-stat-card strong {
+        font-size: 22px;
+    }
+
+    .client-table {
+        min-width: 680px;
     }
 }
