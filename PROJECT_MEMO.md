@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.21.
+الإصدار الحالي للتطبيق هو 0.2.22.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -104,6 +104,7 @@ https://www.date-tool.com
 40. تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة مثل النظام الحديث.
 41. إضافة صفحة مستقلة لإعدادات مواضع الإعلانات `/admin/ad-settings` مع دعم مقتطف AdSense وAds.txt.
 42. تبسيط جدول إعدادات مواضع الإعلانات في `/admin/ad-settings` ونقل تفاصيل الأكواد إلى نوافذ إجراءات.
+43. نقل التكاملات الخارجية إلى صفحة مستقلة `/admin/integrations` باسم الربط الخارجي مع استثناء AdSense.
 
 ---
 
@@ -3176,6 +3177,50 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار صفحة الربط الخارجي - الإصدار 0.2.22
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/integrations
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/integrations`.
+✅ OpenNext build نجح للإصدار 0.2.22.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/integrations` أعاد 200.
+✅ Cloudflare Version ID: 50c45500-f799-468e-b237-f60218c0e8c8
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/integrations/page.jsx
+app/admin/AdminDashboard.css
+app/admin/tools/page.jsx
+app/admin/page.jsx
+app/admin/ad-settings/page.jsx
+app/admin/ads/page.jsx
+app/admin/identity/page.jsx
+app/components/ExternalIntegrations.jsx
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3320,6 +3365,11 @@ PROJECT_MEMO.md
 ✅ تم تبسيط جدول `/admin/ad-settings` إلى أربعة أعمدة مع نقل تفاصيل كود Google إلى نوافذ إجراءات
 ✅ تم تحديث الإصدار إلى 0.2.21
 ✅ تم نشر الإصدار 0.2.21 على Cloudflare Version ID: f28b034a-3733-400d-9ab9-7ac5da50278e
+✅ تمت إضافة صفحة `/admin/integrations` للربط الخارجي الآمن
+✅ تم حذف سيكشن التكاملات من `/admin/tools` منعًا للتكرار
+✅ بقي AdSense و Ads.txt داخل `/admin/ad-settings` فقط
+✅ تم تحديث الإصدار إلى 0.2.22
+✅ تم نشر الإصدار 0.2.22 على Cloudflare Version ID: 50c45500-f799-468e-b237-f60218c0e8c8
 ```
 
 ---

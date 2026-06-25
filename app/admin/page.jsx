@@ -208,6 +208,12 @@ export default function AdminDashboardPage() {
                         </Link>
                     </li>
                     <li>
+                        <Link href="/admin/integrations">
+                            <i className="fa-solid fa-plug-circle-bolt"></i>
+                            <span className="nav-text">الربط الخارجي</span>
+                        </Link>
+                    </li>
+                    <li>
                         <Link href="/admin/ad-settings">
                             <i className="fa-solid fa-rectangle-ad"></i>
                             <span className="nav-text">إدارة الإعلانات</span>

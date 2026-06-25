@@ -5,6 +5,9 @@ import { useEffect } from 'react';
 const GOOGLE_TAG_PATTERN = /^(G|AW|DC)-[A-Z0-9-]+$/i;
 const GOOGLE_TAG_MANAGER_PATTERN = /^GTM-[A-Z0-9-]+$/i;
 const GOOGLE_VERIFICATION_PATTERN = /^[A-Za-z0-9_-]{10,120}$/;
+const BING_VERIFICATION_PATTERN = /^[A-Za-z0-9]{10,120}$/;
+const CLARITY_PROJECT_PATTERN = /^[A-Za-z0-9]{6,30}$/;
+const META_PIXEL_PATTERN = /^[0-9]{5,30}$/;
 const INTEGRATION_ATTRIBUTE = 'data-date-tools-integration';
 
 function clean(value = '') {
@@ -34,6 +37,16 @@ function appendGoogleSiteVerification(code) {
 
     const meta = document.createElement('meta');
     meta.name = 'google-site-verification';
+    meta.content = code;
+    meta.setAttribute(INTEGRATION_ATTRIBUTE, 'true');
+    document.head.appendChild(meta);
+}
+
+function appendBingSiteVerification(code) {
+    if (!BING_VERIFICATION_PATTERN.test(code)) return;
+
+    const meta = document.createElement('meta');
+    meta.name = 'msvalidate.01';
     meta.content = code;
     meta.setAttribute(INTEGRATION_ATTRIBUTE, 'true');
     document.head.appendChild(meta);
@@ -73,6 +86,36 @@ function appendGoogleTagManager(containerId) {
     });
 }
 
+function appendMicrosoftClarity(projectId) {
+    if (!CLARITY_PROJECT_PATTERN.test(projectId)) return;
+
+    appendHeadScript({
+        content: [
+            '(function(c,l,a,r,i,t,y){',
+            'c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};',
+            't=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;',
+            'y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);',
+            `})(window, document, "clarity", "script", "${projectId}");`,
+        ].join('\n'),
+    });
+}
+
+function appendMetaPixel(pixelId) {
+    if (!META_PIXEL_PATTERN.test(pixelId)) return;
+
+    appendHeadScript({
+        content: [
+            '!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?',
+            'n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;',
+            'n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;',
+            't.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}',
+            '(window, document,"script","https://connect.facebook.net/en_US/fbevents.js");',
+            `fbq("init", "${pixelId}");`,
+            'fbq("track", "PageView");',
+        ].join('\n'),
+    });
+}
+
 export default function ExternalIntegrations() {
     useEffect(() => {
         let isMounted = true;
@@ -89,6 +132,9 @@ export default function ExternalIntegrations() {
                 appendGoogleSiteVerification(clean(integrations.googleSiteVerification));
                 appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
                 appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
+                appendBingSiteVerification(clean(integrations.bingSiteVerification));
+                appendMicrosoftClarity(clean(integrations.microsoftClarityProjectId));
+                appendMetaPixel(clean(integrations.metaPixelId));
             } catch (error) {
                 console.warn('External integrations were skipped:', error);
             }

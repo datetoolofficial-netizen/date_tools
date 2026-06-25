@@ -38,6 +38,9 @@ const defaultExternalIntegrations = {
     googleTagManagerId: "",
     googleAdsenseClient: "",
     googleSiteVerification: "",
+    bingSiteVerification: "",
+    microsoftClarityProjectId: "",
+    metaPixelId: "",
     adsenseSnippet: "",
     adsTxtSnippet: ""
 };
@@ -83,6 +86,9 @@ function normalizeExternalIntegrations(value = {}) {
         googleTagManagerId: String(value.googleTagManagerId || "").trim(),
         googleAdsenseClient: String(value.googleAdsenseClient || "").trim(),
         googleSiteVerification: String(value.googleSiteVerification || "").trim(),
+        bingSiteVerification: String(value.bingSiteVerification || "").trim(),
+        microsoftClarityProjectId: String(value.microsoftClarityProjectId || "").trim(),
+        metaPixelId: String(value.metaPixelId || "").trim(),
         adsenseSnippet: String(value.adsenseSnippet || "").slice(0, 4000),
         adsTxtSnippet: String(value.adsTxtSnippet || "").slice(0, 4000)
     };

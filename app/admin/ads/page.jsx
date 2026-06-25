@@ -138,6 +138,12 @@ function AdminNav({ active = 'ads' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/integrations" className={active === 'integrations' ? 'active' : ''}>
+                    <i className="fa-solid fa-plug-circle-bolt"></i>
+                    <span className="nav-text">الربط الخارجي</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/admin/ad-settings" className={active === 'ad-settings' ? 'active' : ''}>
                     <i className="fa-solid fa-rectangle-ad"></i>
                     <span className="nav-text">إدارة الإعلانات</span>
