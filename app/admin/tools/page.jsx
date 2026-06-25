@@ -642,6 +642,15 @@ export default function AdminToolsPage() {
                             <div className="tools-empty">لا توجد روابط خارجية بعد.</div>
                         )}
 
+                        {(toolsConfig.externalLinks || []).length > 0 && (
+                            <div className="tools-table-head">
+                                <span>اسم الرابط</span>
+                                <span>الرابط</span>
+                                <span>مكان الظهور</span>
+                                <span>الإجراءات</span>
+                            </div>
+                        )}
+
                         {(toolsConfig.externalLinks || []).map((link, index) => (
                             <div className="tools-item-card compact" key={`${link.url}-${index}`}>
                                 <div className="tools-item-main">
@@ -663,6 +672,9 @@ export default function AdminToolsPage() {
                                     </div>
                                 </div>
                                 <div className="tools-item-actions">
+                                    <a className="tools-row-action" href={link.url || '#'} target="_blank" rel="noopener noreferrer" title="فتح الرابط">
+                                        <i className="fa-solid fa-up-right-from-square"></i>
+                                    </a>
                                     <button type="button" className="danger" onClick={() => removeArrayItem('externalLinks', index)} title="حذف الرابط">
                                         <i className="fa-solid fa-trash"></i>
                                     </button>
@@ -692,6 +704,16 @@ export default function AdminToolsPage() {
                             <div className="tools-empty">لا توجد حسابات سوشيال بعد.</div>
                         )}
 
+                        {(toolsConfig.socialLinks || []).length > 0 && (
+                            <div className="tools-table-head">
+                                <span>الأيقونة</span>
+                                <span>المنصة</span>
+                                <span>الرابط</span>
+                                <span>اللون</span>
+                                <span>الإجراءات</span>
+                            </div>
+                        )}
+
                         {(toolsConfig.socialLinks || []).map((social, index) => (
                             <div className="tools-social-card" key={`${social.url}-${index}`}>
                                 <div className="tools-social-preview" style={{ color: social.color || '#3b82f6' }}>
@@ -718,6 +740,9 @@ export default function AdminToolsPage() {
                                 </div>
                                 <div className="tools-color-row">
                                     <input type="color" value={social.color || '#3b82f6'} onChange={(event) => updateArrayItem('socialLinks', index, 'color', event.target.value)} />
+                                    <a className="tools-row-action" href={social.url || '#'} target="_blank" rel="noopener noreferrer" title="فتح الحساب">
+                                        <i className="fa-solid fa-up-right-from-square"></i>
+                                    </a>
                                     <button type="button" className="danger" onClick={() => removeArrayItem('socialLinks', index)} title="حذف الحساب">
                                         <i className="fa-solid fa-trash"></i>
                                     </button>
@@ -747,8 +772,23 @@ export default function AdminToolsPage() {
                             <div className="tools-empty">لا توجد أحداث بعد.</div>
                         )}
 
+                        {(toolsConfig.events || []).length > 0 && (
+                            <div className="tools-table-head">
+                                <span>تفعيل</span>
+                                <span>أيقونة</span>
+                                <span>اسم الحدث</span>
+                                <span>التاريخ</span>
+                                <span>التكرار</span>
+                                <span>كود الأيقونة</span>
+                                <span>الإجراءات</span>
+                            </div>
+                        )}
+
                         {(toolsConfig.events || []).map((eventItem, index) => (
                             <div className="tools-item-card event" key={`${eventItem.id}-${index}`}>
+                                <label className="tools-mini-check icon-only" title="تفعيل الحدث">
+                                    <input type="checkbox" checked={eventItem.active !== false} onChange={(event) => updateArrayItem('events', index, 'active', event.target.checked)} />
+                                </label>
                                 <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
                                     <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                                 </div>
@@ -760,13 +800,6 @@ export default function AdminToolsPage() {
                                     <div className="legacy-field">
                                         <label>التاريخ</label>
                                         <input type="date" value={eventItem.date || ''} onChange={(event) => updateArrayItem('events', index, 'date', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>التقويم</label>
-                                        <select value={eventItem.calendar || 'gregorian'} onChange={(event) => updateArrayItem('events', index, 'calendar', event.target.value)}>
-                                            <option value="gregorian">ميلادي</option>
-                                            <option value="hijri">هجري</option>
-                                        </select>
                                     </div>
                                     <div className="legacy-field">
                                         <label>التكرار</label>
@@ -781,12 +814,11 @@ export default function AdminToolsPage() {
                                         <input dir="ltr" value={eventItem.icon || ''} onChange={(event) => updateArrayItem('events', index, 'icon', event.target.value)} placeholder="fa-star" />
                                     </div>
                                 </div>
-                                <div className="tools-item-actions stacked">
-                                    <label className="tools-mini-check">
-                                        <input type="checkbox" checked={eventItem.active !== false} onChange={(event) => updateArrayItem('events', index, 'active', event.target.checked)} />
-                                        <span>مفعل</span>
+                                <div className="tools-item-actions">
+                                    <label className="tools-color-action" title="لون الحدث">
+                                        <input className="tools-event-color" type="color" value={eventItem.color || '#3b82f6'} onChange={(event) => updateArrayItem('events', index, 'color', event.target.value)} />
+                                        <span>لون</span>
                                     </label>
-                                    <input className="tools-event-color" type="color" value={eventItem.color || '#3b82f6'} onChange={(event) => updateArrayItem('events', index, 'color', event.target.value)} />
                                     <button type="button" className="danger" onClick={() => removeArrayItem('events', index)} title="حذف الحدث">
                                         <i className="fa-solid fa-trash"></i>
                                     </button>
