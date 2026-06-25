@@ -57,7 +57,7 @@ export function EventsSection({ lang, upcomingEvents, onShare }) {
             </div>
             <div className="events-grid">
                 {upcomingEvents.map((evt, idx) => (
-                    <div className="event-card" key={`${evt.name}-${idx}`} style={{ borderRightColor: evt.color }}>
+                    <div className="event-card" key={`${evt.name}-${idx}`} style={{ '--event-color': evt.color }}>
                         <div className="evt-icon" style={{ backgroundColor: `${evt.color}15`, color: evt.color }}>
                             <i className={`fa-solid ${evt.icon}`}></i>
                         </div>

@@ -1,11 +1,12 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
+    const [hasNavOverflow, setHasNavOverflow] = useState(false);
     const navLinks = [];
 
     if (config) {
@@ -39,12 +40,29 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
     const scrollNav = (direction) => {
         if (!navRef.current) return;
-        const dirMultiplier = document?.documentElement?.dir === 'rtl' ? -1 : 1;
+        const dirMultiplier = typeof document !== 'undefined' && document.documentElement.dir === 'rtl' ? -1 : 1;
         navRef.current.scrollBy({
             left: direction * dirMultiplier * 220,
             behavior: 'smooth'
         });
     };
+
+    useEffect(() => {
+        const updateNavOverflow = () => {
+            const nav = navRef.current;
+            if (!nav) return;
+            setHasNavOverflow(nav.scrollWidth > nav.clientWidth + 4);
+        };
+
+        updateNavOverflow();
+        const timer = window.setTimeout(updateNavOverflow, 80);
+        window.addEventListener('resize', updateNavOverflow);
+
+        return () => {
+            window.clearTimeout(timer);
+            window.removeEventListener('resize', updateNavOverflow);
+        };
+    }, [lang, navLinks.length]);
 
     return (
         <header className="header site-header">
@@ -90,10 +108,17 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                 </div>
             </div>
 
-            <div className="site-nav-shell">
-                <button type="button" className="nav-scroll-btn" onClick={() => scrollNav(-1)} aria-label={lang === 'ar' ? 'التمرير يمينًا' : 'Scroll left'}>
-                    <i className="fa-solid fa-chevron-right"></i>
-                </button>
+            <div className={`site-nav-shell${hasNavOverflow ? ' has-overflow' : ''}`}>
+                {hasNavOverflow && (
+                    <button
+                        type="button"
+                        className="nav-scroll-btn"
+                        onClick={() => scrollNav(-1)}
+                        aria-label={lang === 'ar' ? 'التمرير يمينًا' : 'Scroll left'}
+                    >
+                        <i className="fa-solid fa-chevron-right"></i>
+                    </button>
+                )}
 
                 <nav className="nav-links" ref={navRef} aria-label={lang === 'ar' ? 'روابط الموقع' : 'Site links'}>
                     <Link href="/" className="nav-link active">
@@ -115,9 +140,16 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     ))}
                 </nav>
 
-                <button type="button" className="nav-scroll-btn" onClick={() => scrollNav(1)} aria-label={lang === 'ar' ? 'التمرير يسارًا' : 'Scroll right'}>
-                    <i className="fa-solid fa-chevron-left"></i>
-                </button>
+                {hasNavOverflow && (
+                    <button
+                        type="button"
+                        className="nav-scroll-btn"
+                        onClick={() => scrollNav(1)}
+                        aria-label={lang === 'ar' ? 'التمرير يسارًا' : 'Scroll right'}
+                    >
+                        <i className="fa-solid fa-chevron-left"></i>
+                    </button>
+                )}
             </div>
         </header>
     );
