@@ -1693,9 +1693,92 @@ body.dark-mode .legacy-admin-shell {
     box-shadow: 0 10px 25px color-mix(in srgb, var(--tool-color) 18%, transparent);
 }
 
+.tools-section-card#pages .tools-section-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: stretch;
+    gap: 14px;
+    padding: 12px 14px;
+    text-align: start;
+}
+
+.tools-section-card#pages .tools-section-title {
+    justify-items: start;
+    gap: 2px;
+    max-width: none;
+}
+
+.tools-section-card#pages .tools-section-title h2 {
+    font-size: 18px;
+}
+
+.tools-section-card#pages .tools-section-title p {
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.tools-section-card#pages .tools-section-head .legacy-primary-btn {
+    min-width: 180px;
+    min-height: 42px;
+    padding: 10px 16px;
+}
+
 .tools-list {
     display: grid;
     gap: 12px;
+}
+
+.tools-section-card#pages .tools-list {
+    display: block;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--bg-container);
+}
+
+.tools-section-card#pages .tools-table-head,
+.tools-section-card#pages .tools-item-card {
+    min-width: 720px;
+    display: grid;
+    grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1fr) minmax(140px, 0.8fr) 126px;
+    gap: 12px;
+    align-items: center;
+}
+
+.tools-section-card#pages .tools-table-head {
+    padding: 12px 14px;
+    background: var(--tool-bg);
+    color: var(--text-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.tools-section-card#pages .tools-item-card {
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-container);
+    padding: 12px 14px;
+}
+
+.tools-section-card#pages .tools-item-card:last-child {
+    border-bottom: 0;
+}
+
+.tools-section-card#pages .tools-item-main {
+    display: contents;
+}
+
+.tools-section-card#pages .legacy-field {
+    gap: 0;
+}
+
+.tools-section-card#pages .legacy-field label {
+    display: none;
+}
+
+.tools-section-card#pages .tools-item-actions {
+    justify-content: center;
 }
 
 .tools-empty {

@@ -577,6 +577,15 @@ export default function AdminToolsPage() {
                             <div className="tools-empty">لا توجد صفحات بعد.</div>
                         )}
 
+                        {(toolsConfig.internalPages || []).length > 0 && (
+                            <div className="tools-table-head">
+                                <span>عنوان الصفحة</span>
+                                <span>المسار</span>
+                                <span>مكان الظهور</span>
+                                <span>الإجراءات</span>
+                            </div>
+                        )}
+
                         {(toolsConfig.internalPages || []).map((page, index) => (
                             <div className="tools-item-card" key={`${page.slug}-${index}`}>
                                 <div className="tools-item-main">
