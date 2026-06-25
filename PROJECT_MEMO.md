@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.26.
+الإصدار الحالي للتطبيق هو 0.2.27.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -109,6 +109,7 @@ https://www.date-tool.com
 45. توحيد شكل أيقونات لوحة الإدارة وأزرار الإجراءات وحقول رفع الصور، وتحويل أرقام الإحصائيات إلى أرقام إنجليزية.
 46. إعادة بناء بوابة المعلنين بنمط الإدارة الحالي مع رقم نسخة مستقل وربط الحملات ورفع صور الإعلانات إلى R2.
 47. تحسين كروت إحصائيات صفحة `/admin` بأربعة أعمدة، أيقونات خلفية شفافة، وأرقام أساسية واضحة لمواضع الإعلانات.
+48. تحسين رؤوس سكاشن صفحة `/admin/tools` بخلفيات ملوّنة حسب القسم، عنوان متوسط دائمًا، وبطاقات اختصار علوية بأيقونات ناعمة.
 
 ---
 
@@ -3302,6 +3303,42 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار تحسين رؤوس سكاشن إعدادات الأداة - الإصدار 0.2.27
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/tools
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهرت صفحة `/admin/tools` ضمن البناء.
+✅ OpenNext build نجح بعد تشغيله بصلاحية موسعة بسبب قيود sandbox على ويندوز.
+✅ تم نشر الإصدار 0.2.27 على Cloudflare.
+✅ صفحة الإنتاج `/admin/tools` أعادت 200.
+✅ Cloudflare Version ID: 029b520f-272f-4174-acc2-40bd977658bb
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ### اختبار تحسين إحصائيات لوحة الإدارة - الإصدار 0.2.26
 
 تم تشغيل:
@@ -3556,6 +3593,9 @@ PROJECT_MEMO.md
 ✅ تم تحسين كروت إحصائيات صفحة `/admin` بأربعة أعمدة وأيقونات خلفية شفافة
 ✅ تم تحديث الإصدار إلى 0.2.26
 ✅ تم نشر الإصدار 0.2.26 على Cloudflare Version ID: fa1f9f6c-43bd-4f4d-b7c0-c69c9e379636
+✅ تم تحسين رؤوس سكاشن صفحة `/admin/tools` وبطاقات الاختصارات العلوية
+✅ تم تحديث الإصدار إلى 0.2.27
+✅ تم نشر الإصدار 0.2.27 على Cloudflare Version ID: 029b520f-272f-4174-acc2-40bd977658bb
 ```
 
 ---
