@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.32.
+الإصدار الحالي للتطبيق هو 0.2.33.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -115,6 +115,7 @@ https://www.date-tool.com
 51. تحسين هيدر الصفحة الرئيسية بترتيب اللوقو واسم الأداة والسلوقن داخل منطقة هوية وتحويل روابط الهيدر إلى شريط أفقي قابل للتمرير.
 52. إضافة شريط جانبي مميز لكروت الأحداث بدل البوردر الثقيل مع تخفيف بوردرات أقسام الصفحة.
 53. ضبط هيدر الصفحة الرئيسية ومحاذاة الشعار والاسم والسلوغن والأزرار، وإظهار أسهم الصفحات فقط عند وجود overflow، وإرجاع كروت الأحداث إلى بوردر يمين ملوّن بلون الحدث.
+54. إنشاء ملف ترجمة مركزي للواجهة الرئيسية وتنظيف مشاكل الترميز والملفات غير المستخدمة.
 
 ---
 
@@ -3487,6 +3488,63 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار ملف الترجمة وتنظيف المشروع - الإصدار 0.2.33
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+Invoke-WebRequest https://date-tool.com/?v=0.2.33
+Invoke-WebRequest https://date-tool.com/ads.txt?v=0.2.33
+```
+
+النتيجة:
+
+```txt
+✅ تم إنشاء ملف ترجمة مركزي `app/i18n.js` لنصوص الصفحة الرئيسية والهيدر والفوتر وSEO.
+✅ تم نقل نصوص المشاركة والأحداث وقصص التاريخ إلى ملف الترجمة بدل إبقائها داخل كود الصفحة.
+✅ تم تنظيف ملفات وأصول غير مستخدمة من المشروع.
+✅ تم تصحيح إدخالات الترميز المشوهة في `VERSION_LOG.md`.
+✅ فحص الترميز لم يجد علامات mojibake في ملفات المشروع بعد التنظيف.
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهرت الصفحة الرئيسية وباقي المسارات ضمن البناء.
+✅ تم نشر الإصدار 0.2.33 على Cloudflare.
+✅ صفحة الإنتاج أعادت 200 وظهر رقم الإصدار 0.2.33.
+✅ `/ads.txt` أعاد 200.
+✅ Cloudflare Version ID: 0d12e075-d709-4c62-a162-9339430f7699
+```
+
+الملفات المتأثرة:
+
+```txt
+app/i18n.js
+app/page.jsx
+app/Header.jsx
+app/Footer.jsx
+app/layout.jsx
+app/components/home/HomeSections.jsx
+app/components/home/homeDateUtils.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+config.json
+CLAUDE.md
+logo.png
+logo.svg
+favicon.svg
+public/file.svg
+public/globe.svg
+public/next.svg
+public/vercel.svg
+public/window.svg
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3660,6 +3718,11 @@ PROJECT_MEMO.md
 ✅ تم تحويل سكشن الصفحات في `/admin/tools` إلى عرض جدولي مضغوط
 ✅ تم تحديث الإصدار إلى 0.2.28
 ✅ تم نشر الإصدار 0.2.28 على Cloudflare Version ID: 84f9afc2-e4bf-49c4-aa3d-41c0269bfa8f
+✅ تم إنشاء ملف ترجمة مركزي للصفحة الرئيسية والهيدر والفوتر
+✅ تم تنظيف ملفات وأصول قديمة غير مستخدمة
+✅ تم تصحيح إدخالات الترميز المشوهة في سجل الإصدارات
+✅ تم تحديث الإصدار إلى 0.2.33
+✅ تم نشر الإصدار 0.2.33 على Cloudflare Version ID: 0d12e075-d709-4c62-a162-9339430f7699
 ```
 
 ---

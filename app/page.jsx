@@ -4,6 +4,15 @@ import Toast from './components/Toast';
 import Header from './Header';
 import Footer from './Footer';
 import {
+    buildDateStory,
+    buildEventsShareText,
+    daysAr,
+    getSeasonKey,
+    getTodayInfo,
+    i18n,
+    monthNames,
+} from './i18n';
+import {
     AgeCalculatorSection,
     BottomAdSlots,
     DateConversionSection,
@@ -14,7 +23,7 @@ import {
     TodayBanner,
     TopAdSlot,
 } from './components/home/HomeSections';
-import { daysAr, getHijriParts, hijriToGregorian, i18n, monthNames } from './components/home/homeDateUtils';
+import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
 
 export default function Home() {
     const [lang, setLang] = useState('ar');
@@ -182,7 +191,13 @@ export default function Home() {
         const hParts = getHijriParts(today);
         const currentDayName = daysAr[today.getDay()];
         
-        setTodayInfo(`اليوم ${currentDayName}، ${today.getDate()} ${monthNames['ar'].greg[today.getMonth()]} م | ${hParts.d} ${monthNames['ar'].hijri[hParts.m - 1]} هـ`);
+        setTodayInfo(getTodayInfo({
+            dayName: currentDayName,
+            gregDay: today.getDate(),
+            gregMonth: monthNames.ar.greg[today.getMonth()],
+            hijriDay: hParts.d,
+            hijriMonth: monthNames.ar.hijri[hParts.m - 1],
+        }));
 
         let events = [];
         const maxDays = 60; 
@@ -234,47 +249,40 @@ export default function Home() {
     const handleShareEvents = async () => {
         if (upcomingEvents.length === 0) return;
         
-        let shareBody = `📅 *أهم المواعيد القادمة*\n`;
-        shareBody += `————————————————\n`;
-        
-        upcomingEvents.forEach(evt => {
-            const daysText = evt.days === 0 ? '🕒 يصرف/يوافق اليوم!' : `⏳ متبقي: ${evt.days} يوم`;
-            shareBody += `🔹 *${evt.name}*\n${daysText}\n\n`;
-        });
-        
-        shareBody += `————————————————\n🔗 تابع المواعيد بدقة عبر أدوات التاريخ:\n${window.location.href}`;
+        const labels = i18n[lang] || i18n.ar;
+        const shareBody = buildEventsShareText(lang, upcomingEvents, window.location.href);
 
         if (navigator.share) {
-            try { await navigator.share({ title: 'المواعيد القادمة', text: shareBody }); } catch (err) {}
+            try { await navigator.share({ title: labels.shareEventsTitle, text: shareBody }); } catch (err) {}
         } else {
             navigator.clipboard.writeText(shareBody);
-            showNotification('تم نسخ القائمة كرسالة نصية!', 'info');
+            showNotification('eventsCopied', 'info');
         }
     };
 
     const generateDateStory = (gregDate, title, rawResultText) => {
         const dName = daysAr[gregDate.getDay()];
         const m = gregDate.getMonth() + 1;
-        let season = '';
-        if(m >= 3 && m <= 5) season = 'الربيع 🌸';
-        else if(m >= 6 && m <= 8) season = 'الصيف ☀️';
-        else if(m >= 9 && m <= 11) season = 'الخريف 🍂';
-        else season = 'الشتاء ❄️';
-
-        const isLeap = new Date(gregDate.getFullYear(), 1, 29).getMonth() === 1 ? 'نعم' : 'لا';
-        const info = `يوافق يوم ${dName} • فصل ${season} • سنة كبيسة: ${isLeap}`;
-        
-        const shareText = `*أدوات التاريخ الشاملة* 📅\n\n📌 ${title}\nالنتيجة: ${rawResultText}\n\n💡 هل تعلم؟\nهذا التاريخ يوافق يوم ${dName} وكان في فصل ${season}.\n\n🔗 جرب الأداة بنفسك:\n${window.location.href}`;
+        const isLeap = new Date(gregDate.getFullYear(), 1, 29).getMonth() === 1;
+        const { info, shareText } = buildDateStory(lang, {
+            dayName: dName,
+            seasonKey: getSeasonKey(m),
+            isLeap,
+            title,
+            rawResultText,
+            url: window.location.href,
+        });
         setEnteredDateInfo({ title, info, shareText });
     };
 
     const handleShareResult = async () => {
         if (!enteredDateInfo) return;
+        const labels = i18n[lang] || i18n.ar;
         if (navigator.share) {
-            try { await navigator.share({ title: 'نتيجة أدوات التاريخ', text: enteredDateInfo.shareText }); } catch (err) {}
+            try { await navigator.share({ title: labels.shareResultTitle, text: enteredDateInfo.shareText }); } catch (err) {}
         } else {
             navigator.clipboard.writeText(enteredDateInfo.shareText);
-            showNotification('تم نسخ النتيجة للمشاركة!', 'info');
+            showNotification('resultCopied', 'info');
         }
     };
 
@@ -316,7 +324,7 @@ export default function Home() {
         const durationStr = formatDuration(diff.years, diff.months, diff.days);
         
         setResAgeGreg(`${i18n[lang].resAge} <br><span style="color:inherit;">${durationStr}</span>`);
-        generateDateStory(birthDate, 'حساب العمر (ميلادي)', durationStr);
+        generateDateStory(birthDate, i18n[lang].storyAgeGreg, durationStr);
         firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
@@ -338,7 +346,7 @@ export default function Home() {
         setResAgeHijri(`${i18n[lang].resAgeH} <br><span style="color:inherit;">${durationStr}</span>`);
         
         const gregEquivalent = hijriToGregorian(bYear, bMonth, bDay);
-        generateDateStory(gregEquivalent, 'حساب العمر (هجري)', durationStr);
+        generateDateStory(gregEquivalent, i18n[lang].storyAgeHijri, durationStr);
         firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
@@ -352,7 +360,7 @@ export default function Home() {
         const hDate = new Intl.DateTimeFormat(locale, options).format(gDate);
         
         setResHijriConv(`${i18n[lang].resG2H} <br><span style="color:inherit;">${hDate}</span>`);
-        generateDateStory(gDate, 'تحويل ميلادي إلى هجري', hDate);
+        generateDateStory(gDate, i18n[lang].storyGregToHijri, hDate);
         firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 
@@ -364,11 +372,11 @@ export default function Home() {
         const options = { year: 'numeric', month: 'long', day: 'numeric' }; 
         const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
         const gDateFormatted = new Intl.DateTimeFormat(locale, options).format(gDateObj);
-        const suffix = lang === 'ar' ? ' م' : '';
+        const suffix = i18n[lang].gregorianSuffix;
         const finalRes = `${gDateFormatted}${suffix}`;
         
         setResGregConv(`${i18n[lang].resH2G} <br><span style="color:inherit;">${finalRes}</span>`);
-        generateDateStory(gDateObj, 'تحويل هجري إلى ميلادي', finalRes);
+        generateDateStory(gDateObj, i18n[lang].storyHijriToGreg, finalRes);
         firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 

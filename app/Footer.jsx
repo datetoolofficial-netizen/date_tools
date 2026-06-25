@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { i18n } from './i18n';
 import { APP_VERSION } from './version';
 
 export default function Footer({ lang, config }) {
@@ -42,14 +43,15 @@ export default function Footer({ lang, config }) {
     }
 
     const currentYear = new Date().getFullYear();
-    const copyrightText = config?.copyrightText || 'جميع الحقوق محفوظة';
-    const copyrightName = config?.copyrightName ? `لـ ${config.copyrightName}` : '';
+    const labels = i18n[lang] || i18n.ar;
+    const copyrightText = config?.copyrightText || labels.copyrightDefault;
+    const copyrightName = config?.copyrightName ? `${labels.copyrightFor} ${config.copyrightName}` : '';
 
     return (
         <footer className="footer site-footer">
             <div className="footer-inner">
                 {footerLinks.length > 0 && (
-                    <nav className="footer-links" aria-label={lang === 'en' ? 'Footer links' : 'روابط الفوتر'}>
+                    <nav className="footer-links" aria-label={labels.footerLinks}>
                         {footerLinks.map((link, idx) => (
                             link.isExternal ? (
                                 <a key={`${link.url}-${idx}`} href={link.url} target="_blank" rel="noopener noreferrer">
@@ -66,7 +68,7 @@ export default function Footer({ lang, config }) {
                 )}
 
                 {Array.isArray(config?.socialLinks) && config.socialLinks.length > 0 && (
-                    <div className="footer-social" aria-label={lang === 'en' ? 'Social links' : 'روابط التواصل'}>
+                    <div className="footer-social" aria-label={labels.socialLinks}>
                         {config.socialLinks.map((social, idx) => (
                             <a
                                 key={`${social.url}-${idx}`}

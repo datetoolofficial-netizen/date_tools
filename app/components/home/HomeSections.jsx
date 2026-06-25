@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
+import { getEventDayText, i18n } from '../../i18n';
 
 const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
 const ADSENSE_SLOT_PATTERN = /^\d{4,20}$/;
@@ -44,15 +45,16 @@ export function TodayBanner({ lang, todayInfo }) {
 
 export function EventsSection({ lang, upcomingEvents, onShare }) {
     if (lang !== 'ar' || upcomingEvents.length === 0) return null;
+    const labels = i18n[lang] || i18n.ar;
 
     return (
         <div className="events-wrapper">
             <div className="events-header">
                 <h3 className="section-header-title">
-                    <i className="fa-solid fa-bolt" style={{ color: '#f59e0b' }}></i> مواعيد تهمك
+                    <i className="fa-solid fa-bolt" style={{ color: '#f59e0b' }}></i> {labels.eventsTitle}
                 </h3>
                 <button className="share-events-btn" onClick={onShare}>
-                    <i className="fa-solid fa-share-nodes"></i> مشاركة المواعيد
+                    <i className="fa-solid fa-share-nodes"></i> {labels.shareEvents}
                 </button>
             </div>
             <div className="events-grid">
@@ -63,7 +65,7 @@ export function EventsSection({ lang, upcomingEvents, onShare }) {
                         </div>
                         <div className="evt-details">
                             <div className="evt-name">{evt.name}</div>
-                            <div className="evt-days">{evt.days === 0 ? 'يصرف/يوافق اليوم!' : `متبقي ${evt.days} يوم`}</div>
+                            <div className="evt-days">{getEventDayText(lang, evt.days)}</div>
                         </div>
                     </div>
                 ))}
@@ -73,6 +75,8 @@ export function EventsSection({ lang, upcomingEvents, onShare }) {
 }
 
 export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
+    const labels = i18n[lang] || i18n.ar;
+
     return (
         <div className="result-container">
             <div className="result" style={{ display: 'block' }} dangerouslySetInnerHTML={{ __html: htmlContent }}></div>
@@ -80,11 +84,11 @@ export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
                 <div className="story-card">
                     <div className="story-content">
                         <i className="fa-solid fa-lightbulb" style={{ color: '#f59e0b', marginInlineEnd: '8px' }}></i>
-                        <span style={{ fontWeight: 'bold' }}>{lang === 'ar' ? 'معلومة إضافية:' : 'Date Info:'}</span>
+                        <span style={{ fontWeight: 'bold' }}>{labels.dateInfo}</span>
                         <p>{enteredDateInfo.info}</p>
                     </div>
                     <button className="share-btn" onClick={onShare}>
-                        <i className="fa-solid fa-share-nodes"></i> {lang === 'ar' ? 'مشاركة النتيجة' : 'Share Result'}
+                        <i className="fa-solid fa-share-nodes"></i> {labels.shareResult}
                     </button>
                 </div>
             )}
@@ -433,34 +437,29 @@ export function BottomAdSlots({ configData, labels }) {
 
 export function SeoSections({ lang }) {
     if (lang !== 'ar') return null;
+    const seo = i18n.ar.seo;
 
     return (
         <div className="seo-sections-wrapper">
             <section className="seo-card">
-                <h2 className="seo-title"><i className="fa-solid fa-book-open"></i> دليلك لمعرفة أهمية تحويل التواريخ</h2>
+                <h2 className="seo-title"><i className="fa-solid fa-book-open"></i> {seo.guideTitle}</h2>
                 <p className="seo-text">
-                    في حياتنا اليومية والعملية، تلعب التواريخ دوراً محورياً في تنظيم التزاماتنا. في المملكة العربية السعودية، تتداخل الاستخدامات بين التقويم الميلادي (المرتبط بالرواتب والأعمال العالمية) والتقويم الهجري (المرتبط بالمناسبات الدينية، الأحوال المدنية، والمعاملات الرسمية).
+                    {seo.guideIntro}
                 </p>
                 <p className="seo-text">
-                    <strong>لماذا هذه الأداة مفيدة لك؟</strong><br />
-                    تتيح لك الأداة التخطيط المسبق لحياتك؛ فمن خلال معرفة عمرك الدقيق تستطيع تحديد مواعيد استحقاقك للخدمات الحكومية (مثل استخراج الهوية، الضمان، أو التقاعد). كما يساعدك تحويل التواريخ في مطابقة العقود الإيجارية والتجارية التي قد تُكتب بتقويم مختلف.
+                    <strong>{seo.guideQuestion}</strong><br />
+                    {seo.guideAnswer}
                 </p>
             </section>
 
             <section className="seo-card">
-                <h2 className="seo-title"><i className="fa-regular fa-circle-question"></i> الأسئلة الشائعة</h2>
-                <div className="faq-item">
-                    <h4 className="faq-q">كيف تعمل حاسبة العمر بالهجري والميلادي؟</h4>
-                    <p className="faq-a">تقوم الحاسبة بأخذ تاريخ ميلادك، وتقارنه بالتاريخ الحالي. وبناءً على خوارزميات رياضية دقيقة، تستخرج عدد السنوات، ثم الأشهر، والأيام المتبقية لتعطيك عمرك بالتفصيل.</p>
-                </div>
-                <div className="faq-item">
-                    <h4 className="faq-q">هل محول التاريخ الهجري يعتمد على تقويم أم القرى؟</h4>
-                    <p className="faq-a">نعم، تم بناء معادلات التحويل في برمجياتنا لتتوافق تماماً مع "تقويم أم القرى" المعتمد رسمياً في المملكة العربية السعودية، لضمان أعلى مستويات الدقة.</p>
-                </div>
-                <div className="faq-item">
-                    <h4 className="faq-q">ما الفرق الأساسي بين السنة الكبيسة والبسيطة؟</h4>
-                    <p className="faq-a">السنة الميلادية البسيطة عدد أيامها 365 يوماً، بينما السنة الكبيسة تحدث كل 4 سنوات وعدد أيامها 366 يوماً (يُضاف يوم لشهر فبراير). أداتنا تأخذ هذه التغيرات في الحسبان تلقائياً.</p>
-                </div>
+                <h2 className="seo-title"><i className="fa-regular fa-circle-question"></i> {seo.faqTitle}</h2>
+                {seo.faq.map((item) => (
+                    <div className="faq-item" key={item.q}>
+                        <h4 className="faq-q">{item.q}</h4>
+                        <p className="faq-a">{item.a}</p>
+                    </div>
+                ))}
             </section>
         </div>
     );

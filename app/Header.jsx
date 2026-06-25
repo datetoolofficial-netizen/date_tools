@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { i18n } from './i18n';
 
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
@@ -35,7 +36,8 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
         }
     }
 
-    const toolName = config?.toolDisplayName || 'أدوات التاريخ';
+    const labels = i18n[lang] || i18n.ar;
+    const toolName = config?.toolDisplayName || labels.toolNameFallback;
     const toolSlogan = config?.toolSlogan || '';
 
     const scrollNav = (direction) => {
@@ -91,8 +93,8 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     <button
                         onClick={toggleLang}
                         className="control-btn lang-btn"
-                        title={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                        aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                        title={lang === 'ar' ? labels.switchToEnglish : labels.switchToArabic}
+                        aria-label={lang === 'ar' ? labels.switchToEnglish : labels.switchToArabic}
                     >
                         <i className="fa-solid fa-language"></i>
                     </button>
@@ -100,8 +102,8 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     <button
                         onClick={toggleTheme}
                         className="control-btn"
-                        title={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
-                        aria-label={isDarkMode ? 'الوضع المضيء' : 'الوضع الليلي'}
+                        title={isDarkMode ? labels.lightMode : labels.darkMode}
+                        aria-label={isDarkMode ? labels.lightMode : labels.darkMode}
                     >
                         <i className={isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
                     </button>
@@ -114,16 +116,16 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                         type="button"
                         className="nav-scroll-btn"
                         onClick={() => scrollNav(-1)}
-                        aria-label={lang === 'ar' ? 'التمرير يمينًا' : 'Scroll left'}
+                        aria-label={lang === 'ar' ? labels.scrollRight : labels.scrollLeft}
                     >
                         <i className="fa-solid fa-chevron-right"></i>
                     </button>
                 )}
 
-                <nav className="nav-links" ref={navRef} aria-label={lang === 'ar' ? 'روابط الموقع' : 'Site links'}>
+                <nav className="nav-links" ref={navRef} aria-label={labels.siteLinks}>
                     <Link href="/" className="nav-link active">
                         <i className="fa-solid fa-house"></i>
-                        {lang === 'ar' ? 'الرئيسية' : 'Home'}
+                        {labels.navHome}
                     </Link>
 
                     {navLinks.map((link, idx) => (
@@ -145,7 +147,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                         type="button"
                         className="nav-scroll-btn"
                         onClick={() => scrollNav(1)}
-                        aria-label={lang === 'ar' ? 'التمرير يسارًا' : 'Scroll right'}
+                        aria-label={lang === 'ar' ? labels.scrollLeft : labels.scrollRight}
                     >
                         <i className="fa-solid fa-chevron-left"></i>
                     </button>

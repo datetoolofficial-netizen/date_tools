@@ -1,8 +1,10 @@
 import { Cairo } from 'next/font/google';
 import ExternalIntegrations from './components/ExternalIntegrations';
+import { i18n } from './i18n';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
+const meta = i18n.ar;
 const cairo = Cairo({
     subsets: ['arabic', 'latin'],
     weight: ['400', '600', '700', '800'],
@@ -11,23 +13,23 @@ const cairo = Cairo({
 
 export const metadata = {
     metadataBase: new URL(siteUrl),
-    title: 'أدوات التاريخ الشاملة',
-    description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+    title: meta.pageTitle,
+    description: meta.pageDescription,
     alternates: {
         canonical: '/',
     },
     openGraph: {
-        title: 'أدوات التاريخ الشاملة',
-        description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+        title: meta.pageTitle,
+        description: meta.pageDescription,
         url: siteUrl,
-        siteName: 'أدوات التاريخ الشاملة',
+        siteName: meta.pageTitle,
         locale: 'ar_SA',
         type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'أدوات التاريخ الشاملة',
-        description: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+        title: meta.pageTitle,
+        description: meta.pageDescription,
     },
     icons: {
         icon: '/favicon.ico',
@@ -38,7 +40,7 @@ export default function RootLayout({ children }) {
     return (
         <html lang="ar" dir="rtl">
             <head>
-                {/* استدعاء خطوط Google ومكتبة FontAwesome الأساسية */}
+                {/* تحميل مكتبة FontAwesome الأساسية */}
                 <link
                     rel="stylesheet"
                     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
