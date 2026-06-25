@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.18.
+الإصدار الحالي للتطبيق هو 0.2.19.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -101,6 +101,7 @@ https://www.date-tool.com
 37. إضافة فلاتر أعلى إحصائيات الإعلانات في صفحة `/admin/ads` حسب الأداة والتاريخ ومكان العرض/المصدر.
 38. إضافة صفحة مستقلة لإدارة الهوية البصرية `/admin/identity` بنفس هيكل لوحة الإدارة الجديدة وروح الإدارة القديمة.
 39. تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتكون بطاقة اختيار ومعاينة مصغرة بدل زر رفع منفصل.
+40. تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة مثل النظام الحديث.
 
 ---
 
@@ -3054,6 +3055,42 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار Toast صفحة الهوية - الإصدار 0.2.19
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/identity
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/identity`.
+✅ OpenNext build نجح للإصدار 0.2.19.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/identity` أعاد 200.
+✅ Cloudflare Version ID: d52d8519-284e-4d3e-a9cd-fb122773caf7
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/identity/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3186,6 +3223,9 @@ PROJECT_MEMO.md
 ✅ تم تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتعرض معاينة مصغرة داخل نفس خانة الاختيار
 ✅ تم تحديث الإصدار إلى 0.2.18
 ✅ تم نشر الإصدار 0.2.18 على Cloudflare Version ID: 7f74ee6b-6722-4592-9edb-6583858bc348
+✅ تم تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة
+✅ تم تحديث الإصدار إلى 0.2.19
+✅ تم نشر الإصدار 0.2.19 على Cloudflare Version ID: d52d8519-284e-4d3e-a9cd-fb122773caf7
 ```
 
 ---

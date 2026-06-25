@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Toast from '../../components/Toast';
 import '../AdminDashboard.css';
 
 const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
@@ -360,12 +361,12 @@ export default function AdminIdentityPage() {
                     </div>
                 </nav>
 
-                {message && (
-                    <div className={`legacy-inline-message ${message.type}`}>
-                        <i className={`fa-solid ${message.type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'}`}></i>
-                        {message.text}
-                    </div>
-                )}
+                <Toast
+                    message={message?.text || ''}
+                    type={message?.type || 'info'}
+                    visible={Boolean(message?.text)}
+                    onClose={() => setMessage(null)}
+                />
 
                 <section className="legacy-ads-hero legacy-identity-hero">
                     <div>
