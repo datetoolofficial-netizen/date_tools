@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.19.
+الإصدار الحالي للتطبيق هو 0.2.20.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -102,6 +102,7 @@ https://www.date-tool.com
 38. إضافة صفحة مستقلة لإدارة الهوية البصرية `/admin/identity` بنفس هيكل لوحة الإدارة الجديدة وروح الإدارة القديمة.
 39. تحسين حقول رفع اللوقو وfavicon في `/admin/identity` لتكون بطاقة اختيار ومعاينة مصغرة بدل زر رفع منفصل.
 40. تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة مثل النظام الحديث.
+41. إضافة صفحة مستقلة لإعدادات مواضع الإعلانات `/admin/ad-settings` مع دعم مقتطف AdSense وAds.txt.
 
 ---
 
@@ -3091,6 +3092,52 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار صفحة إعدادات الإعلانات - الإصدار 0.2.20
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/admin/ad-settings
+Invoke-WebRequest https://date-tool.com/ads.txt
+```
+
+النتيجة:
+
+```txt
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهر المسار `/admin/ad-settings`.
+✅ ظهر المسار الديناميكي `/ads.txt` ضمن build.
+✅ OpenNext build نجح للإصدار 0.2.20.
+✅ تم نشر Worker بنجاح على Cloudflare.
+✅ مسار الإنتاج `/admin/ad-settings` أعاد 200.
+✅ مسار الإنتاج `/ads.txt` أعاد 200 ويعرض سطر AdSense الحالي.
+✅ Cloudflare Version ID: a2df03ff-6602-4b0e-b713-be0b6ee010f2
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/ad-settings/page.jsx
+app/ads.txt/route.js
+app/admin/AdminDashboard.css
+app/admin/page.jsx
+app/admin/ads/page.jsx
+app/admin/identity/page.jsx
+app/components/home/HomeSections.jsx
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3226,6 +3273,12 @@ PROJECT_MEMO.md
 ✅ تم تحويل رسائل صفحة `/admin/identity` إلى Toast عائم أعلى يسار الشاشة
 ✅ تم تحديث الإصدار إلى 0.2.19
 ✅ تم نشر الإصدار 0.2.19 على Cloudflare Version ID: d52d8519-284e-4d3e-a9cd-fb122773caf7
+✅ تمت إضافة صفحة `/admin/ad-settings` لإدارة إعدادات مواضع الإعلانات بعيدًا عن الحملات
+✅ تم دعم مواضع الإعلانات الأربعة في `googleAdSlots`
+✅ تم دعم مقتطف AdSense ومقتطف Ads.txt داخل `externalIntegrations`
+✅ تمت إضافة route ديناميكي `/ads.txt` يقرأ مقتطف Ads.txt من إعدادات قاعدة البيانات
+✅ تم تحديث الإصدار إلى 0.2.20
+✅ تم نشر الإصدار 0.2.20 على Cloudflare Version ID: a2df03ff-6602-4b0e-b713-be0b6ee010f2
 ```
 
 ---
@@ -3280,6 +3333,7 @@ ads top / middle / bottom1 / bottom2
 تحسين إدارة الإحصائيات
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
+اختبار صفحة `/admin/ad-settings` بجلسة مدير فعلية: حفظ مواضع الإعلانات، تفعيل Google عند غياب المعلنين، وإدخال مقتطف Ads.txt ثم اختبار `/ads.txt`.
 مهم جدًا: بعد تحويل `/admin/ads` إلى `campaigns`، يجب لاحقًا ربط عرض الإعلانات في الصفحة الرئيسية بالحملات النشطة من `campaigns` بدل الاعتماد النهائي على `settings/main.adCampaigns`
 ```
 

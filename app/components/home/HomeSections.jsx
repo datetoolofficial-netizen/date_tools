@@ -25,6 +25,7 @@ function getGoogleAdSlot(configData, slotName) {
         slot,
         format: clean(slotConfig.format) || 'auto',
         fullWidthResponsive: slotConfig.fullWidthResponsive !== false,
+        enabledWhenNoAdvertiser: slotConfig.enabledWhenNoAdvertiser === true,
     };
 }
 
@@ -364,21 +365,26 @@ export function TopAdSlot({ configData, labels }) {
             data-ad-id="google_top"
         >
             <AdImage src={configData?.adImages?.top} altText={labels.adBanner1} />
-            {!configData?.adImages?.top && googleTopAd && (
+            {!configData?.adImages?.top && googleTopAd?.enabledWhenNoAdvertiser && (
                 <GoogleAdsenseUnit ad={googleTopAd} scriptId="adsbygoogle-top-init" />
             )}
-            {!configData?.adImages?.top && !googleTopAd && labels.adBanner1}
+            {!configData?.adImages?.top && !googleTopAd?.enabledWhenNoAdvertiser && labels.adBanner1}
         </div>
     );
 }
 
 export function FeaturedAdSlot({ configData, labels, onClick }) {
+    const googleMiddleAd = getGoogleAdSlot(configData, 'middle');
+
     return (
         <div id="customAdContainer" data-ad-location="middle-banner" data-ad-id="custom_promo_middle" onClick={onClick}>
             <Link href="/client" style={{ textDecoration: 'none', display: 'block' }}>
                 <div className="ad-placeholder custom-ad-promo">
                     <AdImage src={configData?.adImages?.middle} altText={labels.adPortal} />
-                    {!configData?.adImages?.middle && (
+                    {!configData?.adImages?.middle && googleMiddleAd?.enabledWhenNoAdvertiser && (
+                        <GoogleAdsenseUnit ad={googleMiddleAd} scriptId="adsbygoogle-middle-init" />
+                    )}
+                    {!configData?.adImages?.middle && !googleMiddleAd?.enabledWhenNoAdvertiser && (
                         <>
                             <i className="fa-solid fa-star"></i> <span>{labels.adPortal}</span> <i className="fa-solid fa-star"></i>
                         </>
@@ -390,6 +396,9 @@ export function FeaturedAdSlot({ configData, labels, onClick }) {
 }
 
 export function BottomAdSlots({ configData, labels }) {
+    const googleBottom1Ad = getGoogleAdSlot(configData, 'bottom1');
+    const googleBottom2Ad = getGoogleAdSlot(configData, 'bottom2');
+
     return (
         <div className="bottom-banners-grid">
             <div
@@ -400,7 +409,10 @@ export function BottomAdSlots({ configData, labels }) {
                 data-ad-id="google_bottom_1"
             >
                 <AdImage src={configData?.adImages?.bottom1} altText={labels.adBanner1} />
-                {!configData?.adImages?.bottom1 && labels.adBanner1}
+                {!configData?.adImages?.bottom1 && googleBottom1Ad?.enabledWhenNoAdvertiser && (
+                    <GoogleAdsenseUnit ad={googleBottom1Ad} scriptId="adsbygoogle-bottom-1-init" />
+                )}
+                {!configData?.adImages?.bottom1 && !googleBottom1Ad?.enabledWhenNoAdvertiser && labels.adBanner1}
             </div>
             <div
                 className="ad-placeholder"
@@ -410,7 +422,10 @@ export function BottomAdSlots({ configData, labels }) {
                 data-ad-id="google_bottom_2"
             >
                 <AdImage src={configData?.adImages?.bottom2} altText={labels.adBanner2} />
-                {!configData?.adImages?.bottom2 && labels.adBanner2}
+                {!configData?.adImages?.bottom2 && googleBottom2Ad?.enabledWhenNoAdvertiser && (
+                    <GoogleAdsenseUnit ad={googleBottom2Ad} scriptId="adsbygoogle-bottom-2-init" />
+                )}
+                {!configData?.adImages?.bottom2 && !googleBottom2Ad?.enabledWhenNoAdvertiser && labels.adBanner2}
             </div>
         </div>
     );

@@ -37,7 +37,9 @@ const defaultExternalIntegrations = {
     googleTagId: "",
     googleTagManagerId: "",
     googleAdsenseClient: "",
-    googleSiteVerification: ""
+    googleSiteVerification: "",
+    adsenseSnippet: "",
+    adsTxtSnippet: ""
 };
 
 const defaultGoogleAdSlots = {
@@ -45,8 +47,34 @@ const defaultGoogleAdSlots = {
         client: "",
         slot: "",
         format: "auto",
-        fullWidthResponsive: true
-    }
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: ""
+    },
+    middle: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: ""
+    },
+    bottom1: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: ""
+    },
+    bottom2: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: ""
+    },
 };
 
 function normalizeExternalIntegrations(value = {}) {
@@ -54,7 +82,9 @@ function normalizeExternalIntegrations(value = {}) {
         googleTagId: String(value.googleTagId || "").trim(),
         googleTagManagerId: String(value.googleTagManagerId || "").trim(),
         googleAdsenseClient: String(value.googleAdsenseClient || "").trim(),
-        googleSiteVerification: String(value.googleSiteVerification || "").trim()
+        googleSiteVerification: String(value.googleSiteVerification || "").trim(),
+        adsenseSnippet: String(value.adsenseSnippet || "").slice(0, 4000),
+        adsTxtSnippet: String(value.adsTxtSnippet || "").slice(0, 4000)
     };
 }
 
@@ -63,13 +93,18 @@ function normalizeGoogleAdSlot(value = {}) {
         client: String(value.client || "").trim(),
         slot: String(value.slot || "").trim(),
         format: String(value.format || "auto").trim() || "auto",
-        fullWidthResponsive: value.fullWidthResponsive !== false
+        fullWidthResponsive: value.fullWidthResponsive !== false,
+        enabledWhenNoAdvertiser: value.enabledWhenNoAdvertiser === true,
+        htmlSnippet: String(value.htmlSnippet || "").slice(0, 4000)
     };
 }
 
 function normalizeGoogleAdSlots(value = {}) {
     return {
-        top: normalizeGoogleAdSlot(value.top || {})
+        top: normalizeGoogleAdSlot(value.top || {}),
+        middle: normalizeGoogleAdSlot(value.middle || {}),
+        bottom1: normalizeGoogleAdSlot(value.bottom1 || {}),
+        bottom2: normalizeGoogleAdSlot(value.bottom2 || {})
     };
 }
 
