@@ -8,11 +8,56 @@ import { defaultFirebaseApi, SiteContext } from './SiteContext';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 
+function timezoneLabel(timezone) {
+    if (!timezone) return 'موقعك الحالي';
+    return timezone.split('/').pop()?.replaceAll('_', ' ') || 'موقعك الحالي';
+}
+
+function PublicShellSkeleton() {
+    return (
+        <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
+            <div className="skeleton-header-panel">
+                <div className="skeleton-controls">
+                    <span className="skeleton-block skeleton-control"></span>
+                    <span className="skeleton-block skeleton-control"></span>
+                </div>
+                <div className="skeleton-brand-row">
+                    <div className="skeleton-title-stack">
+                        <span className="skeleton-block skeleton-title"></span>
+                        <span className="skeleton-block skeleton-subtitle"></span>
+                    </div>
+                    <span className="skeleton-block skeleton-logo"></span>
+                </div>
+            </div>
+
+            <div className="skeleton-nav-row">
+                <span className="skeleton-block skeleton-nav-pill"></span>
+                <span className="skeleton-block skeleton-nav-pill"></span>
+                <span className="skeleton-block skeleton-nav-pill"></span>
+            </div>
+
+            <span className="skeleton-block skeleton-hero"></span>
+            <span className="skeleton-block skeleton-banner"></span>
+            <span className="skeleton-block skeleton-ad"></span>
+
+            <div className="skeleton-events-grid">
+                <span className="skeleton-block skeleton-event-card"></span>
+                <span className="skeleton-block skeleton-event-card"></span>
+            </div>
+
+            <span className="skeleton-block skeleton-card-large"></span>
+        </div>
+    );
+}
+
 export default function SiteShell({ children }) {
     const pathname = usePathname() || '/';
     const [lang, setLang] = useState('ar');
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [configData, setConfigData] = useState(null);
+    const [currentLocation, setCurrentLocation] = useState(null);
+    const [locationStatus, setLocationStatus] = useState('idle');
+    const [locationError, setLocationError] = useState('');
     const firebaseApiRef = useRef(defaultFirebaseApi);
 
     const shouldUseShell = !excludedShellPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -102,12 +147,57 @@ export default function SiteShell({ children }) {
         localStorage.setItem('site_theme', newTheme ? 'dark' : 'light');
     };
 
+    const requestCurrentLocation = async () => {
+        if (currentLocation) return currentLocation;
+
+        if (typeof navigator === 'undefined' || !navigator.geolocation) {
+            setLocationStatus('error');
+            setLocationError('متصفحك لا يدعم تحديد الموقع.');
+            return null;
+        }
+
+        setLocationStatus('loading');
+        setLocationError('');
+
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Riyadh';
+                    const location = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        timezone,
+                        label: timezoneLabel(timezone),
+                    };
+
+                    setCurrentLocation(location);
+                    setLocationStatus('granted');
+                    resolve(location);
+                },
+                () => {
+                    setLocationStatus('error');
+                    setLocationError('لم يتم السماح باستخدام الموقع الحالي.');
+                    resolve(null);
+                },
+                {
+                    enableHighAccuracy: false,
+                    timeout: 10000,
+                    maximumAge: 1000 * 60 * 20,
+                },
+            );
+        });
+    };
+
     const contextValue = {
         lang,
         isDarkMode,
         configData,
         isSiteLoading,
         firebaseApiRef,
+        currentLocation,
+        locationStatus,
+        locationError,
+        requestCurrentLocation,
     };
 
     if (!shouldUseShell) {
@@ -121,7 +211,9 @@ export default function SiteShell({ children }) {
     return (
         <SiteContext.Provider value={contextValue}>
             <div className="container site-shell-container">
-                {!isSiteLoading && (
+                {isSiteLoading ? (
+                    <PublicShellSkeleton />
+                ) : (
                     <Header
                         lang={lang}
                         isDarkMode={isDarkMode}
@@ -131,9 +223,11 @@ export default function SiteShell({ children }) {
                     />
                 )}
 
-                <main className="site-page-content">
-                    {children}
-                </main>
+                {!isSiteLoading && (
+                    <main className="site-page-content">
+                        {children}
+                    </main>
+                )}
             </div>
 
             {!isSiteLoading && <Footer lang={lang} config={configData} />}

@@ -1,4 +1,4 @@
-# مذكرة مشروع: date_tools
+﻿# مذكرة مشروع: date_tools
 
 ## 1. معلومات عامة
 
@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.37.
+الإصدار الحالي للتطبيق هو 0.2.38.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -119,7 +119,7 @@ https://www.date-tool.com
 55. إضافة Skeleton لامع وخفيف أثناء تحميل الصفحة الرئيسية بدل ظهور نصوص مؤقتة ثم اختفائها.
 56. إضافة Shell عام للصفحات العامة حتى يبقى الهيدر والفوتر ثابتين، وإضافة صفحات أدوات الساعة والطقس.
 57. إضافة بانر الساعة الحالية في صفحة الساعة وإضافة Hero تعريفي أعلى صفحة التاريخ.
-
+58. توحيد قياسات السكاشن العامة في صفحات التاريخ والساعة والطقس، وإضافة Skeleton عام، وطلب موافقة صريح لاستخدام الموقع الحالي في الساعة والطقس.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -3760,6 +3760,58 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار توحيد السكاشن والسكيلتون وموافقة الموقع - الإصدار 0.2.38
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx wrangler --version
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/?v=0.2.38
+Invoke-WebRequest https://date-tool.com/clock?v=0.2.38
+Invoke-WebRequest https://date-tool.com/weather?v=0.2.38
+Browser check: https://date-tool.com/clock?v=0.2.38
+Browser check: https://date-tool.com/weather?v=0.2.38
+```
+
+النتيجة:
+
+```txt
+✅ تم توحيد قياسات السكاشن والبطاقات العامة بين صفحات التاريخ والساعة والطقس عبر CSS variables.
+✅ تم نقل Skeleton التحميل إلى SiteShell حتى يظهر قبل اكتمال إعدادات الموقع العامة.
+✅ تم إضافة زر موافقة صريح لاستخدام الموقع الحالي في `/clock` و `/weather`.
+✅ لا يتم طلب إذن الموقع تلقائيًا ولا يتم حفظ الإحداثيات في قاعدة البيانات.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح بصلاحية كاملة.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ / و /clock و /weather أعادت 200 وظهر رقم الإصدار 0.2.38.
+✅ فحص المتصفح أكد ظهور زر "استخدام موقعي الحالي" في الساعة والطقس واختفاء `.shell-skeleton` بعد التحميل.
+✅ Cloudflare Version ID: b141fca1-986a-449b-96a6-09de9d13e3f5
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteContext.jsx
+app/SiteShell.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -3949,6 +4001,11 @@ PROJECT_MEMO.md
 ✅ تم إضافة بانر الساعة الحالية في `/clock` وHero تعريفي في صفحة التاريخ
 ✅ تم تحديث الإصدار إلى 0.2.37
 ✅ تم نشر الإصدار 0.2.37 على Cloudflare Version ID: 329dce14-55d1-476d-8bfd-2fb05ed9fa96
+✅ تم توحيد قياسات السكاشن العامة في صفحات التاريخ والساعة والطقس
+✅ تم إضافة Skeleton عام على مستوى SiteShell للصفحات العامة
+✅ تم إضافة طلب موافقة صريح لاستخدام الموقع الحالي في الساعة والطقس بدون حفظ الإحداثيات
+✅ تم تحديث الإصدار إلى 0.2.38
+✅ تم نشر الإصدار 0.2.38 على Cloudflare Version ID: b141fca1-986a-449b-96a6-09de9d13e3f5
 ```
 
 ---

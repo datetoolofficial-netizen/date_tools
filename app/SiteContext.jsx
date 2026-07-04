@@ -16,6 +16,10 @@ export const SiteContext = createContext({
     configData: null,
     isSiteLoading: true,
     firebaseApiRef: { current: defaultFirebaseApi },
+    currentLocation: null,
+    locationStatus: 'idle',
+    locationError: '',
+    requestCurrentLocation: async () => null,
 });
 
 export function useSiteContext() {

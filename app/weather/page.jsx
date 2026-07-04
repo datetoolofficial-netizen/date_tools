@@ -33,12 +33,31 @@ function getOutdoorAdvice(current, daily) {
     if (!current) return 'ابحث عن مدينة لعرض النصيحة.';
     if (daily?.uv_index_max?.[0] >= 8) return 'مؤشر UV مرتفع، الأفضل تجنب التعرض الطويل للشمس وقت الظهيرة.';
     if (current.precipitation > 0 || daily?.precipitation_probability_max?.[0] >= 60) return 'احتمال أمطار واضح، خذ مظلة أو خطط لنشاط داخلي.';
-    if (current.apparent_temperature >= 35) return 'الإحساس الحراري مرتفع، اشرب ماءً أكثر واختر وقتًا أبرد.';
+    if (current.apparent_temperature >= 35) return 'الإحساس الحراري مرتفع، اشرب ماء أكثر واختر وقتًا أبرد.';
     return 'الأجواء مناسبة غالبًا للخروج، مع متابعة الرياح والحرارة قبل الانطلاق.';
 }
 
+async function fetchForecast(latitude, longitude) {
+    const params = new URLSearchParams({
+        latitude,
+        longitude,
+        timezone: 'auto',
+        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m',
+        daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset',
+        forecast_days: '5',
+    });
+
+    const forecastResponse = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    return forecastResponse.json();
+}
+
 export default function WeatherPage() {
-    const { firebaseApiRef } = useSiteContext();
+    const {
+        firebaseApiRef,
+        locationStatus,
+        locationError,
+        requestCurrentLocation,
+    } = useSiteContext();
     const [query, setQuery] = useState('Riyadh');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -58,22 +77,36 @@ export default function WeatherPage() {
             const place = geoData.results?.[0];
             if (!place) throw new Error('city_not_found');
 
-            const params = new URLSearchParams({
-                latitude: place.latitude,
-                longitude: place.longitude,
-                timezone: 'auto',
-                current: 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m',
-                daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset',
-                forecast_days: '5',
-            });
-
-            const forecastResponse = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-            const forecastData = await forecastResponse.json();
+            const forecastData = await fetchForecast(place.latitude, place.longitude);
 
             setWeather({ place, forecast: forecastData });
             firebaseApiRef.current.trackToolUsage('weatherTools');
         } catch {
-            setError('تعذر جلب الطقس لهذه المدينة. جرّب اسمًا آخر.');
+            setError('تعذر جلب الطقس لهذه المدينة. جرب اسمًا آخر.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const loadCurrentLocationWeather = async () => {
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const location = await requestCurrentLocation();
+            if (!location) return;
+
+            const forecastData = await fetchForecast(location.latitude, location.longitude);
+            const place = {
+                name: location.label || 'موقعك الحالي',
+                country: 'حسب موقعك',
+            };
+
+            setQuery(place.name);
+            setWeather({ place, forecast: forecastData });
+            firebaseApiRef.current.trackToolUsage('weatherTools');
+        } catch {
+            setError('تعذر جلب الطقس من موقعك الحالي. جرّب البحث باسم المدينة.');
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +142,19 @@ export default function WeatherPage() {
                 </button>
             </form>
 
-            {error && <div className="inline-error">{error}</div>}
+            <div className={`location-consent-card ${locationStatus === 'granted' ? 'success' : ''}`}>
+                <i className="fa-solid fa-map-location-dot"></i>
+                <div>
+                    <strong>عرض طقس مدينتك الحالية</strong>
+                    <p>
+                        سيطلب المتصفح موافقتك أولًا، ثم نستخدم الإحداثيات لجلب الطقس فقط دون حفظ موقعك.
+                    </p>
+                    {(locationError || error) && <small>{locationError || error}</small>}
+                </div>
+                <button type="button" onClick={loadCurrentLocationWeather} disabled={isLoading || locationStatus === 'loading'}>
+                    {locationStatus === 'loading' ? 'جاري التحقق...' : 'استخدام موقعي الحالي'}
+                </button>
+            </div>
 
             {current && (
                 <>
