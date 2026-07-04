@@ -43,9 +43,6 @@ export default function ClockPage() {
     const {
         firebaseApiRef,
         currentLocation,
-        locationStatus,
-        locationError,
-        requestCurrentLocation,
     } = useSiteContext();
     const [now, setNow] = useState(() => new Date());
     const [inputTime, setInputTime] = useState('13:30');
@@ -53,17 +50,12 @@ export default function ClockPage() {
     const [fromZone, setFromZone] = useState('Asia/Riyadh');
     const [toZone, setToZone] = useState('Europe/London');
     const [locationLabel, setLocationLabel] = useState('الرياض');
-    const [showLocationNotice, setShowLocationNotice] = useState(false);
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
         const timer = window.setInterval(() => setNow(new Date()), 1000);
         return () => window.clearInterval(timer);
     }, [firebaseApiRef]);
-
-    useEffect(() => {
-        setShowLocationNotice(locationStatus !== 'granted');
-    }, [locationStatus]);
 
     useEffect(() => {
         if (!currentLocation) return;
@@ -82,34 +74,10 @@ export default function ClockPage() {
         return `${hour12}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
     }, [inputTime]);
 
-    const handleUseCurrentLocation = async () => {
-        const location = await requestCurrentLocation();
-        if (!location?.timezone) return;
-
-        setCityZone(location.timezone);
-        setFromZone(location.timezone);
-        setLocationLabel(location.label || 'موقعك الحالي');
-        setShowLocationNotice(false);
-    };
-
     const diff = Math.round((getOffsetHours(toZone, now) - getOffsetHours(fromZone, now)) * 10) / 10;
 
     return (
         <section className="tools-page">
-            {showLocationNotice && (
-                <div className="location-permission-toast" role="status">
-                    <i className="fa-solid fa-location-crosshairs"></i>
-                    <div>
-                        <strong>اعرض وقت مدينتك الحالية</strong>
-                        <p>اضغط موافقة، ثم وافق من نافذة المتصفح لعرض وقت مدينتك بدون حفظ موقعك.</p>
-                        {locationError && <small>{locationError}</small>}
-                    </div>
-                    <button type="button" onClick={handleUseCurrentLocation} disabled={locationStatus === 'loading'}>
-                        {locationStatus === 'loading' ? 'جاري التحقق...' : 'موافقة'}
-                    </button>
-                </div>
-            )}
-
             <div className="tools-hero clock-hero">
                 <i className="fa-solid fa-clock"></i>
                 <div>

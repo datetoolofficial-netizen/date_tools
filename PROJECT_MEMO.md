@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.40.
+الإصدار الحالي للتطبيق هو 0.2.41.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -122,6 +122,7 @@ https://www.date-tool.com
 58. توحيد قياسات السكاشن العامة في صفحات التاريخ والساعة والطقس، وإضافة Skeleton عام، وطلب موافقة صريح لاستخدام الموقع الحالي في الساعة والطقس.
 59. تبسيط صفحة الساعة بإزالة كرت الوقت حسب المدينة، وتحويل أداة الساعة إلى 24→12 فقط، ونقل طلب الموقع إلى إشعار موافقة عند تحميل الصفحة.
 60. تحسين إشعار موافقة الموقع في صفحة الساعة وتثبيت ارتفاع ونص بانر الساعة الحالية حتى لا يتحرك مع الثواني.
+61. نقل طلب إذن الموقع إلى Shell عام يعمل تلقائيًا بعد تحميل الصفحات العامة، وإصلاح `Permissions-Policy` للسماح بـ geolocation من نفس الموقع فقط.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -705,6 +706,40 @@ npx wrangler deploy --config wrangler.jsonc
 
 ```txt
 تم الحل للإصدار 0.2.36 عبر النشر المباشر بWrangler بعد نجاح build
+```
+
+---
+
+### الخطأ 12: المتصفح لا يطلب إذن الموقع بسبب Permissions-Policy
+
+**الأعراض:**
+
+```txt
+إشعار الموقع يظهر داخل الصفحة، لكن المتصفح لا يفتح نافذة طلب الإذن تلقائيًا.
+```
+
+**السبب:**
+
+كان `middleware.js` يرسل الهيدر التالي:
+
+```txt
+Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+```
+
+وهذا يمنع geolocation بالكامل، حتى لو استدعى الكود `navigator.geolocation.getCurrentPosition`.
+
+**الحل:**
+
+تم تعديل السياسة لتبقى صارمة، لكنها تسمح للموقع نفسه فقط بطلب الموقع:
+
+```txt
+Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=()
+```
+
+**الحالة:**
+
+```txt
+تم الحل في الإصدار 0.2.41
 ```
 
 ---
@@ -3903,6 +3938,56 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار طلب إذن الموقع العام - الإصدار 0.2.41
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/clock?v=0.2.41
+curl.exe -I https://date-tool.com/weather?v=0.2.41
+```
+
+النتيجة:
+
+```txt
+✅ تم نقل طلب الموقع من صفحة /clock إلى SiteShell العام للصفحات العامة.
+✅ أصبح طلب geolocation يبدأ تلقائيًا بعد تحميل الصفحة العامة واكتمال إعدادات الموقع.
+✅ أصبح إشعار الموقع يظهر بعد نتيجة المتصفح فقط: نجاح أو رفض/منع.
+✅ تم حذف رسالة/زر الموافقة اليدوي من /clock.
+✅ تم حذف كرت الموافقة اليدوي من /weather، وأصبحت صفحة الطقس تحدث بياناتها تلقائيًا عند السماح بالموقع.
+✅ تم إصلاح Permissions-Policy من geolocation=() إلى geolocation=(self).
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ /clock أعادت 200 وبالهيدر: permissions-policy: camera=(), microphone=(), geolocation=(self), payment=()
+✅ /weather أعادت 200 وبالهيدر: permissions-policy: camera=(), microphone=(), geolocation=(self), payment=()
+✅ Cloudflare Version ID: 1d9f7c66-ca25-4810-840d-71df4bc9f7c7
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/globals.css
+middleware.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -4105,6 +4190,9 @@ PROJECT_MEMO.md
 ✅ تم تصغير بانر الساعة الحالية وتثبيت عرض الوقت حتى لا يتحرك النص مع تغير الثواني
 ✅ تم تحديث الإصدار إلى 0.2.40
 ✅ تم نشر الإصدار 0.2.40 على Cloudflare Version ID: a5d74276-91cd-4167-9308-86b2ee284927
+✅ تم نقل طلب إذن الموقع إلى SiteShell العام وإصلاح Permissions-Policy للسماح بـ geolocation من نفس الموقع فقط
+✅ تم تحديث الإصدار إلى 0.2.41
+✅ تم نشر الإصدار 0.2.41 على Cloudflare Version ID: 1d9f7c66-ca25-4810-840d-71df4bc9f7c7
 ```
 
 ---

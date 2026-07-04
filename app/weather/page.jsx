@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSiteContext } from '../SiteContext';
 
 const weatherLabels = {
@@ -54,14 +54,13 @@ async function fetchForecast(latitude, longitude) {
 export default function WeatherPage() {
     const {
         firebaseApiRef,
-        locationStatus,
-        locationError,
-        requestCurrentLocation,
+        currentLocation,
     } = useSiteContext();
     const [query, setQuery] = useState('Riyadh');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [weather, setWeather] = useState(null);
+    const loadedLocationKeyRef = useRef('');
 
     const loadWeather = async (cityName = query) => {
         const cleanQuery = cityName.trim();
@@ -88,12 +87,11 @@ export default function WeatherPage() {
         }
     };
 
-    const loadCurrentLocationWeather = async () => {
+    const loadWeatherByLocation = async (location) => {
         setIsLoading(true);
         setError('');
 
         try {
-            const location = await requestCurrentLocation();
             if (!location) return;
 
             const forecastData = await fetchForecast(location.latitude, location.longitude);
@@ -116,6 +114,17 @@ export default function WeatherPage() {
         loadWeather('Riyadh');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (!currentLocation) return;
+
+        const locationKey = `${currentLocation.latitude}:${currentLocation.longitude}`;
+        if (loadedLocationKeyRef.current === locationKey) return;
+
+        loadedLocationKeyRef.current = locationKey;
+        loadWeatherByLocation(currentLocation);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentLocation]);
 
     const current = weather?.forecast?.current;
     const daily = weather?.forecast?.daily;
@@ -142,19 +151,7 @@ export default function WeatherPage() {
                 </button>
             </form>
 
-            <div className={`location-consent-card ${locationStatus === 'granted' ? 'success' : ''}`}>
-                <i className="fa-solid fa-map-location-dot"></i>
-                <div>
-                    <strong>عرض طقس مدينتك الحالية</strong>
-                    <p>
-                        سيطلب المتصفح موافقتك أولًا، ثم نستخدم الإحداثيات لجلب الطقس فقط دون حفظ موقعك.
-                    </p>
-                    {(locationError || error) && <small>{locationError || error}</small>}
-                </div>
-                <button type="button" onClick={loadCurrentLocationWeather} disabled={isLoading || locationStatus === 'loading'}>
-                    {locationStatus === 'loading' ? 'جاري التحقق...' : 'استخدام موقعي الحالي'}
-                </button>
-            </div>
+            {error && <p className="inline-error">{error}</p>}
 
             {current && (
                 <>

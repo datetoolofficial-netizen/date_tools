@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
@@ -58,7 +58,9 @@ export default function SiteShell({ children }) {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [locationStatus, setLocationStatus] = useState('idle');
     const [locationError, setLocationError] = useState('');
+    const [locationNotice, setLocationNotice] = useState(null);
     const firebaseApiRef = useRef(defaultFirebaseApi);
+    const autoLocationRequestRef = useRef(false);
 
     const shouldUseShell = !excludedShellPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
     const isSiteLoading = shouldUseShell && configData === null;
@@ -147,7 +149,7 @@ export default function SiteShell({ children }) {
         localStorage.setItem('site_theme', newTheme ? 'dark' : 'light');
     };
 
-    const requestCurrentLocation = async () => {
+    const requestCurrentLocation = useCallback(async () => {
         if (currentLocation) return currentLocation;
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -161,7 +163,7 @@ export default function SiteShell({ children }) {
                 const permission = await navigator.permissions.query({ name: 'geolocation' });
                 if (permission.state === 'denied') {
                     setLocationStatus('error');
-                    setLocationError('إذن الموقع ممنوع في المتصفح. افتح أيقونة القفل بجانب الرابط، غيّر إذن الموقع إلى سماح، ثم جرّب مرة أخرى.');
+                    setLocationError('إذن الموقع ممنوع في المتصفح. افتح أيقونة القفل بجانب الرابط، غيّر إذن الموقع إلى سماح، ثم أعد تحميل الصفحة.');
                     return null;
                 }
             } catch {
@@ -199,7 +201,37 @@ export default function SiteShell({ children }) {
                 },
             );
         });
-    };
+    }, [currentLocation]);
+
+    useEffect(() => {
+        if (!shouldUseShell || isSiteLoading || autoLocationRequestRef.current) return;
+
+        autoLocationRequestRef.current = true;
+        requestCurrentLocation();
+    }, [isSiteLoading, requestCurrentLocation, shouldUseShell]);
+
+    useEffect(() => {
+        if (!shouldUseShell || locationStatus === 'idle' || locationStatus === 'loading') return;
+
+        if (locationStatus === 'granted') {
+            setLocationNotice({
+                type: 'success',
+                icon: 'fa-solid fa-location-dot',
+                title: 'تم السماح بالموقع',
+                message: 'تم تحديث أدوات الساعة والطقس حسب موقعك الحالي بدون حفظ إحداثياتك.',
+            });
+
+            const timer = window.setTimeout(() => setLocationNotice(null), 4500);
+            return () => window.clearTimeout(timer);
+        }
+
+        setLocationNotice({
+            type: 'error',
+            icon: 'fa-solid fa-location-crosshairs',
+            title: 'تعذر استخدام موقعك الحالي',
+            message: locationError || 'يمكنك السماح بالموقع من إعدادات المتصفح عند الحاجة.',
+        });
+    }, [locationError, locationStatus, shouldUseShell]);
 
     const contextValue = {
         lang,
@@ -238,6 +270,15 @@ export default function SiteShell({ children }) {
 
                 {!isSiteLoading && (
                     <main className="site-page-content">
+                        {locationNotice && (
+                            <div className={`location-permission-toast ${locationNotice.type}`} role="status">
+                                <i className={locationNotice.icon}></i>
+                                <div>
+                                    <strong>{locationNotice.title}</strong>
+                                    <p>{locationNotice.message}</p>
+                                </div>
+                            </div>
+                        )}
                         {children}
                     </main>
                 )}
