@@ -156,6 +156,19 @@ export default function SiteShell({ children }) {
             return null;
         }
 
+        if (navigator.permissions?.query) {
+            try {
+                const permission = await navigator.permissions.query({ name: 'geolocation' });
+                if (permission.state === 'denied') {
+                    setLocationStatus('error');
+                    setLocationError('إذن الموقع ممنوع في المتصفح. افتح أيقونة القفل بجانب الرابط، غيّر إذن الموقع إلى سماح، ثم جرّب مرة أخرى.');
+                    return null;
+                }
+            } catch {
+                // Some browsers do not expose geolocation permission state.
+            }
+        }
+
         setLocationStatus('loading');
         setLocationError('');
 

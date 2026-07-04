@@ -1415,8 +1415,8 @@
 /* شريط معلومات اليوم */
 .today-info-banner {
     border-radius: 15px;
-    padding: 15px;
-    min-height: 58px;
+    padding: 10px 14px;
+    min-height: 48px;
     background: linear-gradient(45deg, var(--primary), #4f46e5);
     color: white;
     margin-bottom: var(--section-gap);
@@ -1432,18 +1432,30 @@
     gap: 10px;
     font-weight: bold;
     font-size: 15px;
+    width: 100%;
 }
 
 .clock-now-banner .today-content {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: auto minmax(0, auto) minmax(8.8ch, 8.8ch);
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    direction: rtl;
+    white-space: nowrap;
 }
 
 .clock-now-banner strong {
     direction: ltr;
-    font-size: clamp(20px, 5vw, 30px);
+    display: inline-block;
+    min-width: 8.8ch;
+    text-align: start;
+    font-size: clamp(18px, 4.4vw, 24px);
     font-weight: 950;
     letter-spacing: 0;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    line-height: 1.2;
 }
 
 /* قسم المواعيد والأحداث */
