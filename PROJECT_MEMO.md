@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.35.
+الإصدار الحالي للتطبيق هو 0.2.36.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -117,6 +117,7 @@ https://www.date-tool.com
 53. ضبط هيدر الصفحة الرئيسية ومحاذاة الشعار والاسم والسلوغن والأزرار، وإظهار أسهم الصفحات فقط عند وجود overflow، وإرجاع كروت الأحداث إلى بوردر يمين ملوّن بلون الحدث.
 54. إنشاء ملف ترجمة مركزي للواجهة الرئيسية وتنظيف مشاكل الترميز والملفات غير المستخدمة.
 55. إضافة Skeleton لامع وخفيف أثناء تحميل الصفحة الرئيسية بدل ظهور نصوص مؤقتة ثم اختفائها.
+56. إضافة Shell عام للصفحات العامة حتى يبقى الهيدر والفوتر ثابتين، وإضافة صفحات أدوات الساعة والطقس.
 
 ---
 
@@ -670,6 +671,37 @@ firebase.json
 ```txt
 تم الحل
 تم نشر قواعد Firestore على مشروع date-tool-official عبر Firebase CLI
+```
+
+### الخطأ 11: فشل OpenNext deploy على Windows بخطأ spawn UNKNOWN
+
+**الأعراض:**
+
+```txt
+npm run deploy بنى المشروع وولّد .open-next/worker.js بنجاح، ثم فشل في مرحلة OpenNext deploy مع:
+Error: spawn UNKNOWN
+داخل miniflare / getPlatformProxy
+```
+
+**السبب:**
+
+```txt
+تعطل مرتبط بتشغيل OpenNext/Miniflare على Windows أثناء محاولة قراءة Platform Proxy قبل نشر Worker.
+OpenNext نفسه أظهر تحذيرًا أن Windows غير مدعوم بالكامل وقد تحدث أخطاء غير متوقعة.
+```
+
+**الحل:**
+
+بعد نجاح مرحلة OpenNext build وتوليد `.open-next/worker.js` والأصول، تم نشر Worker مباشرة عبر Wrangler باستخدام إعداد المشروع:
+
+```powershell
+npx wrangler deploy --config wrangler.jsonc
+```
+
+**الحالة:**
+
+```txt
+تم الحل للإصدار 0.2.36 عبر النشر المباشر بWrangler بعد نجاح build
 ```
 
 ---
@@ -3631,6 +3663,58 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار Shell أدوات الموقع وصفحات الساعة والطقس - الإصدار 0.2.36
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/?v=0.2.36
+Invoke-WebRequest https://date-tool.com/clock?v=0.2.36
+Invoke-WebRequest https://date-tool.com/weather?v=0.2.36
+Invoke-WebRequest https://date-tool.com/ads.txt?v=0.2.36
+```
+
+النتيجة:
+
+```txt
+✅ تم إضافة SiteShell عام للصفحات العامة حتى يبقى الهيدر والفوتر ثابتين بين صفحات الأدوات.
+✅ تم تغيير زر الرئيسية إلى التاريخ وإضافة الساعة والطقس في شريط الهيدر.
+✅ تم إضافة صفحة /clock لأدوات الوقت: تحويل 24/12، الوقت حسب المدينة، وفرق التوقيت.
+✅ تم إضافة صفحة /weather لأدوات الطقس اعتمادًا على Open-Meteo بدون مفاتيح سرية.
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح وظهرت /clock و /weather ضمن 21 صفحة.
+⚠️ npm run deploy فشل في مرحلة OpenNext deploy بسبب خطأ Windows/Miniflare: spawn UNKNOWN.
+✅ تم نشر الإصدار بنجاح عبر npx wrangler deploy --config wrangler.jsonc بعد نجاح build.
+✅ / و /clock و /weather أعادت 200 وظهر رقم الإصدار 0.2.36.
+✅ /ads.txt أعاد 200.
+✅ Cloudflare Version ID: 2344ab93-b02d-4a0d-9fc9-2cd247b27854
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteContext.jsx
+app/SiteShell.jsx
+app/Header.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/globals.css
+app/i18n.js
+app/layout.jsx
+app/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ---
 
 ## 9. الحالة الحالية
@@ -3815,6 +3899,10 @@ PROJECT_MEMO.md
 ✅ تم توحيد الاستجابة في واجهة الأداة والإدارة وبوابة الكلاينت
 ✅ تم تحديث الإصدار إلى 0.2.35
 ✅ تم نشر الإصدار 0.2.35 على Cloudflare Version ID: 5dc52627-e705-4290-87b7-f67d9062f603
+✅ تم إضافة Shell عام للصفحات العامة مع بقاء الهيدر والفوتر ثابتين بين أدوات الموقع
+✅ تم إضافة صفحتي `/clock` و `/weather`
+✅ تم تحديث الإصدار إلى 0.2.36
+✅ تم نشر الإصدار 0.2.36 على Cloudflare Version ID: 2344ab93-b02d-4a0d-9fc9-2cd247b27854
 ```
 
 ---
@@ -3914,6 +4002,20 @@ npm audit fix --force
 ```
 
 إلا بعد مراجعة أثره، لأنه قد يرفع حزم بإصدارات كاسرة.
+
+---
+
+### 5. توسعة أدوات الساعة والطقس
+
+المتبقي بعد إضافة الصفحات الأساسية:
+
+```txt
+إضافة مؤقت وعد تنازلي ومنبه بسيط داخل صفحة /clock.
+إضافة أداة أفضل وقت للاجتماع بين مدن متعددة.
+إضافة SEO مستقل لصفحات /clock و /weather لاحقًا.
+إضافة أدوات طقس إضافية مثل جودة الهواء ومؤشر المطر وسجل درجات الحرارة إذا كانت مناسبة بدون مفاتيح سرية أو بتكامل آمن.
+تقييم نقل إعدادات أسماء الأدوات وروابط الهيدر إلى لوحة الإدارة لاحقًا بدل إبقائها ثابتة في الكود.
+```
 
 ---
 

@@ -1,8 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Toast from './components/Toast';
-import Header from './Header';
-import Footer from './Footer';
+import { useSiteContext } from './SiteContext';
 import {
     buildDateStory,
     buildEventsShareText,
@@ -82,10 +81,8 @@ function HomePageSkeleton() {
 }
 
 export default function Home() {
-    const [lang, setLang] = useState('ar');
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { lang, configData, isSiteLoading, firebaseApiRef } = useSiteContext();
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
-    const [configData, setConfigData] = useState(null);
     const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
     const [conversionCalendarMode, setConversionCalendarMode] = useState('gregorian');
     const [durationCalendarMode, setDurationCalendarMode] = useState('gregorian');
@@ -110,64 +107,7 @@ export default function Home() {
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [enteredDateInfo, setEnteredDateInfo] = useState(null);
 
-    const firebaseApiRef = useRef({
-        initAndTrackVisit: async () => {},
-        trackToolUsage: async () => {},
-        trackAdClick: async () => {},
-        trackAdImpression: async () => {},
-        getSiteConfig: async () => null,
-    });
     const trackedAdImpressionsRef = useRef(new Set());
-
-    useEffect(() => {
-        let isMounted = true;
-
-        const savedLang = localStorage.getItem('site_lang') || 'ar';
-        setLang(savedLang);
-        
-        const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const savedTheme = localStorage.getItem('site_theme');
-        setIsDarkMode(savedTheme ? savedTheme === 'dark' : osThemeQuery.matches);
-
-        async function loadFirebaseData() {
-            try {
-                // مهم: نستورد Firebase داخل المتصفح فقط حتى لا يتم تشغيله داخل Cloudflare Worker أثناء SSR
-                const firebaseApi = await import('./firebase');
-
-                firebaseApiRef.current = {
-                    initAndTrackVisit: firebaseApi.initAndTrackVisit || (async () => {}),
-                    trackToolUsage: firebaseApi.trackToolUsage || (async () => {}),
-                    trackAdClick: firebaseApi.trackAdClick || (async () => {}),
-                    trackAdImpression: firebaseApi.trackAdImpression || (async () => {}),
-                    getSiteConfig: firebaseApi.getSiteConfig || (async () => null),
-                };
-
-                await firebaseApiRef.current.initAndTrackVisit();
-
-                const data = await firebaseApiRef.current.getSiteConfig();
-                if (isMounted) setConfigData(data || {});
-            } catch (error) {
-                console.error("Error fetching site config:", error);
-                if (isMounted) setConfigData({ events: [] });
-            }
-        }
-
-        loadFirebaseData();
-
-        // مراقب نقرات الإعلانات (خدعة الـ iframe focus)
-        const handleBlur = () => {
-            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-                if (window.hoveredAdId) firebaseApiRef.current.trackAdClick(window.hoveredAdId);
-            }
-        };
-
-        window.addEventListener('blur', handleBlur);
-
-        return () => {
-            isMounted = false;
-            window.removeEventListener('blur', handleBlur);
-        };
-    }, []);
 
     useEffect(() => {
         if (!configData || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
@@ -191,46 +131,13 @@ export default function Home() {
         adNodes.forEach((node) => observer.observe(node));
 
         return () => observer.disconnect();
-    }, [configData]);
-
-    useEffect(() => {
-        if (!configData?.faviconUrl) return;
-
-        let icon = document.querySelector("link[rel='icon']");
-        if (!icon) {
-            icon = document.createElement('link');
-            icon.rel = 'icon';
-            document.head.appendChild(icon);
-        }
-
-        icon.href = configData.faviconUrl;
-    }, [configData?.faviconUrl]);
-
-    useEffect(() => {
-        document.documentElement.lang = lang;
-        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        if (isDarkMode) document.body.classList.add('dark-mode');
-        else document.body.classList.remove('dark-mode');
-    }, [lang, isDarkMode]);
-
-    const toggleLang = () => {
-        const newLang = lang === 'ar' ? 'en' : 'ar';
-        setLang(newLang);
-        localStorage.setItem('site_lang', newLang);
-        clearResults();
-    };
-
-    const toggleTheme = () => {
-        const newTheme = !isDarkMode;
-        setIsDarkMode(newTheme);
-        localStorage.setItem('site_theme', newTheme ? 'dark' : 'light');
-    };
+    }, [configData, firebaseApiRef]);
 
     const clearResults = () => {
         setResAgeGreg(null); setResAgeHijri(null); setResHijriConv(null);
         setResGregConv(null); setResDiffGreg(null); setResDiffHijri(null);
         setEnteredDateInfo(null);
-    }
+    };
 
     const setToolCalendarMode = (setter, mode) => {
         setter(mode);
@@ -536,7 +443,7 @@ export default function Home() {
         calcDiffHijri,
     };
 
-    const isPageLoading = configData === null;
+    const isPageLoading = isSiteLoading || configData === null;
 
     return (
         <>
@@ -547,19 +454,10 @@ export default function Home() {
                 onClose={() => setAlertConfig({ show: false, msg: '', type: '' })}
             />
 
-            <div className="container">
-                {isPageLoading ? (
-                    <HomePageSkeleton />
-                ) : (
-                    <>
-                        <Header
-                            lang={lang}
-                            isDarkMode={isDarkMode}
-                            toggleLang={toggleLang}
-                            toggleTheme={toggleTheme}
-                            config={configData}
-                        />
-
+            {isPageLoading ? (
+                <HomePageSkeleton />
+            ) : (
+                <>
                         <TodayBanner lang={lang} todayInfo={todayInfo} />
                         <TopAdSlot configData={configData} labels={i18n[lang]} />
                         <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />
@@ -614,10 +512,8 @@ export default function Home() {
 
                         <BottomAdSlots configData={configData} labels={i18n[lang]} />
                         <SeoSections lang={lang} />
-                    </>
-                )}
-            </div>
-            {!isPageLoading && <Footer lang={lang} config={configData} />}
+                </>
+            )}
         </>
     );
 }

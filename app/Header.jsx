@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { i18n } from './i18n';
 
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
+    const pathname = usePathname() || '/';
     const [hasNavOverflow, setHasNavOverflow] = useState(false);
     const navLinks = [];
 
@@ -39,6 +41,11 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     const labels = i18n[lang] || i18n.ar;
     const toolName = config?.toolDisplayName || labels.toolNameFallback;
     const toolSlogan = config?.toolSlogan || '';
+    const primaryToolLinks = [
+        { href: '/', label: labels.navHome, icon: 'fa-solid fa-calendar-days' },
+        { href: '/clock', label: labels.navClock, icon: 'fa-solid fa-clock' },
+        { href: '/weather', label: labels.navWeather, icon: 'fa-solid fa-cloud-sun' },
+    ];
 
     const scrollNav = (direction) => {
         if (!navRef.current) return;
@@ -123,10 +130,16 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                 )}
 
                 <nav className="nav-links" ref={navRef} aria-label={labels.siteLinks}>
-                    <Link href="/" className="nav-link active">
-                        <i className="fa-solid fa-house"></i>
-                        {labels.navHome}
-                    </Link>
+                    {primaryToolLinks.map((link) => {
+                        const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+
+                        return (
+                            <Link key={link.href} href={link.href} className={`nav-link${isActive ? ' active' : ''}`}>
+                                <i className={link.icon}></i>
+                                {link.label}
+                            </Link>
+                        );
+                    })}
 
                     {navLinks.map((link, idx) => (
                         link.isExternal ? (
