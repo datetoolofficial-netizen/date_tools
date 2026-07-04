@@ -49,11 +49,11 @@ export default function ClockPage() {
     } = useSiteContext();
     const [now, setNow] = useState(() => new Date());
     const [inputTime, setInputTime] = useState('13:30');
-    const [sourceFormat, setSourceFormat] = useState('24');
     const [cityZone, setCityZone] = useState('Asia/Riyadh');
     const [fromZone, setFromZone] = useState('Asia/Riyadh');
     const [toZone, setToZone] = useState('Europe/London');
-    const [locationLabel, setLocationLabel] = useState('');
+    const [locationLabel, setLocationLabel] = useState('الرياض');
+    const [showLocationNotice, setShowLocationNotice] = useState(false);
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
@@ -62,7 +62,13 @@ export default function ClockPage() {
     }, [firebaseApiRef]);
 
     useEffect(() => {
+        setShowLocationNotice(locationStatus !== 'granted');
+    }, [locationStatus]);
+
+    useEffect(() => {
         if (!currentLocation) return;
+        setCityZone(currentLocation.timezone);
+        setFromZone(currentLocation.timezone);
         setLocationLabel(currentLocation.label || 'موقعك الحالي');
     }, [currentLocation]);
 
@@ -70,16 +76,11 @@ export default function ClockPage() {
         const [rawHour, rawMinute] = inputTime.split(':').map(Number);
         if (Number.isNaN(rawHour) || Number.isNaN(rawMinute)) return 'أدخل وقتًا صحيحًا';
 
-        if (sourceFormat === '24') {
-            const hour = rawHour % 24;
-            const suffix = hour >= 12 ? 'م' : 'ص';
-            const hour12 = hour % 12 || 12;
-            return `${hour12}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
-        }
-
-        const suffix = rawHour >= 12 ? 'م' : 'ص';
-        return `${String(rawHour).padStart(2, '0')}:${String(rawMinute).padStart(2, '0')} بنظام 24 ساعة (${suffix})`;
-    }, [inputTime, sourceFormat]);
+        const hour = rawHour % 24;
+        const suffix = hour >= 12 ? 'م' : 'ص';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
+    }, [inputTime]);
 
     const handleUseCurrentLocation = async () => {
         const location = await requestCurrentLocation();
@@ -88,76 +89,57 @@ export default function ClockPage() {
         setCityZone(location.timezone);
         setFromZone(location.timezone);
         setLocationLabel(location.label || 'موقعك الحالي');
+        setShowLocationNotice(false);
     };
 
     const diff = Math.round((getOffsetHours(toZone, now) - getOffsetHours(fromZone, now)) * 10) / 10;
-    const selectedCity = locationLabel && cityZone === currentLocation?.timezone
-        ? { name: locationLabel, zone: cityZone }
-        : cities.find((city) => city.zone === cityZone) || { name: cityZone, zone: cityZone };
 
     return (
         <section className="tools-page">
-            <div className="tools-hero">
+            {showLocationNotice && (
+                <div className="location-permission-toast" role="status">
+                    <i className="fa-solid fa-location-crosshairs"></i>
+                    <div>
+                        <strong>اعرض وقت مدينتك الحالية</strong>
+                        <p>اضغط موافقة، ثم وافق من نافذة المتصفح لعرض وقت مدينتك بدون حفظ موقعك.</p>
+                        {locationError && <small>{locationError}</small>}
+                    </div>
+                    <button type="button" onClick={handleUseCurrentLocation} disabled={locationStatus === 'loading'}>
+                        {locationStatus === 'loading' ? 'جاري التحقق...' : 'موافقة'}
+                    </button>
+                </div>
+            )}
+
+            <div className="tools-hero clock-hero">
                 <i className="fa-solid fa-clock"></i>
                 <div>
                     <h2>أدوات الساعة والوقت</h2>
-                    <p>تحويل نظام الساعة، معرفة الوقت في المدن، وحساب فرق التوقيت بسرعة.</p>
+                    <p>تحويل نظام الساعة، معرفة الوقت الحالي، وحساب فرق التوقيت بسرعة.</p>
                 </div>
             </div>
 
             <div className="today-info-banner clock-now-banner">
                 <div className="today-content">
                     <i className="fa-regular fa-clock"></i>
-                    <span>الساعة الآن في {selectedCity.name}</span>
+                    <span>الساعة الآن في {locationLabel}</span>
                     <strong>{formatTime(now, cityZone)}</strong>
                 </div>
             </div>
 
-            <div className={`location-consent-card ${locationStatus === 'granted' ? 'success' : ''}`}>
-                <i className="fa-solid fa-location-crosshairs"></i>
-                <div>
-                    <strong>عرض وقت مدينتك الحالية</strong>
-                    <p>
-                        نطلب الإذن من المتصفح فقط عند الضغط على الزر، ولا نخزن موقعك في قاعدة البيانات.
-                    </p>
-                    {locationError && <small>{locationError}</small>}
+            <article className="tool-widget time-converter-card">
+                <div className="tool-widget-title">
+                    <i className="fa-solid fa-repeat"></i>
+                    <h3>تحويل الساعة من 24 إلى 12</h3>
                 </div>
-                <button type="button" onClick={handleUseCurrentLocation} disabled={locationStatus === 'loading'}>
-                    {locationStatus === 'loading' ? 'جاري التحقق...' : 'استخدام موقعي الحالي'}
-                </button>
-            </div>
-
-            <div className="tool-grid two-columns">
-                <article className="tool-widget">
-                    <div className="tool-widget-title">
-                        <i className="fa-solid fa-repeat"></i>
-                        <h3>تحويل الساعة 24 / 12</h3>
-                    </div>
-                    <div className="segmented-control">
-                        <button className={sourceFormat === '24' ? 'active' : ''} onClick={() => setSourceFormat('24')}>24 ساعة</button>
-                        <button className={sourceFormat === '12' ? 'active' : ''} onClick={() => setSourceFormat('12')}>12 ساعة</button>
-                    </div>
-                    <input type="time" value={inputTime} onChange={(event) => setInputTime(event.target.value)} />
-                    <div className="tool-result">{convertedTime}</div>
-                </article>
-
-                <article className="tool-widget">
-                    <div className="tool-widget-title">
-                        <i className="fa-solid fa-earth-asia"></i>
-                        <h3>الوقت حسب المدينة</h3>
-                    </div>
-                    <select value={cityZone} onChange={(event) => { setCityZone(event.target.value); setLocationLabel(''); }}>
-                        {cities.map((city) => (
-                            <option key={city.name} value={city.zone}>{city.name}</option>
-                        ))}
-                        {currentLocation?.timezone && (
-                            <option value={currentLocation.timezone}>{currentLocation.label || 'موقعك الحالي'}</option>
-                        )}
-                    </select>
-                    <div className="big-time">{formatTime(now, cityZone)}</div>
-                    <p className="muted-text">الوقت الحالي في {selectedCity.name}</p>
-                </article>
-            </div>
+                <input
+                    className="time-converter-input"
+                    type="time"
+                    value={inputTime}
+                    onChange={(event) => setInputTime(event.target.value)}
+                    aria-label="الوقت بنظام 24 ساعة"
+                />
+                <div className="tool-result">{convertedTime}</div>
+            </article>
 
             <article className="tool-widget">
                 <div className="tool-widget-title">
@@ -166,13 +148,13 @@ export default function ClockPage() {
                 </div>
                 <div className="tool-grid two-columns compact">
                     <select value={fromZone} onChange={(event) => setFromZone(event.target.value)}>
-                        {cities.map((city) => <option key={city.zone + 'from'} value={city.zone}>{city.name}</option>)}
+                        {cities.map((city) => <option key={`${city.name}-${city.zone}-from`} value={city.zone}>{city.name}</option>)}
                         {currentLocation?.timezone && (
                             <option value={currentLocation.timezone}>{currentLocation.label || 'موقعك الحالي'}</option>
                         )}
                     </select>
                     <select value={toZone} onChange={(event) => setToZone(event.target.value)}>
-                        {cities.map((city) => <option key={city.zone + 'to'} value={city.zone}>{city.name}</option>)}
+                        {cities.map((city) => <option key={`${city.name}-${city.zone}-to`} value={city.zone}>{city.name}</option>)}
                     </select>
                 </div>
                 <div className="tool-result">
