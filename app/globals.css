@@ -1145,6 +1145,18 @@
     font-size: 15px;
 }
 
+.clock-now-banner .today-content {
+    flex-wrap: wrap;
+}
+
+.clock-now-banner strong {
+    direction: ltr;
+    font-size: clamp(20px, 5vw, 30px);
+    font-weight: 950;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
 /* قسم المواعيد والأحداث */
 .events-wrapper { margin-bottom: 30px; }
 .events-header {

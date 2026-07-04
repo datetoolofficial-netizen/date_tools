@@ -458,6 +458,14 @@ export default function Home() {
                 <HomePageSkeleton />
             ) : (
                 <>
+                        <div className="tools-hero date-tools-hero">
+                            <i className="fa-solid fa-calendar-days"></i>
+                            <div>
+                                <h2>{i18n[lang].pageTitle}</h2>
+                                <p>{i18n[lang].pageDescription}</p>
+                            </div>
+                        </div>
+
                         <TodayBanner lang={lang} todayInfo={todayInfo} />
                         <TopAdSlot configData={configData} labels={i18n[lang]} />
                         <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.36.
+الإصدار الحالي للتطبيق هو 0.2.37.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -118,6 +118,7 @@ https://www.date-tool.com
 54. إنشاء ملف ترجمة مركزي للواجهة الرئيسية وتنظيف مشاكل الترميز والملفات غير المستخدمة.
 55. إضافة Skeleton لامع وخفيف أثناء تحميل الصفحة الرئيسية بدل ظهور نصوص مؤقتة ثم اختفائها.
 56. إضافة Shell عام للصفحات العامة حتى يبقى الهيدر والفوتر ثابتين، وإضافة صفحات أدوات الساعة والطقس.
+57. إضافة بانر الساعة الحالية في صفحة الساعة وإضافة Hero تعريفي أعلى صفحة التاريخ.
 
 ---
 
@@ -3663,6 +3664,48 @@ VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
+### اختبار بانر الساعة وHero صفحة التاريخ - الإصدار 0.2.37
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+Invoke-WebRequest https://date-tool.com/?v=0.2.37b
+Invoke-WebRequest https://date-tool.com/clock?v=0.2.37b
+```
+
+النتيجة:
+
+```txt
+✅ تم إضافة بانر الساعة الحالية داخل صفحة /clock بنفس نمط شريط معلومات اليوم.
+✅ تم إضافة Hero تعريفي أعلى صفحة التاريخ بنفس أسلوب Hero صفحة الساعة.
+✅ npm run lint نجح بدون أخطاء.
+✅ git diff --check لم يجد أخطاء whitespace، مع تحذيرات CRLF المعتادة على ويندوز فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح بعد تشغيله بصلاحية كاملة بسبب قيود Windows/sandbox.
+✅ تم نشر الإصدار عبر npx wrangler deploy --config wrangler.jsonc.
+✅ / و /clock أعادتا 200 وظهر رقم الإصدار 0.2.37.
+✅ تحقق الإنتاج وجد نص "الساعة الآن" في صفحة /clock.
+✅ Cloudflare Version ID: 329dce14-55d1-476d-8bfd-2fb05ed9fa96
+```
+
+الملفات المتأثرة:
+
+```txt
+app/clock/page.jsx
+app/globals.css
+app/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
 ### اختبار Shell أدوات الموقع وصفحات الساعة والطقس - الإصدار 0.2.36
 
 تم تشغيل:
@@ -3903,6 +3946,9 @@ PROJECT_MEMO.md
 ✅ تم إضافة صفحتي `/clock` و `/weather`
 ✅ تم تحديث الإصدار إلى 0.2.36
 ✅ تم نشر الإصدار 0.2.36 على Cloudflare Version ID: 2344ab93-b02d-4a0d-9fc9-2cd247b27854
+✅ تم إضافة بانر الساعة الحالية في `/clock` وHero تعريفي في صفحة التاريخ
+✅ تم تحديث الإصدار إلى 0.2.37
+✅ تم نشر الإصدار 0.2.37 على Cloudflare Version ID: 329dce14-55d1-476d-8bfd-2fb05ed9fa96
 ```
 
 ---

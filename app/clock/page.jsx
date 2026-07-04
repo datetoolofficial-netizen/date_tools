@@ -82,6 +82,14 @@ export default function ClockPage() {
                 </div>
             </div>
 
+            <div className="today-info-banner clock-now-banner">
+                <div className="today-content">
+                    <i className="fa-regular fa-clock"></i>
+                    <span>الساعة الآن في {selectedCity.name}</span>
+                    <strong>{formatTime(now, cityZone)}</strong>
+                </div>
+            </div>
+
             <div className="tool-grid two-columns">
                 <article className="tool-widget">
                     <div className="tool-widget-title">
