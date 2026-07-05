@@ -6,10 +6,16 @@ import Toast from '../../components/Toast';
 import '../AdminDashboard.css';
 
 const AD_SLOTS = [
-    { id: 'top', label: 'إعلان أعلى الصفحة', hint: 'تحت خانة اليوم مباشرة' },
-    { id: 'middle', label: 'الإعلان المميز', hint: 'منتصف الصفحة قبل الأدوات' },
-    { id: 'bottom1', label: 'إعلان أسفل الصفحة 1', hint: 'أسفل الصفحة - الموضع الأول' },
-    { id: 'bottom2', label: 'إعلان أسفل الصفحة 2', hint: 'أسفل الصفحة - الموضع الثاني' },
+    { id: 'top', label: 'التاريخ - إعلان أعلى الصفحة', hint: 'تحت خانة اليوم مباشرة' },
+    { id: 'middle', label: 'التاريخ - الإعلان المميز', hint: 'منتصف صفحة التاريخ قبل الأدوات' },
+    { id: 'bottom1', label: 'التاريخ - إعلان أسفل الصفحة 1', hint: 'أسفل صفحة التاريخ - الموضع الأول' },
+    { id: 'bottom2', label: 'التاريخ - إعلان أسفل الصفحة 2', hint: 'أسفل صفحة التاريخ - الموضع الثاني' },
+    { id: 'clockTop', label: 'الساعة - إعلان أعلى', hint: 'بعد بانر الساعة الحالية' },
+    { id: 'clockMiddle', label: 'الساعة - إعلان وسط', hint: 'بين أداة التحويل وأداة فرق التوقيت' },
+    { id: 'clockBottom', label: 'الساعة - إعلان أسفل', hint: 'بعد أدوات الساعة' },
+    { id: 'weatherTop', label: 'الطقس - إعلان أعلى', hint: 'بعد عنوان صفحة الطقس' },
+    { id: 'weatherMiddle', label: 'الطقس - إعلان وسط', hint: 'بعد نموذج البحث' },
+    { id: 'weatherBottom', label: 'الطقس - إعلان أسفل', hint: 'بعد ملخص الطقس' },
 ];
 
 const EMPTY_SLOT = {
@@ -19,6 +25,8 @@ const EMPTY_SLOT = {
     fullWidthResponsive: true,
     enabledWhenNoAdvertiser: false,
     htmlSnippet: '',
+    showHouseAd: false,
+    houseAdText: '',
 };
 
 const EMPTY_INTEGRATIONS = {
@@ -390,7 +398,7 @@ export default function AdminAdSettingsPage() {
                             <tr>
                                 <th>#</th>
                                 <th>موضع الإعلان</th>
-                                <th>تفعيل Google عند عدم وجود معلنين</th>
+                                <th>العرض البديل عند عدم وجود معلنين</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -413,6 +421,14 @@ export default function AdminAdSettingsPage() {
                                                     onChange={(event) => updateSlot(slotItem.id, 'enabledWhenNoAdvertiser', event.target.checked)}
                                                 />
                                                 <span>{slot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</span>
+                                            </label>
+                                            <label className="ad-settings-toggle">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={slot.showHouseAd === true}
+                                                    onChange={(event) => updateSlot(slotItem.id, 'showHouseAd', event.target.checked)}
+                                                />
+                                                <span>{slot.showHouseAd ? 'نص تسويقي' : 'لا نص'}</span>
                                             </label>
                                         </td>
                                         <td>
@@ -507,7 +523,9 @@ export default function AdminAdSettingsPage() {
                                         <span>
                                             {activeSlot.enabledWhenNoAdvertiser && activeSlot.client && activeSlot.slot
                                                 ? 'سيظهر إعلان Google هنا عند عدم وجود حملة معلن نشطة لهذا الموضع.'
-                                                : 'لن يظهر إعلان Google تلقائيًا لهذا الموضع حتى يتم تفعيل Google وإدخال Publisher و Ad Slot.'}
+                                                : activeSlot.showHouseAd
+                                                    ? `سيظهر نص تسويقي: ${activeSlot.houseAdText || 'أعلن معنا في هذه المساحة'}`
+                                                    : 'لن يظهر إعلان Google أو نص تسويقي تلقائيًا لهذا الموضع حتى يتم تفعيل أحد الخيارات.'}
                                         </span>
                                     </div>
                                     <p>إعلانات المعلنين النشطة لها الأولوية. هذا العرض يوضح إعداد fallback فقط ولا ينفذ كود Google داخل لوحة الإدارة.</p>
@@ -571,6 +589,16 @@ export default function AdminAdSettingsPage() {
                                             />
                                             <span className="legacy-field-hint">لا يتم تنفيذ JavaScript الخام من قاعدة البيانات. نستخرج القيم المنظمة ونحفظها فقط.</span>
                                         </div>
+                                        <div className="legacy-field full-span">
+                                            <label>نص المساحة التسويقية عند عدم وجود إعلان</label>
+                                            <input
+                                                type="text"
+                                                value={activeSlot.houseAdText || ''}
+                                                onChange={(event) => updateSlot(activeSlotItem.id, 'houseAdText', event.target.value)}
+                                                placeholder="مثال: أعلن معنا في هذه المساحة"
+                                            />
+                                            <span className="legacy-field-hint">فعّل خيار "نص تسويقي" من الجدول، ثم اكتب هنا النص الذي تريد ظهوره داخل مربع الإعلان.</span>
+                                        </div>
                                     </div>
                                     <div className="legacy-modal-actions">
                                         <button type="button" className="legacy-primary-btn" onClick={closeSlotModal}>
@@ -585,6 +613,10 @@ export default function AdminAdSettingsPage() {
                                     <div>
                                         <dt>حالة Google fallback</dt>
                                         <dd>{activeSlot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</dd>
+                                    </div>
+                                    <div>
+                                        <dt>المساحة التسويقية</dt>
+                                        <dd>{activeSlot.showHouseAd ? (activeSlot.houseAdText || 'أعلن معنا في هذه المساحة') : 'غير مفعلة'}</dd>
                                     </div>
                                     <div>
                                         <dt>Publisher / Client ID</dt>

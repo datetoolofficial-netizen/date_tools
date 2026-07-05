@@ -52,7 +52,9 @@ const defaultGoogleAdSlots = {
         format: "auto",
         fullWidthResponsive: true,
         enabledWhenNoAdvertiser: false,
-        htmlSnippet: ""
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
     },
     middle: {
         client: "",
@@ -60,7 +62,9 @@ const defaultGoogleAdSlots = {
         format: "auto",
         fullWidthResponsive: true,
         enabledWhenNoAdvertiser: false,
-        htmlSnippet: ""
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
     },
     bottom1: {
         client: "",
@@ -68,7 +72,9 @@ const defaultGoogleAdSlots = {
         format: "auto",
         fullWidthResponsive: true,
         enabledWhenNoAdvertiser: false,
-        htmlSnippet: ""
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
     },
     bottom2: {
         client: "",
@@ -76,7 +82,69 @@ const defaultGoogleAdSlots = {
         format: "auto",
         fullWidthResponsive: true,
         enabledWhenNoAdvertiser: false,
-        htmlSnippet: ""
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    clockTop: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    clockMiddle: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    clockBottom: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    weatherTop: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    weatherMiddle: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
+    },
+    weatherBottom: {
+        client: "",
+        slot: "",
+        format: "auto",
+        fullWidthResponsive: true,
+        enabledWhenNoAdvertiser: false,
+        htmlSnippet: "",
+        showHouseAd: false,
+        houseAdText: ""
     },
 };
 
@@ -101,17 +169,19 @@ function normalizeGoogleAdSlot(value = {}) {
         format: String(value.format || "auto").trim() || "auto",
         fullWidthResponsive: value.fullWidthResponsive !== false,
         enabledWhenNoAdvertiser: value.enabledWhenNoAdvertiser === true,
-        htmlSnippet: String(value.htmlSnippet || "").slice(0, 4000)
+        htmlSnippet: String(value.htmlSnippet || "").slice(0, 4000),
+        showHouseAd: value.showHouseAd === true,
+        houseAdText: String(value.houseAdText || "").slice(0, 160)
     };
 }
 
 function normalizeGoogleAdSlots(value = {}) {
-    return {
-        top: normalizeGoogleAdSlot(value.top || {}),
-        middle: normalizeGoogleAdSlot(value.middle || {}),
-        bottom1: normalizeGoogleAdSlot(value.bottom1 || {}),
-        bottom2: normalizeGoogleAdSlot(value.bottom2 || {})
-    };
+    return Object.fromEntries(
+        Object.keys(defaultGoogleAdSlots).map((slotId) => [
+            slotId,
+            normalizeGoogleAdSlot(value[slotId] || {})
+        ])
+    );
 }
 
 // App Check يعمل فقط في المتصفح

@@ -10,6 +10,12 @@ const AD_LOCATION_OPTIONS = [
     { value: 'middle', label: 'الإعلان المميز' },
     { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
     { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' },
+    { value: 'clockTop', label: 'الساعة - إعلان أعلى' },
+    { value: 'clockMiddle', label: 'الساعة - إعلان وسط' },
+    { value: 'clockBottom', label: 'الساعة - إعلان أسفل' },
+    { value: 'weatherTop', label: 'الطقس - إعلان أعلى' },
+    { value: 'weatherMiddle', label: 'الطقس - إعلان وسط' },
+    { value: 'weatherBottom', label: 'الطقس - إعلان أسفل' },
 ];
 
 const initialForm = {
@@ -38,6 +44,12 @@ function getDurationText(startTime, endTime) {
     if (hours) parts.push(`${hours} ساعة`);
 
     return parts.join(' و ') || 'ساعة واحدة';
+}
+
+function getTargetTool(adLocation) {
+    if (String(adLocation).startsWith('clock')) return 'clock_tool';
+    if (String(adLocation).startsWith('weather')) return 'weather_tool';
+    return 'date_tool';
 }
 
 export default function CreateCampaignPage() {
@@ -146,7 +158,7 @@ export default function CreateCampaignPage() {
                 advertiserEmail: currentUser.email || profile?.email || '',
                 storeName: profile?.storeName || '',
                 campaignName: form.campaignName.trim(),
-                targetTool: 'date_tool',
+                targetTool: getTargetTool(form.adLocation),
                 adLocation: form.adLocation,
                 source: 'advertisers',
                 targetUrl: form.targetUrl.trim(),

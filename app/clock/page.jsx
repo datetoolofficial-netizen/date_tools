@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import PublicAdSlot from '../components/PublicAdSlot';
 import { useSiteContext } from '../SiteContext';
 
 const cities = [
@@ -41,15 +42,19 @@ function getOffsetHours(zone, date) {
 
 export default function ClockPage() {
     const {
+        configData,
         firebaseApiRef,
         currentLocation,
     } = useSiteContext();
     const [now, setNow] = useState(() => new Date());
-    const [inputTime, setInputTime] = useState('13:30');
+    const [inputHour, setInputHour] = useState('13');
+    const [inputMinute, setInputMinute] = useState('30');
+    const [convertedTime, setConvertedTime] = useState('');
     const [cityZone, setCityZone] = useState('Asia/Riyadh');
     const [fromZone, setFromZone] = useState('Asia/Riyadh');
     const [toZone, setToZone] = useState('Europe/London');
     const [locationLabel, setLocationLabel] = useState('الرياض');
+    const [timezoneDiff, setTimezoneDiff] = useState('');
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
@@ -62,19 +67,33 @@ export default function ClockPage() {
         setCityZone(currentLocation.timezone);
         setFromZone(currentLocation.timezone);
         setLocationLabel(currentLocation.label || 'موقعك الحالي');
+        setTimezoneDiff('');
     }, [currentLocation]);
 
-    const convertedTime = useMemo(() => {
-        const [rawHour, rawMinute] = inputTime.split(':').map(Number);
+    const previewTime = useMemo(() => {
+        const rawHour = Number(inputHour);
+        const rawMinute = Number(inputMinute);
         if (Number.isNaN(rawHour) || Number.isNaN(rawMinute)) return 'أدخل وقتًا صحيحًا';
 
         const hour = rawHour % 24;
         const suffix = hour >= 12 ? 'م' : 'ص';
         const hour12 = hour % 12 || 12;
         return `${hour12}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
-    }, [inputTime]);
+    }, [inputHour, inputMinute]);
 
-    const diff = Math.round((getOffsetHours(toZone, now) - getOffsetHours(fromZone, now)) * 10) / 10;
+    const calculateTimeConversion = () => {
+        setConvertedTime(previewTime);
+        firebaseApiRef.current.trackToolUsage('clockTools');
+    };
+
+    const calculateTimezoneDiff = () => {
+        const diff = Math.round((getOffsetHours(toZone, now) - getOffsetHours(fromZone, now)) * 10) / 10;
+        setTimezoneDiff(diff === 0 ? 'نفس الوقت' : `${Math.abs(diff)} ساعة ${diff > 0 ? 'أمام' : 'خلف'}`);
+        firebaseApiRef.current.trackToolUsage('clockTools');
+    };
+
+    const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
+    const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
 
     return (
         <section className="tools-page">
@@ -94,20 +113,34 @@ export default function ClockPage() {
                 </div>
             </div>
 
+            <PublicAdSlot configData={configData} slotName="clockTop" label="إعلان أعلى الساعة" />
+
             <article className="tool-widget time-converter-card">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-repeat"></i>
                     <h3>تحويل الساعة من 24 إلى 12</h3>
                 </div>
-                <input
-                    className="time-converter-input"
-                    type="time"
-                    value={inputTime}
-                    onChange={(event) => setInputTime(event.target.value)}
-                    aria-label="الوقت بنظام 24 ساعة"
-                />
-                <div className="tool-result">{convertedTime}</div>
+                <div className="time-select-grid">
+                    <label>
+                        <span>الساعة</span>
+                        <select value={inputHour} onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}>
+                            {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+                        </select>
+                    </label>
+                    <label>
+                        <span>الدقيقة</span>
+                        <select value={inputMinute} onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}>
+                            {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
+                        </select>
+                    </label>
+                </div>
+                <button className="action-btn" type="button" onClick={calculateTimeConversion}>
+                    <i className="fa-solid fa-clock"></i> <span>استخدام</span>
+                </button>
+                {convertedTime && <div className="tool-result">{convertedTime}</div>}
             </article>
+
+            <PublicAdSlot configData={configData} slotName="clockMiddle" label="إعلان وسط الساعة" />
 
             <article className="tool-widget">
                 <div className="tool-widget-title">
@@ -115,20 +148,23 @@ export default function ClockPage() {
                     <h3>فرق التوقيت بين مدينتين</h3>
                 </div>
                 <div className="tool-grid two-columns compact">
-                    <select value={fromZone} onChange={(event) => setFromZone(event.target.value)}>
+                    <select value={fromZone} onChange={(event) => { setFromZone(event.target.value); setTimezoneDiff(''); }}>
                         {cities.map((city) => <option key={`${city.name}-${city.zone}-from`} value={city.zone}>{city.name}</option>)}
                         {currentLocation?.timezone && (
                             <option value={currentLocation.timezone}>{currentLocation.label || 'موقعك الحالي'}</option>
                         )}
                     </select>
-                    <select value={toZone} onChange={(event) => setToZone(event.target.value)}>
+                    <select value={toZone} onChange={(event) => { setToZone(event.target.value); setTimezoneDiff(''); }}>
                         {cities.map((city) => <option key={`${city.name}-${city.zone}-to`} value={city.zone}>{city.name}</option>)}
                     </select>
                 </div>
-                <div className="tool-result">
-                    فرق التوقيت: {diff === 0 ? 'نفس الوقت' : `${Math.abs(diff)} ساعة ${diff > 0 ? 'أمام' : 'خلف'}`}
-                </div>
+                <button className="action-btn" type="button" onClick={calculateTimezoneDiff}>
+                    <i className="fa-solid fa-code-compare"></i> <span>استخدام</span>
+                </button>
+                {timezoneDiff && <div className="tool-result">فرق التوقيت: {timezoneDiff}</div>}
             </article>
+
+            <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
 
             <div className="ideas-strip">
                 <span><i className="fa-solid fa-stopwatch"></i> مؤقت وعد تنازلي لاحقًا</span>

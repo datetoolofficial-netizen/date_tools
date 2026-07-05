@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import PublicAdSlot from '../components/PublicAdSlot';
 import { useSiteContext } from '../SiteContext';
 
 const weatherLabels = {
@@ -53,6 +54,7 @@ async function fetchForecast(latitude, longitude) {
 
 export default function WeatherPage() {
     const {
+        configData,
         firebaseApiRef,
         currentLocation,
     } = useSiteContext();
@@ -139,6 +141,8 @@ export default function WeatherPage() {
                 </div>
             </div>
 
+            <PublicAdSlot configData={configData} slotName="weatherTop" label="إعلان أعلى الطقس" />
+
             <form className="weather-search" onSubmit={(event) => { event.preventDefault(); loadWeather(); }}>
                 <input
                     value={query}
@@ -152,6 +156,8 @@ export default function WeatherPage() {
             </form>
 
             {error && <p className="inline-error">{error}</p>}
+
+            <PublicAdSlot configData={configData} slotName="weatherMiddle" label="إعلان وسط الطقس" />
 
             {current && (
                 <>
@@ -180,6 +186,8 @@ export default function WeatherPage() {
                     </article>
                 </>
             )}
+
+            <PublicAdSlot configData={configData} slotName="weatherBottom" label="إعلان أسفل الطقس" />
 
             {daily?.time && (
                 <article className="tool-widget">

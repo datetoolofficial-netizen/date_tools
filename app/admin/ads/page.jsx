@@ -37,14 +37,22 @@ const STATUS_OPTIONS = [
 ];
 
 const TOOL_NAMES = {
-    date_tool: 'أداة التاريخ والعمر'
+    date_tool: 'أداة التاريخ والعمر',
+    clock_tool: 'أداة الساعة والوقت',
+    weather_tool: 'أداة الطقس'
 };
 
 const LOCATION_NAMES = {
     top: 'إعلان أعلى الصفحة',
     middle: 'الإعلان المميز',
     bottom1: 'إعلان أسفل الصفحة 1',
-    bottom2: 'إعلان أسفل الصفحة 2'
+    bottom2: 'إعلان أسفل الصفحة 2',
+    clockTop: 'الساعة - إعلان أعلى',
+    clockMiddle: 'الساعة - إعلان وسط',
+    clockBottom: 'الساعة - إعلان أسفل',
+    weatherTop: 'الطقس - إعلان أعلى',
+    weatherMiddle: 'الطقس - إعلان وسط',
+    weatherBottom: 'الطقس - إعلان أسفل'
 };
 
 const STATS_PLACEMENT_OPTIONS = [
@@ -53,13 +61,21 @@ const STATS_PLACEMENT_OPTIONS = [
     { value: 'middle', label: 'الإعلان المميز' },
     { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
     { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' },
+    { value: 'clockTop', label: 'الساعة - إعلان أعلى' },
+    { value: 'clockMiddle', label: 'الساعة - إعلان وسط' },
+    { value: 'clockBottom', label: 'الساعة - إعلان أسفل' },
+    { value: 'weatherTop', label: 'الطقس - إعلان أعلى' },
+    { value: 'weatherMiddle', label: 'الطقس - إعلان وسط' },
+    { value: 'weatherBottom', label: 'الطقس - إعلان أسفل' },
     { value: 'google', label: 'قوقل فقط' },
     { value: 'advertisers', label: 'المعلنين فقط' }
 ];
 
 const TOOL_FILTER_OPTIONS = [
     { value: 'all', label: 'كل الأدوات' },
-    { value: 'date_tool', label: 'أداة التاريخ الشاملة' }
+    { value: 'date_tool', label: 'أداة التاريخ الشاملة' },
+    { value: 'clock_tool', label: 'أداة الساعة والوقت' },
+    { value: 'weather_tool', label: 'أداة الطقس' }
 ];
 
 function getStatusClass(status) {

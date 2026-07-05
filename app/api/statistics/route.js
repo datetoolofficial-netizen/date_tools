@@ -5,7 +5,7 @@ const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
 const DEFAULT_PROJECT_ID = 'date-tool-official';
-const ALLOWED_TOOL_EVENTS = new Set(['ageCalc', 'dateConverter', 'durationCalc']);
+const ALLOWED_TOOL_EVENTS = new Set(['ageCalc', 'dateConverter', 'durationCalc', 'clockTools', 'weatherTools']);
 const SAFE_AD_ID_PATTERN = /^[a-zA-Z0-9_-]{1,40}$/;
 
 export const dynamic = 'force-dynamic';

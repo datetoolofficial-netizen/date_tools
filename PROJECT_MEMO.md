@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.41.
+الإصدار الحالي للتطبيق هو 0.2.42.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -123,6 +123,7 @@ https://www.date-tool.com
 59. تبسيط صفحة الساعة بإزالة كرت الوقت حسب المدينة، وتحويل أداة الساعة إلى 24→12 فقط، ونقل طلب الموقع إلى إشعار موافقة عند تحميل الصفحة.
 60. تحسين إشعار موافقة الموقع في صفحة الساعة وتثبيت ارتفاع ونص بانر الساعة الحالية حتى لا يتحرك مع الثواني.
 61. نقل طلب إذن الموقع إلى Shell عام يعمل تلقائيًا بعد تحميل الصفحات العامة، وإصلاح `Permissions-Policy` للسماح بـ geolocation من نفس الموقع فقط.
+62. تحسين أدوات الساعة بزر استخدام وحقول ساعة/دقيقة منفصلة، وإضافة مواضع إعلانية للساعة والطقس مع نص تسويقي قابل للتحكم من الإدارة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -3567,6 +3568,11 @@ PROJECT_MEMO.md
 npm run lint
 git diff --check
 npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/clock?v=0.2.42
+curl.exe -I https://date-tool.com/weather?v=0.2.42
+curl.exe -I https://date-tool.com/admin/ad-settings?v=0.2.42
 npm run deploy
 Invoke-WebRequest https://date-tool.com/?v=0.2.33
 Invoke-WebRequest https://date-tool.com/ads.txt?v=0.2.33
@@ -3988,6 +3994,60 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار أدوات الساعة ومواضع الإعلانات - الإصدار 0.2.42
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم تحويل إدخال الساعة إلى قائمتين: الساعة من 00 إلى 23، والدقيقة من 00 إلى 59.
+✅ أصبحت نتيجة تحويل 24 إلى 12 تظهر بعد الضغط على زر استخدام فقط.
+✅ أصبح فرق التوقيت يظهر بعد الضغط على زر استخدام فقط، ويتم تصفير النتيجة عند تغيير المدينة أو تحديث الموقع.
+✅ الفقرات المعتمدة على الموقع في صفحة الساعة والطقس تستقبل `currentLocation` من SiteShell وتحدث نفسها بعد موافقة المتصفح.
+✅ تمت إضافة مكون `PublicAdSlot` لعرض إعلان صورة/معلن من الإعدادات، أو Google fallback، أو نص تسويقي عند تفعيله من لوحة الإدارة.
+✅ تمت إضافة 3 مواضع إعلانية لصفحة الساعة و3 مواضع إعلانية لصفحة الطقس.
+✅ تمت توسعة `/admin/ad-settings` لتشمل مواضع الساعة والطقس وخيار النص التسويقي لكل موضع.
+✅ تمت توسعة قوائم الحملات في لوحة الإدارة وبوابة العميل بمواضع الساعة والطقس.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ /clock أعادت 200.
+✅ /weather أعادت 200.
+✅ /admin/ad-settings أعادت 200.
+✅ Cloudflare Version ID: 074c21b9-bb4e-4ddc-9e3b-4847cf0a8f74
+⚠️ عرض حملات العملاء العامة مباشرة من `campaigns` يحتاج endpoint خادم لاحقًا، لأن قواعد Firestore تمنع القراءة العامة للحملات وهذا مطلوب أمنيًا.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/PublicAdSlot.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/admin/ad-settings/page.jsx
+app/admin/ads/page.jsx
+app/client/create-campaign/page.jsx
+app/firebase.js
+app/api/statistics/route.js
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -4193,6 +4253,10 @@ PROJECT_MEMO.md
 ✅ تم نقل طلب إذن الموقع إلى SiteShell العام وإصلاح Permissions-Policy للسماح بـ geolocation من نفس الموقع فقط
 ✅ تم تحديث الإصدار إلى 0.2.41
 ✅ تم نشر الإصدار 0.2.41 على Cloudflare Version ID: 1d9f7c66-ca25-4810-840d-71df4bc9f7c7
+✅ تم تحسين أدوات الساعة بزر استخدام وقوائم ساعة/دقيقة منفصلة
+✅ تمت إضافة مواضع إعلانية للساعة والطقس مع نص تسويقي قابل للتحكم من إدارة الإعلانات
+✅ تم تحديث الإصدار إلى 0.2.42
+✅ تم نشر الإصدار 0.2.42 على Cloudflare Version ID: 074c21b9-bb4e-4ddc-9e3b-4847cf0a8f74
 ```
 
 ---
