@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.45.
+الإصدار الحالي للتطبيق هو 0.2.46.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -127,6 +127,7 @@ https://www.date-tool.com
 63. توحيد مواضع الإعلانات في صفحات التاريخ والساعة والطقس إلى ثلاثة مواضع لكل صفحة وربطها بمعرفات واضحة في لوحة التحكم.
 64. ضبط وثيقة Firebase نفسها حتى تحفظ مواضع الإعلانات التسعة الجديدة فقط وتحذف مفاتيح التاريخ القديمة عند حفظ إعدادات الإعلانات.
 65. ربط حفظ مفاتيح صور الإعلانات `adImages` بصفحة إعدادات الإعلانات حتى تصبح مواضع الصور في Firebase موحدة أيضًا.
+66. تحسين جدول إعدادات الإعلانات بفصل تفعيل Google والنص التسويقي إلى عمودين مستقلين بتصميم أوضح.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4175,6 +4176,46 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار تحسين جدول إعدادات الإعلانات - الإصدار 0.2.46
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم فصل خيار `إعلانات Google` وخيار `النص التسويقي` إلى عمودين مستقلين في جدول `/admin/ad-settings`.
+✅ أصبحت أزرار التفعيل بطاقات تبديل منفصلة بأيقونة وحالة واضحة لكل موضع إعلان.
+✅ تم تحسين عرض الجدول على الجوال بتوسعة عرض الجدول الأفقي بدل تكديس الخيارين داخل خلية واحدة.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ /admin/ad-settings أعادت 200.
+✅ / أعادت 200.
+✅ Cloudflare Version ID: 9502acf8-9c69-405e-8230-5d6b045bf685.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/ad-settings/page.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -4391,6 +4432,8 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.45 وضبط حفظ adImages في Firebase على 9 مواضع فقط
 ✅ تم نشر الإصدار 0.2.45 على Cloudflare Version ID: 56a5c636-0266-4ad2-9f84-69e5472984f6
 ✅ تم التحقق من Firestore: googleAdSlotsCount=9 و adImagesCount=9
+✅ تم تحديث الإصدار إلى 0.2.46 وتحسين جدول إعدادات الإعلانات بفصل Google والنص التسويقي إلى عمودين
+✅ تم نشر الإصدار 0.2.46 على Cloudflare Version ID: 9502acf8-9c69-405e-8230-5d6b045bf685
 ```
 
 ---

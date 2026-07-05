@@ -438,7 +438,8 @@ export default function AdminAdSettingsPage() {
                             <tr>
                                 <th>#</th>
                                 <th>موضع الإعلان</th>
-                                <th>العرض البديل عند عدم وجود معلنين</th>
+                                <th>إعلانات Google</th>
+                                <th>النص التسويقي</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -455,21 +456,35 @@ export default function AdminAdSettingsPage() {
                                             <code dir="ltr" className="ad-slot-id-badge">{slotItem.id}</code>
                                         </td>
                                         <td>
-                                            <label className="ad-settings-toggle">
+                                            <label className={`ad-settings-switch google ${slot.enabledWhenNoAdvertiser ? 'active' : ''}`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={slot.enabledWhenNoAdvertiser}
                                                     onChange={(event) => updateSlot(slotItem.id, 'enabledWhenNoAdvertiser', event.target.checked)}
                                                 />
-                                                <span>{slot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</span>
+                                                <span className="ad-settings-switch-icon">
+                                                    <i className="fa-brands fa-google"></i>
+                                                </span>
+                                                <span className="ad-settings-switch-copy">
+                                                    <strong>{slot.enabledWhenNoAdvertiser ? 'مفعلة' : 'متوقفة'}</strong>
+                                                    <small>عند عدم وجود معلن</small>
+                                                </span>
                                             </label>
-                                            <label className="ad-settings-toggle">
+                                        </td>
+                                        <td>
+                                            <label className={`ad-settings-switch house ${slot.showHouseAd === true ? 'active' : ''}`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={slot.showHouseAd === true}
                                                     onChange={(event) => updateSlot(slotItem.id, 'showHouseAd', event.target.checked)}
                                                 />
-                                                <span>{slot.showHouseAd ? 'نص تسويقي' : 'لا نص'}</span>
+                                                <span className="ad-settings-switch-icon">
+                                                    <i className="fa-solid fa-bullhorn"></i>
+                                                </span>
+                                                <span className="ad-settings-switch-copy">
+                                                    <strong>{slot.showHouseAd ? 'ظاهر' : 'مخفي'}</strong>
+                                                    <small>اعلن معنا</small>
+                                                </span>
                                             </label>
                                         </td>
                                         <td>
