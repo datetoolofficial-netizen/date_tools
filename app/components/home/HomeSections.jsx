@@ -147,6 +147,7 @@ function CalendarModeSwitch({ labels, value, onChange }) {
                     key={option.value}
                     type="button"
                     role="tab"
+                    data-mode={option.value}
                     aria-selected={value === option.value}
                     className={`calendar-mode-btn ${value === option.value ? 'active' : ''}`}
                     onClick={() => onChange(option.value)}
@@ -452,8 +453,8 @@ export function SeoSections({ lang }) {
                 </p>
             </section>
 
-            <section className="seo-card">
-                <h2 className="seo-title"><i className="fa-regular fa-circle-question"></i> {seo.faqTitle}</h2>
+            <section className="seo-card faq-card">
+                <h2 className="seo-title">{seo.faqTitle}</h2>
                 {seo.faq.map((item) => (
                     <div className="faq-item" key={item.q}>
                         <h4 className="faq-q">{item.q}</h4>

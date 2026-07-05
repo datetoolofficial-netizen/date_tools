@@ -126,8 +126,8 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     } else if (imageUrl && imageFailed) {
         content = (
             <span className="public-ad-house muted">
-                <i className="fa-regular fa-image"></i>
-                {label}
+                <i className="fa-solid fa-bullhorn"></i>
+                {houseText || label}
             </span>
         );
     }

@@ -1415,14 +1415,15 @@
         .footer-meta p { margin: 0; }
         .footer-version {
             direction: ltr;
-            border: 1px solid var(--border-color);
-            background: var(--input-bg);
+            border: 0;
+            background: transparent;
             border-radius: 999px;
-            padding: 2px 8px;
+            padding: 0 2px;
             color: var(--text-sub);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             line-height: 1.4;
+            opacity: 0.72;
         }
 
         @media (max-width: 600px) {
@@ -1882,6 +1883,235 @@ body.dark-mode .event-card {
     margin: 0;
     font-size: 14px;
     line-height: 1.7;
+}
+
+/* Public page polish: calmer mobile typography and unified ad/hero/form surfaces. */
+.date-tools-hero {
+    justify-content: center;
+    text-align: center;
+    align-content: center;
+}
+
+.date-tools-hero > div {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.date-tools-hero > i {
+    inset-inline-end: auto;
+    left: 50%;
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    opacity: 0.1;
+}
+
+.public-ad-slot {
+    position: relative;
+    min-height: clamp(112px, 30vw, 150px);
+}
+
+.public-ad-house {
+    position: relative;
+    min-height: 72px;
+    padding: 10px 18px;
+    isolation: isolate;
+}
+
+.public-ad-house i {
+    position: absolute;
+    inset-inline-start: auto;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 86px;
+    height: 86px;
+    border-radius: 24px;
+    background: transparent;
+    font-size: 58px;
+    opacity: 0.14;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.calendar-mode-btn[data-mode="hijri"].active {
+    background: linear-gradient(135deg, #34d399, #16a34a);
+    box-shadow: 0 8px 24px rgba(22, 163, 74, 0.22);
+}
+
+body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
+    color: #052e16;
+}
+
+.tool-mode-card h3 {
+    color: var(--text-main);
+    font-size: 15px;
+    font-weight: 850;
+    margin: 16px 0 10px;
+    text-align: start;
+}
+
+.date-dropdowns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.date-dropdowns select {
+    min-height: 52px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 850;
+    background-color: color-mix(in srgb, var(--bg-card) 86%, var(--primary) 8%);
+}
+
+.faq-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding-inline: 0;
+}
+
+.faq-card .seo-title {
+    justify-content: center;
+    text-align: center;
+}
+
+.faq-card .seo-title i,
+.faq-q::before {
+    display: none;
+}
+
+.faq-q {
+    padding-inline-start: 0;
+    text-align: center;
+    font-size: clamp(14px, 3.6vw, 16px);
+    line-height: 1.55;
+}
+
+.faq-a {
+    text-align: center;
+}
+
+@media (max-width: 520px) {
+    .tools-hero {
+        min-height: 136px;
+        padding: 22px 18px;
+        border-radius: 20px;
+    }
+
+    .tools-hero h2,
+    .weather-current-card h3 {
+        font-size: 25px;
+        line-height: 1.25;
+    }
+
+    .tools-hero p,
+    .weather-current-card p,
+    .seo-text,
+    .static-rich-page p,
+    .static-rich-page li {
+        font-size: 13px;
+        line-height: 1.75;
+    }
+
+    .date-tools-hero > i {
+        width: 104px;
+        height: 104px;
+        font-size: 72px;
+    }
+
+    h2 {
+        font-size: 20px;
+        margin-bottom: 14px;
+        gap: 8px;
+    }
+
+    h2::before,
+    h2::after {
+        margin: 0 8px;
+    }
+
+    .card,
+    .tool-mode-card {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .calendar-mode-btn {
+        min-height: 40px;
+        font-size: 14px;
+    }
+
+    .tool-mode-card h3 {
+        font-size: 14px;
+        margin: 14px 0 8px;
+    }
+
+    .date-dropdowns {
+        gap: 8px;
+    }
+
+    .date-dropdowns select {
+        min-height: 48px;
+        font-size: 13px;
+        padding: 10px 4px;
+        background-position: left 8px center;
+        background-size: 13px;
+    }
+
+    .public-ad-slot {
+        min-height: 116px;
+        border-radius: 18px;
+        font-size: 14px;
+    }
+
+    .public-ad-house {
+        min-height: 58px;
+        font-size: 14px;
+    }
+
+    .public-ad-house i {
+        width: 72px;
+        height: 72px;
+        font-size: 48px;
+        opacity: 0.11;
+    }
+
+    .seo-sections-wrapper {
+        margin-top: 26px;
+    }
+
+    .seo-card {
+        padding: 22px 18px;
+        margin-bottom: 18px;
+        border-radius: 18px;
+    }
+
+    .faq-card {
+        padding-inline: 0;
+    }
+
+    .seo-title {
+        font-size: 19px;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .faq-q {
+        font-size: 14px;
+        line-height: 1.45;
+        margin-bottom: 6px;
+    }
+
+    .faq-a {
+        font-size: 13px;
+        line-height: 1.65;
+    }
+
+    .footer-links {
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 700px) {

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.47.
+الإصدار الحالي للتطبيق هو 0.2.48.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -129,6 +129,7 @@ https://www.date-tool.com
 65. ربط حفظ مفاتيح صور الإعلانات `adImages` بصفحة إعدادات الإعلانات حتى تصبح مواضع الصور في Firebase موحدة أيضًا.
 66. تحسين جدول إعدادات الإعلانات بفصل تفعيل Google والنص التسويقي إلى عمودين مستقلين بتصميم أوضح.
 67. تحسين صفحات القبول لدى AdSense بإخفاء إشعار الموقع تلقائيًا، منع صور الإعلانات المكسورة، وإضافة محتوى ونموذج تواصل أفضل للصفحات الأساسية.
+68. تحسين واجهة الجوال لصفحة التاريخ بتوحيد بانرات الإعلانات، محاذاة الهيرو، تحسين نماذج الإدخال، تلوين زر الهجري، وتبسيط الأسئلة والفوتر.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4257,6 +4258,53 @@ npm run build
 app/SiteShell.jsx
 app/components/PublicAdSlot.jsx
 app/[slug]/PageClient.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار تحسين واجهة الجوال وصفحة التاريخ - الإصدار 0.2.48
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/?v=0.2.48
+curl.exe -I https://date-tool.com/clock?v=0.2.48
+```
+
+النتيجة:
+
+```txt
+✅ تم توحيد عرض بانرات الإعلانات الفارغة أو التي تفشل صورها بنص تسويقي واحد وأيقونة خلفية منخفضة الشفافية.
+✅ تم ضبط Hero صفحة التاريخ ليكون النص في المنتصف أفقيًا وعموديًا.
+✅ تم تحسين نماذج إدخال أدوات التاريخ وعناوين الحقول، مع أحجام خطوط أصغر وأنسب للجوال.
+✅ تم تمييز زر التقويم الهجري بتدرج أخضر عند اختياره.
+✅ تم تبسيط قسم الأسئلة الشائعة بإزالة خلفية كرت الأسئلة وعلامات الاستفهام الزرقاء وتخفيف النصوص على الجوال.
+✅ تم دمج رقم الإصدار في الفوتر بشكل أهدأ وأقل بروزًا.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ تم نشر الإصدار 0.2.48 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 519c0455-e052-44c4-beff-805f1fd87e6b.
+✅ صفحات `/` و `/clock` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/PublicAdSlot.jsx
+app/components/home/HomeSections.jsx
 app/globals.css
 app/version.js
 package.json
