@@ -28,12 +28,6 @@ function getSlotConfig(configData, slotName) {
     return names.map((name) => slots[name]).find(Boolean) || {};
 }
 
-function getSlotImage(configData, slotName) {
-    const images = configData?.adImages || {};
-    const names = getSlotNames(slotName);
-    return clean(names.map((name) => images[name]).find(Boolean));
-}
-
 function getGoogleAdSlot(configData, slotName) {
     const slotConfig = getSlotConfig(configData, slotName);
     const client = clean(slotConfig.client || configData?.externalIntegrations?.googleAdsenseClient).toLowerCase();
@@ -58,7 +52,7 @@ function getActiveCampaign(configData, slotName) {
         if (!slotNames.has(campaign?.adLocation)) return false;
         const start = campaign.startTime ? new Date(campaign.startTime).getTime() : 0;
         const end = campaign.endTime ? new Date(campaign.endTime).getTime() : Number.POSITIVE_INFINITY;
-        return now >= start && now <= end && (campaign.imageUrl || campaign.text);
+        return now >= start && now <= end && Boolean(clean(campaign.imageUrl));
     });
 }
 
@@ -92,12 +86,11 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     const slotConfig = getSlotConfig(configData, slotName);
     const campaign = getActiveCampaign(configData, slotName);
     const googleAd = getGoogleAdSlot(configData, slotName);
-    const imageUrl = clean(getSlotImage(configData, slotName) || campaign?.imageUrl);
-    const campaignText = clean(campaign?.text);
+    const imageUrl = clean(campaign?.imageUrl);
+    const hasActiveCampaign = Boolean(campaign);
     const targetUrl = clean(campaign?.targetUrl);
     const houseText = clean(slotConfig.houseAdText) || 'أعلن معنا في هذه المساحة';
     const shouldShowHouseAd = slotConfig.showHouseAd === true;
-    const hasAdvertiserContent = Boolean(imageUrl || campaignText);
     const adId = campaign?.campaignNumber || campaign?.id || `slot_${slotName}`;
 
     useEffect(() => {
@@ -116,16 +109,9 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
                 onError={() => setImageFailed(true)}
             />
         );
-    } else if (campaignText && (!imageUrl || imageFailed)) {
-        content = (
-            <span className="public-ad-house">
-                <i className="fa-solid fa-rectangle-ad"></i>
-                {campaignText}
-            </span>
-        );
-    } else if (!hasAdvertiserContent && googleAd?.enabledWhenNoAdvertiser) {
+    } else if (!hasActiveCampaign && googleAd?.enabledWhenNoAdvertiser) {
         content = <GoogleAdsenseUnit ad={googleAd} scriptId={`adsbygoogle-${slotName}-init`} />;
-    } else if (!hasAdvertiserContent && shouldShowHouseAd) {
+    } else if (!hasActiveCampaign && shouldShowHouseAd) {
         content = (
             <span className="public-ad-house">
                 <i className="fa-solid fa-bullhorn"></i>
