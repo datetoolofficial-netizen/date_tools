@@ -4,7 +4,8 @@ import {
     getFirestore,
     doc,
     setDoc,
-    getDoc
+    getDoc,
+    deleteField
 } from "firebase/firestore";
 
 import {
@@ -46,7 +47,7 @@ const defaultExternalIntegrations = {
 };
 
 const defaultGoogleAdSlots = {
-    top: {
+    dateTop: {
         client: "",
         slot: "",
         format: "auto",
@@ -56,7 +57,7 @@ const defaultGoogleAdSlots = {
         showHouseAd: false,
         houseAdText: ""
     },
-    middle: {
+    dateMiddle: {
         client: "",
         slot: "",
         format: "auto",
@@ -66,17 +67,7 @@ const defaultGoogleAdSlots = {
         showHouseAd: false,
         houseAdText: ""
     },
-    bottom1: {
-        client: "",
-        slot: "",
-        format: "auto",
-        fullWidthResponsive: true,
-        enabledWhenNoAdvertiser: false,
-        htmlSnippet: "",
-        showHouseAd: false,
-        houseAdText: ""
-    },
-    bottom2: {
+    dateBottom: {
         client: "",
         slot: "",
         format: "auto",
@@ -175,13 +166,41 @@ function normalizeGoogleAdSlot(value = {}) {
     };
 }
 
+const legacyAdSlotAliases = {
+    dateTop: ["top"],
+    dateMiddle: ["middle"],
+    dateBottom: ["bottom1", "bottom2"]
+};
+
+const legacyDateAdSlotKeys = ["top", "middle", "bottom1", "bottom2"];
+
+function pickWithAliases(value = {}, key) {
+    return [key, ...(legacyAdSlotAliases[key] || [])]
+        .map((candidateKey) => value[candidateKey])
+        .find(Boolean) || {};
+}
+
 function normalizeGoogleAdSlots(value = {}) {
     return Object.fromEntries(
         Object.keys(defaultGoogleAdSlots).map((slotId) => [
             slotId,
-            normalizeGoogleAdSlot(value[slotId] || {})
+            normalizeGoogleAdSlot(pickWithAliases(value, slotId))
         ])
     );
+}
+
+function normalizeAdImages(value = {}) {
+    return {
+        dateTop: String(value.dateTop || value.top || ""),
+        dateMiddle: String(value.dateMiddle || value.middle || ""),
+        dateBottom: String(value.dateBottom || value.bottom1 || value.bottom2 || ""),
+        clockTop: String(value.clockTop || ""),
+        clockMiddle: String(value.clockMiddle || ""),
+        clockBottom: String(value.clockBottom || ""),
+        weatherTop: String(value.weatherTop || ""),
+        weatherMiddle: String(value.weatherMiddle || ""),
+        weatherBottom: String(value.weatherBottom || "")
+    };
 }
 
 // App Check يعمل فقط في المتصفح
@@ -210,10 +229,15 @@ export const defaultSiteConfig = {
     logoUrl: "",
     faviconUrl: "",
     adImages: {
-        top: "",
-        middle: "",
-        bottom1: "",
-        bottom2: ""
+        dateTop: "",
+        dateMiddle: "",
+        dateBottom: "",
+        clockTop: "",
+        clockMiddle: "",
+        clockBottom: "",
+        weatherTop: "",
+        weatherMiddle: "",
+        weatherBottom: ""
     },
     googleAdSlots: defaultGoogleAdSlots,
     adCampaigns: [],
@@ -261,7 +285,7 @@ export async function getSiteConfig() {
 
             adImages: {
                 ...defaultSiteConfig.adImages,
-                ...(data.adImages || {})
+                ...normalizeAdImages(data.adImages || {})
             },
 
             googleAdSlots: {
@@ -315,12 +339,17 @@ export async function saveSiteConfig(config) {
 
         adImages: {
             ...defaultSiteConfig.adImages,
-            ...(config.adImages || {})
+            ...normalizeAdImages(config.adImages || {}),
+            top: deleteField(),
+            middle: deleteField(),
+            bottom1: deleteField(),
+            bottom2: deleteField()
         },
 
         googleAdSlots: {
             ...defaultGoogleAdSlots,
-            ...normalizeGoogleAdSlots(config.googleAdSlots || {})
+            ...normalizeGoogleAdSlots(config.googleAdSlots || {}),
+            ...Object.fromEntries(legacyDateAdSlotKeys.map((slotId) => [slotId, deleteField()]))
         },
 
         externalIntegrations: {
@@ -355,14 +384,19 @@ export async function saveSiteConfigSection(sectionPatch) {
     if ('adImages' in cleanPatch) {
         cleanPatch.adImages = {
             ...defaultSiteConfig.adImages,
-            ...(cleanPatch.adImages || {})
+            ...normalizeAdImages(cleanPatch.adImages || {}),
+            top: deleteField(),
+            middle: deleteField(),
+            bottom1: deleteField(),
+            bottom2: deleteField()
         };
     }
 
     if ('googleAdSlots' in cleanPatch) {
         cleanPatch.googleAdSlots = {
             ...defaultGoogleAdSlots,
-            ...normalizeGoogleAdSlots(cleanPatch.googleAdSlots || {})
+            ...normalizeGoogleAdSlots(cleanPatch.googleAdSlots || {}),
+            ...Object.fromEntries(legacyDateAdSlotKeys.map((slotId) => [slotId, deleteField()]))
         };
     }
 

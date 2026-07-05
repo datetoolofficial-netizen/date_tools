@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.42.
+الإصدار الحالي للتطبيق هو 0.2.45.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -124,6 +124,9 @@ https://www.date-tool.com
 60. تحسين إشعار موافقة الموقع في صفحة الساعة وتثبيت ارتفاع ونص بانر الساعة الحالية حتى لا يتحرك مع الثواني.
 61. نقل طلب إذن الموقع إلى Shell عام يعمل تلقائيًا بعد تحميل الصفحات العامة، وإصلاح `Permissions-Policy` للسماح بـ geolocation من نفس الموقع فقط.
 62. تحسين أدوات الساعة بزر استخدام وحقول ساعة/دقيقة منفصلة، وإضافة مواضع إعلانية للساعة والطقس مع نص تسويقي قابل للتحكم من الإدارة.
+63. توحيد مواضع الإعلانات في صفحات التاريخ والساعة والطقس إلى ثلاثة مواضع لكل صفحة وربطها بمعرفات واضحة في لوحة التحكم.
+64. ضبط وثيقة Firebase نفسها حتى تحفظ مواضع الإعلانات التسعة الجديدة فقط وتحذف مفاتيح التاريخ القديمة عند حفظ إعدادات الإعلانات.
+65. ربط حفظ مفاتيح صور الإعلانات `adImages` بصفحة إعدادات الإعلانات حتى تصبح مواضع الصور في Firebase موحدة أيضًا.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4048,6 +4051,130 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار توحيد مواضع إعلانات الأدوات - الإصدار 0.2.43
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم تحويل صفحة التاريخ إلى ثلاثة مواضع إعلانية موحدة: dateTop و dateMiddle و dateBottom.
+✅ أصبحت صفحات التاريخ والساعة والطقس تعتمد نفس نمط المواضع: أعلى ووسط وأسفل.
+✅ تمت إضافة توافق خلفي لقراءة إعدادات التاريخ القديمة top و middle و bottom1 و bottom2 حتى لا ينقطع العرض قبل إعادة الحفظ من لوحة الإدارة.
+✅ تمت إضافة معرف كل موضع داخل جدول /admin/ad-settings.
+✅ تمت تحديث قوائم الحملات في لوحة الإدارة وبوابة المعلنين لاستخدام معرفات المواضع الجديدة.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ / و /clock و /weather و /admin/ad-settings أعادت 200.
+✅ Cloudflare Version ID: cb7b4eae-09e2-4162-a8ff-65eec25c3ed0
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/PublicAdSlot.jsx
+app/page.jsx
+app/admin/AdminDashboard.css
+app/admin/ad-settings/page.jsx
+app/admin/ads/page.jsx
+app/client/create-campaign/page.jsx
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار ضبط مواضع الإعلانات داخل Firebase - الإصدار 0.2.44
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم تعديل `defaultGoogleAdSlots` ليحتوي مواضع الأدوات التسعة فقط.
+✅ تمت إضافة ترحيل داخلي يقرأ مفاتيح التاريخ القديمة ويحولها إلى dateTop/dateMiddle/dateBottom.
+✅ تمت إضافة حذف صريح لمفاتيح top و middle و bottom1 و bottom2 من googleAdSlots و adImages عند حفظ الإعدادات في Firestore.
+✅ تم حفظ إعدادات الإعلانات من جلسة المدير لتحديث وثيقة settings/main في Firebase.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم حفظ إعدادات الإعلانات من جلسة المدير بعد النشر.
+✅ تم التحقق من Firestore: googleAdSlotsCount=9.
+✅ Cloudflare Version ID: 2aabef59-2998-40c8-b014-988dd01c720a
+```
+
+الملفات المتأثرة:
+
+```txt
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار توحيد مفاتيح صور الإعلانات داخل Firebase - الإصدار 0.2.45
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -s "https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main"
+```
+
+النتيجة:
+
+```txt
+✅ تمت إضافة حفظ `adImages` داخل صفحة `/admin/ad-settings`.
+✅ تم نشر الإصدار 0.2.45 على Cloudflare.
+✅ تم حفظ إعدادات الإعلانات من جلسة المدير بعد النشر.
+✅ تم التحقق من Firestore: googleAdSlotsCount=9.
+✅ تم التحقق من Firestore: adImagesCount=9.
+✅ معرفات المواضع النهائية: dateTop و dateMiddle و dateBottom و clockTop و clockMiddle و clockBottom و weatherTop و weatherMiddle و weatherBottom.
+✅ Cloudflare Version ID: 56a5c636-0266-4ad2-9f84-69e5472984f6
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/ad-settings/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -4257,6 +4384,13 @@ PROJECT_MEMO.md
 ✅ تمت إضافة مواضع إعلانية للساعة والطقس مع نص تسويقي قابل للتحكم من إدارة الإعلانات
 ✅ تم تحديث الإصدار إلى 0.2.42
 ✅ تم نشر الإصدار 0.2.42 على Cloudflare Version ID: 074c21b9-bb4e-4ddc-9e3b-4847cf0a8f74
+✅ تم تحديث الإصدار إلى 0.2.43 وتوحيد مواضع التاريخ مع الساعة والطقس
+✅ تم نشر الإصدار 0.2.43 على Cloudflare Version ID: cb7b4eae-09e2-4162-a8ff-65eec25c3ed0
+✅ تم تحديث الإصدار إلى 0.2.44 وضبط حفظ googleAdSlots في Firebase على 9 مواضع فقط
+✅ تم نشر الإصدار 0.2.44 على Cloudflare Version ID: 2aabef59-2998-40c8-b014-988dd01c720a
+✅ تم تحديث الإصدار إلى 0.2.45 وضبط حفظ adImages في Firebase على 9 مواضع فقط
+✅ تم نشر الإصدار 0.2.45 على Cloudflare Version ID: 56a5c636-0266-4ad2-9f84-69e5472984f6
+✅ تم التحقق من Firestore: googleAdSlotsCount=9 و adImagesCount=9
 ```
 
 ---

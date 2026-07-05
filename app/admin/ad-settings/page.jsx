@@ -6,10 +6,9 @@ import Toast from '../../components/Toast';
 import '../AdminDashboard.css';
 
 const AD_SLOTS = [
-    { id: 'top', label: 'التاريخ - إعلان أعلى الصفحة', hint: 'تحت خانة اليوم مباشرة' },
-    { id: 'middle', label: 'التاريخ - الإعلان المميز', hint: 'منتصف صفحة التاريخ قبل الأدوات' },
-    { id: 'bottom1', label: 'التاريخ - إعلان أسفل الصفحة 1', hint: 'أسفل صفحة التاريخ - الموضع الأول' },
-    { id: 'bottom2', label: 'التاريخ - إعلان أسفل الصفحة 2', hint: 'أسفل صفحة التاريخ - الموضع الثاني' },
+    { id: 'dateTop', label: 'التاريخ - إعلان أعلى', hint: 'بعد بانر اليوم مباشرة' },
+    { id: 'dateMiddle', label: 'التاريخ - إعلان وسط', hint: 'بين أدوات صفحة التاريخ' },
+    { id: 'dateBottom', label: 'التاريخ - إعلان أسفل', hint: 'بعد أدوات صفحة التاريخ' },
     { id: 'clockTop', label: 'الساعة - إعلان أعلى', hint: 'بعد بانر الساعة الحالية' },
     { id: 'clockMiddle', label: 'الساعة - إعلان وسط', hint: 'بين أداة التحويل وأداة فرق التوقيت' },
     { id: 'clockBottom', label: 'الساعة - إعلان أسفل', hint: 'بعد أدوات الساعة' },
@@ -35,6 +34,45 @@ const EMPTY_INTEGRATIONS = {
     adsTxtSnippet: '',
 };
 
+const EMPTY_AD_IMAGES = {
+    dateTop: '',
+    dateMiddle: '',
+    dateBottom: '',
+    clockTop: '',
+    clockMiddle: '',
+    clockBottom: '',
+    weatherTop: '',
+    weatherMiddle: '',
+    weatherBottom: '',
+};
+
+const SLOT_ALIASES = {
+    dateTop: ['top'],
+    dateMiddle: ['middle'],
+    dateBottom: ['bottom1', 'bottom2'],
+};
+
+function pickConfiguredSlot(config = {}, slotId) {
+    const slots = config.googleAdSlots || {};
+    return [slotId, ...(SLOT_ALIASES[slotId] || [])].map((id) => slots[id]).find(Boolean) || {};
+}
+
+function pickAdImages(config = {}) {
+    const images = config.adImages || {};
+    return {
+        ...EMPTY_AD_IMAGES,
+        dateTop: images.dateTop || images.top || '',
+        dateMiddle: images.dateMiddle || images.middle || '',
+        dateBottom: images.dateBottom || images.bottom1 || images.bottom2 || '',
+        clockTop: images.clockTop || '',
+        clockMiddle: images.clockMiddle || '',
+        clockBottom: images.clockBottom || '',
+        weatherTop: images.weatherTop || '',
+        weatherMiddle: images.weatherMiddle || '',
+        weatherBottom: images.weatherBottom || '',
+    };
+}
+
 function parseAdsenseSnippet(snippet = '') {
     const text = String(snippet || '');
     const client = text.match(/data-ad-client=["']([^"']+)["']|client=([^"'\s&]+)/i);
@@ -54,13 +92,14 @@ function pickAdSettings(config = {}) {
     const googleAdSlots = AD_SLOTS.reduce((slots, item) => {
         slots[item.id] = {
             ...EMPTY_SLOT,
-            ...(config.googleAdSlots?.[item.id] || {}),
+            ...pickConfiguredSlot(config, item.id),
         };
         return slots;
     }, {});
 
     return {
         googleAdSlots,
+        adImages: pickAdImages(config),
         externalIntegrations: {
             ...EMPTY_INTEGRATIONS,
             ...(config.externalIntegrations || {}),
@@ -302,6 +341,7 @@ export default function AdminAdSettingsPage() {
         try {
             const patch = {
                 googleAdSlots: settings.googleAdSlots,
+                adImages: settings.adImages,
                 externalIntegrations: settings.externalIntegrations,
             };
             const savedPatch = await firebaseApi.saveSiteConfigSection(patch);
@@ -412,6 +452,7 @@ export default function AdminAdSettingsPage() {
                                         <td>
                                             <strong>{slotItem.label}</strong>
                                             <small>{slotItem.hint}</small>
+                                            <code dir="ltr" className="ad-slot-id-badge">{slotItem.id}</code>
                                         </td>
                                         <td>
                                             <label className="ad-settings-toggle">

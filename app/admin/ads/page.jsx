@@ -9,7 +9,7 @@ const EMPTY_CAMPAIGN = {
     targetUrl: '',
     imageUrl: '',
     targetTool: 'date_tool',
-    adLocation: 'top',
+    adLocation: 'dateTop',
     startTime: '',
     endTime: '',
     status: 'قيد المراجعة',
@@ -43,24 +43,38 @@ const TOOL_NAMES = {
 };
 
 const LOCATION_NAMES = {
-    top: 'إعلان أعلى الصفحة',
-    middle: 'الإعلان المميز',
-    bottom1: 'إعلان أسفل الصفحة 1',
-    bottom2: 'إعلان أسفل الصفحة 2',
+    dateTop: 'التاريخ - إعلان أعلى',
+    dateMiddle: 'التاريخ - إعلان وسط',
+    dateBottom: 'التاريخ - إعلان أسفل',
     clockTop: 'الساعة - إعلان أعلى',
     clockMiddle: 'الساعة - إعلان وسط',
     clockBottom: 'الساعة - إعلان أسفل',
     weatherTop: 'الطقس - إعلان أعلى',
     weatherMiddle: 'الطقس - إعلان وسط',
-    weatherBottom: 'الطقس - إعلان أسفل'
+    weatherBottom: 'الطقس - إعلان أسفل',
+    top: 'التاريخ - إعلان أعلى (قديم)',
+    middle: 'التاريخ - إعلان وسط (قديم)',
+    bottom1: 'التاريخ - إعلان أسفل (قديم 1)',
+    bottom2: 'التاريخ - إعلان أسفل (قديم 2)'
 };
+
+const CAMPAIGN_LOCATION_OPTIONS = [
+    { value: 'dateTop', label: LOCATION_NAMES.dateTop },
+    { value: 'dateMiddle', label: LOCATION_NAMES.dateMiddle },
+    { value: 'dateBottom', label: LOCATION_NAMES.dateBottom },
+    { value: 'clockTop', label: LOCATION_NAMES.clockTop },
+    { value: 'clockMiddle', label: LOCATION_NAMES.clockMiddle },
+    { value: 'clockBottom', label: LOCATION_NAMES.clockBottom },
+    { value: 'weatherTop', label: LOCATION_NAMES.weatherTop },
+    { value: 'weatherMiddle', label: LOCATION_NAMES.weatherMiddle },
+    { value: 'weatherBottom', label: LOCATION_NAMES.weatherBottom },
+];
 
 const STATS_PLACEMENT_OPTIONS = [
     { value: 'all', label: 'كل أماكن العرض' },
-    { value: 'top', label: 'إعلان أعلى الصفحة' },
-    { value: 'middle', label: 'الإعلان المميز' },
-    { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
-    { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' },
+    { value: 'dateTop', label: LOCATION_NAMES.dateTop },
+    { value: 'dateMiddle', label: LOCATION_NAMES.dateMiddle },
+    { value: 'dateBottom', label: LOCATION_NAMES.dateBottom },
     { value: 'clockTop', label: 'الساعة - إعلان أعلى' },
     { value: 'clockMiddle', label: 'الساعة - إعلان وسط' },
     { value: 'clockBottom', label: 'الساعة - إعلان أسفل' },
@@ -382,7 +396,7 @@ export default function AdminAdsPage() {
             targetUrl: campaign.targetUrl || '',
             imageUrl: campaign.imageUrl || '',
             targetTool: campaign.targetTool || 'date_tool',
-            adLocation: campaign.adLocation || 'top',
+            adLocation: campaign.adLocation || 'dateTop',
             startTime: toInputDateTime(campaign.startTime),
             endTime: toInputDateTime(campaign.endTime),
             status: campaign.status || 'قيد المراجعة',
@@ -399,7 +413,7 @@ export default function AdminAdsPage() {
             targetUrl: campaign.targetUrl || '',
             imageUrl: campaign.imageUrl || '',
             targetTool: campaign.targetTool || 'date_tool',
-            adLocation: campaign.adLocation || 'top',
+            adLocation: campaign.adLocation || 'dateTop',
             startTime: toInputDateTime(campaign.startTime),
             endTime: toInputDateTime(campaign.endTime)
         });
@@ -872,7 +886,7 @@ export default function AdminAdsPage() {
                             <div className="legacy-field">
                                 <label>مكان العرض</label>
                                 <select value={campaignForm.adLocation} onChange={(event) => setCampaignForm((current) => ({ ...current, adLocation: event.target.value }))}>
-                                    {Object.entries(LOCATION_NAMES).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                                    {CAMPAIGN_LOCATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                                 </select>
                             </div>
                             <div className="legacy-field">

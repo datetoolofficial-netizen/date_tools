@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Toast from './components/Toast';
+import PublicAdSlot from './components/PublicAdSlot';
 import { useSiteContext } from './SiteContext';
 import {
     buildDateStory,
@@ -13,14 +14,11 @@ import {
 } from './i18n';
 import {
     AgeCalculatorSection,
-    BottomAdSlots,
     DateConversionSection,
     DurationSection,
     EventsSection,
-    FeaturedAdSlot,
     SeoSections,
     TodayBanner,
-    TopAdSlot,
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
 
@@ -467,7 +465,7 @@ export default function Home() {
                         </div>
 
                         <TodayBanner lang={lang} todayInfo={todayInfo} />
-                        <TopAdSlot configData={configData} labels={i18n[lang]} />
+                        <PublicAdSlot configData={configData} slotName="dateTop" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
                         <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />
 
                         <AgeCalculatorSection
@@ -484,11 +482,7 @@ export default function Home() {
                             actions={homeActions}
                         />
 
-                        <FeaturedAdSlot
-                            configData={configData}
-                            labels={i18n[lang]}
-                            onClick={() => firebaseApiRef.current.trackAdClick('custom_promo_middle')}
-                        />
+                        <PublicAdSlot configData={configData} slotName="dateMiddle" label={i18n[lang].featuredAd || 'إعلان مميز'} />
 
                         <DateConversionSection
                             labels={i18n[lang]}
@@ -518,7 +512,7 @@ export default function Home() {
                             actions={homeActions}
                         />
 
-                        <BottomAdSlots configData={configData} labels={i18n[lang]} />
+                        <PublicAdSlot configData={configData} slotName="dateBottom" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
                         <SeoSections lang={lang} />
                 </>
             )}

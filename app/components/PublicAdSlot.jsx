@@ -11,8 +11,30 @@ function clean(value = '') {
     return String(value || '').trim();
 }
 
+const SLOT_ALIASES = {
+    dateTop: ['top'],
+    dateMiddle: ['middle'],
+    dateBottom: ['bottom1', 'bottom2'],
+};
+
+function getSlotNames(slotName) {
+    return [slotName, ...(SLOT_ALIASES[slotName] || [])];
+}
+
+function getSlotConfig(configData, slotName) {
+    const slots = configData?.googleAdSlots || {};
+    const names = getSlotNames(slotName);
+    return names.map((name) => slots[name]).find(Boolean) || {};
+}
+
+function getSlotImage(configData, slotName) {
+    const images = configData?.adImages || {};
+    const names = getSlotNames(slotName);
+    return clean(names.map((name) => images[name]).find(Boolean));
+}
+
 function getGoogleAdSlot(configData, slotName) {
-    const slotConfig = configData?.googleAdSlots?.[slotName] || {};
+    const slotConfig = getSlotConfig(configData, slotName);
     const client = clean(slotConfig.client || configData?.externalIntegrations?.googleAdsenseClient).toLowerCase();
     const slot = clean(slotConfig.slot);
 
@@ -29,9 +51,10 @@ function getGoogleAdSlot(configData, slotName) {
 
 function getActiveCampaign(configData, slotName) {
     const now = Date.now();
+    const slotNames = new Set(getSlotNames(slotName));
     return (configData?.adCampaigns || []).find((campaign) => {
         if (campaign?.status !== 'نشط') return false;
-        if (campaign?.adLocation !== slotName) return false;
+        if (!slotNames.has(campaign?.adLocation)) return false;
         const start = campaign.startTime ? new Date(campaign.startTime).getTime() : 0;
         const end = campaign.endTime ? new Date(campaign.endTime).getTime() : Number.POSITIVE_INFINITY;
         return now >= start && now <= end && (campaign.imageUrl || campaign.text);
@@ -64,10 +87,10 @@ function GoogleAdsenseUnit({ ad, scriptId }) {
 }
 
 export default function PublicAdSlot({ configData, slotName, label = 'مساحة إعلانية', compact = false }) {
-    const slotConfig = configData?.googleAdSlots?.[slotName] || {};
+    const slotConfig = getSlotConfig(configData, slotName);
     const campaign = getActiveCampaign(configData, slotName);
     const googleAd = getGoogleAdSlot(configData, slotName);
-    const imageUrl = clean(configData?.adImages?.[slotName] || campaign?.imageUrl);
+    const imageUrl = clean(getSlotImage(configData, slotName) || campaign?.imageUrl);
     const targetUrl = clean(campaign?.targetUrl);
     const houseText = clean(slotConfig.houseAdText) || 'أعلن معنا في هذه المساحة';
     const shouldShowHouseAd = slotConfig.showHouseAd === true;

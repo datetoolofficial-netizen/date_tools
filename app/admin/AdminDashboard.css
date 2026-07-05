@@ -1311,6 +1311,19 @@ body.dark-mode .legacy-admin-shell {
     vertical-align: middle;
 }
 
+.ad-slot-id-badge {
+    width: max-content;
+    display: block;
+    margin-top: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 800;
+}
+
 .ad-settings-modal textarea,
 .ad-settings-modal input,
 .ad-settings-modal select {

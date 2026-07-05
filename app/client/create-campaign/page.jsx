@@ -6,10 +6,9 @@ import ClientShell from '../ClientShell';
 import '../ClientPortal.css';
 
 const AD_LOCATION_OPTIONS = [
-    { value: 'top', label: 'إعلان أعلى الصفحة' },
-    { value: 'middle', label: 'الإعلان المميز' },
-    { value: 'bottom1', label: 'إعلان أسفل الصفحة 1' },
-    { value: 'bottom2', label: 'إعلان أسفل الصفحة 2' },
+    { value: 'dateTop', label: 'التاريخ - إعلان أعلى' },
+    { value: 'dateMiddle', label: 'التاريخ - إعلان وسط' },
+    { value: 'dateBottom', label: 'التاريخ - إعلان أسفل' },
     { value: 'clockTop', label: 'الساعة - إعلان أعلى' },
     { value: 'clockMiddle', label: 'الساعة - إعلان وسط' },
     { value: 'clockBottom', label: 'الساعة - إعلان أسفل' },
@@ -22,7 +21,7 @@ const initialForm = {
     campaignName: '',
     targetUrl: '',
     imageUrl: '',
-    adLocation: 'top',
+    adLocation: 'dateTop',
     startTime: '',
     endTime: '',
     notes: '',
@@ -213,7 +212,7 @@ export default function CreateCampaignPage() {
                     <div className="client-form-row">
                         <div className="client-form-group">
                             <label>الأداة</label>
-                            <input value="أداة التاريخ الشاملة" disabled />
+                            <input value="كل أدوات الموقع حسب مكان العرض" disabled />
                         </div>
                         <div className="client-form-group">
                             <label>مكان العرض المطلوب</label>
