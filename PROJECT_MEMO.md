@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.46.
+الإصدار الحالي للتطبيق هو 0.2.47.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -128,6 +128,7 @@ https://www.date-tool.com
 64. ضبط وثيقة Firebase نفسها حتى تحفظ مواضع الإعلانات التسعة الجديدة فقط وتحذف مفاتيح التاريخ القديمة عند حفظ إعدادات الإعلانات.
 65. ربط حفظ مفاتيح صور الإعلانات `adImages` بصفحة إعدادات الإعلانات حتى تصبح مواضع الصور في Firebase موحدة أيضًا.
 66. تحسين جدول إعدادات الإعلانات بفصل تفعيل Google والنص التسويقي إلى عمودين مستقلين بتصميم أوضح.
+67. تحسين صفحات القبول لدى AdSense بإخفاء إشعار الموقع تلقائيًا، منع صور الإعلانات المكسورة، وإضافة محتوى ونموذج تواصل أفضل للصفحات الأساسية.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4184,6 +4185,13 @@ PROJECT_MEMO.md
 npm run lint
 git diff --check
 npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/?v=0.2.47
+curl.exe -I https://date-tool.com/contact?v=0.2.47
+curl.exe -I https://date-tool.com/about?v=0.2.47
+curl.exe -I https://date-tool.com/privacy?v=0.2.47
+curl.exe -I https://date-tool.com/terms?v=0.2.47
 ```
 
 النتيجة:
@@ -4207,6 +4215,49 @@ npm run build
 ```txt
 app/admin/ad-settings/page.jsx
 app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار تحسين صفحات قبول AdSense - الإصدار 0.2.47
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم جعل إشعار رفض الموقع الجغرافي يختفي تلقائيًا بعد 8 ثواني.
+✅ تم منع ظهور صورة إعلان مكسورة داخل `PublicAdSlot` واستبدالها بمربع إعلان منسق.
+✅ تمت إضافة محتوى احتياطي غني لصفحات `about` و `privacy` و `terms` عند وجود محتوى قصير.
+✅ تمت إضافة نموذج تواصل في صفحة `contact` يرسل إلى `/api/support` ونظام تذاكر الدعم الحالي.
+✅ تم توثيق أن إدارة تذاكر الدعم من لوحة الإدارة تبقى مهمة مستقلة لاحقة لأنها تحتاج صفحة إدارة وصلاحيات قراءة `support_tickets`.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ تم نشر الإصدار 0.2.47 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: c8a24b1b-b294-483c-b758-463dc903951a.
+✅ صفحات `/` و `/contact` و `/about` و `/privacy` و `/terms` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/components/PublicAdSlot.jsx
+app/[slug]/PageClient.jsx
+app/globals.css
 app/version.js
 package.json
 package-lock.json

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
+import { useEffect, useState } from 'react';
 
 const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
 const ADSENSE_SLOT_PATTERN = /^\d{4,20}$/;
@@ -87,6 +88,7 @@ function GoogleAdsenseUnit({ ad, scriptId }) {
 }
 
 export default function PublicAdSlot({ configData, slotName, label = 'مساحة إعلانية', compact = false }) {
+    const [imageFailed, setImageFailed] = useState(false);
     const slotConfig = getSlotConfig(configData, slotName);
     const campaign = getActiveCampaign(configData, slotName);
     const googleAd = getGoogleAdSlot(configData, slotName);
@@ -96,8 +98,12 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     const shouldShowHouseAd = slotConfig.showHouseAd === true;
     const adId = campaign?.campaignNumber || campaign?.id || `slot_${slotName}`;
 
+    useEffect(() => {
+        setImageFailed(false);
+    }, [imageUrl]);
+
     let content = null;
-    if (imageUrl) {
+    if (imageUrl && !imageFailed) {
         content = (
             <Image
                 src={imageUrl}
@@ -105,6 +111,7 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
                 width={728}
                 height={180}
                 unoptimized
+                onError={() => setImageFailed(true)}
             />
         );
     } else if (googleAd?.enabledWhenNoAdvertiser) {
@@ -114,6 +121,13 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
             <span className="public-ad-house">
                 <i className="fa-solid fa-bullhorn"></i>
                 {houseText}
+            </span>
+        );
+    } else if (imageUrl && imageFailed) {
+        content = (
+            <span className="public-ad-house muted">
+                <i className="fa-regular fa-image"></i>
+                {label}
             </span>
         );
     }

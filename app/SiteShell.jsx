@@ -231,6 +231,9 @@ export default function SiteShell({ children }) {
             title: 'تعذر استخدام موقعك الحالي',
             message: locationError || 'يمكنك السماح بالموقع من إعدادات المتصفح عند الحاجة.',
         });
+
+        const timer = window.setTimeout(() => setLocationNotice(null), 8000);
+        return () => window.clearTimeout(timer);
     }, [locationError, locationStatus, shouldUseShell]);
 
     const contextValue = {
