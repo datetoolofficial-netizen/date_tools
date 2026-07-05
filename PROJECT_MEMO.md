@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.48.
+الإصدار الحالي للتطبيق هو 0.2.49.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -130,6 +130,7 @@ https://www.date-tool.com
 66. تحسين جدول إعدادات الإعلانات بفصل تفعيل Google والنص التسويقي إلى عمودين مستقلين بتصميم أوضح.
 67. تحسين صفحات القبول لدى AdSense بإخفاء إشعار الموقع تلقائيًا، منع صور الإعلانات المكسورة، وإضافة محتوى ونموذج تواصل أفضل للصفحات الأساسية.
 68. تحسين واجهة الجوال لصفحة التاريخ بتوحيد بانرات الإعلانات، محاذاة الهيرو، تحسين نماذج الإدخال، تلوين زر الهجري، وتبسيط الأسئلة والفوتر.
+69. إصلاح منطق عرض النص التسويقي في مواضع الإعلانات العامة حتى لا يظهر إلا عند تفعيل زر النص التسويقي، مع حصر Google بزر Google عند عدم وجود معلنين.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4306,6 +4307,47 @@ curl.exe -I https://date-tool.com/clock?v=0.2.48
 app/components/PublicAdSlot.jsx
 app/components/home/HomeSections.jsx
 app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار إصلاح منطق عرض مواضع الإعلانات - الإصدار 0.2.49
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/?v=0.2.49
+```
+
+النتيجة:
+
+```txt
+✅ تم منع ظهور النص التسويقي عند تعطيل زر النص التسويقي للموضع.
+✅ أصبح إعلان Google يظهر فقط عند عدم وجود إعلان معلن صالح وعند تفعيل زر Google الخاص بالموضع.
+✅ أصبح نص الحملة النشطة يظهر إذا كانت الحملة النصية لا تحتوي صورة.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ تم نشر الإصدار 0.2.49 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 859d2519-f8c9-4276-93bc-82333b9808a1.
+✅ الصفحة الرئيسية رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/PublicAdSlot.jsx
 app/version.js
 package.json
 package-lock.json

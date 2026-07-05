@@ -93,9 +93,11 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     const campaign = getActiveCampaign(configData, slotName);
     const googleAd = getGoogleAdSlot(configData, slotName);
     const imageUrl = clean(getSlotImage(configData, slotName) || campaign?.imageUrl);
+    const campaignText = clean(campaign?.text);
     const targetUrl = clean(campaign?.targetUrl);
     const houseText = clean(slotConfig.houseAdText) || 'أعلن معنا في هذه المساحة';
     const shouldShowHouseAd = slotConfig.showHouseAd === true;
+    const hasAdvertiserContent = Boolean(imageUrl || campaignText);
     const adId = campaign?.campaignNumber || campaign?.id || `slot_${slotName}`;
 
     useEffect(() => {
@@ -114,20 +116,20 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
                 onError={() => setImageFailed(true)}
             />
         );
-    } else if (googleAd?.enabledWhenNoAdvertiser) {
+    } else if (campaignText && (!imageUrl || imageFailed)) {
+        content = (
+            <span className="public-ad-house">
+                <i className="fa-solid fa-rectangle-ad"></i>
+                {campaignText}
+            </span>
+        );
+    } else if (!hasAdvertiserContent && googleAd?.enabledWhenNoAdvertiser) {
         content = <GoogleAdsenseUnit ad={googleAd} scriptId={`adsbygoogle-${slotName}-init`} />;
-    } else if (shouldShowHouseAd) {
+    } else if (!hasAdvertiserContent && shouldShowHouseAd) {
         content = (
             <span className="public-ad-house">
                 <i className="fa-solid fa-bullhorn"></i>
                 {houseText}
-            </span>
-        );
-    } else if (imageUrl && imageFailed) {
-        content = (
-            <span className="public-ad-house muted">
-                <i className="fa-solid fa-bullhorn"></i>
-                {houseText || label}
             </span>
         );
     }
