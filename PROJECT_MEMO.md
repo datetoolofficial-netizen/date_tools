@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.52.
+الإصدار الحالي للتطبيق هو 0.2.53.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -134,6 +134,7 @@ https://www.date-tool.com
 70. ضبط أولوية مواضع الإعلانات العامة في التاريخ والساعة والطقس: حملة عميل نشطة بصورة، ثم Google، ثم النص التسويقي فقط.
 71. توحيد تصميم السكاشن التعريفية في صفحات التاريخ والساعة والطقس عبر قيم CSS مشتركة.
 72. إضافة زر تبديل 12/24 في بانر الساعة الحالية وتحسين تسمية المدينة الحالية من إحداثيات المتصفح.
+73. تحسين شكل بانر الساعة الحالية، تغيير أزرار الساعة إلى تحويل/احسب، وإزالة شريط أفكار الأدوات المؤجلة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4484,6 +4485,51 @@ curl.exe -I https://date-tool.com/?v=0.2.52
 
 ```txt
 app/SiteShell.jsx
+app/clock/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار تحسين شكل صفحة الساعة - الإصدار 0.2.53
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/clock?v=0.2.53
+curl.exe -I https://date-tool.com/?v=0.2.53
+```
+
+النتيجة:
+
+```txt
+✅ تم تحسين توزيع بانر الساعة الحالية ليصبح أقل تباعدًا وأكثر اتزانًا على الجوال.
+✅ تم دمج زر تبديل 12/24 داخل البانر بشكل أبسط وأصغر.
+✅ تم تغيير زر تحويل الساعة من `استخدام` إلى `تحويل`.
+✅ تم تغيير زر فرق التوقيت من `استخدام` إلى `احسب`.
+✅ تم حذف شريط أفكار أدوات الساعة المؤجلة من أسفل الصفحة.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ تم نشر الإصدار 0.2.53 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: b6410797-5813-4c24-8726-0fd84a720080.
+✅ صفحات `/clock` و `/` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
 app/clock/page.jsx
 app/globals.css
 app/version.js

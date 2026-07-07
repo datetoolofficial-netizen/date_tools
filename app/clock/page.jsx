@@ -117,8 +117,10 @@ export default function ClockPage() {
                         <span>{clockHour12 ? '12' : '24'}</span>
                         <small>{clockHour12 ? 'ساعة' : 'ساعة'}</small>
                     </button>
-                    <i className="fa-regular fa-clock"></i>
-                    <span>الساعة الآن في {locationLabel}</span>
+                    <span className="clock-now-label">
+                        <i className="fa-regular fa-clock"></i>
+                        <span>الساعة الآن في {locationLabel}</span>
+                    </span>
                     <strong>{formatTime(now, cityZone, clockHour12)}</strong>
                 </div>
             </div>
@@ -145,7 +147,7 @@ export default function ClockPage() {
                     </label>
                 </div>
                 <button className="action-btn" type="button" onClick={calculateTimeConversion}>
-                    <i className="fa-solid fa-clock"></i> <span>استخدام</span>
+                    <i className="fa-solid fa-clock"></i> <span>تحويل</span>
                 </button>
                 {convertedTime && <div className="tool-result">{convertedTime}</div>}
             </article>
@@ -169,18 +171,12 @@ export default function ClockPage() {
                     </select>
                 </div>
                 <button className="action-btn" type="button" onClick={calculateTimezoneDiff}>
-                    <i className="fa-solid fa-code-compare"></i> <span>استخدام</span>
+                    <i className="fa-solid fa-code-compare"></i> <span>احسب</span>
                 </button>
                 {timezoneDiff && <div className="tool-result">فرق التوقيت: {timezoneDiff}</div>}
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
-
-            <div className="ideas-strip">
-                <span><i className="fa-solid fa-stopwatch"></i> مؤقت وعد تنازلي لاحقًا</span>
-                <span><i className="fa-solid fa-bell"></i> منبه بسيط لاحقًا</span>
-                <span><i className="fa-solid fa-business-time"></i> أفضل وقت اجتماع لاحقًا</span>
-            </div>
         </section>
     );
 }
