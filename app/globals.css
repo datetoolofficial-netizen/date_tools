@@ -29,6 +29,10 @@
             --card-radius: 16px;
             --section-pad: clamp(18px, 3vw, 28px);
             --section-min-height: 128px;
+            --tools-hero-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.16));
+            --tools-hero-icon-size: 118px;
+            --tools-hero-icon-font: 78px;
+            --tools-hero-icon-opacity: 0.1;
             --widget-pad: clamp(16px, 2.4vw, 24px);
             --widget-min-height: 178px;
             --soft-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
@@ -48,6 +52,7 @@
             --result-bg: rgba(34, 197, 94, 0.1);
             --result-text: #4ade80;
             --ad-accent: #f59e0b;
+            --tools-hero-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(139, 92, 246, 0.18));
         }
 
         body {
@@ -505,32 +510,37 @@
 
         .tools-hero,
         .weather-current-card {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.16));
+            background: var(--tools-hero-bg);
             border-radius: var(--card-radius);
             padding: var(--section-pad);
             min-height: var(--section-min-height);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             gap: 18px;
             overflow: hidden;
             position: relative;
+            text-align: center;
+            align-content: center;
         }
 
         .tools-hero > i {
             position: absolute;
-            inset-inline-end: 22px;
-            bottom: 18px;
-            width: 118px;
-            height: 118px;
+            inset-inline-end: auto;
+            left: 50%;
+            top: 50%;
+            bottom: auto;
+            transform: translate(-50%, -50%);
+            width: var(--tools-hero-icon-size);
+            height: var(--tools-hero-icon-size);
             border-radius: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: transparent;
             color: var(--primary);
-            font-size: 78px;
-            opacity: 0.16;
+            font-size: var(--tools-hero-icon-font);
+            opacity: var(--tools-hero-icon-opacity);
             pointer-events: none;
             z-index: 0;
         }
@@ -538,6 +548,14 @@
         .tools-hero > div {
             position: relative;
             z-index: 1;
+            margin-inline: auto;
+            text-align: center;
+        }
+
+        .weather-current-card {
+            justify-content: space-between;
+            text-align: start;
+            align-content: normal;
         }
 
         .weather-current-card > i {
@@ -1519,8 +1537,8 @@
 
     .tools-hero,
     .weather-current-card {
-        align-items: flex-start;
-        flex-direction: column-reverse;
+        align-items: center;
+        flex-direction: row;
     }
 
     .tools-hero > i {
@@ -1528,8 +1546,16 @@
         height: 96px;
         border-radius: 24px;
         font-size: 64px;
-        inset-inline-end: 14px;
-        bottom: 12px;
+        inset-inline-end: auto;
+        left: 50%;
+        top: 50%;
+        bottom: auto;
+        transform: translate(-50%, -50%);
+    }
+
+    .weather-current-card {
+        align-items: flex-start;
+        flex-direction: column-reverse;
     }
 
     .weather-current-card > i {
@@ -1886,25 +1912,6 @@ body.dark-mode .event-card {
 }
 
 /* Public page polish: calmer mobile typography and unified ad/hero/form surfaces. */
-.date-tools-hero {
-    justify-content: center;
-    text-align: center;
-    align-content: center;
-}
-
-.date-tools-hero > div {
-    margin-inline: auto;
-    text-align: center;
-}
-
-.date-tools-hero > i {
-    inset-inline-end: auto;
-    left: 50%;
-    top: 50%;
-    bottom: auto;
-    transform: translate(-50%, -50%);
-    opacity: 0.1;
-}
 
 .public-ad-slot {
     position: relative;
@@ -2015,7 +2022,7 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         line-height: 1.75;
     }
 
-    .date-tools-hero > i {
+    .tools-hero > i {
         width: 104px;
         height: 104px;
         font-size: 72px;
