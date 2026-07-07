@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.55.
+الإصدار الحالي للتطبيق هو 0.2.57.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -137,6 +137,8 @@ https://www.date-tool.com
 73. تحسين شكل بانر الساعة الحالية، تغيير أزرار الساعة إلى تحويل/احسب، وإزالة شريط أفكار الأدوات المؤجلة.
 74. دمج مقاييس الطقس الأساسية داخل كرت الطقس الحالي وتأكيد اعتماد الطقس على إحداثيات المتصفح عند الموافقة.
 75. حذف النص التعريفي من صفحة اتصل بنا وربط مرفقات نموذج التواصل برفع صور آمن إلى Cloudflare R2.
+76. إزالة نص R2 التقني من مربع رفع الصورة في صفحة اتصل بنا حتى لا تظهر تفاصيل التخزين للعملاء.
+77. إضافة قسم الأسئلة الشائعة إلى صفحات الساعة والطقس بنفس نمط قسم الأسئلة في صفحة التاريخ.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4578,6 +4580,88 @@ curl.exe -I https://date-tool.com/?v=0.2.54
 ```txt
 app/weather/page.jsx
 app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار إضافة الأسئلة الشائعة للساعة والطقس - الإصدار 0.2.57
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/clock?v=0.2.57
+curl.exe -I https://date-tool.com/weather?v=0.2.57
+curl.exe -I https://date-tool.com/contact?v=0.2.57
+```
+
+النتيجة:
+
+```txt
+✅ تم إضافة مكون مشترك `ToolFaqSection` لعرض الأسئلة الشائعة بنفس نمط صفحة التاريخ.
+✅ تم إضافة أسئلة شائعة لصفحة `/clock` حول تحويل 24/12، استخدام الموقع الحالي، وفرق التوقيت.
+✅ تم إضافة أسئلة شائعة لصفحة `/weather` حول مصدر بيانات الطقس، الموقع الحالي، واختلاف النتائج بين المصادر.
+✅ تم حذف النص التقني الخاص بـ R2 من مربع رفع الصورة في صفحة `contact`.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم نشر الإصدار 0.2.57 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 3bb8e312-e90e-4154-8a07-665f49cb8ddb.
+✅ صفحات `/clock` و `/weather` و `/contact` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/ToolFaqSection.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/[slug]/PageClient.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار حذف نص R2 من واجهة التواصل - الإصدار 0.2.56
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+```
+
+النتيجة:
+
+```txt
+✅ تم حذف نص "ترفع الصورة إلى R2 مع التذكرة بعد الإرسال" من مربع رفع الصورة في صفحة اتصل بنا.
+✅ بقي رفع الصورة إلى R2 يعمل من الخلفية بدون كشف تفاصيل التخزين للعميل.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+ℹ️ لم يتم نشر 0.2.56 منفردًا لأن طلب إضافة الأسئلة الشائعة وصل قبل النشر، وسيتم نشر التغييرات ضمن 0.2.57.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
 app/version.js
 package.json
 package-lock.json

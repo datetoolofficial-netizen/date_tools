@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
+import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
 
 const weatherLabels = {
@@ -25,6 +26,21 @@ const weatherLabels = {
     82: 'زخات مطر قوية',
     95: 'عواصف رعدية',
 };
+
+const weatherFaq = [
+    {
+        q: 'من أين تأتي بيانات الطقس في الأداة؟',
+        a: 'تعتمد الأداة على بيانات طقس مباشرة من خدمة Open-Meteo، وتعرض الحرارة الحالية، الإحساس الحراري، الرطوبة، الرياح، الأمطار، ومؤشر UV عند توفرها.',
+    },
+    {
+        q: 'هل يمكن عرض طقس موقعي الحالي تلقائيًا؟',
+        a: 'نعم، إذا وافقت من المتصفح على مشاركة الموقع، تستخدم الأداة إحداثياتك الحالية لعرض الطقس الأقرب لك دون حفظ موقعك في قاعدة البيانات.',
+    },
+    {
+        q: 'لماذا قد تختلف درجة الحرارة عن تطبيقات أخرى؟',
+        a: 'قد تختلف النتائج قليلًا حسب مصدر البيانات، وقت التحديث، والمحطة أو النموذج الجوي الأقرب للمدينة أو الإحداثيات المستخدمة.',
+    },
+];
 
 function weatherText(code) {
     return weatherLabels[code] || 'حالة جوية متغيرة';
@@ -209,6 +225,8 @@ export default function WeatherPage() {
                     </div>
                 </article>
             )}
+            <ToolFaqSection items={weatherFaq} />
+
         </section>
     );
 }

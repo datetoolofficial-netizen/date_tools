@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
+import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
 
 const cities = [
@@ -12,6 +13,21 @@ const cities = [
     { name: 'لندن', zone: 'Europe/London' },
     { name: 'نيويورك', zone: 'America/New_York' },
     { name: 'طوكيو', zone: 'Asia/Tokyo' },
+];
+
+const clockFaq = [
+    {
+        q: 'كيف أحول الوقت من نظام 24 ساعة إلى 12 ساعة؟',
+        a: 'اختر الساعة والدقيقة بنظام 24 ساعة، ثم اضغط تحويل. ستعرض الأداة الوقت بصيغة 12 ساعة مع تحديد الفترة صباحًا أو مساءً.',
+    },
+    {
+        q: 'هل تعتمد الساعة الحالية على موقعي الحقيقي؟',
+        a: 'نعم، عند السماح للموقع بقراءة موقعك من المتصفح يتم استخدام المنطقة الزمنية المناسبة لموقعك الحالي دون حفظ إحداثياتك في قاعدة البيانات.',
+    },
+    {
+        q: 'كيف يتم حساب فرق التوقيت بين مدينتين؟',
+        a: 'تقارن الأداة فرق UTC لكل مدينة في اللحظة الحالية، ثم تعرض الفرق بالساعات مع مراعاة المنطقة الزمنية للمدن المختارة.',
+    },
 ];
 
 function formatTime(date, zone, hour12 = false) {
@@ -177,6 +193,8 @@ export default function ClockPage() {
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
+            <ToolFaqSection items={clockFaq} />
+
         </section>
     );
 }

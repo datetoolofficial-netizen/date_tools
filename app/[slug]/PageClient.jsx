@@ -304,7 +304,6 @@ function ContactForm() {
                         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={updateAttachment} />
                         <i className="fa-solid fa-cloud-arrow-up"></i>
                         <strong>{attachmentFile ? attachmentFile.name : 'اختر صورة من جهازك'}</strong>
-                        <small>ترفع الصورة إلى R2 مع التذكرة بعد الإرسال. الحد الأقصى 3MB.</small>
                     </div>
                 </label>
 
