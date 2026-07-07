@@ -2,10 +2,17 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const MAX_BODY_BYTES = 4096;
+const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_ATTACHMENT_TYPES = new Map([
+    ['image/png', 'png'],
+    ['image/jpeg', 'jpg'],
+    ['image/webp', 'webp'],
+    ['image/gif', 'gif'],
+]);
 
 export const dynamic = 'force-dynamic';
 
@@ -19,18 +26,23 @@ function jsonResponse(body, status = 200) {
     });
 }
 
+async function getCloudflareEnv() {
+    try {
+        const { env } = await getCloudflareContext({ async: true });
+        return env || {};
+    } catch {
+        return {};
+    }
+}
+
 async function getEnvValue(...keys) {
     for (const key of keys) {
         if (process.env[key]) return process.env[key];
     }
 
-    try {
-        const { env } = await getCloudflareContext({ async: true });
-        for (const key of keys) {
-            if (typeof env?.[key] === 'string' && env[key]) return env[key];
-        }
-    } catch {
-        // Local builds do not always have a Cloudflare request context.
+    const env = await getCloudflareEnv();
+    for (const key of keys) {
+        if (typeof env?.[key] === 'string' && env[key]) return env[key];
     }
 
     return '';
@@ -171,11 +183,107 @@ function getStringField(value) {
     return { stringValue: value };
 }
 
-async function createSupportTicket(serviceAccount, payload) {
+function getIntegerField(value) {
+    return { integerValue: String(Number.isFinite(value) ? value : 0) };
+}
+
+function getSafeFileName(name) {
+    return String(name || 'attachment')
+        .toLowerCase()
+        .replace(/\.[^.]+$/g, '')
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40) || 'attachment';
+}
+
+function getAttachmentInfo(file) {
+    const extension = ALLOWED_ATTACHMENT_TYPES.get(file?.type);
+    if (!extension) return null;
+    return {
+        extension,
+        contentType: file.type,
+    };
+}
+
+async function uploadSupportAttachment(file, ticketNumber) {
+    if (!file || file.size <= 0) return null;
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+        throw new Error('attachment_too_large');
+    }
+
+    const attachmentInfo = getAttachmentInfo(file);
+    if (!attachmentInfo) {
+        throw new Error('unsupported_attachment_type');
+    }
+
+    const env = await getCloudflareEnv();
+    const bucket = env?.MEDIA_BUCKET || null;
+    if (!bucket) {
+        throw new Error('media_storage_not_configured');
+    }
+
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const safeName = getSafeFileName(file.name);
+    const key = `support/${year}/${month}/${ticketNumber}-${crypto.randomUUID()}-${safeName}.${attachmentInfo.extension}`;
+
+    await bucket.put(key, await file.arrayBuffer(), {
+        httpMetadata: {
+            contentType: attachmentInfo.contentType,
+            cacheControl: 'private, max-age=0, no-store',
+        },
+        customMetadata: {
+            originalName: file.name.slice(0, 120),
+            category: 'support',
+            ticketNumber,
+        },
+    });
+
+    return {
+        key,
+        name: file.name.slice(0, 120),
+        contentType: attachmentInfo.contentType,
+        size: file.size,
+    };
+}
+
+async function readSupportPayload(request) {
+    const contentType = request.headers.get('content-type') || '';
+
+    if (contentType.includes('multipart/form-data')) {
+        const formData = await request.formData();
+        const attachment = formData.get('attachment');
+
+        return {
+            payload: {
+                senderName: formData.get('senderName'),
+                senderEmail: formData.get('senderEmail'),
+                subject: formData.get('subject'),
+                message: formData.get('message'),
+                website: formData.get('website'),
+            },
+            attachment: attachment instanceof File && attachment.size > 0 ? attachment : null,
+        };
+    }
+
+    return {
+        payload: await readLimitedJson(request),
+        attachment: null,
+    };
+}
+
+async function createSupportTicket(serviceAccount, payload, ticketNumber, attachment) {
     const token = await getAccessToken(serviceAccount);
     const projectId = serviceAccount.projectId || DEFAULT_PROJECT_ID;
     const databaseName = `projects/${projectId}/databases/(default)`;
-    const ticketNumber = `date-${Math.floor(1000 + Math.random() * 9000)}`;
+    const attachmentFields = attachment ? {
+        attachmentKey: getStringField(attachment.key),
+        attachmentName: getStringField(attachment.name),
+        attachmentContentType: getStringField(attachment.contentType),
+        attachmentSize: getIntegerField(attachment.size),
+    } : {};
 
     const response = await fetch(`https://firestore.googleapis.com/v1/${databaseName}/documents/support_tickets`, {
         method: 'POST',
@@ -190,7 +298,7 @@ async function createSupportTicket(serviceAccount, payload) {
                 senderEmail: getStringField(payload.senderEmail),
                 subject: getStringField(payload.subject),
                 message: getStringField(payload.message),
-                attachmentNote: getStringField(payload.attachmentNote),
+                ...attachmentFields,
                 status: getStringField('جديدة'),
                 source: getStringField('support_page'),
                 createdAt: { timestampValue: new Date().toISOString() },
@@ -204,7 +312,7 @@ async function createSupportTicket(serviceAccount, payload) {
 
 export async function POST(request) {
     try {
-        const payload = await readLimitedJson(request);
+        const { payload, attachment } = await readSupportPayload(request);
 
         if (cleanText(payload.website, 80)) {
             return jsonResponse({ ok: true, ticketNumber: 'queued' });
@@ -215,7 +323,6 @@ export async function POST(request) {
             senderEmail: cleanText(payload.senderEmail, 120).toLowerCase(),
             subject: cleanText(payload.subject, 120),
             message: cleanText(payload.message, 1200),
-            attachmentNote: cleanText(payload.attachmentNote, 240),
         };
 
         if (!cleaned.senderName || !EMAIL_PATTERN.test(cleaned.senderEmail) || !cleaned.subject || cleaned.message.length < 10) {
@@ -227,11 +334,15 @@ export async function POST(request) {
             return jsonResponse({ ok: false, error: 'support_not_configured' }, 503);
         }
 
-        const ticketNumber = await createSupportTicket(serviceAccount, cleaned);
+        const ticketNumber = `date-${Math.floor(1000 + Math.random() * 9000)}`;
+        const uploadedAttachment = await uploadSupportAttachment(attachment, ticketNumber);
+        await createSupportTicket(serviceAccount, cleaned, ticketNumber, uploadedAttachment);
         return jsonResponse({ ok: true, ticketNumber });
     } catch (error) {
         console.error('support endpoint error:', error);
-        const errorCode = error instanceof SyntaxError ? 'invalid_json' : 'support_create_failed';
-        return jsonResponse({ ok: false, error: errorCode }, errorCode === 'invalid_json' ? 400 : 500);
+        const badRequestErrors = new Set(['attachment_too_large', 'unsupported_attachment_type']);
+        const errorMessage = error instanceof Error ? error.message : '';
+        const errorCode = error instanceof SyntaxError ? 'invalid_json' : badRequestErrors.has(errorMessage) ? errorMessage : 'support_create_failed';
+        return jsonResponse({ ok: false, error: errorCode }, errorCode === 'support_create_failed' ? 500 : 400);
     }
 }

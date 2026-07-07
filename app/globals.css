@@ -932,6 +932,48 @@
             line-height: 1.7;
         }
 
+        .contact-upload-field {
+            position: relative;
+            min-height: 138px;
+            border: 1px dashed color-mix(in srgb, var(--primary) 58%, var(--border) 42%);
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--bg-main) 82%, var(--primary) 18%);
+            color: var(--text-main);
+            display: grid;
+            place-items: center;
+            gap: 7px;
+            padding: 18px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .contact-upload-field input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .contact-upload-field i {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(59, 130, 246, 0.16);
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .contact-upload-field strong {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: clamp(15px, 3vw, 18px);
+        }
+
         .contact-page-form button {
             min-height: 56px;
             border: 0;

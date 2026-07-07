@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.54.
+الإصدار الحالي للتطبيق هو 0.2.55.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -136,6 +136,7 @@ https://www.date-tool.com
 72. إضافة زر تبديل 12/24 في بانر الساعة الحالية وتحسين تسمية المدينة الحالية من إحداثيات المتصفح.
 73. تحسين شكل بانر الساعة الحالية، تغيير أزرار الساعة إلى تحويل/احسب، وإزالة شريط أفكار الأدوات المؤجلة.
 74. دمج مقاييس الطقس الأساسية داخل كرت الطقس الحالي وتأكيد اعتماد الطقس على إحداثيات المتصفح عند الموافقة.
+75. حذف النص التعريفي من صفحة اتصل بنا وربط مرفقات نموذج التواصل برفع صور آمن إلى Cloudflare R2.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4586,6 +4587,54 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار حذف نص التواصل وربط مرفق R2 - الإصدار 0.2.55
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/contact?v=0.2.55
+curl.exe -I https://date-tool.com/?v=0.2.55
+```
+
+النتيجة:
+
+```txt
+✅ تم حذف النص التعريفي من صفحة `contact` والإبقاء على نموذج التواصل فقط.
+✅ تم تحويل حقل رابط الصورة إلى اختيار ملف صورة من الجهاز.
+✅ نموذج التواصل يرسل `FormData` إلى `/api/support` بدل JSON عند وجود مرفق.
+✅ `/api/support` يتحقق من نوع الصورة وحجمها ثم يرفعها إلى R2 تحت مسار `support/...`.
+✅ يتم حفظ `attachmentKey` و `attachmentName` و `attachmentContentType` و `attachmentSize` داخل مستند التذكرة.
+✅ مرفقات الدعم لا تُعرض عبر `/api/media` العام لأن فئة `support` ليست ضمن الفئات العامة.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم نشر الإصدار 0.2.55 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: cd96d81b-a732-4540-8d81-a9a49447e5f3.
+✅ صفحات `/contact` و `/` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
+app/api/support/route.js
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -4885,7 +4934,7 @@ app/admin/components/SaveButton.jsx
 اختبار ظهور الحملة في /client/dashboard لصاحبها فقط.
 إضافة إدارة حملات Firestore داخل لوحة الإدارة بدل جدول adCampaigns المحلي فقط.
 إضافة إدارة تذاكر support_tickets داخل لوحة الإدارة.
-إضافة نظام مرفقات خاص وآمن للتذاكر بدل استخدام R2 العام.
+إضافة واجهة إدارة/عرض مرفقات التذاكر في لوحة الإدارة؛ الرفع إلى R2 أصبح موجودًا من `/api/support` لكن مفاتيح `support/...` لا تُعرض عبر `/api/media` العام.
 تحديد سياسة تفعيل الحملات من الإدارة وربط الحملات المقبولة بمواقع الإعلان على الصفحة الرئيسية.
 تفعيل Cloudflare Turnstile فعليًا لصفحات تسجيل/دخول/استعادة كلمة مرور الكلاينت بعد توفير صلاحية إنشاء Widget وSecret/Worker تحقق، وعدم الاكتفاء بواجهة شكلية.
 ```

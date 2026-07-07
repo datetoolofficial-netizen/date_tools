@@ -62,7 +62,6 @@ const initialContactForm = {
     senderEmail: '',
     subject: '',
     message: '',
-    attachmentNote: '',
     website: '',
 };
 
@@ -197,12 +196,38 @@ function PageFrame({ lang, title, children, align = 'right' }) {
     );
 }
 
-function ContactForm({ config }) {
+function ContactForm() {
     const [form, setForm] = useState(initialContactForm);
+    const [attachmentFile, setAttachmentFile] = useState(null);
     const [notice, setNotice] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
 
     const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+    const updateAttachment = (event) => {
+        const file = event.target.files?.[0] || null;
+
+        if (!file) {
+            setAttachmentFile(null);
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            event.target.value = '';
+            setAttachmentFile(null);
+            setNotice({ text: 'يرجى اختيار صورة فقط بصيغة PNG أو JPG أو WEBP أو GIF.', type: 'error' });
+            return;
+        }
+
+        if (file.size > 3 * 1024 * 1024) {
+            event.target.value = '';
+            setAttachmentFile(null);
+            setNotice({ text: 'حجم الصورة كبير. الحد الأقصى المسموح هو 3MB.', type: 'error' });
+            return;
+        }
+
+        setAttachmentFile(file);
+        setNotice({ text: 'تم اختيار الصورة، وسيتم رفعها بأمان مع الرسالة.', type: 'success' });
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -215,10 +240,13 @@ function ContactForm({ config }) {
         setIsLoading(true);
 
         try {
+            const payload = new FormData();
+            Object.entries(form).forEach(([key, value]) => payload.append(key, value));
+            if (attachmentFile) payload.append('attachment', attachmentFile);
+
             const response = await fetch('/api/support', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
+                body: payload,
             });
             const result = await response.json().catch(() => ({}));
 
@@ -226,6 +254,8 @@ function ContactForm({ config }) {
 
             setNotice({ text: `تم إرسال رسالتك بنجاح. رقم التذكرة: ${result.ticketNumber}`, type: 'success' });
             setForm(initialContactForm);
+            setAttachmentFile(null);
+            event.currentTarget.reset();
         } catch {
             setNotice({ text: 'تعذر إرسال الرسالة الآن. حاول مرة أخرى لاحقًا.', type: 'error' });
         } finally {
@@ -236,15 +266,6 @@ function ContactForm({ config }) {
     return (
         <section className="contact-page-form">
             <Toast visible={Boolean(notice.text)} message={notice.text} type={notice.type} onClose={() => setNotice({ text: '', type: 'info' })} />
-
-            <div className="contact-page-intro">
-                <i className="fa-solid fa-envelope-open-text"></i>
-                <div>
-                    <h2>تواصل معنا</h2>
-                    <p>يسعدنا استقبال اقتراحاتك، ملاحظاتك، طلبات الإعلانات، أو أي مشكلة واجهتها أثناء استخدام الأدوات.</p>
-                    {config?.contactEmail ? <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> : null}
-                </div>
-            </div>
 
             <form onSubmit={handleSubmit}>
                 <input
@@ -278,9 +299,13 @@ function ContactForm({ config }) {
                 </label>
 
                 <label>
-                    <span>رابط صورة أو لقطة شاشة اختياري</span>
-                    <input dir="ltr" value={form.attachmentNote} onChange={(event) => updateField('attachmentNote', event.target.value)} placeholder="https://..." />
-                    <small>حاليًا نقبل رابط الصورة أو وصف المرفق، وسيضاف رفع الصور الخاص بالتذاكر لاحقًا بمسار آمن.</small>
+                    <span>صورة أو لقطة شاشة اختيارية</span>
+                    <div className="contact-upload-field">
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={updateAttachment} />
+                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                        <strong>{attachmentFile ? attachmentFile.name : 'اختر صورة من جهازك'}</strong>
+                        <small>ترفع الصورة إلى R2 مع التذكرة بعد الإرسال. الحد الأقصى 3MB.</small>
+                    </div>
                 </label>
 
                 <button type="submit" disabled={isLoading}>
@@ -291,7 +316,6 @@ function ContactForm({ config }) {
         </section>
     );
 }
-
 export default function PageClient({ slug }) {
     const [config, setConfig] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -381,7 +405,9 @@ export default function PageClient({ slug }) {
 
     const title = getPageTitle(page);
     const description = getPageDescription(page);
-    const rawContent = getEnhancedContent(slug, getPageContent(page));
+    const normalizedSlug = normalizeSlug(slug);
+    const isContactPage = normalizedSlug === 'contact';
+    const rawContent = isContactPage ? '' : getEnhancedContent(slug, getPageContent(page));
     const content = sanitizeHtml(applyConfigVariables(rawContent, config));
     const align = lang === 'ar' ? 'right' : 'left';
 
@@ -391,17 +417,17 @@ export default function PageClient({ slug }) {
                 <p style={{ color: 'var(--text-sub)', marginBottom: '25px' }}>{description}</p>
             ) : null}
 
-            {content ? (
+            {!isContactPage && content ? (
                 <div dangerouslySetInnerHTML={{ __html: content }} />
-            ) : (
+            ) : !isContactPage ? (
                 <p style={{ color: 'var(--text-sub)' }}>
                     {lang === 'ar'
                         ? 'لا يوجد محتوى لهذه الصفحة حاليًا.'
                         : 'This page does not have content yet.'}
                 </p>
-            )}
+            ) : null}
 
-            {normalizeSlug(slug) === 'contact' ? <ContactForm config={config} /> : null}
+            {isContactPage ? <ContactForm /> : null}
         </PageFrame>
     );
 }
