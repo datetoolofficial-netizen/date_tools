@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.53.
+الإصدار الحالي للتطبيق هو 0.2.54.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -135,6 +135,7 @@ https://www.date-tool.com
 71. توحيد تصميم السكاشن التعريفية في صفحات التاريخ والساعة والطقس عبر قيم CSS مشتركة.
 72. إضافة زر تبديل 12/24 في بانر الساعة الحالية وتحسين تسمية المدينة الحالية من إحداثيات المتصفح.
 73. تحسين شكل بانر الساعة الحالية، تغيير أزرار الساعة إلى تحويل/احسب، وإزالة شريط أفكار الأدوات المؤجلة.
+74. دمج مقاييس الطقس الأساسية داخل كرت الطقس الحالي وتأكيد اعتماد الطقس على إحداثيات المتصفح عند الموافقة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4531,6 +4532,50 @@ curl.exe -I https://date-tool.com/?v=0.2.53
 
 ```txt
 app/clock/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار دمج مقاييس الطقس داخل كرت الطقس - الإصدار 0.2.54
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/weather?v=0.2.54
+curl.exe -I https://date-tool.com/?v=0.2.54
+```
+
+النتيجة:
+
+```txt
+✅ تم دمج الرطوبة والرياح والأمطار وUV داخل كرت الطقس الحالي بدل عرضها في سيكشن منفصل.
+✅ تم تنسيق المقاييس المدمجة بخلفية شفافة خفيفة لتتبع جمالية الكرت العلوي.
+✅ صفحة الطقس ما زالت تستخدم `currentLocation` من المتصفح بعد الموافقة وتطلب التوقعات مباشرة بالإحداثيات.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح بعد إعادة التشغيل بمهلة أطول لأن التشغيل الأول انتهى بالمهلة.
+✅ npx wrangler deploy --config wrangler.jsonc نجح بعد إعادة التشغيل بمهلة أطول لأن التشغيل الأول انتهى بالمهلة.
+✅ تم نشر الإصدار 0.2.54 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: cdfa7014-5606-4893-80be-aea565db62c6.
+✅ صفحات `/weather` و `/` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/weather/page.jsx
 app/globals.css
 app/version.js
 package.json

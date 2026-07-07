@@ -162,20 +162,22 @@ export default function WeatherPage() {
             {current && (
                 <>
                     <article className="weather-current-card">
-                        <div>
-                            <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
-                            <h3>{Math.round(current.temperature_2m)}°</h3>
-                            <p>{weatherText(current.weather_code)} - الإحساس {Math.round(current.apparent_temperature)}°</p>
+                        <div className="weather-current-main">
+                            <div>
+                                <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
+                                <h3>{Math.round(current.temperature_2m)}°</h3>
+                                <p>{weatherText(current.weather_code)} - الإحساس {Math.round(current.apparent_temperature)}°</p>
+                            </div>
+                            <i className="fa-solid fa-temperature-half"></i>
                         </div>
-                        <i className="fa-solid fa-temperature-half"></i>
-                    </article>
 
-                    <div className="weather-metrics">
-                        <div><i className="fa-solid fa-droplet"></i><span>الرطوبة</span><strong>{current.relative_humidity_2m}%</strong></div>
-                        <div><i className="fa-solid fa-wind"></i><span>الرياح</span><strong>{Math.round(current.wind_speed_10m)} كم/س</strong></div>
-                        <div><i className="fa-solid fa-umbrella"></i><span>الأمطار</span><strong>{current.precipitation} مم</strong></div>
-                        <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
-                    </div>
+                        <div className="weather-metrics weather-metrics-inline">
+                            <div><i className="fa-solid fa-droplet"></i><span>الرطوبة</span><strong>{current.relative_humidity_2m}%</strong></div>
+                            <div><i className="fa-solid fa-wind"></i><span>الرياح</span><strong>{Math.round(current.wind_speed_10m)} كم/س</strong></div>
+                            <div><i className="fa-solid fa-umbrella"></i><span>الأمطار</span><strong>{current.precipitation} مم</strong></div>
+                            <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
+                        </div>
+                    </article>
 
                     <article className="tool-widget advice-card">
                         <div className="tool-widget-title">
