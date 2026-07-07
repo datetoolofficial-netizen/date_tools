@@ -1697,18 +1697,61 @@
 
 .clock-now-banner .today-content {
     display: grid;
-    grid-template-columns: auto minmax(0, auto) minmax(8.8ch, 8.8ch);
+    grid-template-columns: auto auto minmax(0, auto) minmax(10.5ch, 10.5ch);
     justify-content: center;
     align-items: center;
-    column-gap: 10px;
+    column-gap: 9px;
     direction: rtl;
     white-space: nowrap;
+}
+
+.clock-format-toggle {
+    align-self: start;
+    justify-self: center;
+    min-width: 34px;
+    min-height: 38px;
+    margin-top: -4px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: inline-grid;
+    place-items: center;
+    gap: 0;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.clock-format-toggle:hover,
+.clock-format-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.42);
+    outline: none;
+}
+
+.clock-format-toggle:active {
+    transform: translateY(1px);
+}
+
+.clock-format-toggle span {
+    font-size: 12px;
+    font-weight: 950;
+    line-height: 1;
+}
+
+.clock-format-toggle small {
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 0.78;
 }
 
 .clock-now-banner strong {
     direction: ltr;
     display: inline-block;
-    min-width: 8.8ch;
+    min-width: 10.5ch;
     text-align: start;
     font-size: clamp(18px, 4.4vw, 24px);
     font-weight: 950;

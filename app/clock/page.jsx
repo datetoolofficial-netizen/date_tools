@@ -54,6 +54,7 @@ export default function ClockPage() {
     const [fromZone, setFromZone] = useState('Asia/Riyadh');
     const [toZone, setToZone] = useState('Europe/London');
     const [locationLabel, setLocationLabel] = useState('الرياض');
+    const [clockHour12, setClockHour12] = useState(false);
     const [timezoneDiff, setTimezoneDiff] = useState('');
 
     useEffect(() => {
@@ -107,9 +108,18 @@ export default function ClockPage() {
 
             <div className="today-info-banner clock-now-banner">
                 <div className="today-content">
+                    <button
+                        className="clock-format-toggle"
+                        type="button"
+                        onClick={() => setClockHour12((current) => !current)}
+                        aria-label={clockHour12 ? 'عرض الساعة بنظام 24' : 'عرض الساعة بنظام 12'}
+                    >
+                        <span>{clockHour12 ? '12' : '24'}</span>
+                        <small>{clockHour12 ? 'ساعة' : 'ساعة'}</small>
+                    </button>
                     <i className="fa-regular fa-clock"></i>
                     <span>الساعة الآن في {locationLabel}</span>
-                    <strong>{formatTime(now, cityZone)}</strong>
+                    <strong>{formatTime(now, cityZone, clockHour12)}</strong>
                 </div>
             </div>
 

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.51.
+الإصدار الحالي للتطبيق هو 0.2.52.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -133,6 +133,7 @@ https://www.date-tool.com
 69. إصلاح منطق عرض النص التسويقي في مواضع الإعلانات العامة حتى لا يظهر إلا عند تفعيل زر النص التسويقي، مع حصر Google بزر Google عند عدم وجود معلنين.
 70. ضبط أولوية مواضع الإعلانات العامة في التاريخ والساعة والطقس: حملة عميل نشطة بصورة، ثم Google، ثم النص التسويقي فقط.
 71. توحيد تصميم السكاشن التعريفية في صفحات التاريخ والساعة والطقس عبر قيم CSS مشتركة.
+72. إضافة زر تبديل 12/24 في بانر الساعة الحالية وتحسين تسمية المدينة الحالية من إحداثيات المتصفح.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4439,6 +4440,51 @@ curl.exe -I https://date-tool.com/weather?v=0.2.51
 الملفات المتأثرة:
 
 ```txt
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### اختبار تحسين بانر الساعة الحالية - الإصدار 0.2.52
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/clock?v=0.2.52
+curl.exe -I https://date-tool.com/?v=0.2.52
+```
+
+النتيجة:
+
+```txt
+✅ تم إضافة زر خفيف داخل بانر الساعة الحالية للتبديل بين نظام 24 ساعة ونظام 12 ساعة.
+✅ تم تثبيت عرض خانة الوقت حتى لا يتحرك النص عند تغير الثواني أو نظام العرض.
+✅ تم تحسين تسمية المدينة الحالية عبر reverse geocoding من إحداثيات المتصفح بعد موافقة المستخدم.
+✅ بقي حساب الوقت معتمدًا على المنطقة الزمنية التي يوفرها المتصفح لضمان توافق الوقت المحلي مع جهاز الزائر.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ تم نشر الإصدار 0.2.52 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 84490522-f964-4c35-a53f-63bd04b0503d.
+✅ صفحات `/clock` و `/` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/clock/page.jsx
 app/globals.css
 app/version.js
 package.json

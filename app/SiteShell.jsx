@@ -13,6 +13,31 @@ function timezoneLabel(timezone) {
     return timezone.split('/').pop()?.replaceAll('_', ' ') || 'موقعك الحالي';
 }
 
+async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 3500);
+
+    try {
+        const params = new URLSearchParams({
+            latitude: String(latitude),
+            longitude: String(longitude),
+            localityLanguage: 'ar',
+        });
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?${params.toString()}`, {
+            signal: controller.signal,
+        });
+
+        if (!response.ok) return fallbackLabel;
+
+        const data = await response.json();
+        return data.city || data.locality || data.principalSubdivision || data.countryName || fallbackLabel;
+    } catch {
+        return fallbackLabel;
+    } finally {
+        window.clearTimeout(timer);
+    }
+}
+
 function PublicShellSkeleton() {
     return (
         <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
@@ -176,13 +201,18 @@ export default function SiteShell({ children }) {
 
         return new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Riyadh';
+                    const label = await resolveLocationLabel(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        timezoneLabel(timezone),
+                    );
                     const location = {
                         latitude: position.coords.latitude,
                         longitude: position.coords.longitude,
                         timezone,
-                        label: timezoneLabel(timezone),
+                        label,
                     };
 
                     setCurrentLocation(location);
