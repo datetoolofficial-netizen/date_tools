@@ -324,6 +324,39 @@ export default function AdminIdentityPage() {
         }
     };
 
+    const handleLinkPreviewImageUpload = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+
+        const validationError = validateMediaFileBeforeUpload(file);
+        if (validationError) {
+            showMessage('error', getUploadMessage(validationError, 'صورة المشاركة'));
+            return;
+        }
+
+        setUploadingTarget('linkPreviewImageUrl');
+        showMessage('success', 'جاري رفع صورة المشاركة إلى R2...');
+
+        try {
+            const url = await uploadMediaFile(file, 'link-preview');
+            setIdentity((current) => ({
+                ...current,
+                linkPreview: normalizeLinkPreviewSettings({
+                    ...(current.linkPreview || DEFAULT_LINK_PREVIEW),
+                    useLogoImage: false,
+                    imageUrl: url,
+                }),
+            }));
+            showMessage('success', 'تم رفع صورة المشاركة. اضغط حفظ الهوية لتثبيت الرابط.');
+        } catch (error) {
+            console.error('Link preview image upload error:', error);
+            showMessage('error', getUploadMessage(error.message, 'صورة المشاركة'));
+        } finally {
+            setUploadingTarget('');
+        }
+    };
+
     const saveIdentity = async () => {
         const firebaseApi = firebaseApiRef.current;
         if (!firebaseApi?.saveSiteConfigSection) {
@@ -677,15 +710,37 @@ export default function AdminIdentityPage() {
                             </label>
 
                             <div className="legacy-field">
-                                <label>رابط صورة مشاركة مخصصة</label>
-                                <input
-                                    dir="ltr"
-                                    type="url"
-                                    value={identity.linkPreview?.imageUrl || ''}
-                                    onChange={(event) => setLinkPreviewField('imageUrl', event.target.value)}
-                                    disabled={identity.linkPreview?.useLogoImage !== false}
-                                    placeholder="https://date-tool.com/api/media/..."
-                                />
+                                <label>صورة مشاركة مخصصة</label>
+                                <label className={`legacy-media-picker ${uploadingTarget === 'linkPreviewImageUrl' ? 'is-uploading' : ''} ${identity.linkPreview?.useLogoImage !== false ? 'is-disabled' : ''}`}>
+                                    <span className="legacy-media-picker-preview">
+                                        {identity.linkPreview?.imageUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={identity.linkPreview.imageUrl} alt="معاينة صورة المشاركة" />
+                                        ) : (
+                                            <i className="fa-regular fa-image"></i>
+                                        )}
+                                    </span>
+                                    <span className="legacy-media-picker-text">
+                                        <strong>
+                                            {identity.linkPreview?.useLogoImage !== false
+                                                ? 'أوقف استخدام اللوقو لاختيار صورة مخصصة'
+                                                : uploadingTarget === 'linkPreviewImageUrl'
+                                                    ? 'جاري رفع صورة المشاركة...'
+                                                    : 'اختر أو استبدل صورة المشاركة'}
+                                        </strong>
+                                        <small dir="ltr">{identity.linkPreview?.imageUrl || '/api/media/link-preview/...'}</small>
+                                    </span>
+                                    <span className="legacy-media-picker-action">
+                                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
+                                        disabled={identity.linkPreview?.useLogoImage !== false || uploadingTarget === 'linkPreviewImageUrl'}
+                                        onChange={handleLinkPreviewImageUpload}
+                                    />
+                                </label>
+                                <span className="legacy-field-hint">الصورة المخصصة ترفع إلى R2 وتحفظ كرابط آمن داخل إعدادات الهوية.</span>
                             </div>
 
                             <div className="legacy-field">

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.60.
+الإصدار الحالي للتطبيق هو 0.2.61.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -142,6 +142,7 @@ https://www.date-tool.com
 78. فصل إدارة أدوات الموقع بإضافة صفحة إدارة أدوات مستقلة ونقل أهم أحداث أداة التاريخ إليها، مع جعل حذف صفحات slug يحذف محتواها من Firebase صراحة.
 79. إضافة إعدادات محتوى مستقلة لكل أداة لتعديل عنوان السكشن التعريفي والسلوغن وأسماء الأدوات الفرعية والأسئلة الشائعة من لوحة الإدارة.
 80. إضافة إعدادات Link Preview داخل الهوية البصرية وربطها بوسوم المشاركة، مع إضافة زر رجوع من صفحات إعداد كل أداة إلى صفحة إدارة الأدوات.
+81. ربط صورة Link Preview المخصصة برفع آمن إلى Cloudflare R2 بدل إدخال رابط يدوي فقط.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4729,6 +4730,62 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار ربط صورة Link Preview المخصصة بـ R2 - الإصدار 0.2.61
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+npx wrangler versions list --config wrangler.jsonc
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.61
+curl.exe -I https://date-tool.com/?v=0.2.61
+curl.exe -I https://date-tool.com/api/media/upload
+curl.exe -X POST https://date-tool.com/api/media/upload
+```
+
+النتيجة:
+
+```txt
+✅ تمت إضافة فئة رفع جديدة `link-preview` في `/api/media/upload`.
+✅ أصبحت صورة Link Preview المخصصة ترفع إلى R2 ثم تحفظ داخل `linkPreview.imageUrl`.
+✅ عند اختيار صورة مخصصة يتم تعطيل استخدام اللوقو تلقائيًا حتى تظهر الصورة الجديدة في المعاينة.
+✅ واجهة `/admin/identity` تعرض بطاقة اختيار ومعاينة لصورة المشاركة بدل حقل رابط يدوي فقط.
+✅ endpoint الرفع بقي محميًا ويرفض POST بدون توكن مدير برسالة `unauthorized`.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح. أثناء sandbox ظهرت تحذيرات اتصال Firestore بسبب منع الشبكة، لكن البناء اكتمل بنجاح.
+✅ npx opennextjs-cloudflare build نجح خارج قيود الشبكة.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم نشر الإصدار 0.2.61 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 8a99f70d-4a03-4e9f-b2b9-f21d3d960f40.
+✅ `/admin/identity` والصفحة الرئيسية رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/identity/page.jsx
+app/admin/AdminDashboard.css
+app/api/media/upload/route.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+المتبقي:
+
+```txt
+اختبار رفع صورة Link Preview فعلية من `/admin/identity` بجلسة مدير، ثم الضغط على حفظ الهوية والتأكد من ظهور الرابط تحت `/api/media/link-preview/...`.
+```
+
+---
+
 ### اختبار إدارة الأدوات وحذف صفحات slug - الإصدار 0.2.58
 
 تم تشغيل:
@@ -5161,6 +5218,8 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.60 وإضافة إعدادات Link Preview ضمن الهوية البصرية
 ✅ تم ربط Open Graph وTwitter Card بإعدادات الهوية والصفحات الديناميكية
 ✅ تم نشر الإصدار 0.2.60 على Cloudflare Version ID: 5ae7a4a4-d064-4645-b7cc-ca5de00567d3
+✅ تم تحديث الإصدار إلى 0.2.61 وربط صورة Link Preview المخصصة برفع R2
+✅ تم نشر الإصدار 0.2.61 على Cloudflare Version ID: 8a99f70d-4a03-4e9f-b2b9-f21d3d960f40
 ```
 
 ---
@@ -5217,6 +5276,7 @@ ads top / middle / bottom1 / bottom2
 اختبار حفظ أحداث أداة التاريخ من `/admin/tool-management/date` والتأكد من انعكاسها على واجهة التاريخ.
 اختبار حفظ إعدادات محتوى أدوات التاريخ والساعة والطقس من `/admin/tool-management/*` بجلسة مدير فعلية والتأكد من انعكاس العنوان والسلوغن وأسماء الأدوات والأسئلة في الواجهة.
 اختبار حفظ إعدادات Link Preview من `/admin/identity` بجلسة مدير فعلية، ثم فحص معاينة المشاركة بعد تحديث كاش منصات السوشيال عند الحاجة.
+اختبار رفع صورة Link Preview مخصصة من `/admin/identity` والتأكد من حفظها كرابط R2 تحت `/api/media/link-preview/...`.
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
 اختبار صفحة `/admin/ad-settings` بجلسة مدير فعلية: حفظ مواضع الإعلانات، تفعيل Google عند غياب المعلنين، وإدخال مقتطف Ads.txt ثم اختبار `/ads.txt`.

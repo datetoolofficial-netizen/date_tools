@@ -1224,6 +1224,11 @@ body.dark-mode .legacy-admin-shell {
     cursor: wait;
 }
 
+.legacy-media-picker.is-disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+
 .legacy-media-picker input {
     display: none;
 }
