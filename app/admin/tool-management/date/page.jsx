@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ToolManagementShell from '../ToolManagementShell';
+import ToolContentSettings from '../ToolContentSettings';
 
 const EMPTY_EVENT = {
     id: '',
@@ -185,7 +186,10 @@ export default function AdminDateToolPage() {
             description="إعدادات خاصة بصفحة التاريخ فقط. نقلنا أهم الأحداث هنا حتى تكون كل أداة مستقلة عن إعدادات الموقع العامة."
         >
             {({ firebaseApi, showMessage }) => (
-                <DateToolEvents firebaseApi={firebaseApi} showMessage={showMessage} />
+                <>
+                    <ToolContentSettings firebaseApi={firebaseApi} showMessage={showMessage} toolKey="date" />
+                    <DateToolEvents firebaseApi={firebaseApi} showMessage={showMessage} />
+                </>
             )}
         </ToolManagementShell>
     );

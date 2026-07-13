@@ -14,19 +14,19 @@ const toolCards = [
     },
     {
         title: 'أداة الساعة',
-        description: 'ستنتقل إعدادات الساعة المستقلة إلى هنا عند تجهيزها.',
-        href: '/clock',
+        description: 'إدارة عنوان الساعة، أسماء أدواتها، والأسئلة الإضافية.',
+        href: '/admin/tool-management/clock',
         icon: 'fa-clock',
         color: 'color-links',
-        status: 'عرض الأداة',
+        status: 'إدارة مستقلة',
     },
     {
         title: 'أداة الطقس',
-        description: 'ستنتقل إعدادات الطقس المستقلة إلى هنا عند تجهيزها.',
-        href: '/weather',
+        description: 'إدارة عنوان الطقس، أسماء أقسامه، والأسئلة الإضافية.',
+        href: '/admin/tool-management/weather',
         icon: 'fa-cloud-sun',
         color: 'color-social',
-        status: 'عرض الأداة',
+        status: 'إدارة مستقلة',
     },
 ];
 

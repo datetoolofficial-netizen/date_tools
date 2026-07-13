@@ -1974,6 +1974,76 @@ body.dark-mode .legacy-admin-shell {
     gap: 10px;
 }
 
+.tool-content-settings {
+    --tool-color: #3b82f6;
+    --tool-bg: rgba(59, 130, 246, 0.14);
+}
+
+.tool-content-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.tool-subtools-list,
+.tool-faq-list {
+    margin-top: 16px;
+    display: block;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--bg-container);
+}
+
+.tool-subtools-list .tools-table-head,
+.tool-subtools-list .tools-item-card {
+    min-width: 620px;
+    display: grid;
+    grid-template-columns: 180px minmax(260px, 1fr);
+    gap: 12px;
+    align-items: center;
+}
+
+.tool-subtools-list .tools-table-head {
+    padding: 12px 14px;
+    background: var(--tool-bg);
+    color: var(--text-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.tool-subtools-list .tools-item-card,
+.tool-faq-list .tool-faq-row {
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-container);
+    padding: 12px 14px;
+}
+
+.tool-subtools-list .tools-item-card:last-child,
+.tool-faq-list .tool-faq-row:last-child {
+    border-bottom: 0;
+}
+
+.tool-subtools-list .legacy-field label {
+    display: none;
+}
+
+.tool-faq-admin {
+    margin-top: 18px;
+}
+
+.tools-section-head.compact-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    text-align: start;
+    justify-items: stretch;
+}
+
+.tool-faq-row {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) 80px;
+    align-items: end;
+}
+
 .tools-item-card,
 .tools-social-card {
     border: 1px solid var(--border-color);

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
+import { getToolFaqs, getToolSettings } from '../toolSettings';
 
 const cities = [
     { name: 'الرياض', zone: 'Asia/Riyadh' },
@@ -111,14 +112,16 @@ export default function ClockPage() {
 
     const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
+    const clockSettings = getToolSettings(configData, 'clock');
+    const clockFaqItems = getToolFaqs(configData, 'clock', clockFaq);
 
     return (
         <section className="tools-page">
             <div className="tools-hero clock-hero">
                 <i className="fa-solid fa-clock"></i>
                 <div>
-                    <h2>أدوات الساعة والوقت</h2>
-                    <p>تحويل نظام الساعة، معرفة الوقت الحالي، وحساب فرق التوقيت بسرعة.</p>
+                    <h2>{clockSettings.heroTitle}</h2>
+                    <p>{clockSettings.heroDescription}</p>
                 </div>
             </div>
 
@@ -146,7 +149,7 @@ export default function ClockPage() {
             <article className="tool-widget time-converter-card">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-repeat"></i>
-                    <h3>تحويل الساعة من 24 إلى 12</h3>
+                    <h3>{clockSettings.subtools?.timeConverter}</h3>
                 </div>
                 <div className="time-select-grid">
                     <label>
@@ -173,7 +176,7 @@ export default function ClockPage() {
             <article className="tool-widget">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-code-compare"></i>
-                    <h3>فرق التوقيت بين مدينتين</h3>
+                    <h3>{clockSettings.subtools?.timezoneDiff}</h3>
                 </div>
                 <div className="tool-grid two-columns compact">
                     <select value={fromZone} onChange={(event) => { setFromZone(event.target.value); setTimezoneDiff(''); }}>
@@ -193,7 +196,7 @@ export default function ClockPage() {
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
-            <ToolFaqSection items={clockFaq} />
+            <ToolFaqSection items={clockFaqItems} />
 
         </section>
     );

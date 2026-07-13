@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { getToolSettings } from '../toolSettings';
 import './AdminDashboard.css';
 
 const AD_BANNER_METRICS = [
@@ -43,6 +44,7 @@ function StatCard({ icon, title, value, color = 'blue' }) {
 export default function AdminDashboardPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [stats, setStats] = useState(null);
+    const [siteConfig, setSiteConfig] = useState(null);
     const [adminName, setAdminName] = useState('أيها المدير');
     const [adminRole, setAdminRole] = useState('مدير');
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -67,6 +69,7 @@ export default function AdminDashboardPage() {
             ctr: formatPercent(clicks, impressions),
         };
     });
+    const dateToolSettings = getToolSettings(siteConfig, 'date');
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -74,7 +77,7 @@ export default function AdminDashboardPage() {
 
         async function loadAdminDashboard() {
             try {
-                const [{ auth, getAdminProfile, getAdminStats }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ auth, getAdminProfile, getAdminStats, getSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../firebase'),
                     import('firebase/auth'),
                 ]);
@@ -112,8 +115,12 @@ export default function AdminDashboardPage() {
                         setAdminName(adminProfile.name || adminProfile.email || 'أيها المدير');
                         setAdminRole(adminProfile.role === 'super_admin' ? 'المدير العام' : 'مدير');
 
-                        const statsData = await getAdminStats();
+                        const [statsData, configData] = await Promise.all([
+                            getAdminStats(),
+                            getSiteConfig(),
+                        ]);
                         setStats(statsData || {});
+                        setSiteConfig(configData || {});
                     } catch (error) {
                         console.error('Error loading admin dashboard:', error);
                         if (isMounted) setLoadError('حدث خطأ في قراءة بيانات لوحة التحكم.');
@@ -297,9 +304,9 @@ export default function AdminDashboardPage() {
                     {stats ? (
                         <div className="legacy-stats-grid">
                             <StatCard icon="fa-users" title="إجمالي الزيارات" value={formatStatNumber(stats.visits)} color="blue" />
-                            <StatCard icon="fa-calculator" title="حساب العمر" value={formatStatNumber(stats.ageCalc)} color="purple" />
-                            <StatCard icon="fa-rotate" title="تحويل التواريخ" value={formatStatNumber(stats.dateConverter)} color="green" />
-                            <StatCard icon="fa-hourglass-half" title="حساب فترتين" value={formatStatNumber(stats.durationCalc)} color="orange" />
+                            <StatCard icon="fa-calculator" title={dateToolSettings.subtools?.ageCalc || 'حساب العمر'} value={formatStatNumber(stats.ageCalc)} color="purple" />
+                            <StatCard icon="fa-rotate" title={dateToolSettings.subtools?.dateConverter || 'تحويل التواريخ'} value={formatStatNumber(stats.dateConverter)} color="green" />
+                            <StatCard icon="fa-hourglass-half" title={dateToolSettings.subtools?.durationCalc || 'حساب فترتين'} value={formatStatNumber(stats.durationCalc)} color="orange" />
                         </div>
                     ) : (
                         <p className="legacy-loading-text">جاري سحب البيانات من السيرفر...</p>

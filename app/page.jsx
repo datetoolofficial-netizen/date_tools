@@ -21,6 +21,7 @@ import {
     TodayBanner,
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
+import { getToolFaqs, getToolSettings } from './toolSettings';
 
 function SkeletonBlock({ className = '' }) {
     return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
@@ -442,6 +443,8 @@ export default function Home() {
     };
 
     const isPageLoading = isSiteLoading || configData === null;
+    const dateToolSettings = getToolSettings(configData, 'date');
+    const dateFaqItems = getToolFaqs(configData, 'date', i18n.ar.seo.faq);
 
     return (
         <>
@@ -459,8 +462,8 @@ export default function Home() {
                         <div className="tools-hero date-tools-hero">
                             <i className="fa-solid fa-calendar-days"></i>
                             <div>
-                                <h2>{i18n[lang].pageTitle}</h2>
-                                <p>{i18n[lang].pageDescription}</p>
+                                <h2>{dateToolSettings.heroTitle || i18n[lang].pageTitle}</h2>
+                                <p>{dateToolSettings.heroDescription || i18n[lang].pageDescription}</p>
                             </div>
                         </div>
 
@@ -470,6 +473,7 @@ export default function Home() {
 
                         <AgeCalculatorSection
                             labels={i18n[lang]}
+                            title={dateToolSettings.subtools?.ageCalc}
                             lang={lang}
                             calendarMode={ageCalendarMode}
                             onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
@@ -486,6 +490,7 @@ export default function Home() {
 
                         <DateConversionSection
                             labels={i18n[lang]}
+                            title={dateToolSettings.subtools?.dateConverter}
                             lang={lang}
                             calendarMode={conversionCalendarMode}
                             onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
@@ -500,6 +505,7 @@ export default function Home() {
 
                         <DurationSection
                             labels={i18n[lang]}
+                            title={dateToolSettings.subtools?.durationCalc}
                             lang={lang}
                             calendarMode={durationCalendarMode}
                             onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
@@ -513,7 +519,7 @@ export default function Home() {
                         />
 
                         <PublicAdSlot configData={configData} slotName="dateBottom" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
-                        <SeoSections lang={lang} />
+                        <SeoSections lang={lang} faqs={dateFaqItems} />
                 </>
             )}
         </>

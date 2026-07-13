@@ -16,6 +16,7 @@ import {
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { sanitizeHtml } from "./sanitizeHtml";
+import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings } from "./toolSettings";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -248,6 +249,7 @@ export const defaultSiteConfig = {
     socialLinks: [],
     externalLinks: [],
     events: [],
+    toolSettings: DEFAULT_TOOL_SETTINGS,
     pages: {},
     customPages: {},
     mainSEO: {
@@ -282,6 +284,7 @@ export async function getSiteConfig() {
             internalPages: Array.isArray(data.internalPages) ? data.internalPages : [],
             socialLinks: Array.isArray(data.socialLinks) ? data.socialLinks : [],
             adCampaigns: Array.isArray(data.adCampaigns) ? data.adCampaigns : [],
+            toolSettings: normalizeToolSettings(data.toolSettings || {}),
 
             adImages: {
                 ...defaultSiteConfig.adImages,
@@ -336,6 +339,7 @@ export async function saveSiteConfig(config) {
         internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
         adCampaigns: Array.isArray(config.adCampaigns) ? config.adCampaigns : [],
+        toolSettings: normalizeToolSettings(config.toolSettings || {}),
 
         adImages: {
             ...defaultSiteConfig.adImages,
@@ -405,6 +409,10 @@ export async function saveSiteConfigSection(sectionPatch) {
             ...defaultExternalIntegrations,
             ...normalizeExternalIntegrations(cleanPatch.externalIntegrations || {})
         };
+    }
+
+    if ('toolSettings' in cleanPatch) {
+        cleanPatch.toolSettings = normalizeToolSettings(cleanPatch.toolSettings || {});
     }
 
     if ('customPages' in cleanPatch) {

@@ -161,6 +161,7 @@ function CalendarModeSwitch({ labels, value, onChange }) {
 
 export function AgeCalculatorSection({
     labels,
+    title,
     lang,
     calendarMode,
     onCalendarModeChange,
@@ -177,7 +178,7 @@ export function AgeCalculatorSection({
 
     return (
         <div className="card">
-            <h2>{labels.hCalcAge}</h2>
+            <h2>{title || labels.hCalcAge}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
                 {isGregorian ? (
@@ -219,6 +220,7 @@ export function AgeCalculatorSection({
 
 export function DateConversionSection({
     labels,
+    title,
     lang,
     calendarMode,
     onCalendarModeChange,
@@ -235,7 +237,7 @@ export function DateConversionSection({
 
     return (
         <div className="card">
-            <h2>{labels.hConv}</h2>
+            <h2>{title || labels.hConv}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
                 {isGregorian ? (
@@ -263,6 +265,7 @@ export function DateConversionSection({
 
 export function DurationSection({
     labels,
+    title,
     lang,
     calendarMode,
     onCalendarModeChange,
@@ -279,7 +282,7 @@ export function DurationSection({
 
     return (
         <div className="card">
-            <h2>{labels.hDiff}</h2>
+            <h2>{title || labels.hDiff}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
                 {isGregorian ? (
@@ -436,9 +439,10 @@ export function BottomAdSlots({ configData, labels }) {
     );
 }
 
-export function SeoSections({ lang }) {
+export function SeoSections({ lang, faqs }) {
     if (lang !== 'ar') return null;
     const seo = i18n.ar.seo;
+    const faqItems = Array.isArray(faqs) && faqs.length > 0 ? faqs : seo.faq;
 
     return (
         <div className="seo-sections-wrapper">
@@ -455,7 +459,7 @@ export function SeoSections({ lang }) {
 
             <section className="seo-card faq-card">
                 <h2 className="seo-title">{seo.faqTitle}</h2>
-                {seo.faq.map((item) => (
+                {faqItems.map((item) => (
                     <div className="faq-item" key={item.q}>
                         <h4 className="faq-q">{item.q}</h4>
                         <p className="faq-a">{item.a}</p>

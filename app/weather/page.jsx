@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
+import { getToolFaqs, getToolSettings } from '../toolSettings';
 
 const weatherLabels = {
     0: 'سماء صافية',
@@ -146,14 +147,16 @@ export default function WeatherPage() {
 
     const current = weather?.forecast?.current;
     const daily = weather?.forecast?.daily;
+    const weatherSettings = getToolSettings(configData, 'weather');
+    const weatherFaqItems = getToolFaqs(configData, 'weather', weatherFaq);
 
     return (
         <section className="tools-page">
             <div className="tools-hero weather-hero">
                 <i className="fa-solid fa-cloud-sun-rain"></i>
                 <div>
-                    <h2>أدوات الطقس</h2>
-                    <p>اعرف طقس مدينتك، مؤشر الحرارة المحسوسة، الرطوبة، الرياح وUV بسرعة.</p>
+                    <h2>{weatherSettings.heroTitle}</h2>
+                    <p>{weatherSettings.heroDescription}</p>
                 </div>
             </div>
 
@@ -167,7 +170,7 @@ export default function WeatherPage() {
                 />
                 <button type="submit" disabled={isLoading}>
                     <i className={isLoading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass'}></i>
-                    {isLoading ? 'جاري البحث...' : 'عرض الطقس'}
+                    {isLoading ? 'جاري البحث...' : weatherSettings.subtools?.weatherSearch}
                 </button>
             </form>
 
@@ -198,7 +201,7 @@ export default function WeatherPage() {
                     <article className="tool-widget advice-card">
                         <div className="tool-widget-title">
                             <i className="fa-solid fa-person-walking"></i>
-                            <h3>نصيحة الخروج اليوم</h3>
+                            <h3>{weatherSettings.subtools?.outdoorAdvice}</h3>
                         </div>
                         <p>{getOutdoorAdvice(current, daily)}</p>
                     </article>
@@ -211,7 +214,7 @@ export default function WeatherPage() {
                 <article className="tool-widget">
                     <div className="tool-widget-title">
                         <i className="fa-solid fa-calendar-week"></i>
-                        <h3>توقعات 5 أيام</h3>
+                        <h3>{weatherSettings.subtools?.forecast}</h3>
                     </div>
                     <div className="forecast-list">
                         {daily.time.map((day, index) => (
@@ -225,7 +228,7 @@ export default function WeatherPage() {
                     </div>
                 </article>
             )}
-            <ToolFaqSection items={weatherFaq} />
+            <ToolFaqSection items={weatherFaqItems} />
 
         </section>
     );
