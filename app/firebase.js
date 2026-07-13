@@ -17,6 +17,7 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { sanitizeHtml } from "./sanitizeHtml";
 import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings } from "./toolSettings";
+import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPreview";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -250,6 +251,7 @@ export const defaultSiteConfig = {
     externalLinks: [],
     events: [],
     toolSettings: DEFAULT_TOOL_SETTINGS,
+    linkPreview: DEFAULT_LINK_PREVIEW,
     pages: {},
     customPages: {},
     mainSEO: {
@@ -285,6 +287,7 @@ export async function getSiteConfig() {
             socialLinks: Array.isArray(data.socialLinks) ? data.socialLinks : [],
             adCampaigns: Array.isArray(data.adCampaigns) ? data.adCampaigns : [],
             toolSettings: normalizeToolSettings(data.toolSettings || {}),
+            linkPreview: normalizeLinkPreviewSettings(data.linkPreview || {}),
 
             adImages: {
                 ...defaultSiteConfig.adImages,
@@ -340,6 +343,7 @@ export async function saveSiteConfig(config) {
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
         adCampaigns: Array.isArray(config.adCampaigns) ? config.adCampaigns : [],
         toolSettings: normalizeToolSettings(config.toolSettings || {}),
+        linkPreview: normalizeLinkPreviewSettings(config.linkPreview || {}),
 
         adImages: {
             ...defaultSiteConfig.adImages,
@@ -413,6 +417,10 @@ export async function saveSiteConfigSection(sectionPatch) {
 
     if ('toolSettings' in cleanPatch) {
         cleanPatch.toolSettings = normalizeToolSettings(cleanPatch.toolSettings || {});
+    }
+
+    if ('linkPreview' in cleanPatch) {
+        cleanPatch.linkPreview = normalizeLinkPreviewSettings(cleanPatch.linkPreview || {});
     }
 
     if ('customPages' in cleanPatch) {

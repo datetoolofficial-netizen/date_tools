@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.59.
+الإصدار الحالي للتطبيق هو 0.2.60.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -141,6 +141,7 @@ https://www.date-tool.com
 77. إضافة قسم الأسئلة الشائعة إلى صفحات الساعة والطقس بنفس نمط قسم الأسئلة في صفحة التاريخ.
 78. فصل إدارة أدوات الموقع بإضافة صفحة إدارة أدوات مستقلة ونقل أهم أحداث أداة التاريخ إليها، مع جعل حذف صفحات slug يحذف محتواها من Firebase صراحة.
 79. إضافة إعدادات محتوى مستقلة لكل أداة لتعديل عنوان السكشن التعريفي والسلوغن وأسماء الأدوات الفرعية والأسئلة الشائعة من لوحة الإدارة.
+80. إضافة إعدادات Link Preview داخل الهوية البصرية وربطها بوسوم المشاركة، مع إضافة زر رجوع من صفحات إعداد كل أداة إلى صفحة إدارة الأدوات.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4663,6 +4664,71 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار Link Preview وزر رجوع إدارة الأدوات - الإصدار 0.2.60
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+npx wrangler versions list --config wrangler.jsonc
+curl.exe -I https://date-tool.com/?v=0.2.60
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.60
+curl.exe -I https://date-tool.com/admin/tool-management/date?v=0.2.60
+curl.exe -I https://date-tool.com/admin/tool-management/clock?v=0.2.60
+curl.exe -I https://date-tool.com/admin/tool-management/weather?v=0.2.60
+curl.exe -I https://date-tool.com/contact?v=0.2.60
+curl.exe -I https://date-tool.com/clock?v=0.2.60
+```
+
+النتيجة:
+
+```txt
+✅ تمت إضافة إعدادات `linkPreview` داخل صفحة `/admin/identity` ضمن الهوية البصرية.
+✅ تمت إضافة معاينة بطاقة المشاركة مع عنوان ووصف واسم موقع وصورة مشاركة.
+✅ يمكن استخدام عنوان الهوية والسلوغن واللوقو الحالي تلقائيًا أو كتابة قيم مخصصة للمعاينة.
+✅ تم إزالة إعدادات Link Preview من `/admin/tools` حتى لا تتكرر في الإدارة العامة.
+✅ `app/layout.jsx` يقرأ إعدادات Link Preview عبر Firestore REST بدون Firebase Client SDK وبدون fs/path/config.json.
+✅ صفحات slug الديناميكية مثل `/contact` تستخدم عنوان الصفحة ووصفها مع إعدادات صورة واسم Link Preview من الهوية.
+✅ تمت إضافة زر رجوع من صفحات `/admin/tool-management/date` و `/admin/tool-management/clock` و `/admin/tool-management/weather` إلى `/admin/tool-management`.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build نجح. أثناء sandbox ظهرت تحذيرات اتصال Firestore بسبب منع الشبكة، لكن البناء اكتمل بنجاح.
+✅ npx opennextjs-cloudflare build نجح خارج قيود الشبكة.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم نشر الإصدار 0.2.60 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: 5ae7a4a4-d064-4645-b7cc-ca5de00567d3.
+✅ الصفحة الرئيسية و `/admin/identity` وصفحات إدارة الأدوات الثلاث و `/contact` و `/clock` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/linkPreview.js
+app/firebase.js
+app/layout.jsx
+app/[slug]/page.jsx
+app/admin/identity/page.jsx
+app/admin/tool-management/ToolManagementShell.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+المتبقي:
+
+```txt
+اختبار حفظ إعدادات Link Preview من `/admin/identity` بجلسة مدير فعلية والتأكد من تحديث معاينة المشاركة في منصات السوشيال بعد تنظيف كاش المنصة عند الحاجة.
+```
+
+---
+
 ### اختبار إدارة الأدوات وحذف صفحات slug - الإصدار 0.2.58
 
 تم تشغيل:
@@ -5092,6 +5158,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.58 وفصل إدارة أدوات الموقع ونقل أحداث أداة التاريخ إليها
 ✅ تم تحديث الإصدار إلى 0.2.59 وإضافة إعدادات محتوى مستقلة لكل أداة من لوحة الإدارة
 ✅ تم نشر الإصدار 0.2.59 على Cloudflare Version ID: e6c22fe0-9384-47c7-b4ef-50cc6f0b7e90
+✅ تم تحديث الإصدار إلى 0.2.60 وإضافة إعدادات Link Preview ضمن الهوية البصرية
+✅ تم ربط Open Graph وTwitter Card بإعدادات الهوية والصفحات الديناميكية
+✅ تم نشر الإصدار 0.2.60 على Cloudflare Version ID: 5ae7a4a4-d064-4645-b7cc-ca5de00567d3
 ```
 
 ---
@@ -5147,6 +5216,7 @@ ads top / middle / bottom1 / bottom2
 اختبار زر حذف الصفحات في `/admin/tools` بجلسة مدير فعلية بعد تعديل الحذف الصريح من Firebase.
 اختبار حفظ أحداث أداة التاريخ من `/admin/tool-management/date` والتأكد من انعكاسها على واجهة التاريخ.
 اختبار حفظ إعدادات محتوى أدوات التاريخ والساعة والطقس من `/admin/tool-management/*` بجلسة مدير فعلية والتأكد من انعكاس العنوان والسلوغن وأسماء الأدوات والأسئلة في الواجهة.
+اختبار حفظ إعدادات Link Preview من `/admin/identity` بجلسة مدير فعلية، ثم فحص معاينة المشاركة بعد تحديث كاش منصات السوشيال عند الحاجة.
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
 اختبار صفحة `/admin/ad-settings` بجلسة مدير فعلية: حفظ مواضع الإعلانات، تفعيل Google عند غياب المعلنين، وإدخال مقتطف Ads.txt ثم اختبار `/ads.txt`.

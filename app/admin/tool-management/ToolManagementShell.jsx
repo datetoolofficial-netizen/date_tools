@@ -246,6 +246,10 @@ export default function ToolManagementShell({
                         </h1>
                         <p>{description}</p>
                     </div>
+                    <Link href="/admin/tool-management" className="legacy-secondary-btn tool-management-back-btn">
+                        <i className="fa-solid fa-arrow-right"></i>
+                        رجوع لإدارة الأدوات
+                    </Link>
                 </section>
 
                 {typeof children === 'function' ? children({ firebaseApi, showMessage }) : children}

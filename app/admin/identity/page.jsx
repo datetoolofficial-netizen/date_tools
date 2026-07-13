@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
+import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings, resolveLinkPreview } from '../../linkPreview';
 import '../AdminDashboard.css';
 
 const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
@@ -38,13 +39,28 @@ const EMPTY_IDENTITY = {
     faviconUrl: '',
     copyrightName: '',
     copyrightText: '',
+    mainSEO: {},
+    linkPreview: DEFAULT_LINK_PREVIEW,
 };
 
 function pickIdentity(config = {}) {
-    return IDENTITY_FIELDS.reduce((patch, field) => {
+    const identityPatch = IDENTITY_FIELDS.reduce((patch, field) => {
         patch[field] = field === 'hasLogo' ? Boolean(config[field]) : (config[field] || '');
         return patch;
     }, {});
+
+    return {
+        ...identityPatch,
+        mainSEO: config.mainSEO || {},
+        linkPreview: normalizeLinkPreviewSettings(config.linkPreview || {}),
+    };
+}
+
+function safePreviewImageUrl(value = '') {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (raw.startsWith('/') || /^https?:\/\//i.test(raw)) return raw;
+    return '';
 }
 
 function AdminNav({ active = 'identity' }) {
@@ -200,6 +216,16 @@ export default function AdminIdentityPage() {
         setIdentity((current) => ({ ...current, [field]: value }));
     };
 
+    const setLinkPreviewField = (field, value) => {
+        setIdentity((current) => ({
+            ...current,
+            linkPreview: normalizeLinkPreviewSettings({
+                ...(current.linkPreview || DEFAULT_LINK_PREVIEW),
+                [field]: value,
+            }),
+        }));
+    };
+
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {
             const next = !current;
@@ -333,6 +359,8 @@ export default function AdminIdentityPage() {
     if (loadError) return <div className="admin-dashboard-error">{loadError}</div>;
 
     const copyrightPreview = `© ${new Date().getFullYear()} ${identity.copyrightText || 'جميع الحقوق محفوظة'}${identity.copyrightName ? ` لـ ${identity.copyrightName}` : ''}`;
+    const linkPreviewData = resolveLinkPreview(identity);
+    const linkPreviewImage = safePreviewImageUrl(linkPreviewData.imageUrl || identity.logoUrl || identity.faviconUrl || '');
 
     return (
         <div className={`legacy-admin-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`} dir="rtl">
@@ -573,6 +601,120 @@ export default function AdminIdentityPage() {
                             <span>{copyrightPreview}</span>
                         </div>
                     </aside>
+                </section>
+
+                <section className="legacy-google-card tools-section-card identity-link-preview-card" id="link-preview">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-preview"><i className="fa-solid fa-share-nodes"></i></span>
+                            <div>
+                                <h2>عارض الرابط عند المشاركة</h2>
+                                <p>هذه البيانات تتحكم في شكل بطاقة الرابط عند مشاركة الموقع في السوشيال ميديا، أما شكل العرض النهائي فتحدده كل منصة.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="link-preview-admin-grid">
+                        <div className="link-preview-fields">
+                            <label className="ad-settings-switch house compact-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={identity.linkPreview?.useSiteTitle !== false}
+                                    onChange={(event) => setLinkPreviewField('useSiteTitle', event.target.checked)}
+                                />
+                                <span className="ad-settings-switch-icon"><i className="fa-solid fa-heading"></i></span>
+                                <span className="ad-settings-switch-copy">
+                                    <strong>استخدم عنوان الهوية الأساسي</strong>
+                                    <small>إذا أوقفته يمكنك كتابة عنوان مخصص للمشاركة فقط.</small>
+                                </span>
+                            </label>
+
+                            <div className="legacy-field">
+                                <label>عنوان المشاركة</label>
+                                <input
+                                    value={identity.linkPreview?.title || ''}
+                                    onChange={(event) => setLinkPreviewField('title', event.target.value)}
+                                    disabled={identity.linkPreview?.useSiteTitle !== false}
+                                    placeholder={identity.mainSEO?.title || identity.toolDisplayName || 'أدوات التاريخ الشاملة'}
+                                />
+                            </div>
+
+                            <label className="ad-settings-switch google compact-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={identity.linkPreview?.useSiteSlogan !== false}
+                                    onChange={(event) => setLinkPreviewField('useSiteSlogan', event.target.checked)}
+                                />
+                                <span className="ad-settings-switch-icon"><i className="fa-solid fa-align-right"></i></span>
+                                <span className="ad-settings-switch-copy">
+                                    <strong>استخدم السلوغن الأساسي</strong>
+                                    <small>الوصف يظهر غالبًا تحت العنوان في تطبيقات المشاركة.</small>
+                                </span>
+                            </label>
+
+                            <div className="legacy-field">
+                                <label>وصف المشاركة</label>
+                                <textarea
+                                    rows={3}
+                                    value={identity.linkPreview?.description || ''}
+                                    onChange={(event) => setLinkPreviewField('description', event.target.value)}
+                                    disabled={identity.linkPreview?.useSiteSlogan !== false}
+                                    placeholder={identity.mainSEO?.description || identity.toolSlogan || 'وصف مختصر يظهر أسفل العنوان عند المشاركة'}
+                                />
+                            </div>
+
+                            <label className="ad-settings-switch house compact-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={identity.linkPreview?.useLogoImage !== false}
+                                    onChange={(event) => setLinkPreviewField('useLogoImage', event.target.checked)}
+                                />
+                                <span className="ad-settings-switch-icon"><i className="fa-solid fa-image"></i></span>
+                                <span className="ad-settings-switch-copy">
+                                    <strong>استخدم اللوقو الحالي كصورة مشاركة</strong>
+                                    <small>غيّر اللوقو من نفس صفحة الهوية، أو أوقف هذا الخيار لصورة مخصصة.</small>
+                                </span>
+                            </label>
+
+                            <div className="legacy-field">
+                                <label>رابط صورة مشاركة مخصصة</label>
+                                <input
+                                    dir="ltr"
+                                    type="url"
+                                    value={identity.linkPreview?.imageUrl || ''}
+                                    onChange={(event) => setLinkPreviewField('imageUrl', event.target.value)}
+                                    disabled={identity.linkPreview?.useLogoImage !== false}
+                                    placeholder="https://date-tool.com/api/media/..."
+                                />
+                            </div>
+
+                            <div className="legacy-field">
+                                <label>اسم الموقع داخل البطاقة</label>
+                                <input
+                                    value={identity.linkPreview?.siteName || ''}
+                                    onChange={(event) => setLinkPreviewField('siteName', event.target.value)}
+                                    placeholder={identity.toolDisplayName || 'أدوات التاريخ الشاملة'}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="link-preview-card" dir="rtl">
+                            <div className="link-preview-media">
+                                {linkPreviewImage ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={linkPreviewImage} alt={linkPreviewData.title || 'معاينة المشاركة'} />
+                                ) : (
+                                    <i className="fa-solid fa-calendar-days"></i>
+                                )}
+                            </div>
+                            <div className="link-preview-body">
+                                <span>{linkPreviewData.siteName || 'date-tool.com'}</span>
+                                <strong>{linkPreviewData.title || 'أدوات التاريخ الشاملة'}</strong>
+                                <p>{linkPreviewData.description || 'وصف الرابط يظهر هنا عند المشاركة.'}</p>
+                                <small>date-tool.com</small>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <footer className="legacy-admin-footer">
