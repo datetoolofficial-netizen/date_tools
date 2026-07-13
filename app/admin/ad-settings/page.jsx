@@ -141,6 +141,12 @@ function AdminNav({ active = 'ad-settings' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/tool-management">
+                    <i className="fa-solid fa-toolbox"></i>
+                    <span className="nav-text">إدارة الأدوات</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/admin/tools">
                     <i className="fa-solid fa-screwdriver-wrench"></i>
                     <span className="nav-text">إعدادات الأداة</span>

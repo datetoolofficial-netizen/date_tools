@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.57.
+الإصدار الحالي للتطبيق هو 0.2.58.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -139,6 +139,7 @@ https://www.date-tool.com
 75. حذف النص التعريفي من صفحة اتصل بنا وربط مرفقات نموذج التواصل برفع صور آمن إلى Cloudflare R2.
 76. إزالة نص R2 التقني من مربع رفع الصورة في صفحة اتصل بنا حتى لا تظهر تفاصيل التخزين للعملاء.
 77. إضافة قسم الأسئلة الشائعة إلى صفحات الساعة والطقس بنفس نمط قسم الأسئلة في صفحة التاريخ.
+78. فصل إدارة أدوات الموقع بإضافة صفحة إدارة أدوات مستقلة ونقل أهم أحداث أداة التاريخ إليها، مع جعل حذف صفحات slug يحذف محتواها من Firebase صراحة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -4589,6 +4590,73 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار إدارة الأدوات وحذف صفحات slug - الإصدار 0.2.58
+
+تم تشغيل:
+
+```powershell
+npm run lint
+git diff --check
+npm run build
+npx opennextjs-cloudflare build
+npx wrangler deploy --config wrangler.jsonc
+curl.exe -I https://date-tool.com/?v=0.2.58
+curl.exe -I https://date-tool.com/admin/tool-management?v=0.2.58
+curl.exe -I https://date-tool.com/admin/tool-management/date?v=0.2.58
+```
+
+النتيجة:
+
+```txt
+✅ تم التأكد من عدم وجود مجلد `app/about` في المشروع.
+✅ تم إيقاف المحتوى الاحتياطي الثابت لمسار `about` حتى تأتي صفحة "من نحن" من قاعدة البيانات فقط.
+✅ تم إضافة رابط `إدارة الأدوات` في سايد بار لوحة الإدارة.
+✅ تم إضافة صفحة `/admin/tool-management` كبوابة لإدارة أدوات الموقع.
+✅ تم إضافة صفحة `/admin/tool-management/date` ونقل إدارة أهم أحداث أداة التاريخ إليها.
+✅ تم إزالة سكشن الأحداث من صفحة `/admin/tools` لتبقى مخصصة للصفحات والروابط والسوشيال.
+✅ تم تعديل حذف الصفحات في `/admin/tools` ليحذف محتوى slug من `customPages` في Firebase بعلامة `deleteField`.
+✅ npm run lint نجح.
+✅ git diff --check نجح، مع تحذيرات CRLF المعتادة على Windows فقط.
+✅ npm run build احتاج صلاحية شبكة لتحميل خط Cairo من Google Fonts ثم نجح.
+✅ npx opennextjs-cloudflare build نجح.
+✅ npx wrangler deploy --config wrangler.jsonc نجح.
+✅ تم نشر الإصدار 0.2.58 على Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: ee5fe69d-db1e-4d47-88e9-60f562d929c4.
+✅ الصفحة الرئيسية و `/admin/tool-management` و `/admin/tool-management/date` رجعت HTTP 200 بعد النشر.
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
+app/admin/tool-management/ToolManagementShell.jsx
+app/admin/tool-management/page.jsx
+app/admin/tool-management/date/page.jsx
+app/admin/AdminDashboard.css
+app/admin/page.jsx
+app/admin/tools/page.jsx
+app/admin/ads/page.jsx
+app/admin/ad-settings/page.jsx
+app/admin/identity/page.jsx
+app/admin/integrations/page.jsx
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+المتبقي:
+
+```txt
+اختبار حذف صفحة فعلية من `/admin/tools` بجلسة مدير للتأكد من اختفائها من Firebase والفوتر.
+اختبار حفظ أحداث أداة التاريخ من `/admin/tool-management/date` بجلسة مدير والتأكد من ظهورها في صفحة التاريخ.
+لاحقًا: نقل إعدادات مستقلة للساعة والطقس إلى إدارة الأدوات عند تحديدها.
+```
+
+---
+
 ### اختبار إضافة الأسئلة الشائعة للساعة والطقس - الإصدار 0.2.57
 
 تم تشغيل:
@@ -4989,6 +5057,9 @@ ads top / middle / bottom1 / bottom2
 تحسين محرر الصفحات
 تحسين معاينة الصفحات
 تحسين إدارة الإحصائيات
+اختبار زر حذف الصفحات في `/admin/tools` بجلسة مدير فعلية بعد تعديل الحذف الصريح من Firebase.
+اختبار حفظ أحداث أداة التاريخ من `/admin/tool-management/date` والتأكد من انعكاسها على واجهة التاريخ.
+نقل إعدادات الساعة والطقس لاحقًا إلى `/admin/tool-management` عندما يتم تحديد خيارات كل أداة.
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
 اختبار صفحة `/admin/ad-settings` بجلسة مدير فعلية: حفظ مواضع الإعلانات، تفعيل Google عند غياب المعلنين، وإدخال مقتطف Ads.txt ثم اختبار `/ads.txt`.

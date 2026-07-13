@@ -411,10 +411,12 @@ export async function saveSiteConfigSection(sectionPatch) {
         cleanPatch.customPages = Object.fromEntries(
             Object.entries(cleanPatch.customPages || {}).map(([slug, page]) => [
                 slug,
-                {
-                    ...page,
-                    content: sanitizeHtml(page?.content || '')
-                }
+                page === null || page?.__delete === true
+                    ? deleteField()
+                    : {
+                        ...page,
+                        content: sanitizeHtml(page?.content || '')
+                    }
             ])
         );
     }

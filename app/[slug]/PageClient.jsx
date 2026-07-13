@@ -170,6 +170,8 @@ function applyConfigVariables(content, config) {
 function getEnhancedContent(slug, content) {
     const normalized = normalizeSlug(slug);
     const current = String(content || '').trim();
+    if (normalized === 'about') return current;
+
     const fallback = DEFAULT_PAGE_CONTENT[normalized] || '';
 
     if (!fallback) return current;

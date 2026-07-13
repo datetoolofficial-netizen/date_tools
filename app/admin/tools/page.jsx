@@ -6,17 +6,6 @@ import Toast from '../../components/Toast';
 import { sanitizeHtml } from '../../sanitizeHtml';
 import '../AdminDashboard.css';
 
-const EMPTY_EVENT = {
-    id: '',
-    name: '',
-    date: '',
-    calendar: 'gregorian',
-    repeat: 'once',
-    icon: 'fa-star',
-    color: '#3b82f6',
-    active: true,
-};
-
 const SOCIAL_PRESETS = [
     { label: 'X / Twitter', icon: 'fa-x-twitter', color: '#111827' },
     { label: 'Snapchat', icon: 'fa-snapchat', color: '#facc15' },
@@ -44,7 +33,6 @@ function pickToolsConfig(config = {}) {
         customPages: config.customPages || {},
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
         externalLinks: Array.isArray(config.externalLinks) ? config.externalLinks : [],
-        events: Array.isArray(config.events) ? config.events : [],
     };
 }
 
@@ -116,6 +104,12 @@ function AdminNav({ active = 'tools' }) {
                 <Link href="/admin/ads" className={active === 'ads' ? 'active' : ''}>
                     <i className="fa-solid fa-bullhorn"></i>
                     <span className="nav-text">الحملات الإعلانية</span>
+                </Link>
+            </li>
+            <li>
+                <Link href="/admin/tool-management" className={active === 'tool-management' ? 'active' : ''}>
+                    <i className="fa-solid fa-toolbox"></i>
+                    <span className="nav-text">إدارة الأدوات</span>
                 </Link>
             </li>
             <li>
@@ -313,19 +307,6 @@ export default function AdminToolsPage() {
         }));
     };
 
-    const addEvent = () => {
-        setToolsConfig((current) => ({
-            ...current,
-            events: [
-                ...(current.events || []),
-                {
-                    ...EMPTY_EVENT,
-                    id: `event-${Date.now()}`,
-                },
-            ],
-        }));
-    };
-
     const addPage = () => {
         setToolsConfig((current) => {
             const slug = createUniqueSlug('page', current.internalPages || []);
@@ -408,22 +389,45 @@ export default function AdminToolsPage() {
         });
     };
 
-    const removePage = (index) => {
-        setToolsConfig((current) => {
-            const pages = [...(current.internalPages || [])];
-            const [removedPage] = pages.splice(index, 1);
-            const slug = normalizeSlug(removedPage?.slug);
-            const customPages = { ...(current.customPages || {}) };
-            if (slug) delete customPages[slug];
+    const removePage = async (index) => {
+        const firebaseApi = firebaseApiRef.current;
+        const pages = [...(toolsConfig.internalPages || [])];
+        const [removedPage] = pages.splice(index, 1);
+        const slug = normalizeSlug(removedPage?.slug);
+        const customPages = { ...(toolsConfig.customPages || {}) };
+        if (slug) delete customPages[slug];
 
-            return {
-                ...current,
-                internalPages: pages,
-                customPages,
-            };
-        });
+        const nextConfig = {
+            ...toolsConfig,
+            internalPages: pages,
+            customPages,
+        };
 
+        setToolsConfig(nextConfig);
         if (pageModalIndex === index) closePageModal();
+
+        if (!firebaseApi?.saveSiteConfigSection) {
+            showMessage('error', 'لم تكتمل تهيئة Firebase بعد. احفظ الإعدادات بعد اكتمال التحميل.');
+            return;
+        }
+
+        try {
+            setSaving(true);
+            showMessage('info', 'جاري حذف الصفحة من قاعدة البيانات...');
+            await firebaseApi.saveSiteConfigSection({
+                internalPages: pages,
+                customPages: slug
+                    ? { ...customPages, [slug]: { __delete: true } }
+                    : customPages,
+            });
+            showMessage('success', 'تم حذف الصفحة من Firebase بنجاح.');
+        } catch (error) {
+            console.error('Error deleting page:', error);
+            showMessage('error', 'تعذر حذف الصفحة من Firebase. تمت إعادة تحميل القائمة المحلية.');
+            setToolsConfig(toolsConfig);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const updatePageContent = (slug, content) => {
@@ -550,10 +554,6 @@ export default function AdminToolsPage() {
                     <a href="#social" className="tools-quick-card color-social">
                         <i className="fa-solid fa-hashtag"></i>
                         <span>السوشيال</span>
-                    </a>
-                    <a href="#events" className="tools-quick-card color-events">
-                        <i className="fa-solid fa-calendar-star"></i>
-                        <span>الأحداث</span>
                     </a>
                 </div>
 
@@ -744,82 +744,6 @@ export default function AdminToolsPage() {
                                         <i className="fa-solid fa-up-right-from-square"></i>
                                     </a>
                                     <button type="button" className="danger" onClick={() => removeArrayItem('socialLinks', index)} title="حذف الحساب">
-                                        <i className="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-
-                <section className="legacy-google-card tools-section-card" id="events">
-                    <div className="tools-section-head">
-                        <div className="tools-section-title">
-                            <span className="tools-section-icon color-events"><i className="fa-solid fa-calendar-star"></i></span>
-                            <div>
-                                <h2>الأحداث</h2>
-                                <p>مواعيد تظهر في الصفحة الرئيسية مع أيقونة ولون لكل حدث.</p>
-                            </div>
-                        </div>
-                        <button type="button" className="legacy-primary-btn" onClick={addEvent}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة حدث
-                        </button>
-                    </div>
-
-                    <div className="tools-list">
-                        {(toolsConfig.events || []).length === 0 && (
-                            <div className="tools-empty">لا توجد أحداث بعد.</div>
-                        )}
-
-                        {(toolsConfig.events || []).length > 0 && (
-                            <div className="tools-table-head">
-                                <span>تفعيل</span>
-                                <span>أيقونة</span>
-                                <span>اسم الحدث</span>
-                                <span>التاريخ</span>
-                                <span>التكرار</span>
-                                <span>كود الأيقونة</span>
-                                <span>الإجراءات</span>
-                            </div>
-                        )}
-
-                        {(toolsConfig.events || []).map((eventItem, index) => (
-                            <div className="tools-item-card event" key={`${eventItem.id}-${index}`}>
-                                <label className="tools-mini-check icon-only" title="تفعيل الحدث">
-                                    <input type="checkbox" checked={eventItem.active !== false} onChange={(event) => updateArrayItem('events', index, 'active', event.target.checked)} />
-                                </label>
-                                <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
-                                    <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
-                                </div>
-                                <div className="tools-item-main">
-                                    <div className="legacy-field">
-                                        <label>اسم الحدث</label>
-                                        <input value={eventItem.name || ''} onChange={(event) => updateArrayItem('events', index, 'name', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>التاريخ</label>
-                                        <input type="date" value={eventItem.date || ''} onChange={(event) => updateArrayItem('events', index, 'date', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>التكرار</label>
-                                        <select value={eventItem.repeat || 'once'} onChange={(event) => updateArrayItem('events', index, 'repeat', event.target.value)}>
-                                            <option value="once">مرة واحدة</option>
-                                            <option value="monthly">شهريًا</option>
-                                            <option value="yearly">سنويًا</option>
-                                        </select>
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>الأيقونة</label>
-                                        <input dir="ltr" value={eventItem.icon || ''} onChange={(event) => updateArrayItem('events', index, 'icon', event.target.value)} placeholder="fa-star" />
-                                    </div>
-                                </div>
-                                <div className="tools-item-actions">
-                                    <label className="tools-color-action" title="لون الحدث">
-                                        <input className="tools-event-color" type="color" value={eventItem.color || '#3b82f6'} onChange={(event) => updateArrayItem('events', index, 'color', event.target.value)} />
-                                        <span>لون</span>
-                                    </label>
-                                    <button type="button" className="danger" onClick={() => removeArrayItem('events', index)} title="حذف الحدث">
                                         <i className="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
