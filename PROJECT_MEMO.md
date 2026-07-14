@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.61.
+الإصدار الحالي للتطبيق هو 0.2.62.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -4983,6 +4983,79 @@ PROJECT_MEMO.md
 
 ---
 
+### تنظيف بيانات Firestore القديمة وربط الحملات الحديثة - الإصدار 0.2.62
+
+الأعراض:
+
+```txt
+بقيت بيانات قديمة في `settings/main` بعد حذفها أو نقلها من المنصة، مثل `customPages.about` و `adCampaigns` القديم و `pages` وحقل `toolSlogan ` المكرر بمسافة.
+كان العرض العام للإعلانات يعتمد على حقل `settings/main.adCampaigns` القديم، بينما إدارة الحملات الحديثة تحفظ في collection `campaigns`.
+```
+
+السبب:
+
+```txt
+بعض الحقول كانت انتقالية من النظام القديم ولم تكن تزال عند الحفظ.
+Firebase CLI المتاح لا يوفر أمرًا مباشرًا لحذف حقول داخل وثيقة واحدة بدون حذف الوثيقة كاملة.
+```
+
+الحل:
+
+```txt
+إضافة `/api/public-campaigns` لقراءة الحملات النشطة من collection `campaigns` عبر Service Account وإرجاع بيانات العرض العامة فقط.
+ربط `SiteShell` بالحملات الحديثة ودمجها داخل `configData.adCampaigns` لاستخدامها في كل الأدوات.
+تعديل `app/firebase.js` حتى لا يعيد حفظ الحقول القديمة ويحذفها تلقائيًا عند أي حفظ إداري.
+إضافة `/api/admin/cleanup` كتنظيف إداري محمي بجلسة مدير فعالة ويحذف فقط قائمة ثابتة من الحقول القديمة.
+إضافة زر "تنظيف Firebase" في `/admin/tools` لتنفيذ التنظيف من الواجهة دون كشف أي token أو سر.
+```
+
+الحالة:
+
+```txt
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build بسبب منع الشبكة في بيئة sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+⚠️ لم يتم تنفيذ الحذف الحي بعد؛ يجب الضغط على زر "تنظيف Firebase" من `/admin/tools` بعد النشر بجلسة مدير فعالة.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -TotalCount 120 PROJECT_MEMO.md
+git status --short
+Get-Content -Raw .firebaserc
+Get-Content -Raw firebase.json
+rg -n "deleteField|deleteDoc|deleteObject|remove|customPages|internalPages|support_tickets|campaigns|settings/main|toolSettings|events|linkPreview|googleAdSlots|adPlacements|marketing" app firestore.rules
+Invoke-RestMethod -Uri 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main'
+npx firebase-tools --version
+npx firebase-tools login:list
+npx firebase-tools --help
+npm run lint
+npm run build
+npm run deploy
+curl.exe -s https://date-tool.com/api/public-campaigns
+curl.exe -s -o NUL -w "%{http_code}" -X POST https://date-tool.com/api/admin/cleanup
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.62
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/api/admin/cleanup/route.js
+app/api/public-campaigns/route.js
+app/admin/AdminDashboard.css
+app/admin/tools/page.jsx
+app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5220,6 +5293,14 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.60 على Cloudflare Version ID: 5ae7a4a4-d064-4645-b7cc-ca5de00567d3
 ✅ تم تحديث الإصدار إلى 0.2.61 وربط صورة Link Preview المخصصة برفع R2
 ✅ تم نشر الإصدار 0.2.61 على Cloudflare Version ID: 8a99f70d-4a03-4e9f-b2b9-f21d3d960f40
+✅ تم تحديث الإصدار إلى 0.2.62 وإضافة تنظيف آمن لبيانات Firestore القديمة
+✅ تم ربط عرض الإعلانات العام بالحملات النشطة من collection `campaigns` عبر `/api/public-campaigns`
+✅ تم منع إعادة حفظ الحقول القديمة `adCampaigns` و `adImages` و `pages` و `toolSlogan ` داخل `settings/main`
+✅ تم إضافة زر "تنظيف Firebase" في `/admin/tools` لحذف `customPages.about` والحقول القديمة بجلسة مدير فعالة
+✅ تم نشر الإصدار 0.2.62 على Cloudflare Version ID: 00434034-28da-4cf1-90de-6f68a06fa119
+✅ تم اختبار `/api/public-campaigns` على الإنتاج ورجع `{ ok: true, campaigns: [] }`
+✅ تم اختبار حماية `/api/admin/cleanup` بدون توثيق ورجع 401 كما هو متوقع
+✅ تم اختبار `/admin/tools?v=0.2.62` على الإنتاج ورجع HTTP 200
 ```
 
 ---
@@ -5280,7 +5361,7 @@ ads top / middle / bottom1 / bottom2
 ربط جدول الإعلانات لاحقًا بنظام طلبات الإعلانات وإدارة العملاء والتذاكر
 اختبار حفظ إعداد Google AdSense للإعلان العلوي من لوحة الإدارة بجلسة مدير فعلية، ثم التأكد من ظهوره تحت خانة اليوم بعد ترك خانة صورة إعلان أعلى الصفحة فارغة
 اختبار صفحة `/admin/ad-settings` بجلسة مدير فعلية: حفظ مواضع الإعلانات، تفعيل Google عند غياب المعلنين، وإدخال مقتطف Ads.txt ثم اختبار `/ads.txt`.
-مهم جدًا: بعد تحويل `/admin/ads` إلى `campaigns`، يجب لاحقًا ربط عرض الإعلانات في الصفحة الرئيسية بالحملات النشطة من `campaigns` بدل الاعتماد النهائي على `settings/main.adCampaigns`
+اختبار زر "تنظيف Firebase" في `/admin/tools` بجلسة مدير فعلية بعد نشر الإصدار 0.2.62 والتأكد من اختفاء الحقول القديمة من `settings/main`.
 ```
 
 تقسيم مقترح:

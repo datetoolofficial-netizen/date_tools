@@ -271,6 +271,49 @@ export default function AdminToolsPage() {
         }
     };
 
+    const cleanupFirebaseData = async () => {
+        const firebaseApi = firebaseApiRef.current;
+        const currentUser = firebaseApi?.auth?.currentUser;
+
+        if (!currentUser) {
+            showMessage('error', 'انتهت جلسة المدير. سجّل الدخول مرة أخرى قبل التنظيف.');
+            return;
+        }
+
+        const confirmed = window.confirm('سيتم حذف بيانات Firestore القديمة غير المستخدمة فقط: صفحة من نحن المحذوفة، الحملات القديمة، صور الإعلانات القديمة، pages، وحقل toolSlogan المكرر. هل تريد المتابعة؟');
+        if (!confirmed) return;
+
+        setSaving(true);
+        showMessage('info', 'جاري تنظيف بيانات Firebase القديمة...');
+
+        try {
+            const token = await currentUser.getIdToken();
+            const response = await fetch('/api/admin/cleanup', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok || !result.ok) {
+                throw new Error(result.error || 'cleanup_failed');
+            }
+
+            setToolsConfig((current) => {
+                const customPages = { ...(current.customPages || {}) };
+                delete customPages.about;
+                return { ...current, customPages };
+            });
+            showMessage('success', 'تم تنظيف بيانات Firebase القديمة بنجاح.');
+        } catch (error) {
+            console.error('Firebase cleanup failed:', error);
+            showMessage('error', 'تعذر تنظيف Firebase. تحقق من صلاحية المدير وإعداد سر Firebase Service Account.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const updateArrayItem = (key, index, field, value) => {
         setToolsConfig((current) => {
             const nextItems = [...(current[key] || [])];
@@ -555,6 +598,10 @@ export default function AdminToolsPage() {
                         <i className="fa-solid fa-hashtag"></i>
                         <span>السوشيال</span>
                     </a>
+                    <button type="button" className="tools-quick-card color-cleanup" onClick={cleanupFirebaseData} disabled={saving}>
+                        <i className="fa-solid fa-broom"></i>
+                        <span>تنظيف Firebase</span>
+                    </button>
                 </div>
 
                 <section className="legacy-google-card tools-section-card" id="pages">

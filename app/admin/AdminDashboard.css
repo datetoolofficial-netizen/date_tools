@@ -1666,6 +1666,9 @@ body.dark-mode .legacy-admin-shell {
     text-align: center;
     box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
     transition: transform 0.2s ease, border-color 0.2s ease;
+    appearance: none;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .tools-quick-card:hover {
@@ -1710,6 +1713,11 @@ body.dark-mode .legacy-admin-shell {
 .color-events {
     --tool-color: #f59e0b;
     --tool-bg: rgba(245, 158, 11, 0.16);
+}
+
+.color-cleanup {
+    --tool-color: #10b981;
+    --tool-bg: rgba(16, 185, 129, 0.14);
 }
 
 .tools-quick-card i,

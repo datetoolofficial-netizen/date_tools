@@ -1,5 +1,12 @@
 # سجل إصدارات date_tools
 
+## 0.2.62 - 2026-07-14
+
+- إضافة endpoint عام آمن `/api/public-campaigns` يعرض حملات `campaigns` النشطة فقط للواجهة العامة بدون بيانات الإدارة أو المعلنين الحساسة.
+- ربط الواجهة العامة بمصدر الحملات الحديث حتى تكون أولوية إعلانات العملاء من collection `campaigns` بدل حقل `settings/main.adCampaigns` القديم.
+- إضافة endpoint إداري محمي `/api/admin/cleanup` لتنظيف حقول Firestore القديمة المحددة فقط: `adCampaigns`, `adImages`, `pages`, `toolSlogan ` و `customPages.about`.
+- إضافة زر "تنظيف Firebase" في `/admin/tools` لتنفيذ التنظيف بجلسة مدير فعالة، مع منع إعادة حفظ الحقول القديمة من `app/firebase.js`.
+
 ## 0.2.61 - 2026-07-13
 
 - ربط صورة Link Preview المخصصة برفع آمن إلى Cloudflare R2 بدل الاعتماد على رابط يدوي فقط.

@@ -38,6 +38,20 @@ async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
     }
 }
 
+async function fetchPublicCampaigns() {
+    try {
+        const response = await fetch('/api/public-campaigns', { cache: 'no-store' });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.ok || !Array.isArray(data.campaigns)) return [];
+
+        return data.campaigns;
+    } catch (error) {
+        console.warn('Unable to load public campaigns:', error);
+        return [];
+    }
+}
+
 function PublicShellSkeleton() {
     return (
         <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
@@ -117,8 +131,17 @@ export default function SiteShell({ children }) {
                 };
 
                 await firebaseApiRef.current.initAndTrackVisit();
-                const data = await firebaseApiRef.current.getSiteConfig();
-                if (isMounted) setConfigData(data || {});
+                const [data, campaigns] = await Promise.all([
+                    firebaseApiRef.current.getSiteConfig(),
+                    fetchPublicCampaigns(),
+                ]);
+
+                if (isMounted) {
+                    setConfigData({
+                        ...(data || {}),
+                        adCampaigns: campaigns,
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching site config:', error);
                 if (isMounted) setConfigData({ events: [] });

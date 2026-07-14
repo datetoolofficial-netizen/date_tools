@@ -191,20 +191,6 @@ function normalizeGoogleAdSlots(value = {}) {
     );
 }
 
-function normalizeAdImages(value = {}) {
-    return {
-        dateTop: String(value.dateTop || value.top || ""),
-        dateMiddle: String(value.dateMiddle || value.middle || ""),
-        dateBottom: String(value.dateBottom || value.bottom1 || value.bottom2 || ""),
-        clockTop: String(value.clockTop || ""),
-        clockMiddle: String(value.clockMiddle || ""),
-        clockBottom: String(value.clockBottom || ""),
-        weatherTop: String(value.weatherTop || ""),
-        weatherMiddle: String(value.weatherMiddle || ""),
-        weatherBottom: String(value.weatherBottom || "")
-    };
-}
-
 // App Check يعمل فقط في المتصفح
 if (typeof window !== "undefined") {
     try {
@@ -230,17 +216,6 @@ export const defaultSiteConfig = {
     hasLogo: false,
     logoUrl: "",
     faviconUrl: "",
-    adImages: {
-        dateTop: "",
-        dateMiddle: "",
-        dateBottom: "",
-        clockTop: "",
-        clockMiddle: "",
-        clockBottom: "",
-        weatherTop: "",
-        weatherMiddle: "",
-        weatherBottom: ""
-    },
     googleAdSlots: defaultGoogleAdSlots,
     adCampaigns: [],
     externalIntegrations: defaultExternalIntegrations,
@@ -252,7 +227,6 @@ export const defaultSiteConfig = {
     events: [],
     toolSettings: DEFAULT_TOOL_SETTINGS,
     linkPreview: DEFAULT_LINK_PREVIEW,
-    pages: {},
     customPages: {},
     mainSEO: {
         title: "أدوات التاريخ الشاملة",
@@ -285,14 +259,9 @@ export async function getSiteConfig() {
             externalLinks: Array.isArray(data.externalLinks) ? data.externalLinks : [],
             internalPages: Array.isArray(data.internalPages) ? data.internalPages : [],
             socialLinks: Array.isArray(data.socialLinks) ? data.socialLinks : [],
-            adCampaigns: Array.isArray(data.adCampaigns) ? data.adCampaigns : [],
+            adCampaigns: [],
             toolSettings: normalizeToolSettings(data.toolSettings || {}),
             linkPreview: normalizeLinkPreviewSettings(data.linkPreview || {}),
-
-            adImages: {
-                ...defaultSiteConfig.adImages,
-                ...normalizeAdImages(data.adImages || {})
-            },
 
             googleAdSlots: {
                 ...defaultGoogleAdSlots,
@@ -304,7 +273,6 @@ export async function getSiteConfig() {
                 ...normalizeExternalIntegrations(data.externalIntegrations || {})
             },
 
-            pages: data.pages || {},
             customPages: data.customPages || {},
 
             mainSEO: {
@@ -341,18 +309,11 @@ export async function saveSiteConfig(config) {
         externalLinks: Array.isArray(config.externalLinks) ? config.externalLinks : [],
         internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
-        adCampaigns: Array.isArray(config.adCampaigns) ? config.adCampaigns : [],
+        adCampaigns: deleteField(),
         toolSettings: normalizeToolSettings(config.toolSettings || {}),
         linkPreview: normalizeLinkPreviewSettings(config.linkPreview || {}),
 
-        adImages: {
-            ...defaultSiteConfig.adImages,
-            ...normalizeAdImages(config.adImages || {}),
-            top: deleteField(),
-            middle: deleteField(),
-            bottom1: deleteField(),
-            bottom2: deleteField()
-        },
+        adImages: deleteField(),
 
         googleAdSlots: {
             ...defaultGoogleAdSlots,
@@ -365,7 +326,8 @@ export async function saveSiteConfig(config) {
             ...normalizeExternalIntegrations(config.externalIntegrations || {})
         },
 
-        pages: config.pages || {},
+        pages: deleteField(),
+        ['toolSlogan ']: deleteField(),
         customPages,
 
         mainSEO: {
@@ -381,23 +343,21 @@ export async function saveSiteConfig(config) {
 
 export async function saveSiteConfigSection(sectionPatch) {
     const configRef = doc(db, "settings", "main");
-    const cleanPatch = { ...sectionPatch, hasError: false };
+    const cleanPatch = {
+        ...sectionPatch,
+        hasError: false,
+        adCampaigns: deleteField(),
+        adImages: deleteField(),
+        pages: deleteField(),
+        ['toolSlogan ']: deleteField()
+    };
 
     if ('events' in cleanPatch && !Array.isArray(cleanPatch.events)) cleanPatch.events = [];
     if ('externalLinks' in cleanPatch && !Array.isArray(cleanPatch.externalLinks)) cleanPatch.externalLinks = [];
     if ('internalPages' in cleanPatch && !Array.isArray(cleanPatch.internalPages)) cleanPatch.internalPages = [];
     if ('socialLinks' in cleanPatch && !Array.isArray(cleanPatch.socialLinks)) cleanPatch.socialLinks = [];
-    if ('adCampaigns' in cleanPatch && !Array.isArray(cleanPatch.adCampaigns)) cleanPatch.adCampaigns = [];
-
     if ('adImages' in cleanPatch) {
-        cleanPatch.adImages = {
-            ...defaultSiteConfig.adImages,
-            ...normalizeAdImages(cleanPatch.adImages || {}),
-            top: deleteField(),
-            middle: deleteField(),
-            bottom1: deleteField(),
-            bottom2: deleteField()
-        };
+        cleanPatch.adImages = deleteField();
     }
 
     if ('googleAdSlots' in cleanPatch) {
