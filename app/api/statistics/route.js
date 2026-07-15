@@ -330,7 +330,7 @@ export async function POST(request) {
 
         return jsonResponse({ ok: true });
     } catch (error) {
-        console.error('statistics endpoint error:', error);
+        console.error('statistics endpoint error:', error instanceof Error ? error.message : 'unknown');
         const errorCode = error instanceof Error && /^(token|firestore)_failed_\d+$/.test(error.message)
             ? error.message
             : `statistics_update_failed_${error?.name || 'unknown'}`;

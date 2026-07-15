@@ -2338,6 +2338,47 @@ body.dark-mode .legacy-admin-shell {
     min-height: 280px;
 }
 
+.tools-rich-editor {
+    min-height: 340px;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    line-height: 1.9;
+    font-size: 15px;
+    overflow: auto;
+    outline: none;
+}
+
+.tools-rich-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+}
+
+.tools-rich-editor:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 16%, transparent);
+}
+
+.tools-rich-editor h1,
+.tools-rich-editor h2,
+.tools-rich-editor h3 {
+    margin: 0.8em 0 0.35em;
+}
+
+.tools-rich-editor p,
+.tools-rich-editor ul,
+.tools-rich-editor ol {
+    margin: 0 0 0.75em;
+}
+
+.tools-rich-editor ul,
+.tools-rich-editor ol {
+    padding-inline-start: 1.35em;
+}
+
 .legacy-identity-hero {
     align-items: flex-start;
 }

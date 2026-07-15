@@ -240,7 +240,7 @@ export async function POST(request) {
             removedFields: CLEANUP_FIELD_PATHS,
         });
     } catch (error) {
-        console.error('admin cleanup endpoint error:', error);
+        console.error('admin cleanup endpoint error:', error instanceof Error ? error.message : 'unknown');
         return jsonResponse({ ok: false, error: 'cleanup_failed' }, 500);
     }
 }

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Toast from './components/Toast';
 import PublicAdSlot from './components/PublicAdSlot';
+import { getSafeCurrentUrl } from './privacyConsent';
 import { useSiteContext } from './SiteContext';
 import {
     buildDateStory,
@@ -212,7 +213,7 @@ export default function Home() {
         if (upcomingEvents.length === 0) return;
         
         const labels = i18n[lang] || i18n.ar;
-        const shareBody = buildEventsShareText(lang, upcomingEvents, window.location.href);
+        const shareBody = buildEventsShareText(lang, upcomingEvents, getSafeCurrentUrl());
 
         if (navigator.share) {
             try { await navigator.share({ title: labels.shareEventsTitle, text: shareBody }); } catch (err) {}
@@ -232,7 +233,7 @@ export default function Home() {
             isLeap,
             title,
             rawResultText,
-            url: window.location.href,
+            url: getSafeCurrentUrl(),
         });
         setEnteredDateInfo({ title, info, shareText });
     };

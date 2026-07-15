@@ -339,7 +339,7 @@ export async function POST(request) {
         await createSupportTicket(serviceAccount, cleaned, ticketNumber, uploadedAttachment);
         return jsonResponse({ ok: true, ticketNumber });
     } catch (error) {
-        console.error('support endpoint error:', error);
+        console.error('support endpoint error:', error instanceof Error ? error.message : 'unknown');
         const badRequestErrors = new Set(['attachment_too_large', 'unsupported_attachment_type']);
         const errorMessage = error instanceof Error ? error.message : '';
         const errorCode = error instanceof SyntaxError ? 'invalid_json' : badRequestErrors.has(errorMessage) ? errorMessage : 'support_create_failed';

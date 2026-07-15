@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
+import { useSiteContext } from '../SiteContext';
 
 const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
 const ADSENSE_SLOT_PATTERN = /^\d{4,20}$/;
@@ -82,6 +83,7 @@ function GoogleAdsenseUnit({ ad, scriptId }) {
 }
 
 export default function PublicAdSlot({ configData, slotName, label = 'مساحة إعلانية', compact = false }) {
+    const { privacyConsent } = useSiteContext();
     const [imageFailed, setImageFailed] = useState(false);
     const slotConfig = getSlotConfig(configData, slotName);
     const campaign = getActiveCampaign(configData, slotName);
@@ -109,7 +111,7 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
                 onError={() => setImageFailed(true)}
             />
         );
-    } else if (!hasActiveCampaign && googleAd?.enabledWhenNoAdvertiser) {
+    } else if (!hasActiveCampaign && privacyConsent?.marketing === true && googleAd?.enabledWhenNoAdvertiser) {
         content = <GoogleAdsenseUnit ad={googleAd} scriptId={`adsbygoogle-${slotName}-init`} />;
     } else if (!hasActiveCampaign && shouldShowHouseAd) {
         content = (

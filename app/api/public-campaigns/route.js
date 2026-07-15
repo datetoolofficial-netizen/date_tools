@@ -225,7 +225,7 @@ export async function GET() {
 
         return jsonResponse({ ok: true, campaigns });
     } catch (error) {
-        console.error('public campaigns endpoint error:', error);
+        console.error('public campaigns endpoint error:', error instanceof Error ? error.message : 'unknown');
         return jsonResponse({ ok: false, error: 'public_campaigns_failed', campaigns: [] }, 500);
     }
 }

@@ -19,7 +19,9 @@ export const SiteContext = createContext({
     currentLocation: null,
     locationStatus: 'idle',
     locationError: '',
+    privacyConsent: null,
     requestCurrentLocation: async () => null,
+    updatePrivacyConsent: () => {},
 });
 
 export function useSiteContext() {

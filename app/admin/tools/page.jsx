@@ -134,6 +134,49 @@ function AdminNav({ active = 'tools' }) {
     );
 }
 
+function PageHtmlEditor({ value, onChange }) {
+    const editorRef = useRef(null);
+
+    useEffect(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+        const safeValue = sanitizeHtml(value || '');
+        if (editor.innerHTML !== safeValue) editor.innerHTML = safeValue;
+    }, [value]);
+
+    const updateFromEditor = () => {
+        const editor = editorRef.current;
+        if (!editor) return;
+        onChange(sanitizeHtml(editor.innerHTML));
+    };
+
+    const handlePaste = (event) => {
+        event.preventDefault();
+        const html = event.clipboardData.getData('text/html');
+        const text = event.clipboardData.getData('text/plain');
+        const safeContent = html
+            ? sanitizeHtml(html)
+            : sanitizeHtml(String(text || '').split(/\n{2,}/).map((part) => `<p>${part.replace(/\n/g, '<br>')}</p>`).join(''));
+
+        document.execCommand('insertHTML', false, safeContent);
+        updateFromEditor();
+    };
+
+    return (
+        <div
+            ref={editorRef}
+            className="tools-rich-editor"
+            contentEditable
+            suppressContentEditableWarning
+            role="textbox"
+            aria-multiline="true"
+            onInput={updateFromEditor}
+            onPaste={handlePaste}
+            data-placeholder="اكتب محتوى الصفحة هنا أو الصق نصًا منسقًا من Google Docs..."
+        />
+    );
+}
+
 export default function AdminToolsPage() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminName, setAdminName] = useState('أيها المدير');
@@ -821,12 +864,11 @@ export default function AdminToolsPage() {
                         {isPageModalEditing ? (
                             <div className="legacy-field">
                                 <label>محتوى الصفحة</label>
-                                <textarea
-                                    rows={12}
+                                <PageHtmlEditor
                                     value={selectedPageContent}
-                                    onChange={(event) => updatePageContent(selectedPageSlug, event.target.value)}
-                                    placeholder="اكتب محتوى الصفحة هنا..."
+                                    onChange={(content) => updatePageContent(selectedPageSlug, content)}
                                 />
+                                <span className="legacy-field-hint">يمكنك لصق نص منسق من Google Docs أو محرر نصوص، وسيتم تنظيف HTML تلقائيًا قبل الحفظ.</span>
                             </div>
                         ) : (
                             <div className="tools-page-preview">

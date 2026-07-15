@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.62.
+الإصدار الحالي للتطبيق هو 0.2.63.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -143,6 +143,7 @@ https://www.date-tool.com
 79. إضافة إعدادات محتوى مستقلة لكل أداة لتعديل عنوان السكشن التعريفي والسلوغن وأسماء الأدوات الفرعية والأسئلة الشائعة من لوحة الإدارة.
 80. إضافة إعدادات Link Preview داخل الهوية البصرية وربطها بوسوم المشاركة، مع إضافة زر رجوع من صفحات إعداد كل أداة إلى صفحة إدارة الأدوات.
 81. ربط صورة Link Preview المخصصة برفع آمن إلى Cloudflare R2 بدل إدخال رابط يدوي فقط.
+82. إضافة موافقة الخصوصية والكوكيز، حجب أدوات التحليلات/التسويق حتى الموافقة، ومنع تسريب تاريخ الميلاد أو البريد الإلكتروني عبر URL أو سجلات عامة أو إعلانات.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5056,6 +5057,92 @@ PROJECT_MEMO.md
 
 ---
 
+### موافقة الخصوصية ومنع تسريب البيانات الحساسة - الإصدار 0.2.63
+
+الأعراض:
+
+```txt
+نصوص صفحات الخصوصية الجديدة تذكر التحكم في الخصوصية والكوكيز من الموقع أو المتصفح.
+كان يلزم إشعار موافقة فعلي، وحجب أدوات التحليلات/التسويق قبل الموافقة.
+كان يلزم التأكد برمجيًا من عدم خروج تاريخ الميلاد أو البريد الإلكتروني إلى URL أو query string أو أسماء أحداث Google Analytics أو عنوان الصفحة أو معلمات الإعلانات أو سجلات الأخطاء العامة.
+كان محرر محتوى الصفحات يحتاج دعم لصق نصوص منسقة من Google Docs ومحررات النصوص.
+```
+
+السبب:
+
+```txt
+التكاملات الخارجية كانت تقرأ الإعدادات وتحقن بعض السكربتات مباشرة بعد تحميل الموقع.
+روابط المشاركة كانت تستخدم window.location.href وقد تحمل query string.
+بعض سجلات الأخطاء العامة كانت تطبع كائن الخطأ كاملًا.
+محرر الصفحات كان textarea عاديًا لا يحافظ على البنية المنسقة عند اللصق.
+```
+
+الحل:
+
+```txt
+إضافة app/privacyConsent.js لإدارة موافقة الخصوصية في localStorage وإطلاق حدث تحديث للمكونات.
+إضافة إشعار موافقة في SiteShell مع خيارات ضرورية/تحليلات/تسويق وزر دائم لإعادة فتح إعدادات الخصوصية من الموقع.
+حجب Google Analytics وGTM وClarity حتى موافقة التحليلات، وحجب Meta Pixel وAdSense حتى موافقة التسويق.
+تعديل روابط المشاركة لتستخدم origin + pathname فقط بدون query string.
+تقليل سجلات الأخطاء العامة في endpoints العامة وصفحات الكلاينت حتى لا تطبع payload أو كائنات خطأ كاملة.
+تحويل محرر محتوى الصفحات في /admin/tools إلى محرر contentEditable يقبل HTML منسقًا وينظفه عبر sanitizeHtml قبل الحفظ.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديلات محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.63 على Cloudflare Version ID: 178e9e28-40a6-4ae0-8b1e-b2cd969fb177.
+✅ تم اختبار الصفحة الرئيسية وصفحة `/admin/tools` على الإنتاج ورجعت HTTP 200.
+✅ تم اختبار `/api/public-campaigns` على الإنتاج ورجع `{ ok: true, campaigns: [] }`.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "tools-rich-editor|privacy-consent|PRIVACY_CONSENT|External integrations were skipped|getSafeCurrentUrl|console\.error\(|console\.warn\(" app PROJECT_MEMO.md package.json app/version.js VERSION_LOG.md
+git status --short
+npm version 0.2.63 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.63
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.63
+curl.exe -s https://date-tool.com/api/public-campaigns
+```
+
+الملفات المتأثرة:
+
+```txt
+app/privacyConsent.js
+app/SiteContext.jsx
+app/SiteShell.jsx
+app/components/ExternalIntegrations.jsx
+app/components/PublicAdSlot.jsx
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/globals.css
+app/page.jsx
+app/api/support/route.js
+app/api/statistics/route.js
+app/api/public-campaigns/route.js
+app/api/admin/cleanup/route.js
+app/client/create-campaign/page.jsx
+app/client/dashboard/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5301,6 +5388,12 @@ PROJECT_MEMO.md
 ✅ تم اختبار `/api/public-campaigns` على الإنتاج ورجع `{ ok: true, campaigns: [] }`
 ✅ تم اختبار حماية `/api/admin/cleanup` بدون توثيق ورجع 401 كما هو متوقع
 ✅ تم اختبار `/admin/tools?v=0.2.62` على الإنتاج ورجع HTTP 200
+✅ تم تحديث الإصدار إلى 0.2.63 وإضافة موافقة الخصوصية والكوكيز
+✅ تم حجب التحليلات والتسويق وAdSense حتى موافقة المستخدم المناسبة
+✅ تم منع روابط المشاركة من حمل query string وتنظيف سجلات الأخطاء العامة من تفاصيل حساسة
+✅ تم تحسين محرر صفحات `/admin/tools` لقبول لصق نص منسق من Google Docs مع تنظيف HTML
+✅ تم نشر الإصدار 0.2.63 على Cloudflare Version ID: 178e9e28-40a6-4ae0-8b1e-b2cd969fb177
+✅ تم اختبار `/`, `/admin/tools?v=0.2.63`, و `/api/public-campaigns` على الإنتاج بنجاح
 ```
 
 ---
@@ -5350,7 +5443,7 @@ ads top / middle / bottom1 / bottom2
 
 ```txt
 تقسيم app/admin/page.jsx إلى مكونات أصغر لاحقًا في مهمة منفصلة
-تحسين محرر الصفحات
+اختبار محرر الصفحات المنسق في `/admin/tools` بجلسة مدير فعلية عبر لصق نص من Google Docs والتأكد من حفظه وعرضه بعد التنظيف.
 تحسين معاينة الصفحات
 تحسين إدارة الإحصائيات
 اختبار زر حذف الصفحات في `/admin/tools` بجلسة مدير فعلية بعد تعديل الحذف الصريح من Firebase.

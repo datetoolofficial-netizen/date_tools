@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { getPrivacyConsent, PRIVACY_CONSENT_EVENT } from '../privacyConsent';
 
 const GOOGLE_TAG_PATTERN = /^(G|AW|DC)-[A-Z0-9-]+$/i;
 const GOOGLE_TAG_MANAGER_PATTERN = /^GTM-[A-Z0-9-]+$/i;
@@ -130,20 +131,29 @@ export default function ExternalIntegrations() {
 
                 removeExistingNodes();
                 appendGoogleSiteVerification(clean(integrations.googleSiteVerification));
-                appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
-                appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
                 appendBingSiteVerification(clean(integrations.bingSiteVerification));
-                appendMicrosoftClarity(clean(integrations.microsoftClarityProjectId));
-                appendMetaPixel(clean(integrations.metaPixelId));
+
+                const consent = getPrivacyConsent();
+                if (consent?.analytics === true) {
+                    appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
+                    appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
+                    appendMicrosoftClarity(clean(integrations.microsoftClarityProjectId));
+                }
+
+                if (consent?.marketing === true) {
+                    appendMetaPixel(clean(integrations.metaPixelId));
+                }
             } catch (error) {
-                console.warn('External integrations were skipped:', error);
+                console.warn('External integrations were skipped.');
             }
         }
 
         loadIntegrations();
+        window.addEventListener(PRIVACY_CONSENT_EVENT, loadIntegrations);
 
         return () => {
             isMounted = false;
+            window.removeEventListener(PRIVACY_CONSENT_EVENT, loadIntegrations);
             removeExistingNodes();
         };
     }, []);

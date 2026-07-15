@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import { defaultFirebaseApi, SiteContext } from './SiteContext';
+import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from './privacyConsent';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 
@@ -46,8 +47,8 @@ async function fetchPublicCampaigns() {
         if (!response.ok || !data.ok || !Array.isArray(data.campaigns)) return [];
 
         return data.campaigns;
-    } catch (error) {
-        console.warn('Unable to load public campaigns:', error);
+    } catch {
+        console.warn('Unable to load public campaigns.');
         return [];
     }
 }
@@ -98,6 +99,9 @@ export default function SiteShell({ children }) {
     const [locationStatus, setLocationStatus] = useState('idle');
     const [locationError, setLocationError] = useState('');
     const [locationNotice, setLocationNotice] = useState(null);
+    const [privacyConsent, setPrivacyConsent] = useState(null);
+    const [showPrivacySettings, setShowPrivacySettings] = useState(false);
+    const [privacyDraft, setPrivacyDraft] = useState(DEFAULT_PRIVACY_CONSENT);
     const firebaseApiRef = useRef(defaultFirebaseApi);
     const autoLocationRequestRef = useRef(false);
 
@@ -107,6 +111,7 @@ export default function SiteShell({ children }) {
     useEffect(() => {
         const savedLang = localStorage.getItem('site_lang') || 'ar';
         setLang(savedLang);
+        setPrivacyConsent(getPrivacyConsent());
 
         const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const savedTheme = localStorage.getItem('site_theme');
@@ -142,8 +147,8 @@ export default function SiteShell({ children }) {
                         adCampaigns: campaigns,
                     });
                 }
-            } catch (error) {
-                console.error('Error fetching site config:', error);
+            } catch {
+                console.error('Error fetching site config.');
                 if (isMounted) setConfigData({ events: [] });
             }
         }
@@ -196,6 +201,20 @@ export default function SiteShell({ children }) {
         setIsDarkMode(newTheme);
         localStorage.setItem('site_theme', newTheme ? 'dark' : 'light');
     };
+
+    const updatePrivacyConsent = useCallback((nextConsent) => {
+        const saved = savePrivacyConsent(nextConsent);
+        setPrivacyConsent(saved);
+        setPrivacyDraft(saved);
+        setShowPrivacySettings(false);
+    }, []);
+
+    const openPrivacySettings = useCallback(() => {
+        const currentConsent = getPrivacyConsent() || DEFAULT_PRIVACY_CONSENT;
+        setPrivacyDraft(currentConsent);
+        setPrivacyConsent(null);
+        setShowPrivacySettings(true);
+    }, []);
 
     const requestCurrentLocation = useCallback(async () => {
         if (currentLocation) return currentLocation;
@@ -299,6 +318,8 @@ export default function SiteShell({ children }) {
         locationStatus,
         locationError,
         requestCurrentLocation,
+        privacyConsent,
+        updatePrivacyConsent,
     };
 
     if (!shouldUseShell) {
@@ -341,6 +362,68 @@ export default function SiteShell({ children }) {
             </div>
 
             {!isSiteLoading && <Footer lang={lang} config={configData} />}
+            {!isSiteLoading && privacyConsent === null && (
+                <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
+                    <div className="privacy-consent-icon">
+                        <i className="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div className="privacy-consent-copy">
+                        <strong>إعدادات الخصوصية والكوكيز</strong>
+                        <p>
+                            نستخدم ملفات ضرورية لتشغيل الموقع، ونطلب موافقتك قبل تشغيل التحليلات أو أدوات التسويق. يمكنك التحكم لاحقًا من إعدادات المتصفح أو من هذا الإشعار عند ظهوره.
+                        </p>
+                        {showPrivacySettings && (
+                            <div className="privacy-consent-options">
+                                <label>
+                                    <input type="checkbox" checked disabled />
+                                    <span>ملفات ضرورية لتشغيل الموقع</span>
+                                </label>
+                                <label>
+                                    <input
+                                        id="privacy-analytics-option"
+                                        type="checkbox"
+                                        checked={privacyDraft.analytics}
+                                        onChange={(event) => setPrivacyDraft((current) => ({ ...current, analytics: event.target.checked }))}
+                                    />
+                                    <span>تحليلات لتحسين تجربة الاستخدام</span>
+                                </label>
+                                <label>
+                                    <input
+                                        id="privacy-marketing-option"
+                                        type="checkbox"
+                                        checked={privacyDraft.marketing}
+                                        onChange={(event) => setPrivacyDraft((current) => ({ ...current, marketing: event.target.checked }))}
+                                    />
+                                    <span>إعلانات وقياس تسويقي</span>
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                    <div className="privacy-consent-actions">
+                        <button type="button" className="privacy-accept" onClick={() => updatePrivacyConsent({ analytics: true, marketing: true })}>
+                            قبول الكل
+                        </button>
+                        <button type="button" className="privacy-secondary" onClick={() => {
+                            if (!showPrivacySettings) {
+                                setShowPrivacySettings(true);
+                                return;
+                            }
+                            updatePrivacyConsent(privacyDraft);
+                        }}>
+                            {showPrivacySettings ? 'حفظ الاختيارات' : 'تخصيص'}
+                        </button>
+                        <button type="button" className="privacy-secondary" onClick={() => updatePrivacyConsent(DEFAULT_PRIVACY_CONSENT)}>
+                            الضروري فقط
+                        </button>
+                    </div>
+                </div>
+            )}
+            {!isSiteLoading && privacyConsent !== null && (
+                <button type="button" className="privacy-settings-button" onClick={openPrivacySettings}>
+                    <i className="fa-solid fa-shield-halved"></i>
+                    إعدادات الخصوصية
+                </button>
+            )}
         </SiteContext.Provider>
     );
 }

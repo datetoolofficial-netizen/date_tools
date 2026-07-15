@@ -120,8 +120,8 @@ export default function CreateCampaignPage() {
 
             updateField('imageUrl', result.url);
             setMessage({ text: 'تم رفع صورة الإعلان إلى R2 وربطها بالطلب.', type: 'success' });
-        } catch (error) {
-            console.error(error);
+        } catch {
+            console.error('Campaign media upload failed.');
             setMessage({ text: 'تعذر رفع الصورة. تأكد من تسجيل الدخول وحاول مرة أخرى.', type: 'error' });
         } finally {
             setIsUploading(false);
@@ -176,8 +176,8 @@ export default function CreateCampaignPage() {
 
             setMessage({ text: `تم إرسال حملتك للمراجعة. رقم الإعلان: ${campaignNumber}`, type: 'success' });
             setForm(initialForm);
-        } catch (error) {
-            console.error(error);
+        } catch {
+            console.error('Campaign create failed.');
             setMessage({ text: 'تعذر إرسال الحملة. تأكد من البيانات والصلاحيات وحاول مجددًا.', type: 'error' });
         } finally {
             setIsLoading(false);

@@ -70,8 +70,8 @@ export default function ClientDashboardPage() {
                         .sort((a, b) => String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')));
 
                     setCampaigns(nextCampaigns);
-                } catch (error) {
-                    console.error(error);
+                } catch {
+                    console.error('Client campaigns load failed.');
                     setMessage({ text: 'تعذر تحميل بيانات حملاتك الآن.', type: 'error' });
                 } finally {
                     setIsLoading(false);

@@ -201,7 +201,7 @@ if (typeof window !== "undefined") {
             isTokenAutoRefreshEnabled: true
         });
     } catch (error) {
-        console.warn("App Check already initialized or skipped:", error);
+        console.warn("App Check already initialized or skipped.");
     }
 }
 
@@ -281,7 +281,7 @@ export async function getSiteConfig() {
             }
         };
     } catch (error) {
-        console.error("Error fetching site config:", error);
+        console.error("Error fetching site config.");
         return defaultSiteConfig;
     }
 }
@@ -430,7 +430,7 @@ export async function getAdminProfile(uid) {
             ...snap.data()
         };
     } catch (error) {
-        console.error("Error fetching admin profile:", error);
+        console.error("Error fetching admin profile.");
         return null;
     }
 }
@@ -493,7 +493,7 @@ export async function getAdminStats() {
 
         return snap.data();
     } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching stats.");
 
         return {
             visits: 0,
