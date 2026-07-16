@@ -33,6 +33,10 @@ function pickToolsConfig(config = {}) {
         customPages: config.customPages || {},
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
         externalLinks: Array.isArray(config.externalLinks) ? config.externalLinks : [],
+        privacySettingsButton: {
+            enabled: config.privacySettingsButton?.enabled === true,
+            pages: Array.isArray(config.privacySettingsButton?.pages) ? config.privacySettingsButton.pages : [],
+        },
     };
 }
 
@@ -71,6 +75,35 @@ function validatePageSlugs(pages = []) {
     }
 
     return { isValid: true, message: '' };
+}
+
+function normalizePagePath(value) {
+    const cleanValue = String(value || '/').trim();
+    if (!cleanValue || cleanValue === '/') return '/';
+    const withoutQuery = cleanValue.split('?')[0].split('#')[0].replace(/\/+$/, '');
+    return withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`;
+}
+
+function getPrivacyPageChoices(pages = []) {
+    const choices = [
+        { path: '/', title: 'التاريخ' },
+        { path: '/clock', title: 'الساعة' },
+        { path: '/weather', title: 'الطقس' },
+    ];
+
+    pages.forEach((page) => {
+        const slug = normalizeSlug(page?.slug);
+        if (!slug) return;
+        const path = normalizePagePath(slug);
+        if (!choices.some((choice) => choice.path === path)) {
+            choices.push({
+                path,
+                title: page?.title || path,
+            });
+        }
+    });
+
+    return choices;
 }
 
 function AdminNav({ active = 'tools' }) {
@@ -154,11 +187,24 @@ function PageHtmlEditor({ value, onChange }) {
         event.preventDefault();
         const html = event.clipboardData.getData('text/html');
         const text = event.clipboardData.getData('text/plain');
+        const pastedHtml = html
+            ? new DOMParser().parseFromString(html, 'text/html').body?.innerHTML || html
+            : '';
         const safeContent = html
-            ? sanitizeHtml(html)
+            ? sanitizeHtml(pastedHtml)
             : sanitizeHtml(String(text || '').split(/\n{2,}/).map((part) => `<p>${part.replace(/\n/g, '<br>')}</p>`).join(''));
 
-        document.execCommand('insertHTML', false, safeContent);
+        const inserted = document.execCommand('insertHTML', false, safeContent);
+        if (!inserted) {
+            const selection = window.getSelection();
+            if (selection?.rangeCount) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(range.createContextualFragment(safeContent));
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        }
         updateFromEditor();
     };
 
@@ -379,6 +425,35 @@ export default function AdminToolsPage() {
         }));
     };
 
+    const updatePrivacySettingsButton = (field, value) => {
+        setToolsConfig((current) => ({
+            ...current,
+            privacySettingsButton: {
+                ...(current.privacySettingsButton || { enabled: false, pages: [] }),
+                [field]: value,
+            },
+        }));
+    };
+
+    const togglePrivacySettingsPage = (path) => {
+        const safePath = normalizePagePath(path);
+        setToolsConfig((current) => {
+            const settings = current.privacySettingsButton || { enabled: false, pages: [] };
+            const pages = Array.isArray(settings.pages) ? settings.pages.map(normalizePagePath) : [];
+            const nextPages = pages.includes(safePath)
+                ? pages.filter((pagePath) => pagePath !== safePath)
+                : [...pages, safePath];
+
+            return {
+                ...current,
+                privacySettingsButton: {
+                    ...settings,
+                    pages: nextPages,
+                },
+            };
+        });
+    };
+
     const addExternalLink = () => {
         setToolsConfig((current) => ({
             ...current,
@@ -550,6 +625,8 @@ export default function AdminToolsPage() {
     const selectedPageSlug = normalizeSlug(selectedPage?.slug);
     const selectedPageTitle = toolsConfig.customPages?.[selectedPageSlug]?.title || selectedPage?.title || 'صفحة';
     const selectedPageContent = toolsConfig.customPages?.[selectedPageSlug]?.content || '';
+    const privacyPageChoices = getPrivacyPageChoices(toolsConfig.internalPages || []);
+    const selectedPrivacyPages = new Set((toolsConfig.privacySettingsButton?.pages || []).map(normalizePagePath));
 
     if (isCheckingAuth) {
         return (
@@ -646,6 +723,46 @@ export default function AdminToolsPage() {
                         <span>تنظيف Firebase</span>
                     </button>
                 </div>
+
+                <section className="legacy-google-card tools-section-card tools-privacy-settings-card" id="privacy-settings-button">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-privacy"><i className="fa-solid fa-shield-halved"></i></span>
+                            <div>
+                                <h2>تفعيل زر إعدادات الخصوصية</h2>
+                                <p>تحكم في ظهور الزر العائم الذي يسمح للزائر بالعودة إلى إعدادات الخصوصية والكوكيز.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="privacy-admin-controls">
+                        <label className="privacy-admin-toggle">
+                            <input
+                                type="checkbox"
+                                checked={toolsConfig.privacySettingsButton?.enabled === true}
+                                onChange={(event) => updatePrivacySettingsButton('enabled', event.target.checked)}
+                            />
+                            <span>
+                                <strong>إظهار زر إعدادات الخصوصية</strong>
+                                <small>بعد موافقة الزائر، يظهر الزر فقط في الصفحات المختارة أدناه.</small>
+                            </span>
+                        </label>
+
+                        <div className="privacy-admin-pages">
+                            {privacyPageChoices.map((page) => (
+                                <label className="privacy-admin-page" key={page.path}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedPrivacyPages.has(normalizePagePath(page.path))}
+                                        onChange={() => togglePrivacySettingsPage(page.path)}
+                                    />
+                                    <span>{page.title}</span>
+                                    <code dir="ltr">{page.path}</code>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
                 <section className="legacy-google-card tools-section-card" id="pages">
                     <div className="tools-section-head">

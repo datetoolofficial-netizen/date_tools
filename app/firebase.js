@@ -227,6 +227,10 @@ export const defaultSiteConfig = {
     events: [],
     toolSettings: DEFAULT_TOOL_SETTINGS,
     linkPreview: DEFAULT_LINK_PREVIEW,
+    privacySettingsButton: {
+        enabled: false,
+        pages: [],
+    },
     customPages: {},
     mainSEO: {
         title: "أدوات التاريخ الشاملة",
@@ -262,6 +266,10 @@ export async function getSiteConfig() {
             adCampaigns: [],
             toolSettings: normalizeToolSettings(data.toolSettings || {}),
             linkPreview: normalizeLinkPreviewSettings(data.linkPreview || {}),
+            privacySettingsButton: {
+                enabled: data.privacySettingsButton?.enabled === true,
+                pages: Array.isArray(data.privacySettingsButton?.pages) ? data.privacySettingsButton.pages : [],
+            },
 
             googleAdSlots: {
                 ...defaultGoogleAdSlots,

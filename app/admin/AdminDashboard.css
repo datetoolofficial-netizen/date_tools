@@ -1700,6 +1700,11 @@ body.dark-mode .legacy-admin-shell {
     --tool-bg: rgba(37, 99, 235, 0.14);
 }
 
+.color-privacy {
+    --tool-color: #2563eb;
+    --tool-bg: rgba(37, 99, 235, 0.14);
+}
+
 .color-links {
     --tool-color: #06b6d4;
     --tool-bg: rgba(6, 182, 212, 0.14);
@@ -1736,6 +1741,12 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tools-section-card#link-preview {
+    --tool-color: #2563eb;
+    --tool-bg: rgba(37, 99, 235, 0.14);
+}
+
+.tools-section-card#privacy-settings-button,
+.tools-privacy-settings-card {
     --tool-color: #2563eb;
     --tool-bg: rgba(37, 99, 235, 0.14);
 }
@@ -1935,6 +1946,85 @@ body.dark-mode .legacy-admin-shell {
     border-radius: 16px;
     background: var(--bg-body);
     font-weight: 800;
+}
+
+.privacy-admin-controls {
+    display: grid;
+    gap: 14px;
+}
+
+.privacy-admin-toggle {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
+    border-radius: 16px;
+    background: var(--bg-container);
+    cursor: pointer;
+}
+
+.privacy-admin-toggle input,
+.privacy-admin-page input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--tool-color);
+}
+
+.privacy-admin-toggle strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 3px;
+}
+
+.privacy-admin-toggle small {
+    color: var(--text-sub);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.privacy-admin-pages {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.privacy-admin-page {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "check title"
+        "check path";
+    gap: 3px 10px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--bg-container);
+    cursor: pointer;
+}
+
+.privacy-admin-page input {
+    grid-area: check;
+}
+
+.privacy-admin-page span {
+    grid-area: title;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.privacy-admin-page code {
+    grid-area: path;
+    width: fit-content;
+    color: var(--text-sub);
+    font-size: 11px;
+    direction: ltr;
 }
 
 .tool-management-grid {

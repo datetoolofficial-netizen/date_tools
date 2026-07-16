@@ -14,6 +14,25 @@ function timezoneLabel(timezone) {
     return timezone.split('/').pop()?.replaceAll('_', ' ') || 'موقعك الحالي';
 }
 
+function normalizePagePath(value) {
+    const cleanValue = String(value || '/').trim();
+    if (!cleanValue || cleanValue === '/') return '/';
+    const withoutQuery = cleanValue.split('?')[0].split('#')[0].replace(/\/+$/, '');
+    return withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`;
+}
+
+function shouldShowPrivacySettingsButton(configData, pathname) {
+    const settings = configData?.privacySettingsButton;
+    if (settings?.enabled !== true) return false;
+
+    const pages = Array.isArray(settings.pages)
+        ? settings.pages.map(normalizePagePath).filter(Boolean)
+        : [];
+
+    if (pages.length === 0) return false;
+    return pages.includes(normalizePagePath(pathname));
+}
+
 async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 3500);
@@ -321,6 +340,9 @@ export default function SiteShell({ children }) {
         privacyConsent,
         updatePrivacyConsent,
     };
+    const showPrivacySettingsButton = !isSiteLoading
+        && privacyConsent !== null
+        && shouldShowPrivacySettingsButton(configData, pathname);
 
     if (!shouldUseShell) {
         return (
@@ -418,7 +440,7 @@ export default function SiteShell({ children }) {
                     </div>
                 </div>
             )}
-            {!isSiteLoading && privacyConsent !== null && (
+            {showPrivacySettingsButton && (
                 <button type="button" className="privacy-settings-button" onClick={openPrivacySettings}>
                     <i className="fa-solid fa-shield-halved"></i>
                     إعدادات الخصوصية

@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.63.
+الإصدار الحالي للتطبيق هو 0.2.64.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -144,6 +144,7 @@ https://www.date-tool.com
 80. إضافة إعدادات Link Preview داخل الهوية البصرية وربطها بوسوم المشاركة، مع إضافة زر رجوع من صفحات إعداد كل أداة إلى صفحة إدارة الأدوات.
 81. ربط صورة Link Preview المخصصة برفع آمن إلى Cloudflare R2 بدل إدخال رابط يدوي فقط.
 82. إضافة موافقة الخصوصية والكوكيز، حجب أدوات التحليلات/التسويق حتى الموافقة، ومنع تسريب تاريخ الميلاد أو البريد الإلكتروني عبر URL أو سجلات عامة أو إعلانات.
+83. إضافة تحكم إداري بظهور زر إعدادات الخصوصية العائم حسب الصفحة، وتحسين دعم لصق تنسيقات Google Docs في محرر الصفحات.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5134,6 +5135,81 @@ app/api/public-campaigns/route.js
 app/api/admin/cleanup/route.js
 app/client/create-campaign/page.jsx
 app/client/dashboard/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### التحكم بزر إعدادات الخصوصية وتحسين محرر الصفحات - الإصدار 0.2.64
+
+الأعراض:
+
+```txt
+زر إعدادات الخصوصية العائم كان يظهر في كل الصفحات بعد الموافقة ولا يمكن التحكم بمكان ظهوره من الإدارة.
+خلفية زر وإشعار الخصوصية كانت تبدو شفافة وتتداخل بصريًا مع محتوى الصفحة.
+محرر محتوى الصفحات كان لا يحافظ بما يكفي على تنسيقات النصوص الملصوقة من Google Docs.
+```
+
+السبب:
+
+```txt
+لم يكن يوجد حقل إعدادات يحدد الصفحات المسموح بظهور زر الخصوصية فيها.
+CSS كان يستخدم خلفيات شفافة/متغيرة لإشعار الخصوصية والزر العائم.
+sanitizeHtml كان يحذف كل style بالكامل، وهذا يحمي الصفحة لكنه يزيل كثيرًا من تنسيقات Google Docs المفيدة.
+```
+
+الحل:
+
+```txt
+إضافة privacySettingsButton إلى إعدادات الموقع مع enabled وقائمة pages.
+إضافة سيكشن صغير في /admin/tools لتفعيل زر إعدادات الخصوصية واختيار صفحات ظهوره.
+تعديل SiteShell حتى لا يظهر الزر العائم إلا بعد الموافقة وعند تفعيل الإعداد ووجود الصفحة الحالية ضمن القائمة.
+جعل خلفية إشعار الخصوصية والزر العائم صلبة وواضحة في الوضعين الفاتح والداكن.
+توسيع sanitizeHtml ليحافظ على خصائص تنسيق آمنة من Google Docs مثل اللون والمحاذاة والحجم والقوائم مع منع JavaScript والروابط والأنماط الخطرة.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديلات محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.64 على Cloudflare Version ID: f63df789-1b4f-4f14-b7fb-6932d71a92a5.
+✅ تم اختبار الصفحة الرئيسية وصفحة `/admin/tools` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md
+git status --short
+Select-String -Path app\admin\tools\page.jsx -Pattern "function pickToolsConfig|function PageHtmlEditor|const saveTools|tools-quick-grid|section className" -Context 3,12
+Select-String -Path app\SiteShell.jsx -Pattern "privacyConsent|privacy-settings-button|isSiteLoading|function timezoneLabel|const contextValue" -Context 3,8
+Select-String -Path app\globals.css -Pattern "privacy-consent-panel|privacy-settings-button|privacy-secondary" -Context 0,18
+Select-String -Path app\admin\AdminDashboard.css -Pattern "tools-rich-editor|tools-section-card|tools-quick-grid" -Context 0,12
+npm run lint
+npm version 0.2.64 --no-git-tag-version
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.64
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.64
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/globals.css
+app/sanitizeHtml.js
+app/firebase.js
 app/version.js
 package.json
 package-lock.json
