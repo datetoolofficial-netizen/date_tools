@@ -1216,6 +1216,40 @@
             font-weight: 900;
         }
 
+        @media (max-width: 600px) {
+            .location-permission-toast {
+                top: auto;
+                left: auto;
+                right: 12px;
+                bottom: 12px;
+                width: min(300px, calc(100vw - 24px));
+                min-height: 0;
+                padding: 10px 11px;
+                border-radius: 16px;
+                gap: 9px;
+                box-shadow: 0 14px 32px rgba(15, 23, 42, 0.2);
+            }
+
+            .location-permission-toast > i {
+                width: 36px;
+                height: 36px;
+                border-radius: 12px;
+                font-size: 15px;
+            }
+
+            .location-permission-toast strong {
+                font-size: 12px;
+                line-height: 1.35;
+            }
+
+            .location-permission-toast p,
+            .location-permission-toast small {
+                font-size: 10px;
+                line-height: 1.45;
+                margin-top: 2px;
+            }
+        }
+
         .weather-current-card h3 {
             direction: ltr;
             font-size: clamp(44px, 10vw, 72px);

@@ -327,6 +327,19 @@ export default function SiteShell({ children }) {
         return () => window.clearTimeout(timer);
     }, [locationError, locationStatus, shouldUseShell]);
 
+    useEffect(() => {
+        if (!locationNotice) return;
+
+        const hideLocationNotice = () => setLocationNotice(null);
+        window.addEventListener('scroll', hideLocationNotice, { passive: true, once: true });
+        window.addEventListener('touchmove', hideLocationNotice, { passive: true, once: true });
+
+        return () => {
+            window.removeEventListener('scroll', hideLocationNotice);
+            window.removeEventListener('touchmove', hideLocationNotice);
+        };
+    }, [locationNotice]);
+
     const contextValue = {
         lang,
         isDarkMode,

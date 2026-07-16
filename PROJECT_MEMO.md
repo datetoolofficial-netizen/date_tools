@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.65.
+الإصدار الحالي للتطبيق هو 0.2.66.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -146,6 +146,7 @@ https://www.date-tool.com
 82. إضافة موافقة الخصوصية والكوكيز، حجب أدوات التحليلات/التسويق حتى الموافقة، ومنع تسريب تاريخ الميلاد أو البريد الإلكتروني عبر URL أو سجلات عامة أو إعلانات.
 83. إضافة تحكم إداري بظهور زر إعدادات الخصوصية العائم حسب الصفحة، وتحسين دعم لصق تنسيقات Google Docs في محرر الصفحات.
 84. إعادة محرر الصفحات لطريقة اللصق السابقة حتى تزال تنسيقات Google Docs الخارجية ويتناسق المحتوى تلقائيًا مع ستايل الموقع.
+85. تحسين إشعار الموقع الحالي على الجوال ليظهر أسفل يمين الصفحة بحجم أصغر ويختفي تلقائيًا عند السحب أو التمرير.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5276,6 +5277,70 @@ curl.exe -I https://date-tool.com/admin/tools?v=0.2.65
 ```txt
 app/admin/tools/page.jsx
 app/sanitizeHtml.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### تحسين إشعار الموقع الحالي على الجوال - الإصدار 0.2.66
+
+الأعراض:
+
+```txt
+إشعار تعذر استخدام الموقع الحالي كان يظهر أعلى الشاشة بحجم كبير نسبيًا على الجوال.
+الإشعار كان قد يغطي جزءًا من محتوى صفحة الساعة أثناء القراءة أو السحب.
+```
+
+السبب:
+
+```txt
+تنسيق إشعار الموقع كان موحدًا بين سطح المكتب والجوال.
+لم يكن هناك سلوك يخفي الإشعار مباشرة عند تمرير الصفحة أو السحب.
+```
+
+الحل:
+
+```txt
+إضافة تنسيق responsive يجعل إشعار الموقع الحالي أصغر وأسفل يمين الشاشة على الشاشات الصغيرة.
+إضافة مستمع scroll و touchmove في SiteShell لإخفاء الإشعار تلقائيًا عند أول تمرير أو سحب.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.66 على Cloudflare Version ID: 29a1ab67-4d1d-4167-9d83-6fda34f515d7.
+✅ تم اختبار صفحة `/clock` والصفحة الرئيسية على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md
+Select-String -Path app\SiteShell.jsx -Pattern "locationNotice|location-permission-toast|setLocationNotice|scroll" -Context 3,8
+Select-String -Path app\globals.css -Pattern "location-permission-toast" -Context 0,24
+git status --short
+npm version 0.2.66 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/clock?v=0.2.66
+curl.exe -I https://date-tool.com/?v=0.2.66
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/globals.css
 app/version.js
 package.json
 package-lock.json
