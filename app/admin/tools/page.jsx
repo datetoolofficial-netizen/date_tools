@@ -187,24 +187,11 @@ function PageHtmlEditor({ value, onChange }) {
         event.preventDefault();
         const html = event.clipboardData.getData('text/html');
         const text = event.clipboardData.getData('text/plain');
-        const pastedHtml = html
-            ? new DOMParser().parseFromString(html, 'text/html').body?.innerHTML || html
-            : '';
         const safeContent = html
-            ? sanitizeHtml(pastedHtml)
+            ? sanitizeHtml(html)
             : sanitizeHtml(String(text || '').split(/\n{2,}/).map((part) => `<p>${part.replace(/\n/g, '<br>')}</p>`).join(''));
 
-        const inserted = document.execCommand('insertHTML', false, safeContent);
-        if (!inserted) {
-            const selection = window.getSelection();
-            if (selection?.rangeCount) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(range.createContextualFragment(safeContent));
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-        }
+        document.execCommand('insertHTML', false, safeContent);
         updateFromEditor();
     };
 

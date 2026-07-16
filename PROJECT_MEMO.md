@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.64.
+الإصدار الحالي للتطبيق هو 0.2.65.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -145,6 +145,7 @@ https://www.date-tool.com
 81. ربط صورة Link Preview المخصصة برفع آمن إلى Cloudflare R2 بدل إدخال رابط يدوي فقط.
 82. إضافة موافقة الخصوصية والكوكيز، حجب أدوات التحليلات/التسويق حتى الموافقة، ومنع تسريب تاريخ الميلاد أو البريد الإلكتروني عبر URL أو سجلات عامة أو إعلانات.
 83. إضافة تحكم إداري بظهور زر إعدادات الخصوصية العائم حسب الصفحة، وتحسين دعم لصق تنسيقات Google Docs في محرر الصفحات.
+84. إعادة محرر الصفحات لطريقة اللصق السابقة حتى تزال تنسيقات Google Docs الخارجية ويتناسق المحتوى تلقائيًا مع ستايل الموقع.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5210,6 +5211,71 @@ app/admin/AdminDashboard.css
 app/globals.css
 app/sanitizeHtml.js
 app/firebase.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### إعادة لصق الصفحات ليتناسق مع ستايل الموقع - الإصدار 0.2.65
+
+الأعراض:
+
+```txt
+بعد تحسين دعم Google Docs أصبح محرر الصفحات يحتفظ ببعض inline styles القادمة من المحررات الخارجية.
+هذا جعل بعض النصوص الملصوقة لا تتناسق تلقائيًا مع هوية الموقع كما كانت في النسخة السابقة.
+```
+
+السبب:
+
+```txt
+الإصدار 0.2.64 وسّع sanitizeHtml للسماح بخصائص CSS آمنة من Google Docs.
+رغم أن ذلك كان آمنًا من ناحية JavaScript، لكنه سمح للنصوص بجلب ألوان وأحجام وتباعدات لا تطابق تصميم الموقع.
+```
+
+الحل:
+
+```txt
+إرجاع sanitizeHtml إلى إزالة attribute style من المحتوى الملصوق.
+إرجاع PageHtmlEditor إلى طريقة اللصق السابقة التي تحفظ بنية HTML النظيفة فقط.
+الإبقاء على زر إعدادات الخصوصية الجديد كما هو دون تغيير.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.65 على Cloudflare Version ID: 5ec301fc-9e53-48e5-a4ee-fc894317b875.
+✅ تم اختبار الصفحة الرئيسية وصفحة `/admin/tools` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md
+git status --short
+Get-Content app\sanitizeHtml.js
+Get-Content app\admin\tools\page.jsx
+npm version 0.2.65 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.65
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.65
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/tools/page.jsx
+app/sanitizeHtml.js
 app/version.js
 package.json
 package-lock.json
