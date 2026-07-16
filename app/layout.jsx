@@ -1,5 +1,6 @@
 import { Cairo } from 'next/font/google';
 import ExternalIntegrations from './components/ExternalIntegrations';
+import FontAwesomeLoader from './components/FontAwesomeLoader';
 import { i18n } from './i18n';
 import { resolveLinkPreview } from './linkPreview';
 import SiteShell from './SiteShell';
@@ -53,6 +54,7 @@ async function getMetadataConfig() {
         const fields = payload.fields || {};
         const mainSEO = getMapField(fields, 'mainSEO');
         const linkPreview = getMapField(fields, 'linkPreview');
+        const externalIntegrations = getMapField(fields, 'externalIntegrations');
 
         return {
             toolDisplayName: getStringField(fields, 'toolDisplayName'),
@@ -72,6 +74,10 @@ async function getMetadataConfig() {
                 siteName: getStringField(linkPreview, 'siteName'),
                 imageUrl: getStringField(linkPreview, 'imageUrl'),
             },
+            externalIntegrations: {
+                googleSiteVerification: getStringField(externalIntegrations, 'googleSiteVerification'),
+                bingSiteVerification: getStringField(externalIntegrations, 'bingSiteVerification'),
+            },
         };
     } catch {
         return {};
@@ -87,6 +93,8 @@ export async function generateMetadata() {
     const imageUrl = absoluteUrl(preview.imageUrl);
     const faviconUrl = absoluteUrl(config.faviconUrl) || '/favicon.ico';
     const images = imageUrl ? [{ url: imageUrl, alt: title }] : undefined;
+    const googleSiteVerification = config.externalIntegrations?.googleSiteVerification || '';
+    const bingSiteVerification = config.externalIntegrations?.bingSiteVerification || '';
 
     return {
         metadataBase: new URL(siteUrl),
@@ -113,20 +121,18 @@ export async function generateMetadata() {
         icons: {
             icon: faviconUrl,
         },
+        verification: {
+            google: googleSiteVerification || undefined,
+            other: bingSiteVerification ? { 'msvalidate.01': bingSiteVerification } : undefined,
+        },
     };
 }
 
 export default function RootLayout({ children }) {
     return (
         <html lang="ar" dir="rtl">
-            <head>
-                {/* تحميل مكتبة FontAwesome الأساسية */}
-                <link
-                    rel="stylesheet"
-                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-                />
-            </head>
             <body className={cairo.className}>
+                <FontAwesomeLoader />
                 <ExternalIntegrations />
                 <SiteShell>{children}</SiteShell>
             </body>

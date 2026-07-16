@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.66.
+الإصدار الحالي للتطبيق هو 0.2.67.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -147,6 +147,7 @@ https://www.date-tool.com
 83. إضافة تحكم إداري بظهور زر إعدادات الخصوصية العائم حسب الصفحة، وتحسين دعم لصق تنسيقات Google Docs في محرر الصفحات.
 84. إعادة محرر الصفحات لطريقة اللصق السابقة حتى تزال تنسيقات Google Docs الخارجية ويتناسق المحتوى تلقائيًا مع ستايل الموقع.
 85. تحسين إشعار الموقع الحالي على الجوال ليظهر أسفل يمين الصفحة بحجم أصغر ويختفي تلقائيًا عند السحب أو التمرير.
+86. تحسين أداء التحميل الآمن وصفحات روابط الفوتر الديناميكية مثل الخصوصية والشروط واتصل بنا لتظهر بشكل ممتاز على الشاشات الصغيرة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5350,6 +5351,81 @@ PROJECT_MEMO.md
 
 ---
 
+### تحسين أداء التحميل وصفحات روابط الفوتر - الإصدار 0.2.67
+
+الأعراض:
+
+```txt
+روابط الفوتر الديناميكية مثل الخصوصية والشروط واتصل بنا كانت تستخدم قالب صفحة قديم يعتمد على inline styles وكرت عام.
+على الشاشات الصغيرة لم تكن محاذاة العنوان وزر الرجوع ونصوص الصفحات ونموذج التواصل بنفس جودة صفحات الأدوات الحديثة.
+تقرير PageSpeed أشار إلى فرص تحسين أداء التحميل، خصوصًا الموارد التي قد تؤثر على الرسم الأولي.
+```
+
+السبب:
+
+```txt
+قالب PageFrame في app/[slug]/PageClient.jsx لم يكن مربوطًا بكلاسات تصميم مخصصة للصفحات النصية.
+ملف Font Awesome كان محملًا كرابط CSS داخل head، وهذا يجعله موردًا حاجبًا للرسم.
+تكاملات التحليلات والتسويق كانت تستورد Firebase عند أول تحميل حتى قبل موافقة المستخدم.
+```
+
+الحل:
+
+```txt
+تحويل قالب صفحات slug إلى بنية semantic بكلاسات static-page-* بدل inline styles.
+إضافة Skeleton خفيف لصفحات slug أثناء التحميل.
+تحسين CSS صفحات الفوتر: عنوان متجاوب، زر رجوع مناسب للجوال، عرض نصي منضبط، كسر الروابط الطويلة، وتحسين نموذج اتصل بنا.
+نقل Font Awesome إلى مكون عميل يتم تحميله بعد تفاعل الصفحة بدل رابط CSS داخل head.
+نقل Google/Bing verification إلى metadata السيرفر.
+منع تحميل Firebase الخاص بالتكاملات الخارجية إلا بعد وجود موافقة analytics أو marketing.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.67 على Cloudflare Version ID: 66cfa0b9-0d23-4c72-96e7-d5a895fa91fa.
+✅ تم اختبار الصفحة الرئيسية و `/privacy` و `/terms` و `/contact` على الإنتاج ورجعت HTTP 200.
+⚠️ تعذر الاعتماد على PageSpeed API داخل هذه الجلسة بسبب حد/منع الوصول، لذلك تم تنفيذ التحسينات الآمنة بناءً على التقرير والرؤية البرمجية.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
+git status --short
+Select-String -LiteralPath 'app\[slug]\PageClient.jsx' -Pattern 'function PageFrame' -Context 0,70
+Select-String -Path app\globals.css -Pattern 'static-rich-page|contact-page-form|contact-form-grid|contact-upload' -Context 0,8
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.67
+curl.exe -I https://date-tool.com/privacy?v=0.2.67
+curl.exe -I https://date-tool.com/terms?v=0.2.67
+curl.exe -I https://date-tool.com/contact?v=0.2.67
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
+app/globals.css
+app/components/ExternalIntegrations.jsx
+app/components/FontAwesomeLoader.jsx
+app/layout.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5601,6 +5677,9 @@ PROJECT_MEMO.md
 ✅ تم تحسين محرر صفحات `/admin/tools` لقبول لصق نص منسق من Google Docs مع تنظيف HTML
 ✅ تم نشر الإصدار 0.2.63 على Cloudflare Version ID: 178e9e28-40a6-4ae0-8b1e-b2cd969fb177
 ✅ تم اختبار `/`, `/admin/tools?v=0.2.63`, و `/api/public-campaigns` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.67 بتحسينات أداء آمنة وتحسين صفحات روابط الفوتر للجوال
+✅ تم نشر الإصدار 0.2.67 على Cloudflare Version ID: 66cfa0b9-0d23-4c72-96e7-d5a895fa91fa
+✅ تم اختبار `/`, `/privacy`, `/terms`, و `/contact` على الإنتاج بنجاح
 ```
 
 ---

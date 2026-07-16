@@ -5,8 +5,6 @@ import { getPrivacyConsent, PRIVACY_CONSENT_EVENT } from '../privacyConsent';
 
 const GOOGLE_TAG_PATTERN = /^(G|AW|DC)-[A-Z0-9-]+$/i;
 const GOOGLE_TAG_MANAGER_PATTERN = /^GTM-[A-Z0-9-]+$/i;
-const GOOGLE_VERIFICATION_PATTERN = /^[A-Za-z0-9_-]{10,120}$/;
-const BING_VERIFICATION_PATTERN = /^[A-Za-z0-9]{10,120}$/;
 const CLARITY_PROJECT_PATTERN = /^[A-Za-z0-9]{6,30}$/;
 const META_PIXEL_PATTERN = /^[0-9]{5,30}$/;
 const INTEGRATION_ATTRIBUTE = 'data-date-tools-integration';
@@ -31,26 +29,6 @@ function appendHeadScript({ src, content, async = false, crossOrigin = '' }) {
     if (crossOrigin) script.crossOrigin = crossOrigin;
 
     document.head.appendChild(script);
-}
-
-function appendGoogleSiteVerification(code) {
-    if (!GOOGLE_VERIFICATION_PATTERN.test(code)) return;
-
-    const meta = document.createElement('meta');
-    meta.name = 'google-site-verification';
-    meta.content = code;
-    meta.setAttribute(INTEGRATION_ATTRIBUTE, 'true');
-    document.head.appendChild(meta);
-}
-
-function appendBingSiteVerification(code) {
-    if (!BING_VERIFICATION_PATTERN.test(code)) return;
-
-    const meta = document.createElement('meta');
-    meta.name = 'msvalidate.01';
-    meta.content = code;
-    meta.setAttribute(INTEGRATION_ATTRIBUTE, 'true');
-    document.head.appendChild(meta);
 }
 
 function appendGoogleTag(tagId) {
@@ -123,6 +101,13 @@ export default function ExternalIntegrations() {
 
         async function loadIntegrations() {
             try {
+                const consent = getPrivacyConsent();
+                const canLoadAnalytics = consent?.analytics === true;
+                const canLoadMarketing = consent?.marketing === true;
+
+                removeExistingNodes();
+                if (!canLoadAnalytics && !canLoadMarketing) return;
+
                 const { getSiteConfig } = await import('../firebase');
                 const siteConfig = await getSiteConfig();
                 const integrations = siteConfig?.externalIntegrations || {};
@@ -130,17 +115,14 @@ export default function ExternalIntegrations() {
                 if (!isMounted) return;
 
                 removeExistingNodes();
-                appendGoogleSiteVerification(clean(integrations.googleSiteVerification));
-                appendBingSiteVerification(clean(integrations.bingSiteVerification));
 
-                const consent = getPrivacyConsent();
-                if (consent?.analytics === true) {
+                if (canLoadAnalytics) {
                     appendGoogleTag(clean(integrations.googleTagId).toUpperCase());
                     appendGoogleTagManager(clean(integrations.googleTagManagerId).toUpperCase());
                     appendMicrosoftClarity(clean(integrations.microsoftClarityProjectId));
                 }
 
-                if (consent?.marketing === true) {
+                if (canLoadMarketing) {
                     appendMetaPixel(clean(integrations.metaPixelId));
                 }
             } catch (error) {

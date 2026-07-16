@@ -182,18 +182,18 @@ function getEnhancedContent(slug, content) {
 
 function PageFrame({ lang, title, children, align = 'right' }) {
     return (
-        <div className="container">
-            <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Link href="/" className="control-btn" style={{ textDecoration: 'none', width: 'auto', padding: '0 15px' }}>
+        <div className="container static-page-container">
+            <header className="static-page-header">
+                <Link href="/" className="static-page-back">
                     <i className="fa-solid fa-arrow-right"></i> {lang === 'ar' ? 'العودة' : 'Back'}
                 </Link>
                 <h1>{title}</h1>
-                <div style={{ width: '80px' }}></div>
-            </div>
+                <span className="static-page-header-spacer" aria-hidden="true"></span>
+            </header>
 
-            <div className="card" style={{ lineHeight: '1.8', textAlign: align }}>
+            <main className="card static-page-card" style={{ '--static-page-align': align }}>
                 {children}
-            </div>
+            </main>
         </div>
     );
 }
@@ -376,9 +376,11 @@ export default function PageClient({ slug }) {
 
     if (loading) {
         return (
-            <div className="container">
-                <div className="card" style={{ lineHeight: '1.8', textAlign: 'center' }}>
-                    <p style={{ color: 'var(--text-sub)', margin: 0 }}>جاري تحميل الصفحة...</p>
+            <div className="container static-page-container">
+                <div className="card static-page-card static-page-loading">
+                    <span className="skeleton-block static-page-skeleton-title"></span>
+                    <span className="skeleton-block static-page-skeleton-line"></span>
+                    <span className="skeleton-block static-page-skeleton-line short"></span>
                 </div>
             </div>
         );
@@ -387,7 +389,7 @@ export default function PageClient({ slug }) {
     if (error) {
         return (
             <PageFrame lang={lang} title={lang === 'ar' ? 'حدث خطأ' : 'Error'} align="center">
-                <p style={{ color: 'var(--text-sub)' }}>{error}</p>
+                <p className="static-page-description">{error}</p>
             </PageFrame>
         );
     }
@@ -395,7 +397,7 @@ export default function PageClient({ slug }) {
     if (!page || page?.isActive === false || page?.enabled === false) {
         return (
             <PageFrame lang={lang} title={lang === 'ar' ? 'الصفحة غير موجودة' : 'Page not found'} align="center">
-                <p style={{ color: 'var(--text-sub)' }}>
+                <p className="static-page-description">
                     {lang === 'ar'
                         ? 'لم يتم العثور على الصفحة المطلوبة أو أنها غير مفعلة.'
                         : 'The requested page was not found or is not enabled.'}
@@ -415,13 +417,13 @@ export default function PageClient({ slug }) {
     return (
         <PageFrame lang={lang} title={title} align={align}>
             {description ? (
-                <p style={{ color: 'var(--text-sub)', marginBottom: '25px' }}>{description}</p>
+                <p className="static-page-description">{description}</p>
             ) : null}
 
             {!isContactPage && content ? (
-                <div dangerouslySetInnerHTML={{ __html: content }} />
+                <div className="static-page-content" dangerouslySetInnerHTML={{ __html: content }} />
             ) : !isContactPage ? (
-                <p style={{ color: 'var(--text-sub)' }}>
+                <p className="static-page-description">
                     {lang === 'ar'
                         ? 'لا يوجد محتوى لهذه الصفحة حاليًا.'
                         : 'This page does not have content yet.'}

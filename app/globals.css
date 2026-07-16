@@ -805,41 +805,155 @@
             background: rgba(59, 130, 246, 0.14);
         }
 
-        .static-rich-page {
+        .static-page-container {
+            max-width: 860px;
             display: grid;
-            gap: 14px;
-            color: var(--text-main);
+            gap: 18px;
         }
 
-        .static-rich-page h2 {
-            margin: 12px 0 0;
+        .static-page-header {
+            min-height: 84px;
+            display: grid;
+            grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(72px, auto);
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 22px;
+            background: var(--bg-card);
+            box-shadow: var(--soft-shadow);
+        }
+
+        .static-page-header h1 {
+            margin: 0;
+            color: var(--text-main);
+            text-align: center;
+            font-size: clamp(28px, 5vw, 44px);
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .static-page-back {
+            min-height: 46px;
+            padding: 0 16px;
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--primary) 16%, var(--bg-card) 84%);
             color: var(--primary);
-            font-size: clamp(20px, 4vw, 26px);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            font-weight: 950;
+            white-space: nowrap;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .static-page-back:hover {
+            transform: translateY(-1px);
+            background: color-mix(in srgb, var(--primary) 24%, var(--bg-card) 76%);
+        }
+
+        .static-page-header-spacer {
+            width: 72px;
+            height: 1px;
+        }
+
+        .static-page-card {
+            text-align: var(--static-page-align, right);
+            line-height: 1.85;
+            padding: clamp(22px, 4vw, 38px);
+            overflow: hidden;
+        }
+
+        .static-page-description {
+            max-width: 720px;
+            margin: 0 auto 24px;
+            color: var(--text-sub);
+            text-align: center;
+            font-size: clamp(15px, 2.6vw, 18px);
+            line-height: 1.9;
+        }
+
+        .static-page-content,
+        .static-rich-page {
+            display: grid;
+            gap: clamp(12px, 2.2vw, 18px);
+            color: var(--text-main);
+            overflow-wrap: anywhere;
+        }
+
+        .static-rich-page h2,
+        .static-page-content h2,
+        .static-page-content h3 {
+            margin: 14px 0 2px;
+            color: var(--text-main);
+            text-align: center;
+            font-size: clamp(20px, 4vw, 28px);
+            line-height: 1.35;
         }
 
         .static-rich-page p,
-        .static-rich-page li {
-            color: var(--text-sub);
-            font-size: clamp(15px, 3vw, 18px);
-            line-height: 2;
-        }
-
-        .static-rich-page ul {
+        .static-rich-page li,
+        .static-page-content p,
+        .static-page-content li {
             margin: 0;
-            padding-inline-start: 24px;
+            color: var(--text-sub);
+            font-size: clamp(15px, 2.6vw, 18px);
+            line-height: 1.95;
         }
 
-        .static-rich-page a {
+        .static-rich-page ul,
+        .static-rich-page ol,
+        .static-page-content ul,
+        .static-page-content ol {
+            margin: 0;
+            padding: 16px 28px;
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--bg-card) 82%, var(--primary) 8%);
+        }
+
+        .static-rich-page li + li,
+        .static-page-content li + li {
+            margin-top: 8px;
+        }
+
+        .static-rich-page a,
+        .static-page-content a {
             color: var(--primary);
             font-weight: 900;
+            text-decoration-thickness: 2px;
+            text-underline-offset: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        .static-page-loading {
+            display: grid;
+            justify-items: center;
+            gap: 14px;
+            min-height: 220px;
+            align-content: center;
+        }
+
+        .static-page-skeleton-title {
+            width: min(320px, 70%);
+            height: 34px;
+        }
+
+        .static-page-skeleton-line {
+            width: min(560px, 88%);
+            height: 18px;
+        }
+
+        .static-page-skeleton-line.short {
+            width: min(420px, 64%);
         }
 
         .contact-page-form {
-            margin-top: 28px;
+            margin-top: 0;
             display: grid;
             gap: 18px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
+            padding-top: 0;
+            border-top: 0;
         }
 
         .contact-page-intro {
@@ -2475,6 +2589,99 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
 
     .footer-links {
         font-size: 13px;
+    }
+
+    .static-page-container {
+        gap: 14px;
+    }
+
+    .static-page-header {
+        min-height: auto;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .static-page-header h1 {
+        order: 1;
+        font-size: clamp(26px, 8vw, 34px);
+    }
+
+    .static-page-back {
+        order: 2;
+        min-height: 42px;
+        padding-inline: 14px;
+        font-size: 13px;
+    }
+
+    .static-page-header-spacer {
+        display: none;
+    }
+
+    .static-page-card {
+        padding: 20px 16px;
+        border-radius: 20px;
+    }
+
+    .static-page-description {
+        margin-bottom: 18px;
+        font-size: 13px;
+        line-height: 1.75;
+    }
+
+    .static-rich-page h2,
+    .static-page-content h2,
+    .static-page-content h3 {
+        font-size: 20px;
+        line-height: 1.4;
+    }
+
+    .static-rich-page ul,
+    .static-rich-page ol,
+    .static-page-content ul,
+    .static-page-content ol {
+        padding: 14px 22px;
+        border-radius: 16px;
+    }
+
+    .contact-page-form label {
+        font-size: 13px;
+    }
+
+    .contact-page-form input,
+    .contact-page-form textarea {
+        min-height: 48px;
+        padding: 12px;
+        font-size: 13px;
+        border-radius: 14px;
+    }
+
+    .contact-page-form textarea {
+        min-height: 130px;
+    }
+
+    .contact-upload-field {
+        min-height: 124px;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .contact-upload-field i {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        font-size: 18px;
+    }
+
+    .contact-upload-field strong {
+        font-size: 13px;
+    }
+
+    .contact-page-form button {
+        min-height: 50px;
+        border-radius: 15px;
+        font-size: 14px;
     }
 }
 
