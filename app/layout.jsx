@@ -100,8 +100,18 @@ export async function generateMetadata() {
         metadataBase: new URL(siteUrl),
         title,
         description,
+        applicationName: title,
+        manifest: '/manifest.webmanifest',
         alternates: {
             canonical: '/',
+        },
+        appleWebApp: {
+            capable: true,
+            title,
+            statusBarStyle: 'black-translucent',
+        },
+        formatDetection: {
+            telephone: false,
         },
         openGraph: {
             title,

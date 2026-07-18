@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
+import PwaInstallPrompt from './components/PwaInstallPrompt';
 import { defaultFirebaseApi, SiteContext } from './SiteContext';
 import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from './privacyConsent';
 
@@ -459,6 +460,7 @@ export default function SiteShell({ children }) {
                     إعدادات الخصوصية
                 </button>
             )}
+            {!isSiteLoading && <PwaInstallPrompt />}
         </SiteContext.Provider>
     );
 }

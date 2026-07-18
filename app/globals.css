@@ -907,14 +907,24 @@
         .static-page-content ul,
         .static-page-content ol {
             margin: 0;
-            padding: 16px 28px;
-            border-radius: 18px;
-            background: color-mix(in srgb, var(--bg-card) 82%, var(--primary) 8%);
+            padding-block: 0;
+            padding-inline-start: 28px;
+            background: transparent;
+            border-radius: 0;
+        }
+
+        .static-page-content b[id^="docs-internal-guid"] {
+            font-weight: inherit;
         }
 
         .static-rich-page li + li,
         .static-page-content li + li {
-            margin-top: 8px;
+            margin-top: 10px;
+        }
+
+        .static-rich-page li::marker,
+        .static-page-content li::marker {
+            color: var(--primary);
         }
 
         .static-rich-page a,
@@ -1117,6 +1127,63 @@
 
         .contact-hidden-field {
             display: none;
+        }
+
+        .pwa-install-prompt {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 990;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 18px;
+            background: color-mix(in srgb, var(--bg-card) 94%, var(--primary) 6%);
+            border: 1px solid color-mix(in srgb, var(--border-color) 76%, var(--primary) 24%);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
+        }
+
+        body.dark-mode .pwa-install-prompt {
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+        }
+
+        .pwa-install-main,
+        .pwa-install-dismiss {
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .pwa-install-main {
+            min-height: 44px;
+            padding: 0 14px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: linear-gradient(135deg, var(--primary), #4f46e5);
+            color: #fff;
+            font-weight: 950;
+            white-space: nowrap;
+        }
+
+        .pwa-install-main:hover,
+        .pwa-install-dismiss:hover {
+            transform: translateY(-1px);
+        }
+
+        .pwa-install-dismiss {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: color-mix(in srgb, var(--input-bg) 84%, var(--primary) 16%);
+            color: var(--text-sub);
         }
 
         .ideas-strip,
@@ -1361,6 +1428,28 @@
                 font-size: 10px;
                 line-height: 1.45;
                 margin-top: 2px;
+            }
+
+            .pwa-install-prompt {
+                left: 12px;
+                bottom: 12px;
+                padding: 6px;
+                border-radius: 15px;
+            }
+
+            .pwa-install-main {
+                min-height: 38px;
+                padding-inline: 11px;
+                border-radius: 12px;
+                gap: 7px;
+                font-size: 12px;
+            }
+
+            .pwa-install-dismiss {
+                width: 30px;
+                height: 30px;
+                border-radius: 10px;
+                font-size: 12px;
             }
         }
 

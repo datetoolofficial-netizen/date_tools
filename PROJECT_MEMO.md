@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.67.
+الإصدار الحالي للتطبيق هو 0.2.68.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -148,6 +148,7 @@ https://www.date-tool.com
 84. إعادة محرر الصفحات لطريقة اللصق السابقة حتى تزال تنسيقات Google Docs الخارجية ويتناسق المحتوى تلقائيًا مع ستايل الموقع.
 85. تحسين إشعار الموقع الحالي على الجوال ليظهر أسفل يمين الصفحة بحجم أصغر ويختفي تلقائيًا عند السحب أو التمرير.
 86. تحسين أداء التحميل الآمن وصفحات روابط الفوتر الديناميكية مثل الخصوصية والشروط واتصل بنا لتظهر بشكل ممتاز على الشاشات الصغيرة.
+87. تحسين تعداد صفحات الفوتر وإضافة دعم تثبيت الموقع كتطبيق جوال عبر PWA Manifest وزر تثبيت عند دعم المتصفح.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5426,6 +5427,84 @@ PROJECT_MEMO.md
 
 ---
 
+### تحسين تعداد صفحات الفوتر وإضافة تثبيت التطبيق - الإصدار 0.2.68
+
+الأعراض:
+
+```txt
+التعدادات داخل صفحات روابط الفوتر مثل `/terms` كانت تظهر بخلفية مختلفة عن كرت الصفحة.
+الموقع لم يكن يملك Web App Manifest وأيقونات PWA ثابتة تتيح تثبيته كتطبيق على الجوالات والمتصفحات الداعمة.
+```
+
+السبب:
+
+```txt
+تنسيق `ul/ol` داخل صفحات slug كان يضيف خلفية ناعمة مستقلة لكل قائمة.
+نصوص Google Docs قد تضيف غلافًا داخليًا مثل `b#docs-internal-guid` يجعل التعدادات والنصوص أثقل من المطلوب.
+لم يكن هناك manifest route أو أيقونات PWA محلية أو زر تثبيت مرتبط بحدث beforeinstallprompt.
+```
+
+الحل:
+
+```txt
+إزالة الخلفية المستقلة من قوائم صفحات slug مع الإبقاء على نقاط القائمة بلون الهوية.
+إضافة قاعدة تمنع غلاف Google Docs الداخلي من فرض bold على كامل المحتوى.
+إضافة `app/manifest.js` مع بيانات التطبيق والاختصارات وأيقونات 192/512/maskable.
+إضافة أيقونات PWA ثابتة داخل `public`.
+إضافة مكون `PwaInstallPrompt` يظهر زر تثبيت فقط عند دعم المتصفح للتثبيت ويختفي بعد التثبيت أو الإخفاء.
+ربط metadata في `layout.jsx` بملف manifest ودعم Apple Web App.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.68 على Cloudflare Version ID: fa495716-3b7d-41f6-a671-9183611cc333.
+✅ تم اختبار `/terms?v=0.2.68` على الإنتاج ورجع HTTP 200.
+✅ تم اختبار `/manifest.webmanifest` على الإنتاج ورجع `application/manifest+json`.
+✅ تم اختبار `/pwa-icon-192.png` و `/pwa-icon-512.png` على الإنتاج ورجعت `image/png`.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
+Get-Content -Raw -Encoding UTF8 app\layout.jsx
+Get-Content -Raw -Encoding UTF8 app\SiteShell.jsx
+npm version 0.2.68 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/terms?v=0.2.68
+curl.exe -I https://date-tool.com/manifest.webmanifest
+curl.exe -I https://date-tool.com/pwa-icon-192.png
+curl.exe -I https://date-tool.com/pwa-icon-512.png
+curl.exe -s https://date-tool.com/manifest.webmanifest
+```
+
+الملفات المتأثرة:
+
+```txt
+app/manifest.js
+app/components/PwaInstallPrompt.jsx
+app/SiteShell.jsx
+app/globals.css
+app/layout.jsx
+app/version.js
+public/pwa-icon-192.png
+public/pwa-icon-512.png
+public/pwa-maskable-512.png
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5680,6 +5759,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.67 بتحسينات أداء آمنة وتحسين صفحات روابط الفوتر للجوال
 ✅ تم نشر الإصدار 0.2.67 على Cloudflare Version ID: 66cfa0b9-0d23-4c72-96e7-d5a895fa91fa
 ✅ تم اختبار `/`, `/privacy`, `/terms`, و `/contact` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.68 بتحسين تعداد صفحات الفوتر وإضافة PWA Manifest وزر تثبيت التطبيق
+✅ تم نشر الإصدار 0.2.68 على Cloudflare Version ID: fa495716-3b7d-41f6-a671-9183611cc333
+✅ تم اختبار `/manifest.webmanifest` وأيقونات PWA وصفحة `/terms` على الإنتاج بنجاح
 ```
 
 ---
