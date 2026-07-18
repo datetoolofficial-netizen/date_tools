@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.70.
+الإصدار الحالي للتطبيق هو 0.2.71.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -151,6 +151,7 @@ https://www.date-tool.com
 87. تحسين تعداد صفحات الفوتر وإضافة دعم تثبيت الموقع كتطبيق جوال عبر PWA Manifest وزر تثبيت عند دعم المتصفح.
 88. ربط اسم ووصف ولوقو التطبيق عند التثبيت بإعدادات الهوية المحفوظة من لوحة الإدارة.
 89. تحسين وضوح نموذج اتصل بنا على الجوال وتقليل أحجام أدوات التاريخ على الشاشات الصغيرة.
+90. توسيع صفحة اتصل بنا على الجوال وتحسين تباين حقولها مع تخفيف إضافي لخطوط أدوات التاريخ.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5642,6 +5643,76 @@ PROJECT_MEMO.md
 
 ---
 
+### ضبط عرض صفحة التواصل وتخفيف خطوط أدوات التاريخ - الإصدار 0.2.71
+
+الأعراض:
+
+```txt
+بعد فحص `/contact` على عرض جوال صغير، ظهرت الصفحة ضيقة جدًا بسبب وجود container داخل SiteShell.
+حقول نموذج التواصل كانت لا تزال قريبة بصريًا من خلفية النموذج.
+خطوط أدوات التاريخ الرئيسية كانت ما زالت كبيرة على الشاشات الصغيرة جدًا.
+```
+
+السبب:
+
+```txt
+صفحات slug تستخدم `.container static-page-container` داخل حاوية Shell العامة، وهذا ضاعف قيود العرض على الجوال.
+صفحة التواصل لم تكن تملك class خاصًا يسمح بضبط عرضها وحقولها دون التأثير على صفحات الخصوصية والشروط.
+قواعد الجوال السابقة خففت الأحجام، لكنها لم تكن كافية لعرض 368px وما حوله.
+```
+
+الحل:
+
+```txt
+إضافة variant خاص لصفحة التواصل باسم `static-contact-page`.
+جعل صفحات static داخل SiteShell تأخذ عرضًا كاملًا آمنًا، مع ضبط أوسع لصفحة التواصل تحديدًا.
+تقليل padding صفحة التواصل على الجوال وتوضيح لون حقول الإدخال بخلفية مختلفة وحدود أقوى.
+تقليل ارتفاع حقول التواصل ومربع رفع الصورة وزر الإرسال مع الحفاظ على قابلية القراءة.
+تخفيف إضافي لعناوين وأزرار وحقول أدوات التاريخ في `max-width: 520px` و `max-width: 380px`.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.71 على Cloudflare Version ID: 2c452616-1005-4e0e-a9ad-4f10cd982c84.
+✅ تم اختبار `/contact?v=0.2.71` على الإنتاج ورجع HTTP 200.
+✅ تم اختبار `/?v=0.2.71` على الإنتاج ورجع HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 120
+rg -n "static-page-container|static-page-header|static-page-card|contact-page-form|site-page-content > \.card|@media \(max-width: 520px\)|@media \(max-width: 380px\)" app\globals.css
+rg -n "static-page-container|site-page-content|container site-shell-container|Static|className=.*static" app\[slug] app\SiteShell.jsx app\globals.css
+Get-Content -LiteralPath 'app\[slug]\PageClient.jsx' -Encoding UTF8 | Select-Object -Skip 170 -First 45
+npm version 0.2.71 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/contact?v=0.2.71
+curl.exe -I https://date-tool.com/?v=0.2.71
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5905,6 +5976,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.70 وتحسين وضوح نموذج التواصل وأحجام أدوات التاريخ على الجوال
 ✅ تم نشر الإصدار 0.2.70 على Cloudflare Version ID: 6eafce62-8243-423c-98a8-2422e70f748d
 ✅ تم اختبار `/contact?v=0.2.70` و `/?v=0.2.70` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.71 وتوسيع صفحة التواصل وتحسين حقولها وتخفيف خطوط أدوات التاريخ على الجوال
+✅ تم نشر الإصدار 0.2.71 على Cloudflare Version ID: 2c452616-1005-4e0e-a9ad-4f10cd982c84
+✅ تم اختبار `/contact?v=0.2.71` و `/?v=0.2.71` على الإنتاج بنجاح
 ```
 
 ---

@@ -180,9 +180,9 @@ function getEnhancedContent(slug, content) {
     return fallback;
 }
 
-function PageFrame({ lang, title, children, align = 'right' }) {
+function PageFrame({ lang, title, children, align = 'right', variant = '' }) {
     return (
-        <div className="container static-page-container">
+        <div className={`container static-page-container ${variant}`.trim()}>
             <header className="static-page-header">
                 <Link href="/" className="static-page-back">
                     <i className="fa-solid fa-arrow-right"></i> {lang === 'ar' ? 'العودة' : 'Back'}
@@ -415,7 +415,7 @@ export default function PageClient({ slug }) {
     const align = lang === 'ar' ? 'right' : 'left';
 
     return (
-        <PageFrame lang={lang} title={title} align={align}>
+        <PageFrame lang={lang} title={title} align={align} variant={isContactPage ? 'static-contact-page' : ''}>
             {description ? (
                 <p className="static-page-description">{description}</p>
             ) : null}
