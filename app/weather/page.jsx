@@ -82,6 +82,7 @@ export default function WeatherPage() {
     const [error, setError] = useState('');
     const [weather, setWeather] = useState(null);
     const loadedLocationKeyRef = useRef('');
+    const loadedInitialWeatherRef = useRef(false);
 
     const loadWeather = async (cityName = query) => {
         const cleanQuery = cityName.trim();
@@ -146,7 +147,23 @@ export default function WeatherPage() {
     };
 
     useEffect(() => {
-        loadWeather('Riyadh');
+        if (loadedInitialWeatherRef.current) return;
+        loadedInitialWeatherRef.current = true;
+
+        async function loadInitialWeather() {
+            const location = currentLocation || await requestCurrentLocation();
+
+            if (location) {
+                const locationKey = `${location.latitude}:${location.longitude}`;
+                loadedLocationKeyRef.current = locationKey;
+                await loadWeatherByLocation(location);
+                return;
+            }
+
+            await loadWeather('Riyadh');
+        }
+
+        loadInitialWeather();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

@@ -157,6 +157,7 @@ export default function SiteShell({ children }) {
     const firebaseApiRef = useRef(defaultFirebaseApi);
     const autoLocationRequestRef = useRef(false);
     const loadedConfigRef = useRef(false);
+    const locationRequestRef = useRef(null);
 
     const shouldUseShell = !excludedShellPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
     const isSiteLoading = shouldUseShell && configData === null;
@@ -278,6 +279,7 @@ export default function SiteShell({ children }) {
     const requestCurrentLocation = useCallback(async (options = {}) => {
         const forceRefresh = Boolean(options.force);
         if (currentLocation && !forceRefresh) return currentLocation;
+        if (locationRequestRef.current && !forceRefresh) return locationRequestRef.current;
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             setLocationStatus('error');
@@ -301,7 +303,7 @@ export default function SiteShell({ children }) {
         setLocationStatus('loading');
         setLocationError('');
 
-        return new Promise((resolve) => {
+        const requestPromise = new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Riyadh';
@@ -332,7 +334,12 @@ export default function SiteShell({ children }) {
                     maximumAge: forceRefresh ? 0 : 1000 * 60 * 20,
                 },
             );
+        }).finally(() => {
+            locationRequestRef.current = null;
         });
+
+        locationRequestRef.current = requestPromise;
+        return requestPromise;
     }, [currentLocation]);
 
     useEffect(() => {
