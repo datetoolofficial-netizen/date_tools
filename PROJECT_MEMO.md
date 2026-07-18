@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.69.
+الإصدار الحالي للتطبيق هو 0.2.70.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -150,6 +150,7 @@ https://www.date-tool.com
 86. تحسين أداء التحميل الآمن وصفحات روابط الفوتر الديناميكية مثل الخصوصية والشروط واتصل بنا لتظهر بشكل ممتاز على الشاشات الصغيرة.
 87. تحسين تعداد صفحات الفوتر وإضافة دعم تثبيت الموقع كتطبيق جوال عبر PWA Manifest وزر تثبيت عند دعم المتصفح.
 88. ربط اسم ووصف ولوقو التطبيق عند التثبيت بإعدادات الهوية المحفوظة من لوحة الإدارة.
+89. تحسين وضوح نموذج اتصل بنا على الجوال وتقليل أحجام أدوات التاريخ على الشاشات الصغيرة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5572,6 +5573,75 @@ PROJECT_MEMO.md
 
 ---
 
+### تحسين نموذج التواصل وأدوات التاريخ على الجوال - الإصدار 0.2.70
+
+الأعراض:
+
+```txt
+في صفحة `/contact` على الشاشات الصغيرة كانت أماكن الإدخال غير واضحة وتظهر كمساحات كبيرة لا تبرز كحقول فعلية.
+في الصفحة الرئيسية للتاريخ كانت كروت الأدوات والاختيارات كبيرة أكثر من اللازم على الأجهزة الصغيرة.
+```
+
+السبب:
+
+```txt
+حقول نموذج التواصل كانت تعتمد على خلفية عامة قريبة من لون البطاقة بدون إبراز كافٍ للحقل والـ placeholder.
+قواعد الجوال لأدوات التاريخ كانت ما زالت تستخدم padding وارتفاعات مناسبة للشاشات الأكبر، مما جعل الكروت ضخمة على عرض 380px وأقل.
+```
+
+الحل:
+
+```txt
+إضافة placeholders واضحة لحقلي الاسم والبريد الإلكتروني في نموذج التواصل.
+تقوية حدود وخلفيات حقول التواصل وحالة التركيز مع الحفاظ على ألوان الموقع.
+إضافة قواعد متجاوبة مخصوصة لكروت أدوات التاريخ على `max-width: 520px` و `max-width: 380px`.
+تقليل padding وحجم عناوين الأدوات وأزرار التقويم وارتفاع حقول اليوم/الشهر/السنة وأزرار التنفيذ على الجوال.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.70 على Cloudflare Version ID: 6eafce62-8243-423c-98a8-2422e70f748d.
+✅ تم اختبار `/contact?v=0.2.70` على الإنتاج ورجع HTTP 200.
+✅ تم اختبار `/?v=0.2.70` على الإنتاج ورجع HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 180
+rg -n "contact-page-form|contact-upload-field|calendar-mode|date-dropdowns|tool-mode-card|site-page-content > \.card|@media \(max-width: 520px\)" app\globals.css app\[slug]\PageClient.jsx app\page.jsx app\components\home
+Get-Content app\globals.css -Encoding UTF8 | Select-Object -Skip 940 -First 190
+Get-Content app\globals.css -Encoding UTF8 | Select-Object -Skip 1530 -First 120
+Get-Content app\globals.css -Encoding UTF8 | Select-Object -Skip 2480 -First 320
+Get-Content -LiteralPath 'app\[slug]\PageClient.jsx' -Encoding UTF8 | Select-Object -Skip 250 -First 95
+npm version 0.2.70 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/contact?v=0.2.70
+curl.exe -I https://date-tool.com/?v=0.2.70
+```
+
+الملفات المتأثرة:
+
+```txt
+app/[slug]/PageClient.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5832,6 +5902,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.69 وربط هوية التطبيق المثبت بإعدادات الإدارة
 ✅ تم نشر الإصدار 0.2.69 على Cloudflare Version ID: a734fee2-2886-49dc-b51f-bc0aa388374e
 ✅ تم اختبار `/manifest.webmanifest` على الإنتاج ورجع الاسم والوصف واللوقو من إعدادات الإدارة
+✅ تم تحديث الإصدار إلى 0.2.70 وتحسين وضوح نموذج التواصل وأحجام أدوات التاريخ على الجوال
+✅ تم نشر الإصدار 0.2.70 على Cloudflare Version ID: 6eafce62-8243-423c-98a8-2422e70f748d
+✅ تم اختبار `/contact?v=0.2.70` و `/?v=0.2.70` على الإنتاج بنجاح
 ```
 
 ---

@@ -282,11 +282,11 @@ function ContactForm() {
                 <div className="contact-form-grid">
                     <label>
                         <span>الاسم</span>
-                        <input required value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} />
+                        <input required value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} placeholder="اكتب اسمك" />
                     </label>
                     <label>
                         <span>البريد الإلكتروني</span>
-                        <input required type="email" dir="ltr" value={form.senderEmail} onChange={(event) => updateField('senderEmail', event.target.value)} />
+                        <input required type="email" dir="ltr" value={form.senderEmail} onChange={(event) => updateField('senderEmail', event.target.value)} placeholder="name@example.com" />
                     </label>
                 </div>
 
