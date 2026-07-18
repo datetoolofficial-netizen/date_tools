@@ -9,6 +9,8 @@ import { defaultFirebaseApi, SiteContext } from './SiteContext';
 import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from './privacyConsent';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
+const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
+const LOCATION_ERROR_NOTICE_SEEN_KEY = 'date_tools_location_error_notice_seen';
 
 function timezoneLabel(timezone) {
     if (!timezone) return 'موقعك الحالي';
@@ -304,18 +306,32 @@ export default function SiteShell({ children }) {
 
     useEffect(() => {
         if (!shouldUseShell || locationStatus === 'idle' || locationStatus === 'loading') return;
+        const seenSuccessNotice = localStorage.getItem(LOCATION_SUCCESS_NOTICE_SEEN_KEY) === 'true';
 
         if (locationStatus === 'granted') {
+            if (seenSuccessNotice) {
+                setLocationNotice(null);
+                return undefined;
+            }
+
+            localStorage.setItem(LOCATION_SUCCESS_NOTICE_SEEN_KEY, 'true');
             setLocationNotice({
                 type: 'success',
                 icon: 'fa-solid fa-location-dot',
                 title: 'تم السماح بالموقع',
                 message: 'تم تحديث أدوات الساعة والطقس حسب موقعك الحالي بدون حفظ إحداثياتك.',
             });
-
             const timer = window.setTimeout(() => setLocationNotice(null), 4500);
             return () => window.clearTimeout(timer);
         }
+
+        const seenErrorNotice = localStorage.getItem(LOCATION_ERROR_NOTICE_SEEN_KEY) === 'true';
+        if (seenErrorNotice) {
+            setLocationNotice(null);
+            return undefined;
+        }
+
+        localStorage.setItem(LOCATION_ERROR_NOTICE_SEEN_KEY, 'true');
 
         setLocationNotice({
             type: 'error',
@@ -460,7 +476,7 @@ export default function SiteShell({ children }) {
                     إعدادات الخصوصية
                 </button>
             )}
-            {!isSiteLoading && <PwaInstallPrompt />}
+            {!isSiteLoading && <PwaInstallPrompt settings={configData?.pwaInstallPrompt} />}
         </SiteContext.Provider>
     );
 }

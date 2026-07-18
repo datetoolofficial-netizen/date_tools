@@ -1705,6 +1705,11 @@ body.dark-mode .legacy-admin-shell {
     --tool-bg: rgba(37, 99, 235, 0.14);
 }
 
+.color-pwa {
+    --tool-color: #8b5cf6;
+    --tool-bg: rgba(139, 92, 246, 0.14);
+}
+
 .color-links {
     --tool-color: #06b6d4;
     --tool-bg: rgba(6, 182, 212, 0.14);
@@ -1749,6 +1754,12 @@ body.dark-mode .legacy-admin-shell {
 .tools-privacy-settings-card {
     --tool-color: #2563eb;
     --tool-bg: rgba(37, 99, 235, 0.14);
+}
+
+.tools-section-card#pwa-install-settings,
+.tools-pwa-settings-card {
+    --tool-color: #8b5cf6;
+    --tool-bg: rgba(139, 92, 246, 0.14);
 }
 
 .tools-section-card#links {

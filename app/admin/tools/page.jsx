@@ -37,6 +37,11 @@ function pickToolsConfig(config = {}) {
             enabled: config.privacySettingsButton?.enabled === true,
             pages: Array.isArray(config.privacySettingsButton?.pages) ? config.privacySettingsButton.pages : [],
         },
+        pwaInstallPrompt: {
+            enabled: config.pwaInstallPrompt?.enabled !== false,
+            text: config.pwaInstallPrompt?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع',
+            buttonText: config.pwaInstallPrompt?.buttonText || 'ثبّت الأداة',
+        },
     };
 }
 
@@ -422,6 +427,16 @@ export default function AdminToolsPage() {
         }));
     };
 
+    const updatePwaInstallPrompt = (field, value) => {
+        setToolsConfig((current) => ({
+            ...current,
+            pwaInstallPrompt: {
+                ...(current.pwaInstallPrompt || { enabled: true, text: '', buttonText: '' }),
+                [field]: value,
+            },
+        }));
+    };
+
     const togglePrivacySettingsPage = (path) => {
         const safePath = normalizePagePath(path);
         setToolsConfig((current) => {
@@ -747,6 +762,51 @@ export default function AdminToolsPage() {
                                     <code dir="ltr">{page.path}</code>
                                 </label>
                             ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="legacy-google-card tools-section-card tools-pwa-settings-card" id="pwa-install-settings">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-pwa"><i className="fa-solid fa-mobile-screen-button"></i></span>
+                            <div>
+                                <h2>زر تثبيت الأداة</h2>
+                                <p>تحكم في ظهور زر تثبيت الموقع كتطبيق ونص الرسالة والزر.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="privacy-admin-controls">
+                        <label className="privacy-admin-toggle">
+                            <input
+                                type="checkbox"
+                                checked={toolsConfig.pwaInstallPrompt?.enabled !== false}
+                                onChange={(event) => updatePwaInstallPrompt('enabled', event.target.checked)}
+                            />
+                            <span>
+                                <strong>إظهار زر تثبيت الأداة</strong>
+                                <small>يظهر فقط عندما يدعم المتصفح تثبيت الموقع كتطبيق، ولا يظهر بعد تثبيت الأداة أو إخفائه من الزائر.</small>
+                            </span>
+                        </label>
+
+                        <div className="legacy-form-grid two-columns">
+                            <div className="legacy-field">
+                                <label>نص رسالة التثبيت</label>
+                                <input
+                                    value={toolsConfig.pwaInstallPrompt?.text || ''}
+                                    onChange={(event) => updatePwaInstallPrompt('text', event.target.value)}
+                                    placeholder="مثال: ثبّت الأداة على جهازك لاستخدام أسرع"
+                                />
+                            </div>
+                            <div className="legacy-field">
+                                <label>نص زر التثبيت</label>
+                                <input
+                                    value={toolsConfig.pwaInstallPrompt?.buttonText || ''}
+                                    onChange={(event) => updatePwaInstallPrompt('buttonText', event.target.value)}
+                                    placeholder="مثال: ثبّت الأداة"
+                                />
+                            </div>
                         </div>
                     </div>
                 </section>

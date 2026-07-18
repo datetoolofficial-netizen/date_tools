@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.71.
+الإصدار الحالي للتطبيق هو 0.2.72.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -152,6 +152,7 @@ https://www.date-tool.com
 88. ربط اسم ووصف ولوقو التطبيق عند التثبيت بإعدادات الهوية المحفوظة من لوحة الإدارة.
 89. تحسين وضوح نموذج اتصل بنا على الجوال وتقليل أحجام أدوات التاريخ على الشاشات الصغيرة.
 90. توسيع صفحة اتصل بنا على الجوال وتحسين تباين حقولها مع تخفيف إضافي لخطوط أدوات التاريخ.
+91. إضافة إدارة زر تثبيت الأداة ومنع تكرار رسالة الموقع وتحسين عرض نموذج التواصل.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5713,6 +5714,87 @@ PROJECT_MEMO.md
 
 ---
 
+### إدارة زر تثبيت الأداة ومنع تكرار رسالة الموقع - الإصدار 0.2.72
+
+الأعراض:
+
+```txt
+نموذج اتصل بنا لا يزال لا يطابق عرض بطاقة عنوان الصفحة، وخلفية حقول الإدخال مطلوبة بلون خلفية الموقع الأساسية.
+زر تثبيت الأداة لم يكن قابلًا للتحكم من لوحة الإدارة.
+رسالة السماح بالموقع كانت تظهر بعد كل إعادة تحميل أو في صفحات متعددة، مما يزعج الزائر.
+```
+
+السبب:
+
+```txt
+زر التثبيت كان مكونًا ثابتًا بنص ثابت وبدون إعدادات محفوظة في `settings/main`.
+رسالة الموقع اعتمدت على حالة `locationStatus` فقط، ولم يكن لديها ذاكرة محلية تمنع تكرار نفس الإشعار بعد ظهوره.
+حقول التواصل كانت تستخدم مزيج ألوان قريب من النموذج بدل `var(--bg-body)` المطلوب.
+```
+
+الحل:
+
+```txt
+إضافة إعداد `pwaInstallPrompt` إلى إعدادات الموقع العامة: enabled و text و buttonText.
+إضافة سيكشن "زر تثبيت الأداة" في `/admin/tools` للتحكم في إظهاره ونص الرسالة ونص الزر.
+تمرير إعدادات زر التثبيت إلى `PwaInstallPrompt` في الواجهة العامة.
+إضافة نص صغير اختياري داخل زر التثبيت العام مع إبقاء الزر ظاهرًا فقط عند دعم المتصفح للتثبيت.
+استخدام مفاتيح localStorage منفصلة لمنع تكرار إشعار نجاح الموقع وإشعار خطأ الموقع بعد أول ظهور لكل حالة.
+ضبط خلفية حقول التواصل إلى لون خلفية الموقع الأساسية `var(--bg-body)` وجعل بطاقة التواصل تتبع عرض صفحة التواصل.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.72 على Cloudflare Version ID: 4fce8e4a-195f-4d35-82c1-f601525f33c2.
+✅ تم اختبار `/contact?v=0.2.72` على الإنتاج ورجع HTTP 200.
+✅ تم اختبار `/admin/tools?v=0.2.72` على الإنتاج ورجع HTTP 200.
+✅ تم اختبار `/?v=0.2.72` على الإنتاج ورجع HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 130
+rg -n "PwaInstallPrompt|install|privacySettingsButton|location-permission|requestLocation|geolocation|static-contact-page|contact-page-form" app
+Get-Content app\components\PwaInstallPrompt.jsx -Encoding UTF8
+Get-Content app\SiteShell.jsx -Encoding UTF8 | Select-Object -Skip 220 -First 270
+Get-Content app\admin\tools\page.jsx -Encoding UTF8 | Select-Object -First 470
+Get-Content app\admin\tools\page.jsx -Encoding UTF8 | Select-Object -Skip 590 -First 180
+Get-Content app\firebase.js -Encoding UTF8 | Select-Object -Skip 210 -First 80
+Get-Content app\admin\AdminDashboard.css -Encoding UTF8 | Select-Object -Skip 1660 -First 120
+npm version 0.2.72 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/contact?v=0.2.72
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.72
+curl.exe -I https://date-tool.com/?v=0.2.72
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/PwaInstallPrompt.jsx
+app/SiteShell.jsx
+app/firebase.js
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5979,6 +6061,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.71 وتوسيع صفحة التواصل وتحسين حقولها وتخفيف خطوط أدوات التاريخ على الجوال
 ✅ تم نشر الإصدار 0.2.71 على Cloudflare Version ID: 2c452616-1005-4e0e-a9ad-4f10cd982c84
 ✅ تم اختبار `/contact?v=0.2.71` و `/?v=0.2.71` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.72 وإضافة إدارة زر تثبيت الأداة ومنع تكرار إشعار الموقع
+✅ تم نشر الإصدار 0.2.72 على Cloudflare Version ID: 4fce8e4a-195f-4d35-82c1-f601525f33c2
+✅ تم اختبار `/contact?v=0.2.72` و `/admin/tools?v=0.2.72` و `/?v=0.2.72` على الإنتاج بنجاح
 ```
 
 ---

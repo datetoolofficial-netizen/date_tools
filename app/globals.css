@@ -821,6 +821,11 @@
             max-width: min(760px, 100%);
         }
 
+        .static-contact-page .static-page-header,
+        .static-contact-page .static-page-card {
+            width: 100%;
+        }
+
         .static-page-header {
             min-height: 84px;
             display: grid;
@@ -878,6 +883,7 @@
         .static-contact-page .static-page-card {
             width: 100%;
             padding: clamp(18px, 4vw, 30px);
+            background: var(--bg-card);
         }
 
         .static-page-description {
@@ -979,6 +985,7 @@
             gap: 18px;
             padding-top: 0;
             border-top: 0;
+            width: 100%;
         }
 
         .contact-page-intro {
@@ -1057,7 +1064,7 @@
             min-height: 54px;
             border: 1px solid color-mix(in srgb, var(--border) 72%, var(--primary) 28%);
             border-radius: 15px;
-            background: color-mix(in srgb, var(--bg-main) 84%, var(--bg-card) 16%);
+            background: var(--bg-body);
             color: var(--text-main);
             padding: 14px;
             font: inherit;
@@ -1070,7 +1077,7 @@
         body.dark-mode .contact-page-form input,
         body.dark-mode .contact-page-form textarea {
             border-color: color-mix(in srgb, var(--primary) 38%, var(--border) 62%);
-            background: color-mix(in srgb, var(--bg-main) 74%, var(--primary) 16%);
+            background: var(--bg-body);
         }
 
         .contact-page-form input::placeholder,
@@ -1086,7 +1093,7 @@
         .contact-page-form input:focus,
         .contact-page-form textarea:focus {
             border-color: var(--primary);
-            background: color-mix(in srgb, var(--bg-card) 90%, var(--primary) 10%);
+            background: color-mix(in srgb, var(--bg-body) 88%, var(--primary) 12%);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
@@ -1181,6 +1188,15 @@
             background: color-mix(in srgb, var(--bg-card) 94%, var(--primary) 6%);
             border: 1px solid color-mix(in srgb, var(--border-color) 76%, var(--primary) 24%);
             box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18);
+        }
+
+        .pwa-install-copy {
+            max-width: 190px;
+            color: var(--text-sub);
+            font-size: 12px;
+            font-weight: 850;
+            line-height: 1.45;
+            padding-inline: 8px 2px;
         }
 
         body.dark-mode .pwa-install-prompt {
@@ -1474,6 +1490,14 @@
                 bottom: 12px;
                 padding: 6px;
                 border-radius: 15px;
+                max-width: calc(100vw - 24px);
+            }
+
+            .pwa-install-copy {
+                max-width: 130px;
+                font-size: 10.5px;
+                line-height: 1.35;
+                padding-inline: 6px 0;
             }
 
             .pwa-install-main {

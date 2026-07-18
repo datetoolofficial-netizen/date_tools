@@ -231,6 +231,11 @@ export const defaultSiteConfig = {
         enabled: false,
         pages: [],
     },
+    pwaInstallPrompt: {
+        enabled: true,
+        text: "ثبّت الأداة على جهازك لاستخدام أسرع",
+        buttonText: "ثبّت الأداة",
+    },
     customPages: {},
     mainSEO: {
         title: "أدوات التاريخ الشاملة",
@@ -269,6 +274,11 @@ export async function getSiteConfig() {
             privacySettingsButton: {
                 enabled: data.privacySettingsButton?.enabled === true,
                 pages: Array.isArray(data.privacySettingsButton?.pages) ? data.privacySettingsButton.pages : [],
+            },
+            pwaInstallPrompt: {
+                ...defaultSiteConfig.pwaInstallPrompt,
+                ...(data.pwaInstallPrompt || {}),
+                enabled: data.pwaInstallPrompt?.enabled !== false,
             },
 
             googleAdSlots: {
