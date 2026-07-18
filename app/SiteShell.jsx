@@ -275,8 +275,9 @@ export default function SiteShell({ children }) {
         setShowPrivacySettings(true);
     }, []);
 
-    const requestCurrentLocation = useCallback(async () => {
-        if (currentLocation) return currentLocation;
+    const requestCurrentLocation = useCallback(async (options = {}) => {
+        const forceRefresh = Boolean(options.force);
+        if (currentLocation && !forceRefresh) return currentLocation;
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             setLocationStatus('error');
@@ -328,7 +329,7 @@ export default function SiteShell({ children }) {
                 {
                     enableHighAccuracy: false,
                     timeout: 10000,
-                    maximumAge: 1000 * 60 * 20,
+                    maximumAge: forceRefresh ? 0 : 1000 * 60 * 20,
                 },
             );
         });

@@ -74,6 +74,8 @@ export default function WeatherPage() {
         configData,
         firebaseApiRef,
         currentLocation,
+        locationStatus,
+        requestCurrentLocation,
     } = useSiteContext();
     const [query, setQuery] = useState('Riyadh');
     const [isLoading, setIsLoading] = useState(false);
@@ -129,6 +131,20 @@ export default function WeatherPage() {
         }
     };
 
+    const handleUseCurrentLocation = async () => {
+        setError('');
+
+        const location = await requestCurrentLocation({ force: true }) || currentLocation;
+        if (!location) {
+            setError('تعذر تحديد موقعك الحالي. تأكد من السماح للموقع من إعدادات المتصفح.');
+            return;
+        }
+
+        const locationKey = `${location.latitude}:${location.longitude}`;
+        loadedLocationKeyRef.current = locationKey;
+        await loadWeatherByLocation(location);
+    };
+
     useEffect(() => {
         loadWeather('Riyadh');
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,10 +184,22 @@ export default function WeatherPage() {
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="اكتب اسم المدينة، مثال: الرياض"
                 />
-                <button type="submit" disabled={isLoading}>
-                    <i className={isLoading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass'}></i>
-                    {isLoading ? 'جاري البحث...' : weatherSettings.subtools?.weatherSearch}
-                </button>
+                <div className="weather-search-actions">
+                    <button type="submit" className="weather-submit-btn" disabled={isLoading}>
+                        <i className={isLoading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass'}></i>
+                        {isLoading ? 'جاري البحث...' : weatherSettings.subtools?.weatherSearch}
+                    </button>
+                    <button
+                        type="button"
+                        className="weather-location-btn"
+                        onClick={handleUseCurrentLocation}
+                        disabled={isLoading || locationStatus === 'loading'}
+                        aria-label="عرض طقس موقعي الحالي"
+                        title="عرض طقس موقعي الحالي"
+                    >
+                        <i className={locationStatus === 'loading' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-location-crosshairs'}></i>
+                    </button>
+                </div>
             </form>
 
             {error && <p className="inline-error">{error}</p>}
@@ -193,7 +221,7 @@ export default function WeatherPage() {
                         <div className="weather-metrics weather-metrics-inline">
                             <div><i className="fa-solid fa-droplet"></i><span>الرطوبة</span><strong>{current.relative_humidity_2m}%</strong></div>
                             <div><i className="fa-solid fa-wind"></i><span>الرياح</span><strong>{Math.round(current.wind_speed_10m)} كم/س</strong></div>
-                            <div><i className="fa-solid fa-umbrella"></i><span>الأمطار</span><strong>{current.precipitation} مم</strong></div>
+                            <div><i className="fa-solid fa-umbrella"></i><span>توقع المطر</span><strong>{daily?.precipitation_probability_max?.[0] ?? 0}%</strong></div>
                             <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
                         </div>
                     </article>
