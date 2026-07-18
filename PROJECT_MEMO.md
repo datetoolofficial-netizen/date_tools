@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.68.
+الإصدار الحالي للتطبيق هو 0.2.69.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -149,6 +149,7 @@ https://www.date-tool.com
 85. تحسين إشعار الموقع الحالي على الجوال ليظهر أسفل يمين الصفحة بحجم أصغر ويختفي تلقائيًا عند السحب أو التمرير.
 86. تحسين أداء التحميل الآمن وصفحات روابط الفوتر الديناميكية مثل الخصوصية والشروط واتصل بنا لتظهر بشكل ممتاز على الشاشات الصغيرة.
 87. تحسين تعداد صفحات الفوتر وإضافة دعم تثبيت الموقع كتطبيق جوال عبر PWA Manifest وزر تثبيت عند دعم المتصفح.
+88. ربط اسم ووصف ولوقو التطبيق عند التثبيت بإعدادات الهوية المحفوظة من لوحة الإدارة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5505,6 +5506,72 @@ PROJECT_MEMO.md
 
 ---
 
+### ربط هوية التطبيق المثبت بإعدادات الإدارة - الإصدار 0.2.69
+
+الأعراض:
+
+```txt
+بعد إضافة خاصية تثبيت الموقع كتطبيق، كان اسم التطبيق وأيقونته داخل `manifest.webmanifest` ثابتين من الكود.
+المطلوب أن يأخذ التثبيت اسم الأداة واللوقو الأساسي من صفحة الإدارة/الهوية.
+```
+
+السبب:
+
+```txt
+ملف `app/manifest.js` كان يعرض name و short_name و description و icons بقيم ثابتة.
+لم يكن يقرأ وثيقة `settings/main` من Firestore كما يفعل `layout.jsx` لبيانات الهوية وLink Preview.
+```
+
+الحل:
+
+```txt
+تحويل `app/manifest.js` إلى دالة async تقرأ `toolDisplayName` و `toolSlogan` و `logoUrl` من Firestore.
+استخدام اسم الأداة المحفوظ كـ name و short_name للتطبيق المثبت.
+استخدام السلوغن المحفوظ كوصف للتطبيق المثبت.
+إدراج اللوقو الأساسي المحفوظ من الإدارة كأول أيقونات manifest مع إبقاء أيقونات PWA المحلية كاحتياط.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.69 على Cloudflare Version ID: a734fee2-2886-49dc-b51f-bc0aa388374e.
+✅ تم اختبار `/manifest.webmanifest` على الإنتاج ورجع الاسم والوصف واللوقو من إعدادات الإدارة.
+✅ تم اختبار الصفحة الرئيسية على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw -Encoding UTF8 PROJECT_MEMO.md
+Get-Content -Raw -Encoding UTF8 app\manifest.js
+Get-Content -Raw -Encoding UTF8 app\layout.jsx
+npm version 0.2.69 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -s https://date-tool.com/manifest.webmanifest
+curl.exe -I https://date-tool.com/manifest.webmanifest
+curl.exe -I https://date-tool.com/?v=0.2.69
+```
+
+الملفات المتأثرة:
+
+```txt
+app/manifest.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -5762,6 +5829,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.68 بتحسين تعداد صفحات الفوتر وإضافة PWA Manifest وزر تثبيت التطبيق
 ✅ تم نشر الإصدار 0.2.68 على Cloudflare Version ID: fa495716-3b7d-41f6-a671-9183611cc333
 ✅ تم اختبار `/manifest.webmanifest` وأيقونات PWA وصفحة `/terms` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.69 وربط هوية التطبيق المثبت بإعدادات الإدارة
+✅ تم نشر الإصدار 0.2.69 على Cloudflare Version ID: a734fee2-2886-49dc-b51f-bc0aa388374e
+✅ تم اختبار `/manifest.webmanifest` على الإنتاج ورجع الاسم والوصف واللوقو من إعدادات الإدارة
 ```
 
 ---
