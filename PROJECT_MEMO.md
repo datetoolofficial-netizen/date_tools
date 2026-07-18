@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.72.
+الإصدار الحالي للتطبيق هو 0.2.73.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -153,6 +153,7 @@ https://www.date-tool.com
 89. تحسين وضوح نموذج اتصل بنا على الجوال وتقليل أحجام أدوات التاريخ على الشاشات الصغيرة.
 90. توسيع صفحة اتصل بنا على الجوال وتحسين تباين حقولها مع تخفيف إضافي لخطوط أدوات التاريخ.
 91. إضافة إدارة زر تثبيت الأداة ومنع تكرار رسالة الموقع وتحسين عرض نموذج التواصل.
+92. إصلاح تمدد صفحة التواصل وتحسين ثبات Shell عند التنقل بين أدوات الموقع.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -5795,6 +5796,80 @@ PROJECT_MEMO.md
 
 ---
 
+### إصلاح تمدد صفحة التواصل وتحسين ثبات Shell - الإصدار 0.2.73
+
+الأعراض:
+
+```txt
+بعد تعديل صفحة التواصل، أصبح عنوان صفحة اتصل بنا أكبر من المطلوب على الشاشات الصغيرة.
+بطاقة نموذج التواصل كانت تتجاوز عرض الشاشة وتسبب سحبًا أفقيًا.
+المطلوب أن يبقى الهيدر والفوتر ثابتين قدر الإمكان عند التنقل بين أدوات التاريخ والساعة والطقس، ويظهر محتوى الصفحة فقط.
+```
+
+السبب:
+
+```txt
+قاعدة `width: 100%` على بطاقة التواصل مع padding بدون `box-sizing: border-box` جعلت عرض البطاقة الفعلي أكبر من الحاوية.
+كان هناك override خاص لعنوان صفحة التواصل على الجوال جعله أكبر من قواعد الصفحات العامة السابقة.
+روابط الأدوات كانت تستخدم `Next Link` بالفعل، لكن لم يكن هناك prefetch صريح، كما أن Shell لم يكن يحتفظ بإعداداته مؤقتًا داخل الجلسة.
+```
+
+الحل:
+
+```txt
+إضافة `box-sizing: border-box` لرأس وبطاقة الصفحات الثابتة.
+إزالة override حجم عنوان صفحة التواصل حتى يرجع لحجم الصفحات العامة السابق.
+إبقاء بطاقة التواصل بعرض آمن دون تجاوز الشاشة.
+إضافة `prefetch` صريح لروابط الأدوات والروابط الداخلية في الهيدر.
+إضافة كاش جلسة خفيف لإعدادات `SiteShell` لمدة 5 دقائق، مع تحديثها من الشبكة في الخلفية، لتقليل وميض الهيدر والفوتر عند التنقل أو إعادة فتح صفحة داخل نفس الجلسة.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.73 على Cloudflare Version ID: ff10c105-2b2c-4aa0-93bb-5f31cc2d36fd.
+✅ تم اختبار `/contact?v=0.2.73` و `/?v=0.2.73` و `/clock?v=0.2.73` و `/weather?v=0.2.73` على الإنتاج بنجاح.
+⚠️ ظهرت رسائل fetch failed / EACCES أثناء build المحلي بسبب منع الشبكة في sandbox عند محاولة جلب Firestore، لكنها لم تفشل البناء.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 130
+rg -n "static-contact-page|static-page-header h1|site-page-content|primaryToolLinks|site-nav-shell|router|Link href" app\globals.css app\Header.jsx app\SiteShell.jsx app\page.jsx app\clock app\weather
+Get-Content app\globals.css -Encoding UTF8 | Select-Object -Skip 800 -First 100
+Get-Content app\globals.css -Encoding UTF8 | Select-Object -Skip 2760 -First 190
+Get-Content app\layout.jsx -Encoding UTF8 | Select-Object -First 180
+Get-Content app\SiteShell.jsx -Encoding UTF8 | Select-Object -First 240
+npm version 0.2.73 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/contact?v=0.2.73
+curl.exe -I https://date-tool.com/?v=0.2.73
+curl.exe -I https://date-tool.com/clock?v=0.2.73
+curl.exe -I https://date-tool.com/weather?v=0.2.73
+```
+
+الملفات المتأثرة:
+
+```txt
+app/Header.jsx
+app/SiteShell.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6064,6 +6139,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.72 وإضافة إدارة زر تثبيت الأداة ومنع تكرار إشعار الموقع
 ✅ تم نشر الإصدار 0.2.72 على Cloudflare Version ID: 4fce8e4a-195f-4d35-82c1-f601525f33c2
 ✅ تم اختبار `/contact?v=0.2.72` و `/admin/tools?v=0.2.72` و `/?v=0.2.72` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.73 وإصلاح تمدد صفحة التواصل وتحسين ثبات Shell عند التنقل بين أدوات الموقع
+✅ تم نشر الإصدار 0.2.73 على Cloudflare Version ID: ff10c105-2b2c-4aa0-93bb-5f31cc2d36fd
+✅ تم اختبار `/contact?v=0.2.73` و `/?v=0.2.73` و `/clock?v=0.2.73` و `/weather?v=0.2.73` على الإنتاج بنجاح
 ```
 
 ---

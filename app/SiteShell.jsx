@@ -11,6 +11,36 @@ import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from '
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
 const LOCATION_ERROR_NOTICE_SEEN_KEY = 'date_tools_location_error_notice_seen';
+const SITE_CONFIG_CACHE_KEY = 'date_tools_site_shell_config';
+const SITE_CONFIG_CACHE_TTL = 1000 * 60 * 5;
+
+function readCachedSiteConfig() {
+    if (typeof window === 'undefined') return null;
+
+    try {
+        const raw = sessionStorage.getItem(SITE_CONFIG_CACHE_KEY);
+        if (!raw) return null;
+
+        const cached = JSON.parse(raw);
+        if (!cached?.timestamp || Date.now() - cached.timestamp > SITE_CONFIG_CACHE_TTL) return null;
+        return cached.data || null;
+    } catch {
+        return null;
+    }
+}
+
+function writeCachedSiteConfig(data) {
+    if (typeof window === 'undefined' || !data) return;
+
+    try {
+        sessionStorage.setItem(SITE_CONFIG_CACHE_KEY, JSON.stringify({
+            timestamp: Date.now(),
+            data,
+        }));
+    } catch {
+        // Ignore storage errors; the live fetch still keeps the UI working.
+    }
+}
 
 function timezoneLabel(timezone) {
     if (!timezone) return 'موقعك الحالي';
@@ -126,6 +156,7 @@ export default function SiteShell({ children }) {
     const [privacyDraft, setPrivacyDraft] = useState(DEFAULT_PRIVACY_CONSENT);
     const firebaseApiRef = useRef(defaultFirebaseApi);
     const autoLocationRequestRef = useRef(false);
+    const loadedConfigRef = useRef(false);
 
     const shouldUseShell = !excludedShellPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
     const isSiteLoading = shouldUseShell && configData === null;
@@ -141,9 +172,12 @@ export default function SiteShell({ children }) {
     }, []);
 
     useEffect(() => {
-        if (!shouldUseShell || configData !== null) return;
+        if (!shouldUseShell || loadedConfigRef.current) return;
 
         let isMounted = true;
+        loadedConfigRef.current = true;
+        const cachedConfig = readCachedSiteConfig();
+        if (cachedConfig) setConfigData(cachedConfig);
 
         async function loadSiteConfig() {
             try {
@@ -163,15 +197,18 @@ export default function SiteShell({ children }) {
                     fetchPublicCampaigns(),
                 ]);
 
+                const nextConfig = {
+                    ...(data || {}),
+                    adCampaigns: campaigns,
+                };
+
                 if (isMounted) {
-                    setConfigData({
-                        ...(data || {}),
-                        adCampaigns: campaigns,
-                    });
+                    setConfigData(nextConfig);
+                    writeCachedSiteConfig(nextConfig);
                 }
             } catch {
                 console.error('Error fetching site config.');
-                if (isMounted) setConfigData({ events: [] });
+                if (isMounted && !cachedConfig) setConfigData({ events: [] });
             }
         }
 
@@ -180,7 +217,7 @@ export default function SiteShell({ children }) {
         return () => {
             isMounted = false;
         };
-    }, [configData, shouldUseShell]);
+    }, [shouldUseShell]);
 
     useEffect(() => {
         document.documentElement.lang = lang;

@@ -827,6 +827,7 @@
         }
 
         .static-page-header {
+            box-sizing: border-box;
             min-height: 84px;
             display: grid;
             grid-template-columns: minmax(72px, auto) minmax(0, 1fr) minmax(72px, auto);
@@ -874,6 +875,7 @@
         }
 
         .static-page-card {
+            box-sizing: border-box;
             text-align: var(--static-page-align, right);
             line-height: 1.85;
             padding: clamp(22px, 4vw, 38px);
@@ -881,7 +883,6 @@
         }
 
         .static-contact-page .static-page-card {
-            width: 100%;
             padding: clamp(18px, 4vw, 30px);
             background: var(--bg-card);
         }
@@ -2815,10 +2816,6 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         border-radius: 18px;
     }
 
-    .static-contact-page .static-page-header h1 {
-        font-size: clamp(28px, 9vw, 38px);
-    }
-
     .static-page-description {
         margin-bottom: 18px;
         font-size: 13px;
@@ -2928,9 +2925,6 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         padding: 14px 12px;
     }
 
-    .static-contact-page .static-page-header h1 {
-        font-size: 28px;
-    }
 }
 
 @media (max-width: 700px) {

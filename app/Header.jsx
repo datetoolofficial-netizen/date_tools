@@ -134,7 +134,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                         const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
 
                         return (
-                            <Link key={link.href} href={link.href} className={`nav-link${isActive ? ' active' : ''}`}>
+                            <Link key={link.href} href={link.href} prefetch className={`nav-link${isActive ? ' active' : ''}`}>
                                 <i className={link.icon}></i>
                                 {link.label}
                             </Link>
@@ -148,7 +148,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                                 <i className="fa-solid fa-arrow-up-right-from-square external-icon"></i>
                             </a>
                         ) : (
-                            <Link key={idx} href={link.url} className="nav-link">
+                            <Link key={idx} href={link.url} prefetch className="nav-link">
                                 {link.title}
                             </Link>
                         )
