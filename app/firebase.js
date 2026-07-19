@@ -8,13 +8,6 @@ import {
     deleteField
 } from "firebase/firestore";
 
-import {
-    initializeAppCheck,
-    ReCaptchaEnterpriseProvider
-} from "firebase/app-check";
-
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
 import { sanitizeHtml } from "./sanitizeHtml";
 import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings } from "./toolSettings";
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPreview";
@@ -33,8 +26,45 @@ const firebaseConfig = {
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+let authInstance = null;
+let storageInstance = null;
+let appCheckPromise = null;
+
+export async function ensureFirebaseAppCheck() {
+    if (typeof window === "undefined") return null;
+    if (appCheckPromise) return appCheckPromise;
+
+    appCheckPromise = import("firebase/app-check")
+        .then(({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider(
+                "6Ldch4ssAAAAAM0HeNiBNFlQBqXM9dUL4SNm1mxM"
+            ),
+            isTokenAutoRefreshEnabled: true
+        }))
+        .catch(() => null);
+
+    return appCheckPromise;
+}
+
+export async function getFirebaseAuth() {
+    await ensureFirebaseAppCheck();
+
+    if (!authInstance) {
+        const { getAuth } = await import("firebase/auth");
+        authInstance = getAuth(app);
+    }
+
+    return authInstance;
+}
+
+export async function getFirebaseStorage() {
+    if (!storageInstance) {
+        const { getStorage } = await import("firebase/storage");
+        storageInstance = getStorage(app);
+    }
+
+    return storageInstance;
+}
 
 const defaultExternalIntegrations = {
     googleTagId: "",
@@ -189,20 +219,6 @@ function normalizeGoogleAdSlots(value = {}) {
             normalizeGoogleAdSlot(pickWithAliases(value, slotId))
         ])
     );
-}
-
-// App Check يعمل فقط في المتصفح
-if (typeof window !== "undefined") {
-    try {
-        initializeAppCheck(app, {
-            provider: new ReCaptchaEnterpriseProvider(
-                "6Ldch4ssAAAAAM0HeNiBNFlQBqXM9dUL4SNm1mxM"
-            ),
-            isTokenAutoRefreshEnabled: true
-        });
-    } catch (error) {
-        console.warn("App Check already initialized or skipped.");
-    }
 }
 
 /* =========================

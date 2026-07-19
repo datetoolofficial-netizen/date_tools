@@ -41,11 +41,12 @@ export default function ClientRegisterPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
-            const [{ auth, db }, { createUserWithEmailAndPassword, updateProfile }, { doc, setDoc, serverTimestamp }] = await Promise.all([
+            const [{ db, getFirebaseAuth }, { createUserWithEmailAndPassword, updateProfile }, { doc, setDoc, serverTimestamp }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            const auth = await getFirebaseAuth();
 
             const cleanEmail = form.email.trim().toLowerCase();
             const credential = await createUserWithEmailAndPassword(auth, cleanEmail, form.password);

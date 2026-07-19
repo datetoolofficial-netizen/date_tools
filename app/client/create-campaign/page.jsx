@@ -63,11 +63,12 @@ export default function CreateCampaignPage() {
         let unsubscribe = () => {};
 
         async function init() {
-            const [{ auth, db }, { onAuthStateChanged }, { doc, getDoc }] = await Promise.all([
+            const [{ db, getFirebaseAuth }, { onAuthStateChanged }, { doc, getDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            const auth = await getFirebaseAuth();
 
             unsubscribe = onAuthStateChanged(auth, async (user) => {
                 if (!user) {
@@ -216,7 +217,12 @@ export default function CreateCampaignPage() {
                         </div>
                         <div className="client-form-group">
                             <label>مكان العرض المطلوب</label>
-                            <select value={form.adLocation} onChange={(event) => updateField('adLocation', event.target.value)}>
+                            <select
+                                value={form.adLocation}
+                                onChange={(event) => updateField('adLocation', event.target.value)}
+                                aria-label="مكان عرض الإعلان المطلوب"
+                                title="مكان عرض الإعلان المطلوب"
+                            >
                                 {AD_LOCATION_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                             </select>
                         </div>

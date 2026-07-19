@@ -145,10 +145,11 @@ export default function AdminIdentityPage() {
 
         async function loadIdentityPage() {
             try {
-                const [{ auth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ getFirebaseAuth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../../firebase'),
                     import('firebase/auth'),
                 ]);
+                const auth = await getFirebaseAuth();
 
                 if (!isMounted) return;
 

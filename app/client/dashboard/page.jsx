@@ -41,11 +41,12 @@ export default function ClientDashboardPage() {
         let unsubscribe = () => {};
 
         async function loadClientData() {
-            const [{ auth, db }, { onAuthStateChanged }, { collection, doc, getDoc, getDocs, query, where }] = await Promise.all([
+            const [{ db, getFirebaseAuth }, { onAuthStateChanged }, { collection, doc, getDoc, getDocs, query, where }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            const auth = await getFirebaseAuth();
 
             unsubscribe = onAuthStateChanged(auth, async (user) => {
                 if (!user) {
@@ -180,7 +181,12 @@ export default function ClientDashboardPage() {
                     </div>
                     <div className="client-form-group">
                         <label>الحالة</label>
-                        <select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}>
+                        <select
+                            value={filters.status}
+                            onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+                            aria-label="تصفية حالة الحملات"
+                            title="تصفية حالة الحملات"
+                        >
                             <option value="all">كل الحالات</option>
                             {STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
                         </select>

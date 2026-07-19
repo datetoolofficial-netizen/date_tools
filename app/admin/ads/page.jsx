@@ -313,10 +313,11 @@ export default function AdminAdsPage() {
 
         async function loadAdminAds() {
             try {
-                const [{ auth, db, getAdminProfile }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ db, getFirebaseAuth, getAdminProfile }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../../firebase'),
                     import('firebase/auth')
                 ]);
+                const auth = await getFirebaseAuth();
 
                 if (!isMounted) return;
 

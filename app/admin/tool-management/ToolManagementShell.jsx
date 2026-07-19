@@ -91,10 +91,11 @@ export default function ToolManagementShell({
 
         async function loadShell() {
             try {
-                const [{ auth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ getFirebaseAuth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../../firebase'),
                     import('firebase/auth'),
                 ]);
+                const auth = await getFirebaseAuth();
 
                 if (!isMounted) return;
 

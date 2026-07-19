@@ -17,11 +17,12 @@ export default function AdminLogin() {
         setIsLoading(true);
 
         try {
-            const [{ auth, db }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
+            const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
                 import('../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            const auth = await getFirebaseAuth();
 
             // 1. تسجيل الدخول عبر Firebase Auth
             const userCredential = await signInWithEmailAndPassword(auth, email, password);

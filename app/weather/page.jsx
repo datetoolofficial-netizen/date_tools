@@ -200,6 +200,8 @@ export default function WeatherPage() {
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="اكتب اسم المدينة، مثال: الرياض"
+                    aria-label="اسم المدينة لعرض الطقس"
+                    title="اسم المدينة لعرض الطقس"
                 />
                 <div className="weather-search-actions">
                     <button type="submit" className="weather-submit-btn" disabled={isLoading}>

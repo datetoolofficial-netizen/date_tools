@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.76.
+الإصدار الحالي للتطبيق هو 0.2.77.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -157,6 +157,7 @@ https://www.date-tool.com
 93. تحسين صفحة الطقس بزر الموقع الحالي ونسبة الهطول وصفوف توقعات مضغوطة للجوال.
 94. جعل صفحة الطقس تبدأ بالموقع الحالي عند التحميل بدل عرض الرياض أولًا.
 95. ضبط أيقونات PWA للتطبيق المثبت واختصارات أدوات التاريخ والساعة والطقس.
+96. تحسينات PageSpeed آمنة بتأجيل تحميل Firebase Auth/App Check عن الواجهة العامة وإصلاح أسماء حقول الاختيار.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6083,6 +6084,95 @@ PROJECT_MEMO.md
 
 ---
 
+### تحسينات PageSpeed الآمنة وتأجيل Firebase Auth - الإصدار 0.2.77
+
+الأعراض:
+
+```txt
+تقرير PageSpeed للجوال أظهر أن الصفحة حملت ببطء شديد وأن نتائج Lighthouse قد تكون غير مكتملة.
+ظهر تحذير وصول واضح: Select element must have an accessible name.
+تحليل التقرير أظهر تحميل سكربتات reCAPTCHA/Firebase Auth ضمن تجربة الزائر العامة رغم أنها مطلوبة أساسًا لتسجيل الدخول والإدارة.
+```
+
+السبب:
+
+```txt
+app/firebase.js كان يهيئ Firebase Auth وApp Check عند استيراد الملف، وصفحة Shell العامة تستورد firebase.js لجلب إعدادات الموقع.
+هذا جعل reCAPTCHA/App Check وFirebase Auth قابلين للتحميل من الواجهة العامة بدل تحميلهما فقط عند الحاجة.
+حقول select في أدوات التاريخ وبعض أدوات الساعة لم تكن تحتوي على aria-label/title واضح.
+```
+
+الحل:
+
+```txt
+فصل تهيئة Firebase Auth وApp Check إلى دوال كسولة getFirebaseAuth و ensureFirebaseAppCheck.
+تحديث صفحات الإدارة والعميل لتطلب Auth عند الحاجة فقط.
+إضافة أسماء وصول وtitle لحقول اليوم والشهر والسنة في أدوات التاريخ.
+إضافة أسماء وصول لحقول الساعة والمدينة في صفحة الساعة وحقل المدينة في الطقس وبعض اختيارات بوابة العميل.
+رفع الإصدار إلى 0.2.77 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.77 على Cloudflare Version ID: 2e592d66-fd30-4f52-9c65-8ba3e0cc4eb9.
+✅ تم اختبار /?v=0.2.77 و /clock?v=0.2.77 و /weather?v=0.2.77 على الإنتاج ورجعت HTTP 200.
+✅ تم فحص HTML الصفحة الرئيسية الأولي وتأكد عدم وجود recaptcha أو enterprise.js أو firebaseapp.com/__/auth داخله.
+⚠️ أثناء build المحلي ظهرت رسائل fetch failed بسبب منع الشبكة الخارجية داخل sandbox، ولم تؤثر على نجاح البناء.
+⚠️ Chrome DevTools MCP غير متاح في هذه الجلسة؛ تم الاعتماد على تقرير PageSpeed المرسل وفحص الكود والبناء.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 240
+Get-Content C:\Users\d7mi6\.codex\skills\web-perf\SKILL.md -Encoding UTF8
+curl.exe -L "https://pagespeed.web.dev/analysis/https-date-tool-com/zz61x8vdln?form_factor=mobile"
+curl.exe -L "https://pagespeed.web.dev/analysis/https-date-tool-com/zz61x8vdln?form_factor=desktop"
+rg -n "DateDropdowns|<select|aria-label|recaptcha|enterprise|firebaseapp|GoogleAuthProvider|getAuth|auth|grecaptcha|api.js|Turnstile" app -S
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.77
+curl.exe -I https://date-tool.com/clock?v=0.2.77
+curl.exe -I https://date-tool.com/weather?v=0.2.77
+curl.exe -L https://date-tool.com/?v=0.2.77
+```
+
+الملفات المتأثرة:
+
+```txt
+app/firebase.js
+app/components/home/HomeSections.jsx
+app/clock/page.jsx
+app/weather/page.jsx
+app/admin/page.jsx
+app/admin/ad-settings/page.jsx
+app/admin/ads/page.jsx
+app/admin/identity/page.jsx
+app/admin/integrations/page.jsx
+app/admin/tools/page.jsx
+app/admin/tool-management/ToolManagementShell.jsx
+app/admin_login/page.jsx
+app/client/ClientShell.jsx
+app/client/page.jsx
+app/client/register/page.jsx
+app/client/reset-password/page.jsx
+app/client/dashboard/page.jsx
+app/client/create-campaign/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6364,6 +6454,10 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.76 وضبط أيقونات PWA للتطبيق واختصارات أدوات التاريخ والساعة والطقس
 ✅ تم نشر الإصدار 0.2.76 على Cloudflare Version ID: 1d5416c1-a760-4445-b896-b8b75aa1f0b2
 ✅ تم اختبار manifest وأيقونات الاختصارات الجديدة على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.77 بتحسينات PageSpeed آمنة وتأجيل Firebase Auth/App Check عن الواجهة العامة
+✅ تم نشر الإصدار 0.2.77 على Cloudflare Version ID: 2e592d66-fd30-4f52-9c65-8ba3e0cc4eb9
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
+✅ تم التأكد أن HTML الأولي للصفحة الرئيسية لا يحتوي على reCAPTCHA أو Firebase Auth iframe
 ```
 
 ---

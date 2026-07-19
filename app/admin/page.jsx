@@ -77,10 +77,11 @@ export default function AdminDashboardPage() {
 
         async function loadAdminDashboard() {
             try {
-                const [{ auth, getAdminProfile, getAdminStats, getSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ getFirebaseAuth, getAdminProfile, getAdminStats, getSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../firebase'),
                     import('firebase/auth'),
                 ]);
+                const auth = await getFirebaseAuth();
 
                 if (!isMounted) return;
 

@@ -37,10 +37,11 @@ export default function ClientShell({ active = 'dashboard', title = 'بوابة 
 
     const logout = async () => {
         try {
-            const [{ auth }, { signOut }] = await Promise.all([
+            const [{ getFirebaseAuth }, { signOut }] = await Promise.all([
                 import('../firebase'),
                 import('firebase/auth'),
             ]);
+            const auth = await getFirebaseAuth();
 
             await signOut(auth);
             router.replace('/client');

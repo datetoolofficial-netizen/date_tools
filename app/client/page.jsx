@@ -18,11 +18,12 @@ export default function ClientLoginPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
-            const [{ auth, db }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
+            const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
                 import('../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            const auth = await getFirebaseAuth();
 
             const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
             const profileSnap = await getDoc(doc(db, 'advertisers', credential.user.uid));

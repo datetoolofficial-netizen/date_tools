@@ -16,10 +16,11 @@ export default function ResetPasswordPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
-            const [{ auth }, { sendPasswordResetEmail }] = await Promise.all([
+            const [{ getFirebaseAuth }, { sendPasswordResetEmail }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
             ]);
+            const auth = await getFirebaseAuth();
 
             await sendPasswordResetEmail(auth, email.trim());
             setMessage({ text: 'تم إرسال رابط استعادة كلمة المرور إلى بريدك إن كان الحساب موجودًا.', type: 'success' });

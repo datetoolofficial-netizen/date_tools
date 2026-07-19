@@ -99,19 +99,34 @@ export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
 function DateDropdowns({ values, onChange, dayMax, months, years, labels }) {
     return (
         <div className="date-dropdowns">
-            <select value={values.d} onChange={(e) => onChange({ ...values, d: e.target.value })}>
+            <select
+                value={values.d}
+                onChange={(e) => onChange({ ...values, d: e.target.value })}
+                aria-label={labels.day}
+                title={labels.day}
+            >
                 <option value="">{labels.day}</option>
                 {Array.from({ length: dayMax }, (_, i) => (
                     <option key={i + 1} value={i + 1}>{i + 1}</option>
                 ))}
             </select>
-            <select value={values.m} onChange={(e) => onChange({ ...values, m: e.target.value })}>
+            <select
+                value={values.m}
+                onChange={(e) => onChange({ ...values, m: e.target.value })}
+                aria-label={labels.month}
+                title={labels.month}
+            >
                 <option value="">{labels.month}</option>
                 {months.map((month) => (
                     <option key={month.value} value={month.value}>{month.label}</option>
                 ))}
             </select>
-            <select value={values.y} onChange={(e) => onChange({ ...values, y: e.target.value })}>
+            <select
+                value={values.y}
+                onChange={(e) => onChange({ ...values, y: e.target.value })}
+                aria-label={labels.year}
+                title={labels.year}
+            >
                 <option value="">{labels.year}</option>
                 {years.map((year) => (
                     <option key={year} value={year}>{year}</option>

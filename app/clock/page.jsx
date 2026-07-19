@@ -154,13 +154,23 @@ export default function ClockPage() {
                 <div className="time-select-grid">
                     <label>
                         <span>الساعة</span>
-                        <select value={inputHour} onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}>
+                        <select
+                            value={inputHour}
+                            onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}
+                            aria-label="الساعة بنظام 24"
+                            title="الساعة بنظام 24"
+                        >
                             {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
                         </select>
                     </label>
                     <label>
                         <span>الدقيقة</span>
-                        <select value={inputMinute} onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}>
+                        <select
+                            value={inputMinute}
+                            onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}
+                            aria-label="الدقيقة"
+                            title="الدقيقة"
+                        >
                             {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
                         </select>
                     </label>
@@ -179,13 +189,23 @@ export default function ClockPage() {
                     <h3>{clockSettings.subtools?.timezoneDiff}</h3>
                 </div>
                 <div className="tool-grid two-columns compact">
-                    <select value={fromZone} onChange={(event) => { setFromZone(event.target.value); setTimezoneDiff(''); }}>
+                    <select
+                        value={fromZone}
+                        onChange={(event) => { setFromZone(event.target.value); setTimezoneDiff(''); }}
+                        aria-label="مدينة البداية"
+                        title="مدينة البداية"
+                    >
                         {cities.map((city) => <option key={`${city.name}-${city.zone}-from`} value={city.zone}>{city.name}</option>)}
                         {currentLocation?.timezone && (
                             <option value={currentLocation.timezone}>{currentLocation.label || 'موقعك الحالي'}</option>
                         )}
                     </select>
-                    <select value={toZone} onChange={(event) => { setToZone(event.target.value); setTimezoneDiff(''); }}>
+                    <select
+                        value={toZone}
+                        onChange={(event) => { setToZone(event.target.value); setTimezoneDiff(''); }}
+                        aria-label="مدينة المقارنة"
+                        title="مدينة المقارنة"
+                    >
                         {cities.map((city) => <option key={`${city.name}-${city.zone}-to`} value={city.zone}>{city.name}</option>)}
                     </select>
                 </div>
