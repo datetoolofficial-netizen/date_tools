@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.77.
+الإصدار الحالي للتطبيق هو 0.2.78.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -158,6 +158,7 @@ https://www.date-tool.com
 94. جعل صفحة الطقس تبدأ بالموقع الحالي عند التحميل بدل عرض الرياض أولًا.
 95. ضبط أيقونات PWA للتطبيق المثبت واختصارات أدوات التاريخ والساعة والطقس.
 96. تحسينات PageSpeed آمنة بتأجيل تحميل Firebase Auth/App Check عن الواجهة العامة وإصلاح أسماء حقول الاختيار.
+97. إضافة ربط PageSpeed Insights API داخل لوحة الإدارة عبر endpoint محمي للمدير.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6173,6 +6174,92 @@ PROJECT_MEMO.md
 
 ---
 
+### ربط PageSpeed Insights API بلوحة الإدارة - الإصدار 0.2.78
+
+الأعراض:
+
+```txt
+تقرير PageSpeed كان يقرأ خارجيًا من رابط pagespeed.web.dev، ولا توجد لوحة داخل الموقع تعرض درجات الأداء والمقاييس بشكل منظم.
+الحاجة إلى رؤية إحصاءات PageSpeed للجوال والكمبيوتر من لوحة الإدارة بدون كشف مفاتيح أو فتح استهلاك عام للكوتا.
+```
+
+السبب:
+
+```txt
+لم يكن هناك endpoint داخلي يربط الموقع بـ Google PageSpeed Insights API.
+استخدام PageSpeed مباشرة من المتصفح أو لصق روابط التقارير لا يعطي لوحة إدارة قابلة للتكرار أو حماية من استهلاك API بشكل عشوائي.
+```
+
+الحل:
+
+```txt
+إضافة /api/pagespeed كمسار إداري محمي يتحقق من Firebase ID token و admins/{uid}.active قبل جلب التقرير.
+حصر الفحص على date-tool.com و www.date-tool.com فقط، وحذف query string و hash قبل الإرسال إلى Google.
+تلخيص تقرير PageSpeed إلى درجات Lighthouse والمقاييس الأساسية وبيانات المستخدمين الميدانية وأهم ملاحظات التحسين.
+إضافة كاش مؤقت داخل Worker لمدة 10 دقائق لكل رابط/استراتيجية لتخفيف الضغط على Google API.
+إضافة صفحة /admin/pagespeed مع اختيار الصفحة وفحص الجوال والكمبيوتر وأزرار منفصلة أو شاملة.
+ربط صفحة PageSpeed في سايد بار الإدارة، وإضافة دعم سر Cloudflare اختياري باسم PAGESPEED_API_KEY.
+رفع الإصدار إلى 0.2.78 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.78 على Cloudflare Version ID: b2c1f208-4ba2-4f0a-96bf-025c98b3b9e8.
+✅ تم اختبار /admin/pagespeed?v=0.2.78 على الإنتاج ورجع HTTP 200.
+✅ تم اختبار /api/pagespeed بدون توثيق ورجع 401 unauthorized كما هو متوقع.
+⚠️ أثناء build المحلي ظهرت رسائل fetch failed بسبب منع الشبكة الخارجية داخل sandbox، ولم تؤثر على نجاح البناء.
+⚠️ اختبار تشغيل فحص PageSpeed الفعلي يحتاج جلسة مدير داخل المتصفح، وقد يحتاج سر PAGESPEED_API_KEY إذا ظهرت حدود كوتا Google.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content AGENTS.md -Encoding UTF8
+Get-Content PROJECT_MEMO.md -Encoding UTF8
+Get-Content C:\Users\d7mi6\.codex\skills\web-perf\SKILL.md -Encoding UTF8
+Get-Content app\api\admin\cleanup\route.js -Encoding UTF8
+Get-Content app\admin\integrations\page.jsx -Encoding UTF8
+rg -n "function AdminNav|AdminNav|/admin/integrations|/admin/ad-settings|tool-management|pagespeed" app\admin app\api -S
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/admin/pagespeed?v=0.2.78
+curl.exe -i https://date-tool.com/api/pagespeed?strategy=mobile
+```
+
+المصدر الرسمي المستخدم:
+
+```txt
+https://developers.google.com/speed/docs/insights/v5/reference/pagespeedapi/runpagespeed
+```
+
+الملفات المتأثرة:
+
+```txt
+app/api/pagespeed/route.js
+app/admin/pagespeed/page.jsx
+app/admin/AdminDashboard.css
+app/admin/page.jsx
+app/admin/ad-settings/page.jsx
+app/admin/ads/page.jsx
+app/admin/identity/page.jsx
+app/admin/integrations/page.jsx
+app/admin/tools/page.jsx
+app/admin/tool-management/ToolManagementShell.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6458,6 +6545,10 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.77 على Cloudflare Version ID: 2e592d66-fd30-4f52-9c65-8ba3e0cc4eb9
 ✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
 ✅ تم التأكد أن HTML الأولي للصفحة الرئيسية لا يحتوي على reCAPTCHA أو Firebase Auth iframe
+✅ تم تحديث الإصدار إلى 0.2.78 وإضافة ربط PageSpeed Insights API داخل لوحة الإدارة
+✅ تم نشر الإصدار 0.2.78 على Cloudflare Version ID: b2c1f208-4ba2-4f0a-96bf-025c98b3b9e8
+✅ تم اختبار `/admin/pagespeed?v=0.2.78` على الإنتاج بنجاح
+✅ تم اختبار حماية `/api/pagespeed` بدون توثيق ورجع 401 كما هو متوقع
 ```
 
 ---

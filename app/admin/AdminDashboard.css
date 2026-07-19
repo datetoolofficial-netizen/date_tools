@@ -2620,6 +2620,338 @@ body.dark-mode .legacy-admin-shell {
     color: var(--primary-color);
 }
 
+.pagespeed-hero {
+    background:
+        radial-gradient(circle at 12% 18%, rgba(96, 165, 250, 0.2), transparent 30%),
+        linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(79, 70, 229, 0.9));
+}
+
+.pagespeed-control-card,
+.pagespeed-report-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.pagespeed-controls {
+    display: grid;
+    grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr);
+    gap: 16px;
+    align-items: end;
+}
+
+.pagespeed-controls select,
+.pagespeed-controls input {
+    width: 100%;
+    min-height: 54px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--bg-body);
+    color: var(--text-main);
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 800;
+    outline: none;
+}
+
+.pagespeed-controls input {
+    direction: ltr;
+    text-align: left;
+}
+
+.pagespeed-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagespeed-actions .legacy-secondary-btn {
+    flex: 1 1 180px;
+}
+
+.pagespeed-safe-note span {
+    color: var(--primary-color);
+    font-weight: 900;
+}
+
+.pagespeed-report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.pagespeed-report-card.is-empty {
+    min-height: 220px;
+    justify-content: center;
+    text-align: center;
+}
+
+.pagespeed-report-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pagespeed-report-title > i {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    font-size: 22px;
+}
+
+.pagespeed-report-title h2 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 22px;
+}
+
+.pagespeed-report-title p,
+.pagespeed-report-card.is-empty p {
+    margin: 4px 0 0;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.pagespeed-score-grid,
+.pagespeed-metrics-grid,
+.pagespeed-field-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.pagespeed-field-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pagespeed-score-card,
+.pagespeed-metric-card,
+.pagespeed-field-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 118px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    background: var(--bg-body);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-main);
+}
+
+.pagespeed-score-card i {
+    position: absolute;
+    inset-inline-start: 12px;
+    bottom: 10px;
+    color: currentColor;
+    font-size: 52px;
+    opacity: 0.08;
+}
+
+.pagespeed-score-card span,
+.pagespeed-metric-card span {
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.pagespeed-score-card strong {
+    color: currentColor;
+    font-size: 36px;
+    line-height: 1;
+}
+
+.pagespeed-score-card.good,
+.pagespeed-metric-card.good {
+    color: #10b981;
+}
+
+.pagespeed-score-card.average,
+.pagespeed-metric-card.average {
+    color: #f59e0b;
+}
+
+.pagespeed-score-card.poor,
+.pagespeed-metric-card.poor {
+    color: #ef4444;
+}
+
+.pagespeed-score-card.unknown,
+.pagespeed-metric-card.unknown {
+    color: var(--primary-color);
+}
+
+.pagespeed-metric-card {
+    min-height: 94px;
+}
+
+.pagespeed-metric-card strong {
+    color: var(--text-main);
+    font-size: 17px;
+    line-height: 1.2;
+}
+
+.pagespeed-metric-card small {
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.pagespeed-field-card {
+    justify-content: flex-start;
+    min-height: 150px;
+}
+
+.pagespeed-field-card > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.pagespeed-field-card strong {
+    color: var(--text-main);
+    font-size: 15px;
+}
+
+.pagespeed-field-card small {
+    color: var(--text-sub);
+    font-size: 11px;
+    direction: ltr;
+    text-align: left;
+    word-break: break-all;
+}
+
+.pagespeed-field-status {
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.pagespeed-field-status.fast {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.pagespeed-field-status.average {
+    background: rgba(245, 158, 11, 0.13);
+    color: #f59e0b;
+}
+
+.pagespeed-field-status.slow {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+}
+
+.pagespeed-field-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.pagespeed-field-metrics span {
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.08);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.pagespeed-field-metrics b {
+    color: var(--text-sub);
+    font-size: 11px;
+}
+
+.pagespeed-field-metrics em {
+    color: var(--text-main);
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.pagespeed-field-metrics p,
+.pagespeed-empty-note {
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.8;
+}
+
+.pagespeed-warning {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.pagespeed-warning i {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: rgba(245, 158, 11, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.pagespeed-warning strong {
+    display: block;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.pagespeed-warning p {
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.8;
+}
+
+.pagespeed-opportunities-head {
+    margin-bottom: -6px;
+}
+
+.pagespeed-table-card {
+    margin-top: 0;
+}
+
+.pagespeed-audits-table {
+    min-width: 720px;
+}
+
+.pagespeed-audits-table td strong {
+    display: block;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+.pagespeed-audits-table td small {
+    display: block;
+    max-width: 440px;
+    color: var(--text-sub);
+    line-height: 1.7;
+}
+
 .legacy-admin-footer {
     margin-top: auto;
     padding: 12px 0;
@@ -2707,6 +3039,12 @@ body.dark-mode .legacy-admin-shell {
     .tools-quick-grid,
     .tools-social-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pagespeed-report-grid,
+    .pagespeed-controls,
+    .pagespeed-field-grid {
+        grid-template-columns: 1fr;
     }
 
     .tools-item-card,
@@ -2879,6 +3217,15 @@ body.dark-mode .legacy-admin-shell {
         min-width: 760px;
     }
 
+    .pagespeed-score-grid,
+    .pagespeed-metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pagespeed-report-title h2 {
+        font-size: 19px;
+    }
+
     .ad-settings-table {
         min-width: 900px;
     }
@@ -3008,6 +3355,33 @@ body.dark-mode .legacy-admin-shell {
     .tool-management-actions .legacy-primary-btn,
     .tool-management-actions .legacy-secondary-btn {
         flex: 1 1 180px;
+    }
+
+    .pagespeed-score-card,
+    .pagespeed-metric-card,
+    .pagespeed-field-card {
+        border-radius: 14px;
+        padding: 13px 10px;
+    }
+
+    .pagespeed-score-card {
+        min-height: 98px;
+    }
+
+    .pagespeed-score-card strong {
+        font-size: 27px;
+    }
+
+    .pagespeed-score-card i {
+        font-size: 42px;
+    }
+
+    .pagespeed-metric-card strong {
+        font-size: 14px;
+    }
+
+    .pagespeed-field-metrics {
+        grid-template-columns: 1fr;
     }
 }
 

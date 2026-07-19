@@ -222,6 +222,12 @@ export default function AdminDashboardPage() {
                         </Link>
                     </li>
                     <li>
+                        <Link href="/admin/pagespeed">
+                            <i className="fa-solid fa-gauge-high"></i>
+                            <span className="nav-text">PageSpeed</span>
+                        </Link>
+                    </li>
+                    <li>
                         <Link href="/admin/ad-settings">
                             <i className="fa-solid fa-rectangle-ad"></i>
                             <span className="nav-text">إدارة الإعلانات</span>

@@ -88,6 +88,12 @@ function AdminNav({ active = 'integrations' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/pagespeed" className={active === 'pagespeed' ? 'active' : ''}>
+                    <i className="fa-solid fa-gauge-high"></i>
+                    <span className="nav-text">PageSpeed</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/admin/ad-settings" className={active === 'ad-settings' ? 'active' : ''}>
                     <i className="fa-solid fa-rectangle-ad"></i>
                     <span className="nav-text">إدارة الإعلانات</span>
