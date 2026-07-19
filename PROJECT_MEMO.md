@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.75.
+الإصدار الحالي للتطبيق هو 0.2.76.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -156,6 +156,7 @@ https://www.date-tool.com
 92. إصلاح تمدد صفحة التواصل وتحسين ثبات Shell عند التنقل بين أدوات الموقع.
 93. تحسين صفحة الطقس بزر الموقع الحالي ونسبة الهطول وصفوف توقعات مضغوطة للجوال.
 94. جعل صفحة الطقس تبدأ بالموقع الحالي عند التحميل بدل عرض الرياض أولًا.
+95. ضبط أيقونات PWA للتطبيق المثبت واختصارات أدوات التاريخ والساعة والطقس.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6005,6 +6006,83 @@ PROJECT_MEMO.md
 
 ---
 
+### ضبط أيقونات PWA للتطبيق والاختصارات - الإصدار 0.2.76
+
+الأعراض:
+
+```txt
+في قائمة الضغط المطول على تطبيق الموقع المثبت في Android كان اختصار التاريخ يستخدم لوقو الموقع بدل أيقونة أداة التاريخ.
+اختصارا الساعة والطقس كانا يستخدمان الأيقونة العامة القديمة نفسها، فظهرت كأيقونة تقويم عامة بدل أيقونة كل أداة.
+كان من المحتمل أن يختار Android الأيقونة maskable المحلية القديمة للتطبيق بدل لوقو الهوية المحفوظ من الإدارة.
+```
+
+السبب:
+
+```txt
+ملف app/manifest.js كان يربط اختصار التاريخ بـ logoUrl، ويربط اختصاري الساعة والطقس بـ /pwa-icon-192.png.
+أيقونة التطبيق الرئيسية كانت تحتوي على logoUrl كأيقونة عادية، لكن الأيقونة maskable المحلية بقيت كخيار قد يفضله Android.
+لم تكن هناك ملفات PNG مستقلة لاختصارات التاريخ والساعة والطقس.
+```
+
+الحل:
+
+```txt
+تحديث manifest ليجعل logoUrl القادم من الهوية البصرية أيقونة any و maskable للتطبيق المثبت.
+إضافة أيقونات PNG مستقلة لاختصارات التاريخ والساعة والطقس بأحجام 192 و 512.
+تحديث shortcuts داخل manifest لتستخدم أيقونة كل أداة بدل الأيقونة العامة أو لوقو التطبيق.
+رفع الإصدار إلى 0.2.76 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.76 على Cloudflare Version ID: 1d5416c1-a760-4445-b896-b8b75aa1f0b2.
+✅ تم اختبار /manifest.webmanifest?v=0.2.76 على الإنتاج بنجاح.
+✅ تم اختبار أيقونات /pwa-shortcut-date-192.png و /pwa-shortcut-clock-192.png و /pwa-shortcut-weather-192.png على الإنتاج بنجاح.
+⚠️ Android/Chrome قد يحتفظ بأيقونات التطبيق المثبتة في الكاش؛ إذا لم تتحدث الأيقونات فورًا، تزال الإضافة من الشاشة الرئيسية ثم يعاد تثبيت الموقع.
+⚠️ أثناء deploy ظهر تحذير OpenNext المعتاد على Windows، والنشر اكتمل بنجاح.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8 | Select-Object -First 180
+Get-Content app\manifest.js -Encoding UTF8 | Select-Object -First 260
+rg --files public app | rg "(icon|logo|manifest|pwa|svg|png|ico|version)"
+npm version 0.2.76 --no-git-tag-version
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/manifest.webmanifest?v=0.2.76
+curl.exe -I https://date-tool.com/pwa-shortcut-date-192.png
+curl.exe -I https://date-tool.com/pwa-shortcut-clock-192.png
+curl.exe -I https://date-tool.com/pwa-shortcut-weather-192.png
+curl.exe https://date-tool.com/manifest.webmanifest?v=0.2.76
+```
+
+الملفات المتأثرة:
+
+```txt
+app/manifest.js
+app/version.js
+package.json
+package-lock.json
+public/pwa-shortcut-date-192.png
+public/pwa-shortcut-date-512.png
+public/pwa-shortcut-clock-192.png
+public/pwa-shortcut-clock-512.png
+public/pwa-shortcut-weather-192.png
+public/pwa-shortcut-weather-512.png
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6283,6 +6361,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.75 وجعل صفحة الطقس تبدأ بالموقع الحالي عند التحميل
 ✅ تم نشر الإصدار 0.2.75 على Cloudflare Version ID: 34c67d87-658a-48e0-94a8-6d0f6fd0c7a9
 ✅ تم اختبار `/weather?v=0.2.75` و `/?v=0.2.75` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.76 وضبط أيقونات PWA للتطبيق واختصارات أدوات التاريخ والساعة والطقس
+✅ تم نشر الإصدار 0.2.76 على Cloudflare Version ID: 1d5416c1-a760-4445-b896-b8b75aa1f0b2
+✅ تم اختبار manifest وأيقونات الاختصارات الجديدة على الإنتاج بنجاح
 ```
 
 ---

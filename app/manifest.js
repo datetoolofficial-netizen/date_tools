@@ -3,6 +3,23 @@ const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-
 const fallbackName = 'أدوات التاريخ الشاملة';
 const fallbackShortName = 'أدوات التاريخ';
 const fallbackDescription = 'أداة شاملة لحساب العمر وتحويل التواريخ وأدوات الساعة والطقس.';
+const appFallbackIcon192 = '/pwa-icon-192.png';
+const appFallbackIcon512 = '/pwa-icon-512.png';
+const appFallbackMaskable = '/pwa-maskable-512.png';
+const shortcutIconPaths = {
+    date: {
+        icon192: '/pwa-shortcut-date-192.png',
+        icon512: '/pwa-shortcut-date-512.png',
+    },
+    clock: {
+        icon192: '/pwa-shortcut-clock-192.png',
+        icon512: '/pwa-shortcut-clock-512.png',
+    },
+    weather: {
+        icon192: '/pwa-shortcut-weather-192.png',
+        icon512: '/pwa-shortcut-weather-512.png',
+    },
+};
 
 export const revalidate = 300;
 
@@ -50,6 +67,25 @@ async function getInstallIdentity() {
     }
 }
 
+function getShortcutIcons(tool) {
+    const paths = shortcutIconPaths[tool] || shortcutIconPaths.date;
+
+    return [
+        {
+            src: paths.icon192,
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+        },
+        {
+            src: paths.icon512,
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+        },
+    ];
+}
+
 export default async function manifest() {
     const identity = await getInstallIdentity();
     const name = identity.name || fallbackName;
@@ -61,12 +97,12 @@ export default async function manifest() {
             {
                 src: logoUrl,
                 sizes: '192x192',
-                purpose: 'any',
+                purpose: 'any maskable',
             },
             {
                 src: logoUrl,
                 sizes: '512x512',
-                purpose: 'any',
+                purpose: 'any maskable',
             },
         ]
         : [];
@@ -87,19 +123,19 @@ export default async function manifest() {
         icons: [
             ...logoIcons,
             {
-                src: '/pwa-icon-192.png',
+                src: appFallbackIcon192,
                 sizes: '192x192',
                 type: 'image/png',
                 purpose: 'any',
             },
             {
-                src: '/pwa-icon-512.png',
+                src: appFallbackIcon512,
                 sizes: '512x512',
                 type: 'image/png',
                 purpose: 'any',
             },
             {
-                src: '/pwa-maskable-512.png',
+                src: appFallbackMaskable,
                 sizes: '512x512',
                 type: 'image/png',
                 purpose: 'maskable',
@@ -110,19 +146,19 @@ export default async function manifest() {
                 name,
                 short_name: 'التاريخ',
                 url: '/',
-                icons: [{ src: logoUrl || '/pwa-icon-192.png', sizes: '192x192', type: logoUrl ? undefined : 'image/png' }],
+                icons: getShortcutIcons('date'),
             },
             {
                 name: 'أدوات الساعة',
                 short_name: 'الساعة',
                 url: '/clock',
-                icons: [{ src: '/pwa-icon-192.png', sizes: '192x192', type: 'image/png' }],
+                icons: getShortcutIcons('clock'),
             },
             {
                 name: 'أدوات الطقس',
                 short_name: 'الطقس',
                 url: '/weather',
-                icons: [{ src: '/pwa-icon-192.png', sizes: '192x192', type: 'image/png' }],
+                icons: getShortcutIcons('weather'),
             },
         ],
     };
