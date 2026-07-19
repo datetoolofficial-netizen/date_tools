@@ -69,17 +69,24 @@ export default function Footer({ lang, config }) {
 
                 {Array.isArray(config?.socialLinks) && config.socialLinks.length > 0 && (
                     <div className="footer-social" aria-label={labels.socialLinks}>
-                        {config.socialLinks.map((social, idx) => (
-                            <a
-                                key={`${social.url}-${idx}`}
-                                href={social.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={social.color ? { color: social.color } : undefined}
-                            >
-                                <i className={`fa-brands ${social.icon}`}></i>
-                            </a>
-                        ))}
+                        {config.socialLinks.map((social, idx) => {
+                            const socialLabel = social.label || social.title || social.name || social.platform || labels.socialLinks;
+
+                            return (
+                                <a
+                                    key={`${social.url}-${idx}`}
+                                    href={social.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={social.color ? { color: social.color } : undefined}
+                                    aria-label={socialLabel}
+                                    title={socialLabel}
+                                >
+                                    <i className={`fa-brands ${social.icon}`} aria-hidden="true"></i>
+                                    <span className="sr-only">{socialLabel}</span>
+                                </a>
+                            );
+                        })}
                     </div>
                 )}
 

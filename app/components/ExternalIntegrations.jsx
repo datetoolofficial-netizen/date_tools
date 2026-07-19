@@ -108,8 +108,9 @@ export default function ExternalIntegrations() {
                 removeExistingNodes();
                 if (!canLoadAnalytics && !canLoadMarketing) return;
 
-                const { getSiteConfig } = await import('../firebase');
-                const siteConfig = await getSiteConfig();
+                const response = await fetch('/api/site-config');
+                const result = await response.json().catch(() => ({}));
+                const siteConfig = response.ok && result.ok ? result.config : {};
                 const integrations = siteConfig?.externalIntegrations || {};
 
                 if (!isMounted) return;

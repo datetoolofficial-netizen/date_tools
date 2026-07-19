@@ -344,8 +344,9 @@ export default function PageClient({ slug }) {
                 setLoading(true);
                 setError('');
 
-                const { getSiteConfig } = await import('../firebase');
-                const siteConfig = await getSiteConfig();
+                const response = await fetch('/api/site-config?include=pages');
+                const result = await response.json().catch(() => ({}));
+                const siteConfig = response.ok && result.ok ? result.config : {};
 
                 if (isMounted) {
                     setConfig(siteConfig || {});

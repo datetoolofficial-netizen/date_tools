@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.78.
+الإصدار الحالي للتطبيق هو 0.2.79.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -6260,6 +6260,92 @@ PROJECT_MEMO.md
 
 ---
 
+### معالجة أسباب PageSpeed الحمراء في الواجهة العامة - الإصدار 0.2.79
+
+الأعراض:
+
+```txt
+تقرير PageSpeed المحفوظ لنسخة قديمة من الموقع أظهر درجة أداء حمراء بسبب:
+unused-javascript بحجم كبير من reCAPTCHA و Firebase Auth iframe وقطع JavaScript غير مستخدمة.
+unused-css-rules من Font Awesome CSS وملفات reCAPTCHA.
+مشاكل تباين في بعض النصوص والأزرار.
+رابط سوشيال في الفوتر بدون اسم وصول واضح.
+```
+
+السبب:
+
+```txt
+الواجهة العامة كانت تعتمد على Firebase Client SDK لجلب إعدادات الموقع، وهذا قد يسحب Auth/App Check/reCAPTCHA في مسار الزائر العام.
+Font Awesome كان قابلًا للتحميل على الواجهة العامة رغم أن الأيقونات يمكن توفيرها ببدائل CSS خفيفة.
+تحميل إعدادات الموقع العامة كان يسحب نصوص الصفحات الطويلة بدون حاجة في أول تحميل.
+الصفحة كانت تنتظر إعدادات الموقع والحملات معًا قبل عرض المحتوى، ما قد يؤخر أول عرض مهم.
+```
+
+الحل:
+
+```txt
+إضافة /api/site-config كمسار عام مخفف ومفلتر يقرأ إعدادات الموقع من Firestore عبر الخادم.
+منع تحميل نصوص customPages/pages الطويلة في الإعدادات العامة، وتحميلها فقط عند فتح صفحة slug عبر include=pages.
+استبدال استيراد Firebase في SiteShell و صفحات slug و ExternalIntegrations باستدعاء /api/site-config.
+جعل SiteShell يعرض المحتوى بعد وصول الإعدادات الخفيفة أولًا، ثم يحدث الحملات الإعلانية لاحقًا بدون حبس LCP.
+قصر تحميل Font Awesome CDN على صفحات الإدارة والعميل والدعم، وإضافة بدائل CSS خفيفة للأيقونات العامة.
+تحسين ألوان التباين وإضافة aria-label و sr-only لروابط السوشيال في الفوتر.
+رفع الإصدار إلى 0.2.79 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ تم التأكد من عدم وجود recaptcha__ أو firebaseapp.com/__/auth داخل ملفات البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.79 على Cloudflare Version ID: 08e61a37-e4eb-47e8-a4d2-617b82585a9c.
+✅ تم اختبار https://date-tool.com/ ورجع HTTP 200.
+✅ تم اختبار /clock و /weather على الإنتاج ورجعا HTTP 200.
+✅ تم اختبار /api/site-config و /api/site-config?include=pages على الإنتاج ورجعا HTTP 200.
+⚠️ تقرير PageSpeed المرفق كان لنسخة 0.2.66، لذلك يلزم تشغيل تقرير جديد بعد انتشار الكاش للتأكد من الدرجة النهائية لدى Google.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -TotalCount 80
+rg -n "firebase" app\SiteShell.jsx app\[slug]\PageClient.jsx app\components\ExternalIntegrations.jsx app\page.jsx app\clock\page.jsx app\weather\page.jsx -S
+rg -n "cdnjs.cloudflare.com/ajax/libs/font-awesome|recaptcha|firebaseapp.com/__/auth" app -S
+git diff --check
+npm run lint
+npm run build
+rg -l "recaptcha__|firebaseapp.com/__/auth" .next\static .next\server -S
+rg -l "cdnjs.cloudflare.com/ajax/libs/font-awesome" .next\static .next\server -S
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/api/site-config
+curl.exe -I "https://date-tool.com/api/site-config?include=pages"
+curl.exe -I https://date-tool.com/clock
+curl.exe -I https://date-tool.com/weather
+```
+
+الملفات المتأثرة:
+
+```txt
+app/api/site-config/route.js
+app/SiteShell.jsx
+app/[slug]/PageClient.jsx
+app/components/ExternalIntegrations.jsx
+app/components/FontAwesomeLoader.jsx
+app/Footer.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6549,6 +6635,10 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.78 على Cloudflare Version ID: b2c1f208-4ba2-4f0a-96bf-025c98b3b9e8
 ✅ تم اختبار `/admin/pagespeed?v=0.2.78` على الإنتاج بنجاح
 ✅ تم اختبار حماية `/api/pagespeed` بدون توثيق ورجع 401 كما هو متوقع
+✅ تم تحديث الإصدار إلى 0.2.79 ومعالجة أسباب PageSpeed الحمراء في التقرير المحفوظ
+✅ تم نشر الإصدار 0.2.79 على Cloudflare Version ID: 08e61a37-e4eb-47e8-a4d2-617b82585a9c
+✅ تم اختبار `/`, `/clock`, `/weather`, و `/api/site-config` على الإنتاج بنجاح
+⚠️ يجب تشغيل تقرير PageSpeed جديد بعد انتشار الكاش لأن التقرير المرفق كان مبنيًا على نسخة 0.2.66 القديمة
 ```
 
 ---

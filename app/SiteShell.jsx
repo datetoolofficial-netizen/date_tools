@@ -105,6 +105,43 @@ async function fetchPublicCampaigns() {
     }
 }
 
+async function fetchPublicSiteConfig() {
+    try {
+        const response = await fetch('/api/site-config');
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.ok || !data.config) return {};
+
+        return data.config;
+    } catch {
+        console.warn('Unable to load public site config.');
+        return {};
+    }
+}
+
+async function sendStatisticEvent(payload) {
+    try {
+        await fetch('/api/statistics', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            keepalive: true,
+        });
+    } catch {
+        // Statistics should never break the visitor experience.
+    }
+}
+
+const publicRuntimeApi = {
+    initAndTrackVisit: () => sendStatisticEvent({ event: 'visit' }),
+    trackToolUsage: (toolName) => sendStatisticEvent({ event: 'tool', toolName }),
+    trackAdClick: (adId) => sendStatisticEvent({ event: 'adClick', adId }),
+    trackAdImpression: (adId) => sendStatisticEvent({ event: 'adImpression', adId }),
+    getSiteConfig: fetchPublicSiteConfig,
+};
+
 function PublicShellSkeleton() {
     return (
         <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
@@ -182,30 +219,32 @@ export default function SiteShell({ children }) {
 
         async function loadSiteConfig() {
             try {
-                const firebaseApi = await import('./firebase');
+                firebaseApiRef.current = publicRuntimeApi;
+                firebaseApiRef.current.initAndTrackVisit();
 
-                firebaseApiRef.current = {
-                    initAndTrackVisit: firebaseApi.initAndTrackVisit || defaultFirebaseApi.initAndTrackVisit,
-                    trackToolUsage: firebaseApi.trackToolUsage || defaultFirebaseApi.trackToolUsage,
-                    trackAdClick: firebaseApi.trackAdClick || defaultFirebaseApi.trackAdClick,
-                    trackAdImpression: firebaseApi.trackAdImpression || defaultFirebaseApi.trackAdImpression,
-                    getSiteConfig: firebaseApi.getSiteConfig || defaultFirebaseApi.getSiteConfig,
-                };
-
-                await firebaseApiRef.current.initAndTrackVisit();
-                const [data, campaigns] = await Promise.all([
-                    firebaseApiRef.current.getSiteConfig(),
-                    fetchPublicCampaigns(),
-                ]);
-
+                const data = await fetchPublicSiteConfig();
                 const nextConfig = {
                     ...(data || {}),
-                    adCampaigns: campaigns,
+                    adCampaigns: Array.isArray(data?.adCampaigns) ? data.adCampaigns : [],
                 };
 
                 if (isMounted) {
                     setConfigData(nextConfig);
                     writeCachedSiteConfig(nextConfig);
+                }
+
+                const campaigns = await fetchPublicCampaigns();
+
+                if (isMounted) {
+                    setConfigData((currentConfig) => {
+                        const updatedConfig = {
+                            ...(currentConfig || nextConfig),
+                            adCampaigns: campaigns,
+                        };
+
+                        writeCachedSiteConfig(updatedConfig);
+                        return updatedConfig;
+                    });
                 }
             } catch {
                 console.error('Error fetching site config.');
