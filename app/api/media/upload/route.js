@@ -6,7 +6,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
-const ALLOWED_CATEGORIES = new Set(['logo', 'favicon', 'ads', 'link-preview']);
+const ALLOWED_CATEGORIES = new Set(['logo', 'favicon', 'ads', 'link-preview', 'app-icon']);
 const ALLOWED_TYPES = new Map([
     ['image/png', 'png'],
     ['image/jpeg', 'jpg'],

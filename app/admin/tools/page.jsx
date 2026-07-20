@@ -41,6 +41,7 @@ function pickToolsConfig(config = {}) {
             enabled: config.pwaInstallPrompt?.enabled !== false,
             text: config.pwaInstallPrompt?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع',
             buttonText: config.pwaInstallPrompt?.buttonText || 'ثبّت الأداة',
+            showAgainKey: config.pwaInstallPrompt?.showAgainKey || '',
         },
     };
 }
@@ -438,10 +439,50 @@ export default function AdminToolsPage() {
         setToolsConfig((current) => ({
             ...current,
             pwaInstallPrompt: {
-                ...(current.pwaInstallPrompt || { enabled: true, text: '', buttonText: '' }),
+                ...(current.pwaInstallPrompt || { enabled: true, text: '', buttonText: '', showAgainKey: '' }),
                 [field]: value,
             },
         }));
+    };
+
+    const showPwaInstallPromptAgain = async () => {
+        const firebaseApi = firebaseApiRef.current;
+        const nextPrompt = {
+            ...(toolsConfig.pwaInstallPrompt || { enabled: true, text: '', buttonText: '', showAgainKey: '' }),
+            enabled: toolsConfig.pwaInstallPrompt?.enabled !== false,
+            showAgainKey: new Date().toISOString(),
+        };
+        const nextConfig = {
+            ...toolsConfig,
+            pwaInstallPrompt: nextPrompt,
+        };
+
+        setToolsConfig(nextConfig);
+
+        if (!firebaseApi?.saveSiteConfigSection) {
+            showMessage('error', 'لم تكتمل تهيئة Firebase بعد. اضغط حفظ الإعدادات بعد اكتمال التحميل.');
+            return;
+        }
+
+        setSaving(true);
+        showMessage('info', 'جاري تفعيل ظهور زر التثبيت مجددًا...');
+
+        try {
+            const savedPatch = await firebaseApi.saveSiteConfigSection({ pwaInstallPrompt: nextPrompt });
+            setToolsConfig((current) => ({
+                ...current,
+                pwaInstallPrompt: {
+                    ...(current.pwaInstallPrompt || {}),
+                    ...(savedPatch.pwaInstallPrompt || nextPrompt),
+                },
+            }));
+            showMessage('success', 'تم تفعيل الظهور مجددًا. سيظهر التنبيه مرة أخرى للزوار الذين لم يشاهدوا هذا التحديث.');
+        } catch (error) {
+            console.error('Error reshowing PWA install prompt:', error);
+            showMessage('error', 'تعذر حفظ إعادة الظهور. تحقق من صلاحيات المدير.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const togglePrivacySettingsPage = (path) => {
@@ -814,6 +855,17 @@ export default function AdminToolsPage() {
                                     placeholder="مثال: ثبّت الأداة"
                                 />
                             </div>
+                        </div>
+
+                        <div className="pwa-reshow-row">
+                            <div>
+                                <strong>إظهار التنبيه مجددًا</strong>
+                                <small>استخدمه عند وجود تحديث مهم. سيظهر التنبيه مرة أخرى لمن أخفاه سابقًا، ولمن ثبت التطبيق سيظهر كرسالة تحديث داخل التطبيق.</small>
+                            </div>
+                            <button type="button" className="legacy-secondary-btn" onClick={showPwaInstallPromptAgain} disabled={saving}>
+                                <i className="fa-solid fa-rotate-right"></i>
+                                إظهار مجددًا
+                            </button>
                         </div>
                     </div>
                 </section>

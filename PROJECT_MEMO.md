@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.80.
+الإصدار الحالي للتطبيق هو 0.2.81.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -6415,6 +6415,93 @@ PROJECT_MEMO.md
 
 ---
 
+### أيقونة تطبيق مستقلة وإعادة إظهار تنبيه التثبيت - الإصدار 0.2.81
+
+الأعراض:
+
+```txt
+أيقونة التطبيق المثبت على الجوال كانت تعتمد على لوقو الموقع أو أيقونات PWA الاحتياطية، وقد تظهر مختلفة عن لوقو الموقع في اختصار التطبيق.
+إعداد زر تثبيت الأداة كان يسمح بالإظهار أو الإخفاء وتغيير النصوص فقط، ولا يوفر طريقة لإعادة إظهار التنبيه للمستخدمين الذين أخفوه أو ثبتوا التطبيق مسبقًا عند وجود تحديث.
+```
+
+السبب:
+
+```txt
+manifest.webmanifest لم يكن يحتوي على حقل مستقل لأيقونة التطبيق المثبت، وكان يستخدم logoUrl كأفضل خيار متاح ثم أيقونات PWA المحلية.
+مكون PwaInstallPrompt كان يخفي التنبيه نهائيًا بعد الإخفاء أو التثبيت اعتمادًا على localStorage بدون مفتاح إصدار/تحديث من لوحة الإدارة.
+تصنيفات R2 العامة لم تكن تحتوي على category مخصصة لأيقونة التطبيق.
+```
+
+الحل:
+
+```txt
+إضافة appIconUrl إلى إعدادات الهوية العامة وحقل رفع مستقل في /admin/identity.
+السماح برفع وقراءة صور R2 تحت category جديدة باسم app-icon.
+تحديث manifest.webmanifest ليستخدم appIconUrl أولًا ثم logoUrl كاحتياط.
+إضافة showAgainKey إلى إعدادات pwaInstallPrompt وزر "إظهار مجددًا" في /admin/tools.
+تحديث PwaInstallPrompt ليعرض بطاقة التثبيت مجددًا عند تغير showAgainKey، ويعرض رسالة تحديث مرة واحدة داخل التطبيق المثبت.
+رفع الإصدار إلى 0.2.81 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديلات محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.81 على Cloudflare Version ID: f887abe3-bc78-4870-b4e4-8908cdc68467.
+✅ تم اختبار /manifest.webmanifest و /admin/identity و /admin/tools والصفحة الرئيسية على الإنتاج ورجعت HTTP 200.
+✅ manifest.webmanifest يستخدم appIconUrl عند وجودها، ويعود إلى logoUrl كاحتياط حتى يرفع المدير أيقونة التطبيق.
+⚠️ لا يمكن للمتصفح عرض نافذة التثبيت الأصلية لمستخدم ثبت التطبيق مسبقًا؛ لذلك يعرض الموقع رسالة تحديث داخل التطبيق المثبت مرة واحدة عند استخدام زر "إظهار مجددًا".
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -TotalCount 90
+rg -n "install|pwa|manifest|app icon|appIcon|beforeinstallprompt|showInstall|installPrompt|privacy|R2|media|logo|favicon" app package.json wrangler.jsonc PROJECT_MEMO.md
+Get-Content app\manifest.js -Encoding UTF8
+Get-Content app\components\PwaInstallPrompt.jsx -Encoding UTF8
+Get-Content app\firebase.js -Encoding UTF8
+Get-Content app\api\site-config\route.js -Encoding UTF8
+Get-Content app\admin\identity\page.jsx -Encoding UTF8
+Get-Content app\admin\tools\page.jsx -Encoding UTF8
+Get-Content -LiteralPath app\api\media\[...key]\route.js -Encoding UTF8
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/manifest.webmanifest?v=0.2.81
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.81
+curl.exe -I https://date-tool.com/admin/tools?v=0.2.81
+curl.exe -I https://date-tool.com/
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.81
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/AdminDashboard.css
+app/admin/identity/page.jsx
+app/admin/tools/page.jsx
+app/api/media/[...key]/route.js
+app/api/media/upload/route.js
+app/api/site-config/route.js
+app/components/PwaInstallPrompt.jsx
+app/firebase.js
+app/globals.css
+app/manifest.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6713,6 +6800,10 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.80 على Cloudflare Version ID: d6d1449d-076b-441f-82c0-3185aa08c742
 ✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
 ⚠️ تمت إعادة تحميل Font Awesome على الواجهة العامة بناءً على طلب المستخدم، وقد تعود ملاحظة unused CSS في PageSpeed مقارنة بالإصدار 0.2.79
+✅ تم تحديث الإصدار إلى 0.2.81 وإضافة أيقونة تطبيق مستقلة مرفوعة عبر R2
+✅ تم إضافة زر "إظهار مجددًا" لإعادة ظهور تنبيه التثبيت/التحديث من لوحة الإدارة
+✅ تم نشر الإصدار 0.2.81 على Cloudflare Version ID: f887abe3-bc78-4870-b4e4-8908cdc68467
+✅ تم اختبار `/manifest.webmanifest`, `/admin/identity`, `/admin/tools`, و `/` على الإنتاج بنجاح
 ```
 
 ---
@@ -6737,6 +6828,7 @@ PROJECT_MEMO.md
 ```txt
 logo
 favicon
+app-icon
 ads top / middle / bottom1 / bottom2
 ```
 
@@ -6749,9 +6841,10 @@ ads top / middle / bottom1 / bottom2
 ```txt
 رفع لوقو حقيقي إلى R2.
 رفع favicon حقيقي إلى R2.
+رفع أيقونة تطبيق حقيقية إلى R2 من حقل أيقونة التطبيق المثبت.
 تعديل إيميل التواصل والحقوق.
 الضغط على حفظ الهوية.
-التأكد من انعكاس القيم على الصفحة الرئيسية والفوتر والصفحات التي تستخدم {{contactEmail}}.
+التأكد من انعكاس القيم على الصفحة الرئيسية والفوتر وmanifest.webmanifest والصفحات التي تستخدم {{contactEmail}}.
 ```
 
 ---

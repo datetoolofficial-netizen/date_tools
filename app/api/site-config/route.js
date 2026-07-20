@@ -9,6 +9,7 @@ const PUBLIC_CONFIG_KEYS = [
     'hasLogo',
     'logoUrl',
     'faviconUrl',
+    'appIconUrl',
     'googleAdSlots',
     'copyrightName',
     'copyrightText',

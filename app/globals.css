@@ -1242,6 +1242,10 @@
             transform: translateY(-1px);
         }
 
+        .pwa-install-prompt.is-update-notice .pwa-install-main {
+            background: linear-gradient(135deg, #10b981, #2563eb);
+        }
+
         .pwa-install-dismiss {
             width: 34px;
             height: 34px;

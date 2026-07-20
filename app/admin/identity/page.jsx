@@ -26,6 +26,7 @@ const IDENTITY_FIELDS = [
     'hasLogo',
     'logoUrl',
     'faviconUrl',
+    'appIconUrl',
     'copyrightName',
     'copyrightText',
 ];
@@ -37,6 +38,7 @@ const EMPTY_IDENTITY = {
     hasLogo: false,
     logoUrl: '',
     faviconUrl: '',
+    appIconUrl: '',
     copyrightName: '',
     copyrightText: '',
     mainSEO: {},
@@ -582,6 +584,34 @@ export default function AdminIdentityPage() {
                             </div>
 
                             <div className="legacy-field">
+                                <label>أيقونة التطبيق المثبّت</label>
+                                <label className={`legacy-media-picker ${uploadingTarget === 'appIconUrl' ? 'is-uploading' : ''}`}>
+                                    <span className="legacy-media-picker-preview small">
+                                        {identity.appIconUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
+                                        ) : (
+                                            <i className="fa-solid fa-mobile-screen-button"></i>
+                                        )}
+                                    </span>
+                                    <span className="legacy-media-picker-text">
+                                        <strong>{uploadingTarget === 'appIconUrl' ? 'جاري رفع أيقونة التطبيق...' : 'اختر أو استبدل أيقونة التطبيق'}</strong>
+                                        <small dir="ltr">{identity.appIconUrl || '/api/media/app-icon/...'}</small>
+                                    </span>
+                                    <span className="legacy-media-picker-action">
+                                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.ico,image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon"
+                                        disabled={uploadingTarget === 'appIconUrl'}
+                                        onChange={(event) => handleMediaUpload(event, 'app-icon', 'appIconUrl', 'أيقونة التطبيق')}
+                                    />
+                                </label>
+                                <span className="legacy-field-hint">هذه الأيقونة تظهر للتطبيق المثبت. الأفضل صورة مربعة 512×512 بخلفية مناسبة.</span>
+                            </div>
+
+                            <div className="legacy-field">
                                 <label>صاحب الحقوق</label>
                                 <input
                                     type="text"
@@ -632,6 +662,18 @@ export default function AdminIdentityPage() {
                                     <img src={identity.faviconUrl} alt="معاينة favicon" />
                                 ) : (
                                     <i className="fa-regular fa-image"></i>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="legacy-preview-row">
+                            <span>أيقونة التطبيق</span>
+                            <div className="legacy-favicon-preview">
+                                {identity.appIconUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
+                                ) : (
+                                    <i className="fa-solid fa-mobile-screen-button"></i>
                                 )}
                             </div>
                         </div>

@@ -232,6 +232,7 @@ export const defaultSiteConfig = {
     hasLogo: false,
     logoUrl: "",
     faviconUrl: "",
+    appIconUrl: "",
     googleAdSlots: defaultGoogleAdSlots,
     adCampaigns: [],
     externalIntegrations: defaultExternalIntegrations,
@@ -251,6 +252,7 @@ export const defaultSiteConfig = {
         enabled: true,
         text: "ثبّت الأداة على جهازك لاستخدام أسرع",
         buttonText: "ثبّت الأداة",
+        showAgainKey: "",
     },
     customPages: {},
     mainSEO: {

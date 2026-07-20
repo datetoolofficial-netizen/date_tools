@@ -61,6 +61,7 @@ async function getInstallIdentity() {
             shortName: cleanText(getStringField(fields, 'toolDisplayName'), fallbackShortName).slice(0, 24),
             description: cleanText(getStringField(fields, 'toolSlogan'), fallbackDescription),
             logoUrl: normalizeIconUrl(getStringField(fields, 'logoUrl')),
+            appIconUrl: normalizeIconUrl(getStringField(fields, 'appIconUrl')),
         };
     } catch {
         return {};
@@ -91,16 +92,16 @@ export default async function manifest() {
     const name = identity.name || fallbackName;
     const shortName = identity.shortName || fallbackShortName;
     const description = identity.description || fallbackDescription;
-    const logoUrl = identity.logoUrl || '';
-    const logoIcons = logoUrl
+    const appIconUrl = identity.appIconUrl || identity.logoUrl || '';
+    const appIcons = appIconUrl
         ? [
             {
-                src: logoUrl,
+                src: appIconUrl,
                 sizes: '192x192',
                 purpose: 'any maskable',
             },
             {
-                src: logoUrl,
+                src: appIconUrl,
                 sizes: '512x512',
                 purpose: 'any maskable',
             },
@@ -121,7 +122,7 @@ export default async function manifest() {
         theme_color: '#1e3a8a',
         categories: ['utilities', 'productivity'],
         icons: [
-            ...logoIcons,
+            ...appIcons,
             {
                 src: appFallbackIcon192,
                 sizes: '192x192',
