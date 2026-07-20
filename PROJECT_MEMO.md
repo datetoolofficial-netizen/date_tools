@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.79.
+الإصدار الحالي للتطبيق هو 0.2.80.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -6346,6 +6346,75 @@ PROJECT_MEMO.md
 
 ---
 
+### إعادة أيقونات الموقع الأصلية وحذف المرفقات المحلية - الإصدار 0.2.80
+
+الأعراض:
+
+```txt
+بعد تحسينات PageSpeed ظهرت أيقونات الواجهة العامة بشكل غير جيد وصغير لأنها اعتمدت على بدائل CSS نصية بدل أيقونات Font Awesome الأصلية.
+بقي مجلد .codex-remote-attachments غير مستخدم وغير متتبع في Git.
+```
+
+السبب:
+
+```txt
+الإصدار 0.2.79 قصر تحميل Font Awesome على صفحات الإدارة والعميل والدعم لتقليل CSS غير المستخدم في تقرير PageSpeed.
+هذا جعل الواجهة العامة تستخدم بدائل رمزية خفيفة، لكنها لم تحافظ على شكل الأيقونات الأصلي وهوية الموقع.
+```
+
+الحل:
+
+```txt
+إعادة FontAwesomeLoader لتحميل Font Awesome على كل صفحات الموقع كما كان سابقًا.
+إزالة كتلة بدائل CSS النصية للأيقونات من globals.css.
+حذف مجلد .codex-remote-attachments المحلي بعد التحقق من أنه داخل مجلد المشروع.
+رفع الإصدار إلى 0.2.80 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم حذف المرفق المحلي غير المستخدم.
+✅ تم تنفيذ تعديل الأيقونات محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.80 على Cloudflare Version ID: d6d1449d-076b-441f-82c0-3185aa08c742.
+✅ تم اختبار / و /clock و /weather على الإنتاج ورجعت HTTP 200.
+⚠️ عودة Font Awesome للواجهة العامة قد تعيد ملاحظة unused CSS في PageSpeed، لكنها أعادت الأيقونات الأصلية المطلوبة.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -TotalCount 70
+git status --short
+Get-Content app\components\FontAwesomeLoader.jsx
+Resolve-Path -LiteralPath .codex-remote-attachments
+Remove-Item -LiteralPath .codex-remote-attachments -Recurse -Force
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/
+curl.exe -I https://date-tool.com/clock
+curl.exe -I https://date-tool.com/weather
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/FontAwesomeLoader.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6639,6 +6708,11 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.79 على Cloudflare Version ID: 08e61a37-e4eb-47e8-a4d2-617b82585a9c
 ✅ تم اختبار `/`, `/clock`, `/weather`, و `/api/site-config` على الإنتاج بنجاح
 ⚠️ يجب تشغيل تقرير PageSpeed جديد بعد انتشار الكاش لأن التقرير المرفق كان مبنيًا على نسخة 0.2.66 القديمة
+✅ تم تحديث الإصدار إلى 0.2.80 وإعادة أيقونات Font Awesome الأصلية للواجهة العامة
+✅ تم حذف مجلد `.codex-remote-attachments` المحلي غير المستخدم
+✅ تم نشر الإصدار 0.2.80 على Cloudflare Version ID: d6d1449d-076b-441f-82c0-3185aa08c742
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
+⚠️ تمت إعادة تحميل Font Awesome على الواجهة العامة بناءً على طلب المستخدم، وقد تعود ملاحظة unused CSS في PageSpeed مقارنة بالإصدار 0.2.79
 ```
 
 ---
