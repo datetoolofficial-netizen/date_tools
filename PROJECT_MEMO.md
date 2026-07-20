@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.81.
+الإصدار الحالي للتطبيق هو 0.2.83.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -159,6 +159,7 @@ https://www.date-tool.com
 95. ضبط أيقونات PWA للتطبيق المثبت واختصارات أدوات التاريخ والساعة والطقس.
 96. تحسينات PageSpeed آمنة بتأجيل تحميل Firebase Auth/App Check عن الواجهة العامة وإصلاح أسماء حقول الاختيار.
 97. إضافة ربط PageSpeed Insights API داخل لوحة الإدارة عبر endpoint محمي للمدير.
+98. إضافة Layout ثابت لمنصة الإدارة حتى يبقى السايد بار والناف بار ظاهرين عند التنقل، مع فلترة روابط السايد بار حسب صلاحيات المساعدين.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6502,6 +6503,165 @@ PROJECT_MEMO.md
 
 ---
 
+### إزالة أيقونات PWA الاحتياطية القديمة وربط كل الأيقونات ببيانات الإدارة - الإصدار 0.2.82
+
+الأعراض:
+
+```txt
+عند تثبيت التطبيق على الجوال ظهرت أيقونة التقويم القديمة التي كانت ضمن أيقونات PWA الاحتياطية بدل الأيقونة التي يريدها المدير من لوحة الإدارة.
+أيقونة المتصفح المصغرة على الجوال كانت قد ترجع إلى fallback ثابت بدل ترتيب بيانات الإدارة.
+ظهر مجلد .codex-remote-attachments جديد نتيجة الصورة المرفقة ولم يكن جزءًا من المشروع.
+```
+
+السبب:
+
+```txt
+manifest.webmanifest كان لا يزال يحتوي على أيقونات static fallback: /pwa-icon-192.png و /pwa-icon-512.png و /pwa-maskable-512.png.
+Android قد يفضّل الأيقونة maskable المحلية حتى مع وجود لوقو الإدارة.
+layout.jsx كان يرجع إلى /favicon.ico عند غياب faviconUrl بدل استخدام appIconUrl أو logoUrl من الإدارة.
+SiteShell كان يحدّث rel=icon من faviconUrl فقط ولا يستخدم appIconUrl أو logoUrl كاحتياط إداري.
+```
+
+الحل:
+
+```txt
+حذف ملفات أيقونات PWA العامة القديمة من public.
+إزالة مراجع pwa-icon و pwa-maskable من app/manifest.js.
+جعل manifest يستخدم فقط بيانات الإدارة بترتيب: appIconUrl ثم faviconUrl ثم logoUrl.
+تحديث metadata في layout.jsx ليستخدم faviconUrl ثم appIconUrl ثم logoUrl، بدون fallback ثابت إلى /favicon.ico عند توفر بيانات الإدارة.
+تحديث SiteShell ليطبّق نفس ترتيب أيقونة المتصفح من بيانات الإدارة.
+حذف مجلد .codex-remote-attachments المحلي غير المستخدم.
+رفع الإصدار إلى 0.2.82 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ تم حذف أيقونات PWA الاحتياطية القديمة من public.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ تم نشر التعديل ضمن الإصدار 0.2.83 على Cloudflare.
+✅ manifest.webmanifest لم يعد يحتوي على pwa-icon أو pwa-maskable، ويستخدم appIconUrl من الإدارة.
+✅ تم حجب مسارات أيقونات PWA القديمة بإرجاع 410 Gone حتى لا يلتقط المتصفح الشكل القديم.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -TotalCount 90
+rg -n "pwa-icon|maskable|favicon|icon|manifest|appIconUrl|apple|metadata|shortcut" app public package.json PROJECT_MEMO.md VERSION_LOG.md
+Get-Content app\layout.jsx -Encoding UTF8
+Get-Content app\manifest.js -Encoding UTF8
+Get-ChildItem public
+Remove-Item -LiteralPath .codex-remote-attachments -Recurse -Force
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-icon-192.png?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-icon-512.png?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-maskable-512.png?v=0.2.83
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/layout.jsx
+app/manifest.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+public/pwa-icon-192.png
+public/pwa-icon-512.png
+public/pwa-maskable-512.png
+```
+
+---
+
+### تثبيت غلاف منصة الإدارة والسايد بار حسب الصلاحيات - الإصدار 0.2.83
+
+الأعراض:
+
+```txt
+كل صفحة في منصة الإدارة كانت تعيد تحميل السايد بار والناف بار وفحص الدخول عند الانتقال بين صفحات الإدارة.
+المستخدم كان يشعر أن لوحة الإدارة كلها يعاد بناؤها مع كل ضغط على صفحة.
+لم يكن هناك مكان مركزي واحد يفلتر روابط السايد بار حسب صلاحيات المساعدين إن أضيفت لهم صلاحيات محددة.
+```
+
+السبب:
+
+```txt
+صفحات الإدارة كانت تحتوي نسخًا مكررة من legacy-admin-shell والسايد بار والناف بار وفحص Firebase Auth.
+عدم وجود app/admin/layout.jsx ثابت جعل App Router يبدّل صفحة كاملة بدل إبقاء غلاف الإدارة مشتركًا.
+```
+
+الحل:
+
+```txt
+إضافة app/admin/layout.jsx و app/admin/AdminShell.jsx كغلاف ثابت لكل صفحات /admin.
+نقل فحص الدخول الأساسي إلى AdminShell حتى يظهر السايد بار والناف بار بعد التحقق الأول.
+إضافة قائمة روابط مركزية في AdminShell مع فلترة حسب حقول صلاحيات محتملة مثل permissions و allowedPages و adminPermissions.
+السماح الكامل للأدوار super_admin و admin و owner و manager، وتقييد assistant عند وجود صلاحيات محددة.
+إظهار حالة تحقق/رفض صلاحية الصفحة داخل محتوى الصفحة فقط، مع بقاء السايد بار والناف بار ظاهرين.
+إخفاء أغلفة الإدارة الداخلية القديمة بصريًا عبر CSS مؤقتًا حتى تبقى الصفحات مستقرة بدون تفكيك شامل دفعة واحدة.
+إضافة 410 Gone لمسارات أيقونات PWA القديمة في middleware.
+رفع الإصدار إلى 0.2.83 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ تم نشر الإصدار 0.2.83 على Cloudflare Version ID: 997615ab-b99d-42a4-8a42-e9876ac09dff.
+✅ تم اختبار /admin و /admin/identity و /admin/ads على الإنتاج ورجعت HTTP 200.
+✅ تم اختبار manifest ومسارات pwa-icon القديمة على الإنتاج.
+⚠️ صفحات الإدارة ما زالت تملك فحص Auth داخليًا كطبقة أمان إضافية؛ الغلاف الثابت يخفي تكرار السايد بار والناف بار بصريًا إلى أن يتم تفكيك صفحات الإدارة لاحقًا.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content app\admin\page.jsx -Encoding UTF8
+Get-Content app\admin\AdminDashboard.css -Encoding UTF8
+rg -n "legacy-admin-shell|legacy-sidebar|legacy-topbar|check|permission|role|assistant|auth|admin" app\admin -g "*.jsx" -g "*.css"
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/admin?v=0.2.83
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.83
+curl.exe -I https://date-tool.com/admin/ads?v=0.2.83
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-icon-192.png?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-icon-512.png?v=0.2.83
+curl.exe -I https://date-tool.com/pwa-maskable-512.png?v=0.2.83
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/AdminShell.jsx
+app/admin/layout.jsx
+app/admin/AdminDashboard.css
+middleware.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6804,6 +6964,11 @@ PROJECT_MEMO.md
 ✅ تم إضافة زر "إظهار مجددًا" لإعادة ظهور تنبيه التثبيت/التحديث من لوحة الإدارة
 ✅ تم نشر الإصدار 0.2.81 على Cloudflare Version ID: f887abe3-bc78-4870-b4e4-8908cdc68467
 ✅ تم اختبار `/manifest.webmanifest`, `/admin/identity`, `/admin/tools`, و `/` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.82 وإزالة أيقونات PWA الاحتياطية القديمة وربط أيقونة التطبيق وfavicon ببيانات الإدارة فقط
+✅ تم تحديث الإصدار إلى 0.2.83 وإضافة Layout ثابت لمنصة الإدارة مع فلترة روابط السايد بار حسب صلاحيات المساعدين
+✅ تم نشر الإصدار 0.2.83 على Cloudflare Version ID: 997615ab-b99d-42a4-8a42-e9876ac09dff
+✅ تم اختبار `/admin`, `/admin/identity`, `/admin/ads`, و `/manifest.webmanifest` على الإنتاج بنجاح
+✅ أصبحت مسارات `/pwa-icon-192.png`, `/pwa-icon-512.png`, و `/pwa-maskable-512.png` ترجع 410 Gone حتى لا تستخدم أيقونات قديمة
 ```
 
 ---

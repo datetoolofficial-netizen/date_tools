@@ -3,9 +3,6 @@ const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-
 const fallbackName = 'أدوات التاريخ الشاملة';
 const fallbackShortName = 'أدوات التاريخ';
 const fallbackDescription = 'أداة شاملة لحساب العمر وتحويل التواريخ وأدوات الساعة والطقس.';
-const appFallbackIcon192 = '/pwa-icon-192.png';
-const appFallbackIcon512 = '/pwa-icon-512.png';
-const appFallbackMaskable = '/pwa-maskable-512.png';
 const shortcutIconPaths = {
     date: {
         icon192: '/pwa-shortcut-date-192.png',
@@ -61,6 +58,7 @@ async function getInstallIdentity() {
             shortName: cleanText(getStringField(fields, 'toolDisplayName'), fallbackShortName).slice(0, 24),
             description: cleanText(getStringField(fields, 'toolSlogan'), fallbackDescription),
             logoUrl: normalizeIconUrl(getStringField(fields, 'logoUrl')),
+            faviconUrl: normalizeIconUrl(getStringField(fields, 'faviconUrl')),
             appIconUrl: normalizeIconUrl(getStringField(fields, 'appIconUrl')),
         };
     } catch {
@@ -92,7 +90,7 @@ export default async function manifest() {
     const name = identity.name || fallbackName;
     const shortName = identity.shortName || fallbackShortName;
     const description = identity.description || fallbackDescription;
-    const appIconUrl = identity.appIconUrl || identity.logoUrl || '';
+    const appIconUrl = identity.appIconUrl || identity.faviconUrl || identity.logoUrl || '';
     const appIcons = appIconUrl
         ? [
             {
@@ -121,27 +119,7 @@ export default async function manifest() {
         background_color: '#0f172a',
         theme_color: '#1e3a8a',
         categories: ['utilities', 'productivity'],
-        icons: [
-            ...appIcons,
-            {
-                src: appFallbackIcon192,
-                sizes: '192x192',
-                type: 'image/png',
-                purpose: 'any',
-            },
-            {
-                src: appFallbackIcon512,
-                sizes: '512x512',
-                type: 'image/png',
-                purpose: 'any',
-            },
-            {
-                src: appFallbackMaskable,
-                sizes: '512x512',
-                type: 'image/png',
-                purpose: 'maskable',
-            },
-        ],
+        icons: appIcons,
         shortcuts: [
             {
                 name,

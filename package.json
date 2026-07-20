@@ -1,6 +1,6 @@
 {
   "name": "date_tools",
-  "version": "0.2.81",
+  "version": "0.2.83",
   "private": true,
   "scripts": {
     "build": "next build",

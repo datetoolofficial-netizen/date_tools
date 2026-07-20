@@ -3014,6 +3014,89 @@ body.dark-mode .legacy-admin-shell {
     transition: 0.25s;
 }
 
+.admin-persistent-main {
+    min-width: 0;
+}
+
+.admin-persistent-content {
+    display: block;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-persistent-content > .legacy-admin-shell {
+    display: block;
+    min-height: 0;
+    background: transparent;
+    color: inherit;
+}
+
+.admin-persistent-content > .legacy-admin-shell > .legacy-sidebar,
+.admin-persistent-content > .legacy-admin-shell > .legacy-sidebar-overlay {
+    display: none !important;
+}
+
+.admin-persistent-content > .legacy-admin-shell > .legacy-main-wrapper,
+.admin-persistent-content > .legacy-admin-shell.sidebar-collapsed > .legacy-main-wrapper {
+    width: 100% !important;
+    min-height: 0;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-persistent-content > .legacy-admin-shell > .legacy-main-wrapper > .legacy-top-nav,
+.admin-persistent-content > .legacy-admin-shell > .legacy-main-wrapper > .legacy-admin-footer {
+    display: none !important;
+}
+
+.admin-persistent-content > .admin-dashboard-loading,
+.admin-persistent-content > .admin-dashboard-error {
+    min-height: min(520px, calc(100vh - 160px));
+    border-radius: var(--legacy-radius);
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+}
+
+.admin-access-state {
+    min-height: min(520px, calc(100vh - 160px));
+    border: 1px solid var(--border-color);
+    border-radius: var(--legacy-radius);
+    background: var(--bg-container);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px;
+    text-align: center;
+}
+
+.admin-access-state-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 22px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+}
+
+.admin-access-state h2 {
+    margin: 0;
+    font-size: clamp(20px, 3vw, 28px);
+}
+
+.admin-access-state p {
+    margin: 0;
+    color: var(--text-sub);
+    line-height: 1.8;
+    max-width: 520px;
+}
+
 @media (max-width: 900px) {
     .legacy-admin-shell {
         font-size: 13.5px;

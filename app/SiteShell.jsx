@@ -266,7 +266,8 @@ export default function SiteShell({ children }) {
     }, [lang, isDarkMode]);
 
     useEffect(() => {
-        if (!configData?.faviconUrl) return;
+        const faviconUrl = configData?.faviconUrl || configData?.appIconUrl || configData?.logoUrl || '';
+        if (!faviconUrl) return;
 
         let icon = document.querySelector("link[rel='icon']");
         if (!icon) {
@@ -275,8 +276,8 @@ export default function SiteShell({ children }) {
             document.head.appendChild(icon);
         }
 
-        icon.href = configData.faviconUrl;
-    }, [configData?.faviconUrl]);
+        icon.href = faviconUrl;
+    }, [configData?.faviconUrl, configData?.appIconUrl, configData?.logoUrl]);
 
     useEffect(() => {
         const handleBlur = () => {

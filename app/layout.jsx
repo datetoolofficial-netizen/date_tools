@@ -61,6 +61,7 @@ async function getMetadataConfig() {
             toolSlogan: getStringField(fields, 'toolSlogan'),
             logoUrl: getStringField(fields, 'logoUrl'),
             faviconUrl: getStringField(fields, 'faviconUrl'),
+            appIconUrl: getStringField(fields, 'appIconUrl'),
             mainSEO: {
                 title: getStringField(mainSEO, 'title'),
                 description: getStringField(mainSEO, 'description'),
@@ -91,7 +92,7 @@ export async function generateMetadata() {
     const description = preview.description || meta.pageDescription;
     const siteName = preview.siteName || title;
     const imageUrl = absoluteUrl(preview.imageUrl);
-    const faviconUrl = absoluteUrl(config.faviconUrl) || '/favicon.ico';
+    const faviconUrl = absoluteUrl(config.faviconUrl || config.appIconUrl || config.logoUrl);
     const images = imageUrl ? [{ url: imageUrl, alt: title }] : undefined;
     const googleSiteVerification = config.externalIntegrations?.googleSiteVerification || '';
     const bingSiteVerification = config.externalIntegrations?.bingSiteVerification || '';
@@ -128,9 +129,11 @@ export async function generateMetadata() {
             description,
             images: imageUrl ? [imageUrl] : undefined,
         },
-        icons: {
+        icons: faviconUrl ? {
             icon: faviconUrl,
-        },
+            shortcut: faviconUrl,
+            apple: faviconUrl,
+        } : undefined,
         verification: {
             google: googleSiteVerification || undefined,
             other: bingSiteVerification ? { 'msvalidate.01': bingSiteVerification } : undefined,
