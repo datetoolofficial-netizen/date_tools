@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.83.
+الإصدار الحالي للتطبيق هو 0.2.84.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -160,6 +160,7 @@ https://www.date-tool.com
 96. تحسينات PageSpeed آمنة بتأجيل تحميل Firebase Auth/App Check عن الواجهة العامة وإصلاح أسماء حقول الاختيار.
 97. إضافة ربط PageSpeed Insights API داخل لوحة الإدارة عبر endpoint محمي للمدير.
 98. إضافة Layout ثابت لمنصة الإدارة حتى يبقى السايد بار والناف بار ظاهرين عند التنقل، مع فلترة روابط السايد بار حسب صلاحيات المساعدين.
+99. توحيد أحجام وهوية أزرار الإجراءات في أدوات التاريخ والساعة والطقس.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6662,6 +6663,73 @@ PROJECT_MEMO.md
 
 ---
 
+### توحيد أزرار إجراءات أدوات الموقع - الإصدار 0.2.84
+
+الأعراض:
+
+```txt
+أزرار الساعة والطقس كانت تختلف في الارتفاع والتدرج والحركة عن أزرار أدوات التاريخ، خصوصًا على الجوال.
+زر عرض الطقس وزر تحديد الموقع الحالي كانا يملكان تنسيقًا منفصلًا يجعل الحجم والشكل مختلفين.
+```
+
+السبب:
+
+```txt
+زر التاريخ كان يعتمد override خاصًا داخل .site-page-content > .card button.action-btn.
+الساعة تستخدم action-btn لكن دون نفس متغيرات الجوال.
+الطقس كان يستخدم .weather-search button بتنسيق مستقل عن action-btn.
+```
+
+الحل:
+
+```txt
+إضافة متغيرات CSS مشتركة لأزرار الأدوات: --tool-action-height و --tool-action-radius و --tool-action-font-size وغيرها.
+تحديث button.action-btn ليستخدم نفس الهوية في كل الأدوات.
+تحديث weather-search button ليستخدم نفس التدرج والارتفاع والحركة.
+جعل weather-location-btn يأخذ ارتفاع زر الأداة نفسه.
+نقل ضبط الجوال إلى متغيرات مشتركة حتى تتطابق أدوات التاريخ والساعة والطقس.
+رفع الإصدار إلى 0.2.84 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ تم نشر الإصدار 0.2.84 على Cloudflare Version ID: 33f01687-749c-4b58-8df8-3708002109fd.
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8
+git status --short
+rg -n "action-btn|weather-search|weather-location-btn|tool-action" app\globals.css app\clock app\weather app\components\home
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.84
+curl.exe -I https://date-tool.com/clock?v=0.2.84
+curl.exe -I https://date-tool.com/weather?v=0.2.84
+```
+
+الملفات المتأثرة:
+
+```txt
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -6969,6 +7037,9 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.83 على Cloudflare Version ID: 997615ab-b99d-42a4-8a42-e9876ac09dff
 ✅ تم اختبار `/admin`, `/admin/identity`, `/admin/ads`, و `/manifest.webmanifest` على الإنتاج بنجاح
 ✅ أصبحت مسارات `/pwa-icon-192.png`, `/pwa-icon-512.png`, و `/pwa-maskable-512.png` ترجع 410 Gone حتى لا تستخدم أيقونات قديمة
+✅ تم تحديث الإصدار إلى 0.2.84 وتوحيد أحجام وهوية أزرار الإجراءات في أدوات التاريخ والساعة والطقس
+✅ تم نشر الإصدار 0.2.84 على Cloudflare Version ID: 33f01687-749c-4b58-8df8-3708002109fd
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
 ```
 
 ---

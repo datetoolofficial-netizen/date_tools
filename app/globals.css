@@ -35,6 +35,11 @@
             --tools-hero-icon-opacity: 0.1;
             --widget-pad: clamp(16px, 2.4vw, 24px);
             --widget-min-height: 178px;
+            --tool-action-height: 50px;
+            --tool-action-radius: 12px;
+            --tool-action-pad-x: 18px;
+            --tool-action-font-size: 15px;
+            --tool-action-icon-gap: 8px;
             --soft-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
         }
 
@@ -684,8 +689,7 @@
             padding: 6px;
         }
 
-        .segmented-control button,
-        .weather-search button {
+        .segmented-control button {
             border: 0;
             border-radius: 12px;
             min-height: 44px;
@@ -696,10 +700,38 @@
             cursor: pointer;
         }
 
-        .segmented-control button.active,
-        .weather-search button {
+        .segmented-control button.active {
             background: var(--primary);
             color: #fff;
+        }
+
+        .weather-search button {
+            border: 0;
+            border-radius: var(--tool-action-radius);
+            min-height: var(--tool-action-height);
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: #fff;
+            font: inherit;
+            font-size: var(--tool-action-font-size);
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
+            transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+        }
+
+        .weather-search button:hover:not(:disabled) {
+            filter: brightness(1.03);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(59, 130, 246, 0.22);
+        }
+
+        .weather-search button:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
+        }
+
+        body.dark-mode .weather-search button {
+            color: #0f172a;
         }
 
         .tool-result,
@@ -1311,11 +1343,11 @@
         }
 
         .weather-search button {
-            padding-inline: 20px;
+            padding-inline: var(--tool-action-pad-x);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: var(--tool-action-icon-gap);
             white-space: nowrap;
         }
 
@@ -1330,8 +1362,8 @@
         }
 
         .weather-location-btn {
-            width: 52px;
-            min-width: 52px;
+            width: var(--tool-action-height);
+            min-width: var(--tool-action-height);
             padding-inline: 0 !important;
             background: color-mix(in srgb, var(--primary) 18%, var(--input-bg)) !important;
             color: var(--primary) !important;
@@ -1721,15 +1753,37 @@
         html[dir="ltr"] .date-dropdowns select { background-position: right 10px center; }
         .date-dropdowns select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
 
-        button.action-btn { 
-            padding: 14px; width: 100%; background-color: var(--primary); color: #fff; 
-            border: none; cursor: pointer; font-size: 15px; font-weight: bold; font-family: inherit;
-            border-radius: 8px; transition: 0.3s; display: flex; align-items: center; justify-content: center;
+        button.action-btn {
+            min-height: var(--tool-action-height);
+            padding: 0 var(--tool-action-pad-x);
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), #6366f1);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: var(--tool-action-font-size);
+            font-weight: 900;
+            font-family: inherit;
+            border-radius: var(--tool-action-radius);
+            transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--tool-action-icon-gap);
+            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
         }
-        button.action-btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+        button.action-btn:hover {
+            filter: brightness(1.03);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(59, 130, 246, 0.22);
+        }
+        button.action-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
+        }
         body.dark-mode button.action-btn { color: #0f172a; }
-        button.action-btn i { margin-left: 8px; }
-        html[dir="ltr"] button.action-btn i { margin-left: 0; margin-right: 8px; }
+        button.action-btn i { margin: 0; }
+        html[dir="ltr"] button.action-btn i { margin: 0; }
         
         .result { 
             margin-top: 15px; padding: 15px; background-color: var(--result-bg); 
@@ -2298,8 +2352,8 @@
     }
 
     .weather-location-btn {
-        width: 48px;
-        min-width: 48px;
+        width: var(--tool-action-height);
+        min-width: var(--tool-action-height);
     }
 
     .forecast-list {
@@ -2716,6 +2770,14 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
 }
 
 @media (max-width: 520px) {
+    :root {
+        --tool-action-height: 44px;
+        --tool-action-radius: 12px;
+        --tool-action-pad-x: 14px;
+        --tool-action-font-size: 12.5px;
+        --tool-action-icon-gap: 7px;
+    }
+
     .tools-hero {
         min-height: 136px;
         padding: 22px 18px;
@@ -2801,10 +2863,10 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
     }
 
     .site-page-content > .card button.action-btn {
-        min-height: 44px;
-        padding: 10px;
-        border-radius: 12px;
-        font-size: 12.5px;
+        min-height: var(--tool-action-height);
+        padding: 0 var(--tool-action-pad-x);
+        border-radius: var(--tool-action-radius);
+        font-size: var(--tool-action-font-size);
     }
 
     .public-ad-slot {
