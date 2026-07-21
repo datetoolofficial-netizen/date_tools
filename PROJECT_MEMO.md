@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.85.
+الإصدار الحالي للتطبيق هو 0.2.86.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -162,6 +162,7 @@ https://www.date-tool.com
 98. إضافة Layout ثابت لمنصة الإدارة حتى يبقى السايد بار والناف بار ظاهرين عند التنقل، مع فلترة روابط السايد بار حسب صلاحيات المساعدين.
 99. توحيد أحجام وهوية أزرار الإجراءات في أدوات التاريخ والساعة والطقس.
 100. تحسين شكل تنبيه تثبيت الأداة وحقل رفع صورة التواصل على الجوال.
+101. ترتيب إشعارات التثبيت والكوكيز داخل مكدس واحد وتحديث كاش أيقونة تطبيق PWA.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6793,6 +6794,85 @@ PROJECT_MEMO.md
 
 ---
 
+### ترتيب إشعارات التثبيت والكوكيز وتحديث أيقونة PWA - الإصدار 0.2.86
+
+الأعراض:
+
+```txt
+إشعار تثبيت الأداة وإشعار الكوكيز كانا يظهران فوق بعضهما في أسفل الصفحة، مما يعطي انطباعًا أوليًا غير مرتب.
+نافذة تثبيت Chrome على الكمبيوتر كانت ما زالت تظهر أيقونة قديمة/غير مناسبة بسبب كاش manifest أو أيقونة قديمة محفوظة في المتصفح.
+```
+
+السبب:
+
+```txt
+كل من .pwa-install-prompt و .privacy-consent-panel كان يملك position: fixed مستقلًا.
+رابط manifest في metadata كان ثابتًا بدون رقم إصدار، وأيقونات manifest لم تكن تحمل query لكسر كاش المتصفح.
+وجود app/manifest.js كملف Next خاص كان يضيف رابط manifest تلقائيًا بدون رقم الإصدار بجانب الرابط المخصص.
+```
+
+الحل:
+
+```txt
+إضافة .site-action-stack كمكدس ثابت في منتصف أسفل الشاشة يضم إشعار الكوكيز وإشعار تثبيت الأداة بشكل عمودي متتابع.
+إعادة تصميم إشعار التثبيت ليقترب من شكل سيكشن الكوكيز ويعرض أيقونة التطبيق من appIconUrl المحفوظة في إدارة الهوية.
+تمرير appIconUrl إلى مكون PwaInstallPrompt من SiteShell.
+تحديث رابط manifest في layout.jsx ليحمل رقم الإصدار.
+نقل منطق manifest من app/manifest.js إلى app/manifestConfig.js وإضافة route مستقل app/manifest.webmanifest/route.js حتى يظهر رابط manifest واحد فقط.
+تحديث manifest لإضافة رقم الإصدار على روابط أيقونة التطبيق وفصل purpose إلى any و maskable.
+تفضيل appIconUrl ثم logoUrl ثم faviconUrl في أيقونة التطبيق داخل manifest.
+رفع الإصدار إلى 0.2.86 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+✅ تم نشر الإصدار 0.2.86 على Cloudflare Version ID: c4e3c36e-c039-49b2-ab2e-1b18b0c2f98d.
+✅ تم اختبار الصفحة الرئيسية على الإنتاج ورجعت 200.
+✅ تم اختبار HTML الصفحة الرئيسية وتأكد وجود رابط manifest واحد فقط: /manifest.webmanifest?v=0.2.86.
+✅ تم اختبار manifest وتأكد أن أيقونة التطبيق تأتي من appIconUrl مع v=0.2.86 و purpose منفصل any/maskable.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content PROJECT_MEMO.md -Encoding UTF8
+rg -n "manifest|appIconUrl|pwa-install-prompt|privacy-consent|cookie|cookies|كوكيز|beforeinstallprompt|PwaInstallPrompt|Consent" app -g "*.js" -g "*.jsx" -g "*.css"
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.85
+git status --short
+git diff --check
+npm run lint
+npm run build
+npx wrangler --version
+npm run deploy
+curl.exe -s https://date-tool.com/?v=0.2.86
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.86
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/?v=0.2.86
+```
+
+الملفات المتأثرة:
+
+```txt
+app/SiteShell.jsx
+app/components/PwaInstallPrompt.jsx
+app/globals.css
+app/layout.jsx
+app/manifest.js
+app/manifestConfig.js
+app/manifest.webmanifest/route.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7106,6 +7186,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.85 وتحسين تنبيه تثبيت الأداة وحقل رفع صورة التواصل
 ✅ تم نشر الإصدار 0.2.85 على Cloudflare Version ID: 41028654-5e67-4da0-896e-4be76d5a4a02
 ✅ تم اختبار `/privacy` و `/contact` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.86 وترتيب إشعارات التثبيت والكوكيز داخل مكدس واحد
+✅ تم نشر الإصدار 0.2.86 على Cloudflare Version ID: c4e3c36e-c039-49b2-ab2e-1b18b0c2f98d
+✅ تم اختبار الصفحة الرئيسية والـ manifest على الإنتاج بنجاح
 ```
 
 ---

@@ -1,3 +1,5 @@
+import { APP_VERSION } from './version';
+
 const siteUrl = 'https://date-tool.com';
 const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 const fallbackName = 'أدوات التاريخ الشاملة';
@@ -39,6 +41,38 @@ function normalizeIconUrl(value = '') {
     } catch {
         return '';
     }
+}
+
+function appendIconVersion(value = '') {
+    if (!value) return '';
+
+    try {
+        const url = new URL(value, siteUrl);
+        url.searchParams.set('v', APP_VERSION);
+        return value.startsWith('/') ? `${url.pathname}${url.search}${url.hash}` : url.toString();
+    } catch {
+        return value;
+    }
+}
+
+function getIconType(value = '') {
+    const path = String(value || '').split('?')[0].toLowerCase();
+    if (path.endsWith('.png')) return 'image/png';
+    if (path.endsWith('.webp')) return 'image/webp';
+    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
+    if (path.endsWith('.ico')) return 'image/x-icon';
+    return undefined;
+}
+
+function buildAppIcon(src, sizes, purpose) {
+    const icon = {
+        src: appendIconVersion(src),
+        sizes,
+        purpose,
+    };
+    const type = getIconType(src);
+    if (type) icon.type = type;
+    return icon;
 }
 
 async function getInstallIdentity() {
@@ -85,24 +119,18 @@ function getShortcutIcons(tool) {
     ];
 }
 
-export default async function manifest() {
+export async function buildManifest() {
     const identity = await getInstallIdentity();
     const name = identity.name || fallbackName;
     const shortName = identity.shortName || fallbackShortName;
     const description = identity.description || fallbackDescription;
-    const appIconUrl = identity.appIconUrl || identity.faviconUrl || identity.logoUrl || '';
+    const appIconUrl = identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '';
     const appIcons = appIconUrl
         ? [
-            {
-                src: appIconUrl,
-                sizes: '192x192',
-                purpose: 'any maskable',
-            },
-            {
-                src: appIconUrl,
-                sizes: '512x512',
-                purpose: 'any maskable',
-            },
+            buildAppIcon(appIconUrl, '192x192', 'any'),
+            buildAppIcon(appIconUrl, '512x512', 'any'),
+            buildAppIcon(appIconUrl, '192x192', 'maskable'),
+            buildAppIcon(appIconUrl, '512x512', 'maskable'),
         ]
         : [];
 

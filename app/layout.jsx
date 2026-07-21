@@ -4,6 +4,7 @@ import FontAwesomeLoader from './components/FontAwesomeLoader';
 import { i18n } from './i18n';
 import { resolveLinkPreview } from './linkPreview';
 import SiteShell from './SiteShell';
+import { APP_VERSION } from './version';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
@@ -102,7 +103,6 @@ export async function generateMetadata() {
         title,
         description,
         applicationName: title,
-        manifest: '/manifest.webmanifest',
         alternates: {
             canonical: '/',
         },
@@ -144,6 +144,9 @@ export async function generateMetadata() {
 export default function RootLayout({ children }) {
     return (
         <html lang="ar" dir="rtl">
+            <head>
+                <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
+            </head>
             <body className={cairo.className}>
                 <FontAwesomeLoader />
                 <ExternalIntegrations />

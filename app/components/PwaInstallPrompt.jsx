@@ -12,7 +12,7 @@ function isStandaloneDisplay() {
         || window.navigator.standalone === true;
 }
 
-export default function PwaInstallPrompt({ settings }) {
+export default function PwaInstallPrompt({ settings, iconUrl }) {
     const [installPrompt, setInstallPrompt] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
     const [isUpdateNotice, setIsUpdateNotice] = useState(false);
@@ -102,14 +102,27 @@ export default function PwaInstallPrompt({ settings }) {
 
     return (
         <div className={`pwa-install-prompt ${isUpdateNotice ? 'is-update-notice' : ''}`} role="status">
-            <span className="pwa-install-copy">{promptText}</span>
-            <button type="button" className="pwa-install-main" onClick={installApp}>
-                <i className={`fa-solid ${installPrompt ? 'fa-mobile-screen-button' : 'fa-circle-check'}`}></i>
-                <span>{installPrompt ? buttonText : 'تم'}</span>
-            </button>
-            <button type="button" className="pwa-install-dismiss" onClick={dismiss} aria-label="إخفاء زر تثبيت التطبيق">
-                <i className="fa-solid fa-xmark"></i>
-            </button>
+            <span className="pwa-install-icon" aria-hidden="true">
+                {iconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={iconUrl} alt="" />
+                ) : (
+                    <i className="fa-solid fa-mobile-screen-button"></i>
+                )}
+            </span>
+            <span className="pwa-install-copy">
+                <strong>{installPrompt ? buttonText : 'تحديث الأداة'}</strong>
+                <span>{promptText}</span>
+            </span>
+            <span className="pwa-install-actions">
+                <button type="button" className="pwa-install-main" onClick={installApp}>
+                    <i className={`fa-solid ${installPrompt ? 'fa-mobile-screen-button' : 'fa-circle-check'}`}></i>
+                    <span>{installPrompt ? buttonText : 'تم'}</span>
+                </button>
+                <button type="button" className="pwa-install-dismiss" onClick={dismiss} aria-label="إخفاء زر تثبيت التطبيق">
+                    <i className="fa-solid fa-xmark"></i>
+                </button>
+            </span>
         </div>
     );
 }

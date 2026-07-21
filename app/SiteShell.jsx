@@ -499,60 +499,68 @@ export default function SiteShell({ children }) {
             </div>
 
             {!isSiteLoading && <Footer lang={lang} config={configData} />}
-            {!isSiteLoading && privacyConsent === null && (
-                <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
-                    <div className="privacy-consent-icon">
-                        <i className="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div className="privacy-consent-copy">
-                        <strong>إعدادات الخصوصية والكوكيز</strong>
-                        <p>
-                            نستخدم ملفات ضرورية لتشغيل الموقع، ونطلب موافقتك قبل تشغيل التحليلات أو أدوات التسويق. يمكنك التحكم لاحقًا من إعدادات المتصفح أو من هذا الإشعار عند ظهوره.
-                        </p>
-                        {showPrivacySettings && (
-                            <div className="privacy-consent-options">
-                                <label>
-                                    <input type="checkbox" checked disabled />
-                                    <span>ملفات ضرورية لتشغيل الموقع</span>
-                                </label>
-                                <label>
-                                    <input
-                                        id="privacy-analytics-option"
-                                        type="checkbox"
-                                        checked={privacyDraft.analytics}
-                                        onChange={(event) => setPrivacyDraft((current) => ({ ...current, analytics: event.target.checked }))}
-                                    />
-                                    <span>تحليلات لتحسين تجربة الاستخدام</span>
-                                </label>
-                                <label>
-                                    <input
-                                        id="privacy-marketing-option"
-                                        type="checkbox"
-                                        checked={privacyDraft.marketing}
-                                        onChange={(event) => setPrivacyDraft((current) => ({ ...current, marketing: event.target.checked }))}
-                                    />
-                                    <span>إعلانات وقياس تسويقي</span>
-                                </label>
+            {!isSiteLoading && (
+                <div className="site-action-stack">
+                    {privacyConsent === null && (
+                        <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
+                            <div className="privacy-consent-icon">
+                                <i className="fa-solid fa-shield-halved"></i>
                             </div>
-                        )}
-                    </div>
-                    <div className="privacy-consent-actions">
-                        <button type="button" className="privacy-accept" onClick={() => updatePrivacyConsent({ analytics: true, marketing: true })}>
-                            قبول الكل
-                        </button>
-                        <button type="button" className="privacy-secondary" onClick={() => {
-                            if (!showPrivacySettings) {
-                                setShowPrivacySettings(true);
-                                return;
-                            }
-                            updatePrivacyConsent(privacyDraft);
-                        }}>
-                            {showPrivacySettings ? 'حفظ الاختيارات' : 'تخصيص'}
-                        </button>
-                        <button type="button" className="privacy-secondary" onClick={() => updatePrivacyConsent(DEFAULT_PRIVACY_CONSENT)}>
-                            الضروري فقط
-                        </button>
-                    </div>
+                            <div className="privacy-consent-copy">
+                                <strong>إعدادات الخصوصية والكوكيز</strong>
+                                <p>
+                                    نستخدم ملفات ضرورية لتشغيل الموقع، ونطلب موافقتك قبل تشغيل التحليلات أو أدوات التسويق. يمكنك التحكم لاحقًا من إعدادات المتصفح أو من هذا الإشعار عند ظهوره.
+                                </p>
+                                {showPrivacySettings && (
+                                    <div className="privacy-consent-options">
+                                        <label>
+                                            <input type="checkbox" checked disabled />
+                                            <span>ملفات ضرورية لتشغيل الموقع</span>
+                                        </label>
+                                        <label>
+                                            <input
+                                                id="privacy-analytics-option"
+                                                type="checkbox"
+                                                checked={privacyDraft.analytics}
+                                                onChange={(event) => setPrivacyDraft((current) => ({ ...current, analytics: event.target.checked }))}
+                                            />
+                                            <span>تحليلات لتحسين تجربة الاستخدام</span>
+                                        </label>
+                                        <label>
+                                            <input
+                                                id="privacy-marketing-option"
+                                                type="checkbox"
+                                                checked={privacyDraft.marketing}
+                                                onChange={(event) => setPrivacyDraft((current) => ({ ...current, marketing: event.target.checked }))}
+                                            />
+                                            <span>إعلانات وقياس تسويقي</span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="privacy-consent-actions">
+                                <button type="button" className="privacy-accept" onClick={() => updatePrivacyConsent({ analytics: true, marketing: true })}>
+                                    قبول الكل
+                                </button>
+                                <button type="button" className="privacy-secondary" onClick={() => {
+                                    if (!showPrivacySettings) {
+                                        setShowPrivacySettings(true);
+                                        return;
+                                    }
+                                    updatePrivacyConsent(privacyDraft);
+                                }}>
+                                    {showPrivacySettings ? 'حفظ الاختيارات' : 'تخصيص'}
+                                </button>
+                                <button type="button" className="privacy-secondary" onClick={() => updatePrivacyConsent(DEFAULT_PRIVACY_CONSENT)}>
+                                    الضروري فقط
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <PwaInstallPrompt
+                        settings={configData?.pwaInstallPrompt}
+                        iconUrl={configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || ''}
+                    />
                 </div>
             )}
             {showPrivacySettingsButton && (
@@ -561,7 +569,6 @@ export default function SiteShell({ children }) {
                     إعدادات الخصوصية
                 </button>
             )}
-            {!isSiteLoading && <PwaInstallPrompt settings={configData?.pwaInstallPrompt} />}
         </SiteContext.Provider>
     );
 }
