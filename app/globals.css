@@ -1148,16 +1148,17 @@
 
         .contact-upload-field {
             position: relative;
-            min-height: 138px;
+            min-height: 66px;
             border: 1px dashed color-mix(in srgb, var(--primary) 58%, var(--border) 42%);
-            border-radius: 18px;
-            background: color-mix(in srgb, var(--bg-main) 82%, var(--primary) 18%);
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--bg-body) 86%, var(--primary) 14%);
             color: var(--text-main);
-            display: grid;
-            place-items: center;
-            gap: 7px;
-            padding: 18px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 10px 14px;
+            text-align: start;
             overflow: hidden;
         }
 
@@ -1169,23 +1170,26 @@
         }
 
         .contact-upload-field i {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: rgba(59, 130, 246, 0.16);
             color: var(--primary);
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .contact-upload-field strong {
+            min-width: 0;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-size: clamp(15px, 3vw, 18px);
+            font-size: clamp(13px, 2.6vw, 16px);
+            line-height: 1.4;
         }
 
         .contact-page-form button {
@@ -1563,19 +1567,27 @@
             .pwa-install-prompt {
                 left: 12px;
                 bottom: 12px;
-                padding: 6px;
-                border-radius: 15px;
+                width: min(260px, calc(100vw - 24px));
                 max-width: calc(100vw - 24px);
+                padding: 12px;
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
             }
 
             .pwa-install-copy {
-                max-width: 130px;
-                font-size: 10.5px;
-                line-height: 1.35;
-                padding-inline: 6px 0;
+                max-width: none;
+                padding: 0 4px 0 30px;
+                font-size: 11px;
+                line-height: 1.45;
+                text-align: center;
+                color: var(--text-main);
             }
 
             .pwa-install-main {
+                width: 100%;
                 min-height: 38px;
                 padding-inline: 11px;
                 border-radius: 12px;
@@ -1584,10 +1596,13 @@
             }
 
             .pwa-install-dismiss {
-                width: 30px;
-                height: 30px;
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                width: 28px;
+                height: 28px;
                 border-radius: 10px;
-                font-size: 12px;
+                font-size: 11px;
             }
         }
 
@@ -3012,20 +3027,22 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
     }
 
     .contact-upload-field {
-        min-height: 104px;
-        padding: 14px;
-        border-radius: 14px;
+        min-height: 54px;
+        padding: 8px 11px;
+        border-radius: 13px;
+        gap: 9px;
     }
 
     .contact-upload-field i {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        font-size: 18px;
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        border-radius: 11px;
+        font-size: 15px;
     }
 
     .contact-upload-field strong {
-        font-size: 13px;
+        font-size: 12.5px;
     }
 
     .contact-page-form button {
