@@ -5,7 +5,7 @@ import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
-import { getShareButtonLabel, getToolFaqs, getToolSettings, renderShareTemplate } from '../toolSettings';
+import { getToolFaqs, getToolSettings, renderShareTemplate } from '../toolSettings';
 
 const defaultFromCity = {
     query: 'الرياض',
@@ -316,7 +316,7 @@ export default function ClockPage() {
                         <>
                             <div className="tool-result clock-tool-result">{convertedTime}</div>
                             <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timeConverterShareText)}>
-                                <i className="fa-solid fa-share-nodes"></i> {getShareButtonLabel(timeConverterShareText)}
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
                             </button>
                         </>
                     )}
@@ -366,7 +366,7 @@ export default function ClockPage() {
                                 <span>{timezoneDiff.toCity.label}: الساعة الآن {formatTime(now, timezoneDiff.toCity.zone, clockHour12, false)}</span>
                             </div>
                             <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timezoneShareText)}>
-                                <i className="fa-solid fa-share-nodes"></i> {getShareButtonLabel(timezoneShareText)}
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
                             </button>
                         </>
                     )}

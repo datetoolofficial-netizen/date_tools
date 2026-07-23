@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.91.
+الإصدار الحالي للتطبيق هو 0.2.92.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -168,6 +168,7 @@ https://www.date-tool.com
 104. تحسين بطاقات أدوات الساعة لتطابق نمط أدوات التاريخ، واختصار نتيجة فرق التوقيت.
 105. إضافة قوالب مشاركة قابلة للتعديل من إدارة الأدوات، وإعادة بطاقة نصيحة الطقس للشكل الأبسط.
 106. اعتماد نصوص مشاركة افتراضية أجمل في أزرار مشاركة نتائج أدوات التاريخ.
+107. تثبيت تسمية أزرار المشاركة بصريًا مع إبقاء نصوص المشاركة القابلة للتعديل تعمل من إعدادات الأدوات.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7263,6 +7264,77 @@ PROJECT_MEMO.md
 
 ---
 
+### تثبيت تسمية أزرار المشاركة - الإصدار 0.2.92
+
+الأعراض:
+
+```txt
+زر مشاركة نتيجة أداة العمر كان يعرض أول سطر من نص المشاركة المخصص بدل اسم زر ثابت.
+هذا جعل الزر طويلًا وغير مناسب بصريًا على الجوال.
+```
+
+السبب:
+
+```txt
+تمت إضافة getShareButtonLabel في الإصدار السابق لاستخراج تسمية الزر من نص المشاركة نفسه.
+هذا خلط بين النص الذي يتم مشاركته فعليًا وبين تسمية الزر داخل الواجهة.
+```
+
+الحل:
+
+```txt
+إرجاع أزرار مشاركة نتائج التاريخ إلى labels.shareResult كنص واجهة ثابت.
+إرجاع أزرار مشاركة نتائج الساعة إلى نص ثابت "مشاركة النتيجة".
+الإبقاء على shareText و renderShareTemplate كما هي حتى تستمر قوالب المشاركة من الإدارة في العمل عند النسخ/المشاركة.
+حذف getShareButtonLabel لأنها لم تعد مطلوبة بعد فصل التسمية عن محتوى المشاركة.
+رفع الإصدار إلى 0.2.92 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ git diff --check نجح.
+✅ npm run build نجح، مع ظهور رسائل fetch failed بسبب تقييد الشبكة داخل بيئة Codex فقط دون كسر البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.92 على Cloudflare Version ID: 6c9687f1-2f3e-4c22-bd00-8809f2077152.
+✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "getShareButtonLabel|shareButtonLabel|shareResult|مشاركة النتيجة|شارك النتيجة|clock-result-share|share-btn" app
+npm version 0.2.92 --no-git-tag-version
+npm run lint
+git diff --check
+npm run build
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/?v=0.2.92"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/clock?v=0.2.92"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/admin/tool-management/date?v=0.2.92"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/admin/tool-management/clock?v=0.2.92"
+```
+
+الملفات المتأثرة:
+
+```txt
+app/toolSettings.js
+app/page.jsx
+app/components/home/HomeSections.jsx
+app/clock/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7593,6 +7665,9 @@ PROJECT_MEMO.md
 ✅ تم اختبار `/`, `/clock`, `/weather`, و `/admin/tool-management/clock` على الإنتاج بنجاح
 ✅ تم تحديث الإصدار إلى 0.2.91 واعتماد نصوص مشاركة افتراضية أجمل في أزرار مشاركة نتائج التاريخ
 ✅ تم نشر الإصدار 0.2.91 على Cloudflare Version ID: 82fcc105-f627-4a4a-adbe-bb27dd40acdb
+✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.92 لتثبيت تسمية أزرار المشاركة مع إبقاء نصوص المشاركة المخصصة
+✅ تم نشر الإصدار 0.2.92 على Cloudflare Version ID: 6c9687f1-2f3e-4c22-bd00-8809f2077152
 ✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج بنجاح
 ```
 

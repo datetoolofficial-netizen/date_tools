@@ -238,10 +238,3 @@ export function renderShareTemplate(settings, templateKey, variables = {}) {
         return value === undefined || value === null ? '' : String(value);
     }).trim();
 }
-
-export function getShareButtonLabel(text, fallback = 'مشاركة النتيجة') {
-    return String(text || '')
-        .split('\n')
-        .map((line) => line.trim())
-        .find((line) => line && !/^https?:\/\//i.test(line)) || fallback;
-}

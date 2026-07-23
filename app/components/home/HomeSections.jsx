@@ -88,7 +88,7 @@ export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
                         <p>{enteredDateInfo.info}</p>
                     </div>
                     <button className="share-btn" onClick={onShare}>
-                        <i className="fa-solid fa-share-nodes"></i> {enteredDateInfo.shareButtonLabel || labels.shareResult}
+                        <i className="fa-solid fa-share-nodes"></i> {labels.shareResult}
                     </button>
                 </div>
             )}
