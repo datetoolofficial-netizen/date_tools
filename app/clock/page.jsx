@@ -35,14 +35,19 @@ const clockFaq = [
     },
 ];
 
-function formatTime(date, zone, hour12 = false) {
-    return new Intl.DateTimeFormat('ar-SA', {
+function formatTime(date, zone, hour12 = false, includeSeconds = true) {
+    const options = {
         timeZone: zone,
         hour: '2-digit',
         minute: '2-digit',
-        second: '2-digit',
         hour12,
-    }).format(date);
+    };
+
+    if (includeSeconds) {
+        options.second = '2-digit';
+    }
+
+    return new Intl.DateTimeFormat('ar-SA', options).format(date);
 }
 
 function getOffsetHours(zone, date) {
@@ -84,7 +89,8 @@ async function searchCityTimezone(query) {
     return {
         query: cleanQuery,
         resolvedQuery: cleanQuery,
-        label: getCityLabel(place),
+        label: cleanQuery,
+        resolvedLabel: getCityLabel(place),
         zone: place.timezone,
     };
 }
@@ -95,11 +101,18 @@ async function resolveCityInput(city) {
     return searchCityTimezone(cleanQuery);
 }
 
-function getDifferenceText(diff, fromCity, toCity) {
+function formatHourDifference(diff) {
+    const absDiff = Math.abs(diff);
+    if (absDiff === 1) return 'ساعة واحدة';
+    if (absDiff === 2) return 'ساعتين';
+    if (Number.isInteger(absDiff)) return `${absDiff} ساعات`;
+    return `${absDiff} ساعة`;
+}
+
+function getDifferenceText(diff) {
     if (diff === 0) return 'نفس التوقيت';
 
-    const absDiff = Math.abs(diff);
-    return `${toCity.label} ${diff > 0 ? 'أمام' : 'خلف'} ${fromCity.label} بـ ${absDiff} ساعة`;
+    return formatHourDifference(diff);
 }
 
 export default function ClockPage() {
@@ -158,6 +171,21 @@ export default function ClockPage() {
         firebaseApiRef.current.trackToolUsage('clockTools');
     };
 
+    const shareClockResult = async (text) => {
+        if (!text) return;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({ text });
+                return;
+            }
+
+            await navigator.clipboard?.writeText(text);
+        } catch {
+            // Sharing may be cancelled by the user; no need to interrupt the tool.
+        }
+    };
+
     const updateCityQuery = (setter, value) => {
         setter((current) => ({
             ...current,
@@ -186,7 +214,7 @@ export default function ClockPage() {
             setToCity(nextToCity);
             setTimezoneDiff({
                 diff,
-                text: getDifferenceText(diff, nextFromCity, nextToCity),
+                text: getDifferenceText(diff),
                 fromCity: nextFromCity,
                 toCity: nextToCity,
             });
@@ -239,34 +267,43 @@ export default function ClockPage() {
                     <i className="fa-solid fa-repeat"></i>
                     <h3>{clockSettings.subtools?.timeConverter}</h3>
                 </div>
-                <div className="time-select-grid">
-                    <label>
-                        <span>الساعة</span>
-                        <select
-                            value={inputHour}
-                            onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}
-                            aria-label="الساعة بنظام 24"
-                            title="الساعة بنظام 24"
-                        >
-                            {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
-                        </select>
-                    </label>
-                    <label>
-                        <span>الدقيقة</span>
-                        <select
-                            value={inputMinute}
-                            onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}
-                            aria-label="الدقيقة"
-                            title="الدقيقة"
-                        >
-                            {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
-                        </select>
-                    </label>
+                <div className="time-select-grid clock-tool-panel">
+                    <div className="time-select-fields">
+                        <label>
+                            <span>الساعة</span>
+                            <select
+                                value={inputHour}
+                                onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}
+                                aria-label="الساعة بنظام 24"
+                                title="الساعة بنظام 24"
+                            >
+                                {hourOptions.map((hour) => <option key={hour} value={hour}>{hour}</option>)}
+                            </select>
+                        </label>
+                        <label>
+                            <span>الدقيقة</span>
+                            <select
+                                value={inputMinute}
+                                onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}
+                                aria-label="الدقيقة"
+                                title="الدقيقة"
+                            >
+                                {minuteOptions.map((minute) => <option key={minute} value={minute}>{minute}</option>)}
+                            </select>
+                        </label>
+                    </div>
+                    <button className="action-btn" type="button" onClick={calculateTimeConversion}>
+                        <i className="fa-solid fa-clock"></i> <span>تحويل</span>
+                    </button>
+                    {convertedTime && (
+                        <>
+                            <div className="tool-result clock-tool-result">{convertedTime}</div>
+                            <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(`الوقت بنظام 12 ساعة: ${convertedTime}`)}>
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                            </button>
+                        </>
+                    )}
                 </div>
-                <button className="action-btn" type="button" onClick={calculateTimeConversion}>
-                    <i className="fa-solid fa-clock"></i> <span>تحويل</span>
-                </button>
-                {convertedTime && <div className="tool-result">{convertedTime}</div>}
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockMiddle" label="إعلان وسط الساعة" />
@@ -276,40 +313,47 @@ export default function ClockPage() {
                     <i className="fa-solid fa-code-compare"></i>
                     <h3>{clockSettings.subtools?.timezoneDiff}</h3>
                 </div>
-                <div className="timezone-search-grid">
-                    <label className="timezone-search-field">
-                        <span>المدينة الأولى</span>
-                        <input
-                            value={fromCity.query}
-                            onChange={(event) => updateCityQuery(setFromCity, event.target.value)}
-                            placeholder="مثال: الرياض"
-                            aria-label="ابحث عن المدينة الأولى"
-                            title="ابحث عن المدينة الأولى"
-                        />
-                    </label>
-                    <label className="timezone-search-field">
-                        <span>المدينة الثانية</span>
-                        <input
-                            value={toCity.query}
-                            onChange={(event) => updateCityQuery(setToCity, event.target.value)}
-                            placeholder="مثال: لندن"
-                            aria-label="ابحث عن المدينة الثانية"
-                            title="ابحث عن المدينة الثانية"
-                        />
-                    </label>
-                </div>
-                <button className="action-btn" type="button" onClick={calculateTimezoneDiff} disabled={timezoneSearchStatus === 'loading'}>
-                    <i className={timezoneSearchStatus === 'loading' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-code-compare'}></i>
-                    <span>{timezoneSearchStatus === 'loading' ? 'جاري الحساب...' : 'احسب'}</span>
-                </button>
-                {timezoneSearchError && <p className="inline-error">{timezoneSearchError}</p>}
-                {timezoneDiff && (
-                    <div className="tool-result timezone-result">
-                        <strong>فرق التوقيت: {timezoneDiff.text}</strong>
-                        <span>{timezoneDiff.fromCity.label}: الساعة الآن {formatTime(now, timezoneDiff.fromCity.zone, clockHour12)}</span>
-                        <span>{timezoneDiff.toCity.label}: الساعة الآن {formatTime(now, timezoneDiff.toCity.zone, clockHour12)}</span>
+                <div className="timezone-search-grid clock-tool-panel">
+                    <div className="timezone-search-fields">
+                        <label className="timezone-search-field">
+                            <span>المدينة الأولى</span>
+                            <input
+                                value={fromCity.query}
+                                onChange={(event) => updateCityQuery(setFromCity, event.target.value)}
+                                placeholder="مثال: الرياض"
+                                aria-label="ابحث عن المدينة الأولى"
+                                title="ابحث عن المدينة الأولى"
+                            />
+                        </label>
+                        <label className="timezone-search-field">
+                            <span>المدينة الثانية</span>
+                            <input
+                                value={toCity.query}
+                                onChange={(event) => updateCityQuery(setToCity, event.target.value)}
+                                placeholder="مثال: لندن"
+                                aria-label="ابحث عن المدينة الثانية"
+                                title="ابحث عن المدينة الثانية"
+                            />
+                        </label>
                     </div>
-                )}
+                    <button className="action-btn" type="button" onClick={calculateTimezoneDiff} disabled={timezoneSearchStatus === 'loading'}>
+                        <i className={timezoneSearchStatus === 'loading' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-code-compare'}></i>
+                        <span>{timezoneSearchStatus === 'loading' ? 'جاري الحساب...' : 'احسب'}</span>
+                    </button>
+                    {timezoneSearchError && <p className="inline-error">{timezoneSearchError}</p>}
+                    {timezoneDiff && (
+                        <>
+                            <div className="tool-result timezone-result">
+                                <strong>فرق التوقيت: {timezoneDiff.text}</strong>
+                                <span>{timezoneDiff.fromCity.label}: الساعة الآن {formatTime(now, timezoneDiff.fromCity.zone, clockHour12, false)}</span>
+                                <span>{timezoneDiff.toCity.label}: الساعة الآن {formatTime(now, timezoneDiff.toCity.zone, clockHour12, false)}</span>
+                            </div>
+                            <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(`فرق التوقيت: ${timezoneDiff.text}`)}>
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                            </button>
+                        </>
+                    )}
+                </div>
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />

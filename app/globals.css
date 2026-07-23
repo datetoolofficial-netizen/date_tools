@@ -816,13 +816,21 @@
             letter-spacing: 0;
         }
 
-        .time-select-grid {
+        .time-select-grid,
+        .timezone-search-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: 1fr;
             gap: 12px;
             padding: 16px;
             border-radius: 14px;
             background: var(--input-bg);
+        }
+
+        .time-select-fields,
+        .timezone-search-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
         }
 
         .time-select-grid label {
@@ -831,15 +839,6 @@
             color: var(--text-sub);
             font-size: 13px;
             font-weight: 900;
-        }
-
-        .timezone-search-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            padding: 16px;
-            border-radius: 14px;
-            background: var(--input-bg);
         }
 
         .timezone-search-field {
@@ -884,6 +883,14 @@
         .timezone-result span {
             color: var(--result-text);
             font-size: 0.92rem;
+        }
+
+        .clock-result-share {
+            min-height: 48px;
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--primary) 14%, transparent);
+            color: var(--primary);
+            font-weight: 900;
         }
 
         .public-ad-link {
@@ -2692,7 +2699,7 @@
     min-width: 42px;
     min-height: 34px;
     border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 999px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
     display: inline-flex;
@@ -3108,7 +3115,7 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         gap: 9px;
     }
 
-    .timezone-search-grid {
+    .timezone-search-fields {
         grid-template-columns: 1fr;
     }
 
