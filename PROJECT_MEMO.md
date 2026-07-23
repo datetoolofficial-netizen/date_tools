@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.90.
+الإصدار الحالي للتطبيق هو 0.2.91.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -167,6 +167,7 @@ https://www.date-tool.com
 103. تعبئة حقول التاريخ بتاريخ اليوم عند أول تفاعل، وتوحيد عناوين أدوات الساعة، وتحسين بطاقة نصيحة الطقس.
 104. تحسين بطاقات أدوات الساعة لتطابق نمط أدوات التاريخ، واختصار نتيجة فرق التوقيت.
 105. إضافة قوالب مشاركة قابلة للتعديل من إدارة الأدوات، وإعادة بطاقة نصيحة الطقس للشكل الأبسط.
+106. اعتماد نصوص مشاركة افتراضية أجمل في أزرار مشاركة نتائج أدوات التاريخ.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7188,6 +7189,80 @@ PROJECT_MEMO.md
 
 ---
 
+### اعتماد نصوص أزرار المشاركة - الإصدار 0.2.91
+
+الأعراض:
+
+```txt
+نصوص مشاركة نتائج أدوات التاريخ كانت افتراضية ومباشرة أكثر من اللازم.
+زر مشاركة نتيجة أدوات التاريخ كان يعرض نصًا عامًا مثل "مشاركة النتيجة" بدل أن يعكس نص القالب المعتمد.
+إذا كانت القوالب القديمة محفوظة في Firebase كقيم افتراضية، فقد لا تظهر النصوص الجديدة بمجرد تغيير الافتراضي في الكود.
+```
+
+السبب:
+
+```txt
+ResultCard كان يستخدم labels.shareResult كنص ثابت للزر.
+قوالب التاريخ الافتراضية في toolSettings كانت مختصرة جدًا.
+normalizeShareTemplates كان يحترم القيم المحفوظة دائمًا حتى لو كانت مجرد القوالب الافتراضية القديمة.
+```
+
+الحل:
+
+```txt
+اعتماد نصوص مشاركة افتراضية أجمل لأداة العمر والتحويل والمدة والمواعيد.
+إضافة getShareButtonLabel كدالة مشتركة لاستخراج أول سطر مفيد من نص المشاركة.
+ربط زر مشاركة نتيجة أدوات التاريخ بـ enteredDateInfo.shareButtonLabel.
+تحديث صفحة الساعة لاستخدام getShareButtonLabel المشتركة بدل دالة محلية مكررة.
+إضافة LEGACY_SHARE_TEMPLATES لاستبدال القوالب القديمة فقط إذا كانت ما زالت مطابقة للافتراضي السابق، مع عدم لمس النصوص المخصصة.
+رفع الإصدار إلى 0.2.91 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح قبل رفع الإصدار.
+✅ git diff --check نجح قبل رفع الإصدار.
+✅ npm run build نجح، مع ظهور رسائل fetch failed بسبب تقييد الشبكة داخل بيئة Codex فقط دون كسر البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.91 على Cloudflare Version ID: 82fcc105-f627-4a4a-adbe-bb27dd40acdb.
+✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "share|مشاركة|shareText|handleShare|enteredDateInfo|shareTemplates|ageResult|dateConversionResult|durationResult" app\components\home app\page.jsx app\toolSettings.js app\globals.css
+npm run lint
+npm version 0.2.91 --no-git-tag-version
+git diff --check
+npm run build
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/?v=0.2.91"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/clock?v=0.2.91"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/admin/tool-management/date?v=0.2.91"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/admin/tool-management/clock?v=0.2.91"
+```
+
+الملفات المتأثرة:
+
+```txt
+app/toolSettings.js
+app/page.jsx
+app/components/home/HomeSections.jsx
+app/clock/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7516,6 +7591,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.90 بقوالب مشاركة قابلة للتعديل وإعادة نصيحة الطقس للشكل الأبسط
 ✅ تم نشر الإصدار 0.2.90 على Cloudflare Version ID: 0b3a593e-78cd-45d9-89c5-d343d345a191
 ✅ تم اختبار `/`, `/clock`, `/weather`, و `/admin/tool-management/clock` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.91 واعتماد نصوص مشاركة افتراضية أجمل في أزرار مشاركة نتائج التاريخ
+✅ تم نشر الإصدار 0.2.91 على Cloudflare Version ID: 82fcc105-f627-4a4a-adbe-bb27dd40acdb
+✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج بنجاح
 ```
 
 ---

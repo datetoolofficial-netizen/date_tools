@@ -109,10 +109,10 @@ export const DEFAULT_TOOL_SETTINGS = {
             durationCalc: 'حساب المدة بين تاريخين',
         },
         shareTemplates: {
-            eventsResult: '{title}\n\n{events}\n\n{url}',
-            ageResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
-            dateConversionResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
-            durationResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+            eventsResult: 'هذه مواعيدي القادمة عبر {title}:\n\n{events}\n\n{url}',
+            ageResult: 'استخدمت {toolTitle} لمعرفة عمري بدقة.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
+            dateConversionResult: 'استخدمت {toolTitle} لتحويل التاريخ بدقة.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
+            durationResult: 'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
         },
         faqs: [],
     },
@@ -149,6 +149,15 @@ export const DEFAULT_TOOL_SETTINGS = {
     },
 };
 
+const LEGACY_SHARE_TEMPLATES = {
+    date: {
+        eventsResult: '{title}\n\n{events}\n\n{url}',
+        ageResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+        dateConversionResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+        durationResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+    },
+};
+
 export function normalizeFaqItems(items = []) {
     if (!Array.isArray(items)) return [];
 
@@ -174,12 +183,19 @@ function normalizeSubtools(toolKey, subtools = {}) {
 
 function normalizeShareTemplates(toolKey, shareTemplates = {}) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {};
+    const legacyDefaults = LEGACY_SHARE_TEMPLATES[toolKey] || {};
 
     return Object.fromEntries(
-        Object.entries(defaults).map(([key, fallback]) => [
-            key,
-            String(shareTemplates?.[key] || fallback).trim() || fallback,
-        ])
+        Object.entries(defaults).map(([key, fallback]) => {
+            const storedValue = String(shareTemplates?.[key] || '').trim();
+            const legacyValue = String(legacyDefaults[key] || '').trim();
+            const shouldUseFallback = !storedValue || (legacyValue && storedValue === legacyValue);
+
+            return [
+                key,
+                shouldUseFallback ? fallback : storedValue,
+            ];
+        })
     );
 }
 
@@ -221,4 +237,11 @@ export function renderShareTemplate(settings, templateKey, variables = {}) {
         const value = variables[key];
         return value === undefined || value === null ? '' : String(value);
     }).trim();
+}
+
+export function getShareButtonLabel(text, fallback = 'مشاركة النتيجة') {
+    return String(text || '')
+        .split('\n')
+        .map((line) => line.trim())
+        .find((line) => line && !/^https?:\/\//i.test(line)) || fallback;
 }

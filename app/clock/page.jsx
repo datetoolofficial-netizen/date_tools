@@ -5,7 +5,7 @@ import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
-import { getToolFaqs, getToolSettings, renderShareTemplate } from '../toolSettings';
+import { getShareButtonLabel, getToolFaqs, getToolSettings, renderShareTemplate } from '../toolSettings';
 
 const defaultFromCity = {
     query: 'الرياض',
@@ -114,13 +114,6 @@ function getDifferenceText(diff) {
     if (diff === 0) return 'نفس التوقيت';
 
     return formatHourDifference(diff);
-}
-
-function getShareButtonLabel(text) {
-    return String(text || '')
-        .split('\n')
-        .map((line) => line.trim())
-        .find((line) => line && !line.startsWith('http')) || 'مشاركة النتيجة';
 }
 
 export default function ClockPage() {

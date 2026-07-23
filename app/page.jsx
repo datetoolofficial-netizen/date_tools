@@ -23,7 +23,7 @@ import {
     TodayBanner,
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
-import { getToolFaqs, getToolSettings, renderShareTemplate } from './toolSettings';
+import { getShareButtonLabel, getToolFaqs, getToolSettings, renderShareTemplate } from './toolSettings';
 
 function SkeletonBlock({ className = '' }) {
     return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
@@ -254,7 +254,12 @@ export default function Home() {
             ...shareVariables,
         }) || story.shareText : story.shareText;
 
-        setEnteredDateInfo({ title, info: story.info, shareText });
+        setEnteredDateInfo({
+            title,
+            info: story.info,
+            shareText,
+            shareButtonLabel: getShareButtonLabel(shareText, i18n[lang].shareResult),
+        });
     };
 
     const handleShareResult = async () => {
