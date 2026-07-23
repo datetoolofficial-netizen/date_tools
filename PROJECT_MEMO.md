@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.93.
+الإصدار الحالي للتطبيق هو 0.2.94.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -170,6 +170,7 @@ https://www.date-tool.com
 106. اعتماد نصوص مشاركة افتراضية أجمل في أزرار مشاركة نتائج أدوات التاريخ.
 107. تثبيت تسمية أزرار المشاركة بصريًا مع إبقاء نصوص المشاركة القابلة للتعديل تعمل من إعدادات الأدوات.
 108. تحسين إدارة قوالب المشاركة بعمود إجراءات يحتوي زر تحرير وزر معاينة بالقيم الافتراضية.
+109. إزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل مباشرة داخل نفس الصف أسفل الملخص.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7405,6 +7406,75 @@ PROJECT_MEMO.md
 
 ---
 
+### التحرير المباشر لقوالب المشاركة - الإصدار 0.2.94
+
+الأعراض:
+
+```txt
+واجهة قوالب المشاركة أصبحت أنظف بعد إضافة أزرار القلم والعين، لكن المستخدم أراد الحفاظ على شكل الملخص نفسه.
+لم تعد الحاجة قائمة لزر التحرير أو زر المعاينة إذا أمكن إظهار النص الكامل أسفل الملخص مباشرة.
+```
+
+السبب:
+
+```txt
+الإصدار السابق فصل تحرير نص المشاركة ومعاينته داخل نوافذ مستقلة.
+هذا أضاف خطوة إضافية رغم أن شكل بطاقة الملخص كان مناسبًا للاستخدام المباشر.
+```
+
+الحل:
+
+```txt
+إزالة عمود الإجراءات من جدول قوالب المشاركة.
+إزالة أزرار القلم والعين ونوافذ التحرير والمعاينة المرتبطة بها.
+عرض ملخص نص المشاركة في بطاقة مختصرة.
+عرض مربع النص الكامل القابل للتعديل أسفل الملخص وبنفس روح التنسيق.
+إبقاء زر حفظ نصوص الأداة هو المسؤول عن حفظ التغييرات إلى Firebase.
+رفع الإصدار إلى 0.2.94 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح قبل رفع الإصدار.
+✅ git diff --check نجح قبل رفع الإصدار.
+✅ npm run build نجح، مع ظهور رسائل fetch failed بسبب تقييد الشبكة داخل بيئة Codex فقط دون كسر البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.94 على Cloudflare Version ID: fdf57462-4433-49ca-bf72-d04e72d3125e.
+✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بعد النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "shareModal|openShareModal|closeShareModal|renderSharePreview|SHARE_PREVIEW_VALUES|tool-share-modal|tool-share-actions|tool-share-preview-box" app\admin\tool-management\ToolContentSettings.jsx app\admin\AdminDashboard.css
+npm run lint
+git diff --check
+npm version 0.2.94 --no-git-tag-version
+npm run build
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -I https://date-tool.com/admin/tool-management/date?v=0.2.94
+curl.exe -I https://date-tool.com/admin/tool-management/clock?v=0.2.94
+curl.exe -I https://date-tool.com/?v=0.2.94
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/tool-management/ToolContentSettings.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7741,6 +7811,9 @@ PROJECT_MEMO.md
 ✅ تم اختبار `/`, `/clock`, `/admin/tool-management/date`, و `/admin/tool-management/clock` على الإنتاج بنجاح
 ✅ تم تحديث الإصدار إلى 0.2.93 بتحسين إدارة قوالب المشاركة عبر زر تحرير وزر معاينة
 ✅ تم نشر الإصدار 0.2.93 على Cloudflare Version ID: 1b519750-bb29-4370-ac1c-d541a1cd3337
+✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.94 بإزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل داخل الصف
+✅ تم نشر الإصدار 0.2.94 على Cloudflare Version ID: fdf57462-4433-49ca-bf72-d04e72d3125e
 ✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
 ```
 

@@ -2168,11 +2168,11 @@ body.dark-mode .legacy-admin-shell {
 
 .tool-share-templates-list .tools-table-head,
 .tool-share-template-row {
-    min-width: 920px;
+    min-width: 860px;
     display: grid;
-    grid-template-columns: 190px minmax(250px, 0.85fr) minmax(280px, 1fr) 118px;
+    grid-template-columns: 190px minmax(250px, 0.8fr) minmax(360px, 1.2fr);
     gap: 12px;
-    align-items: center;
+    align-items: start;
 }
 
 .tool-subtools-list .tools-table-head {
@@ -2253,14 +2253,23 @@ body.dark-mode .legacy-admin-shell {
     font-weight: 900;
 }
 
-.tool-share-template-summary {
+.tool-share-template-editor {
+    display: grid;
+    gap: 10px;
+}
+
+.tool-share-template-summary,
+.tool-share-template-full textarea {
     min-height: 74px;
-    display: flex;
-    align-items: center;
     padding: 12px;
     border: 1px solid color-mix(in srgb, var(--tool-color) 14%, var(--border-color));
     border-radius: 14px;
     background: color-mix(in srgb, var(--tool-color) 7%, var(--bg-main));
+}
+
+.tool-share-template-summary {
+    display: flex;
+    align-items: center;
 }
 
 .tool-share-template-summary p {
@@ -2276,60 +2285,32 @@ body.dark-mode .legacy-admin-shell {
     overflow: hidden;
 }
 
-.tool-share-actions {
-    justify-content: center;
-}
-
-.tool-share-actions button[title*="تعديل"] {
-    background: rgba(245, 158, 11, 0.13);
-    color: #d97706;
-    border-color: color-mix(in srgb, #d97706 24%, var(--border-color));
-}
-
-.tool-share-actions button[title*="معاينة"] {
-    background: rgba(14, 165, 233, 0.13);
-    color: #0284c7;
-    border-color: color-mix(in srgb, #0284c7 24%, var(--border-color));
-}
-
-.tool-share-modal textarea {
-    min-height: 260px;
-    resize: vertical;
-}
-
-.tool-share-modal-editor {
-    margin-top: 16px;
-}
-
-.tool-template-vars-modal {
-    margin-top: 14px;
-}
-
-.tool-share-preview-box {
-    margin-top: 16px;
+.tool-share-template-full {
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
-.tool-share-preview-box > span {
+.tool-share-template-full span {
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 900;
 }
 
-.tool-share-preview-box pre {
-    white-space: pre-wrap;
-    margin: 0;
-    min-height: 210px;
-    padding: 18px;
-    border: 1px dashed color-mix(in srgb, var(--tool-color) 28%, var(--border-color));
-    border-radius: 18px;
-    background: color-mix(in srgb, var(--tool-color) 8%, var(--bg-main));
+.tool-share-template-full textarea {
+    width: 100%;
+    min-height: 150px;
     color: var(--text-main);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 800;
-    line-height: 1.9;
+    line-height: 1.7;
+    resize: vertical;
+    outline: none;
+}
+
+.tool-share-template-full textarea:focus {
+    border-color: var(--tool-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tool-color) 16%, transparent);
 }
 
 .tool-faq-admin {
