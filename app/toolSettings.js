@@ -1,5 +1,103 @@
 export const TOOL_SETTING_KEYS = ['date', 'clock', 'weather'];
 
+export const SHARE_TEMPLATE_DEFINITIONS = {
+    date: {
+        eventsResult: {
+            label: 'مشاركة المواعيد',
+            variables: {
+                title: 'عنوان المشاركة',
+                events: 'قائمة المواعيد القادمة',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        ageResult: {
+            label: 'مشاركة نتيجة حساب العمر',
+            variables: {
+                toolTitle: 'اسم الأداة الفرعية',
+                inputLabel: 'وصف المدخلات',
+                input: 'التاريخ المدخل',
+                result: 'نتيجة الحساب',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        dateConversionResult: {
+            label: 'مشاركة نتيجة تحويل التاريخ',
+            variables: {
+                toolTitle: 'اسم الأداة الفرعية',
+                inputLabel: 'وصف المدخلات',
+                input: 'التاريخ المدخل',
+                result: 'نتيجة التحويل',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        durationResult: {
+            label: 'مشاركة نتيجة حساب المدة',
+            variables: {
+                toolTitle: 'اسم الأداة الفرعية',
+                inputLabel: 'وصف المدخلات',
+                input: 'التاريخان المدخلان',
+                result: 'نتيجة حساب المدة',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+    },
+    clock: {
+        timeConverterResult: {
+            label: 'مشاركة نتيجة تحويل الساعة',
+            variables: {
+                input: 'الوقت المدخل بنظام 24 ساعة',
+                inputHour: 'الساعة المدخلة',
+                inputMinute: 'الدقيقة المدخلة',
+                result: 'الوقت الناتج بنظام 12 ساعة',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        timezoneDiffResult: {
+            label: 'مشاركة نتيجة فرق التوقيت',
+            variables: {
+                fromCity: 'المدينة الأولى كما كتبها المستخدم',
+                toCity: 'المدينة الثانية كما كتبها المستخدم',
+                difference: 'فرق التوقيت المختصر',
+                fromTime: 'الساعة الحالية في المدينة الأولى',
+                toTime: 'الساعة الحالية في المدينة الثانية',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+    },
+    weather: {
+        currentWeatherResult: {
+            label: 'مشاركة الطقس الحالي',
+            variables: {
+                city: 'اسم المدينة',
+                temperature: 'درجة الحرارة',
+                condition: 'حالة الطقس',
+                feelsLike: 'درجة الإحساس',
+                humidity: 'الرطوبة',
+                wind: 'سرعة الرياح',
+                rainChance: 'توقع المطر',
+                uv: 'مؤشر UV',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        outdoorAdviceResult: {
+            label: 'مشاركة نصيحة الخروج',
+            variables: {
+                city: 'اسم المدينة',
+                advice: 'نص النصيحة الحالية',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+        forecastResult: {
+            label: 'مشاركة التوقعات',
+            variables: {
+                city: 'اسم المدينة',
+                forecast: 'ملخص التوقعات',
+                url: 'رابط الصفحة الحالي بدون بيانات شخصية',
+            },
+        },
+    },
+};
+
 export const DEFAULT_TOOL_SETTINGS = {
     date: {
         label: 'أداة التاريخ',
@@ -10,6 +108,12 @@ export const DEFAULT_TOOL_SETTINGS = {
             dateConverter: 'تحويل التاريخ',
             durationCalc: 'حساب المدة بين تاريخين',
         },
+        shareTemplates: {
+            eventsResult: '{title}\n\n{events}\n\n{url}',
+            ageResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+            dateConversionResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+            durationResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+        },
         faqs: [],
     },
     clock: {
@@ -19,6 +123,10 @@ export const DEFAULT_TOOL_SETTINGS = {
         subtools: {
             timeConverter: 'تحويل الساعة من 24 إلى 12',
             timezoneDiff: 'فرق التوقيت بين مدينتين',
+        },
+        shareTemplates: {
+            timeConverterResult: 'الساعة {input} تساوي {result} بنظام 12 ساعة\n\n{url}',
+            timezoneDiffResult: 'الفرق بين {fromCity} و{toCity}: {difference}\n\n{url}',
         },
         faqs: [],
     },
@@ -31,6 +139,11 @@ export const DEFAULT_TOOL_SETTINGS = {
             currentWeather: 'الطقس الحالي',
             outdoorAdvice: 'نصيحة الخروج اليوم',
             forecast: 'توقعات 5 أيام',
+        },
+        shareTemplates: {
+            currentWeatherResult: 'الطقس في {city}: {temperature} - {condition}، الإحساس {feelsLike}\n\n{url}',
+            outdoorAdviceResult: 'نصيحة الخروج اليوم في {city}: {advice}\n\n{url}',
+            forecastResult: 'توقعات الطقس في {city}:\n{forecast}\n\n{url}',
         },
         faqs: [],
     },
@@ -59,6 +172,17 @@ function normalizeSubtools(toolKey, subtools = {}) {
     );
 }
 
+function normalizeShareTemplates(toolKey, shareTemplates = {}) {
+    const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {};
+
+    return Object.fromEntries(
+        Object.entries(defaults).map(([key, fallback]) => [
+            key,
+            String(shareTemplates?.[key] || fallback).trim() || fallback,
+        ])
+    );
+}
+
 export function normalizeToolSettings(settings = {}) {
     return Object.fromEntries(
         TOOL_SETTING_KEYS.map((toolKey) => {
@@ -72,6 +196,7 @@ export function normalizeToolSettings(settings = {}) {
                     heroTitle: String(value.heroTitle || defaults.heroTitle).trim() || defaults.heroTitle,
                     heroDescription: String(value.heroDescription || defaults.heroDescription).trim() || defaults.heroDescription,
                     subtools: normalizeSubtools(toolKey, value.subtools),
+                    shareTemplates: normalizeShareTemplates(toolKey, value.shareTemplates),
                     faqs: normalizeFaqItems(value.faqs),
                 },
             ];
@@ -87,4 +212,13 @@ export function getToolSettings(configData, toolKey) {
 export function getToolFaqs(configData, toolKey, defaultFaqs = []) {
     const customFaqs = getToolSettings(configData, toolKey)?.faqs || [];
     return [...defaultFaqs, ...customFaqs];
+}
+
+export function renderShareTemplate(settings, templateKey, variables = {}) {
+    const template = settings?.shareTemplates?.[templateKey] || '';
+
+    return String(template).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => {
+        const value = variables[key];
+        return value === undefined || value === null ? '' : String(value);
+    }).trim();
 }

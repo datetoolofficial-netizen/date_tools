@@ -2147,6 +2147,7 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tool-subtools-list,
+.tool-share-templates-list,
 .tool-faq-list {
     margin-top: 16px;
     display: block;
@@ -2165,6 +2166,15 @@ body.dark-mode .legacy-admin-shell {
     align-items: center;
 }
 
+.tool-share-templates-list .tools-table-head,
+.tool-share-template-row {
+    min-width: 860px;
+    display: grid;
+    grid-template-columns: 190px minmax(260px, 0.85fr) minmax(320px, 1.15fr);
+    gap: 12px;
+    align-items: start;
+}
+
 .tool-subtools-list .tools-table-head {
     padding: 12px 14px;
     background: var(--tool-bg);
@@ -2174,7 +2184,17 @@ body.dark-mode .legacy-admin-shell {
     font-weight: 900;
 }
 
+.tool-share-templates-list .tools-table-head {
+    padding: 12px 14px;
+    background: color-mix(in srgb, var(--tool-color) 12%, var(--bg-container));
+    color: var(--text-main);
+    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
+    font-size: 12px;
+    font-weight: 900;
+}
+
 .tool-subtools-list .tools-item-card,
+.tool-share-templates-list .tools-item-card,
 .tool-faq-list .tool-faq-row {
     border: 0;
     border-radius: 0;
@@ -2184,12 +2204,58 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tool-subtools-list .tools-item-card:last-child,
+.tool-share-templates-list .tools-item-card:last-child,
 .tool-faq-list .tool-faq-row:last-child {
     border-bottom: 0;
 }
 
 .tool-subtools-list .legacy-field label {
     display: none;
+}
+
+.tool-share-key {
+    display: grid;
+    gap: 6px;
+}
+
+.tool-share-key strong {
+    color: var(--tool-color);
+    font-size: 13px;
+}
+
+.tool-share-key small,
+.tool-template-vars small {
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.tool-template-vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tool-template-vars span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--tool-color) 9%, var(--bg-main));
+    border: 1px solid color-mix(in srgb, var(--tool-color) 16%, var(--border-color));
+}
+
+.tool-template-vars code {
+    direction: ltr;
+    color: var(--tool-color);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.tool-share-template-row textarea {
+    min-height: 116px;
+    resize: vertical;
 }
 
 .tool-faq-admin {

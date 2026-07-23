@@ -8,6 +8,7 @@ import {
     buildDateStory,
     buildEventsShareText,
     daysAr,
+    getEventDayText,
     getSeasonKey,
     getTodayInfo,
     i18n,
@@ -22,7 +23,7 @@ import {
     TodayBanner,
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
-import { getToolFaqs, getToolSettings } from './toolSettings';
+import { getToolFaqs, getToolSettings, renderShareTemplate } from './toolSettings';
 
 function SkeletonBlock({ className = '' }) {
     return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
@@ -213,7 +214,13 @@ export default function Home() {
         if (upcomingEvents.length === 0) return;
         
         const labels = i18n[lang] || i18n.ar;
-        const shareBody = buildEventsShareText(lang, upcomingEvents, getSafeCurrentUrl());
+        const eventsText = upcomingEvents.map((event) => `${event.name}: ${getEventDayText(lang, event.days)}`).join('\n');
+        const defaultShareBody = buildEventsShareText(lang, upcomingEvents, getSafeCurrentUrl());
+        const shareBody = renderShareTemplate(dateToolSettings, 'eventsResult', {
+            title: labels.shareEventsTitle,
+            events: eventsText,
+            url: getSafeCurrentUrl(),
+        }) || defaultShareBody;
 
         if (navigator.share) {
             try { await navigator.share({ title: labels.shareEventsTitle, text: shareBody }); } catch (err) {}
@@ -223,11 +230,16 @@ export default function Home() {
         }
     };
 
-    const generateDateStory = (gregDate, title, rawResultText) => {
+    const formatInputDate = (values, suffix = '') => {
+        const text = [values.d, values.m, values.y].filter(Boolean).join('/');
+        return suffix ? `${text} ${suffix}` : text;
+    };
+
+    const generateDateStory = (gregDate, title, rawResultText, shareTemplateKey, shareVariables = {}) => {
         const dName = daysAr[gregDate.getDay()];
         const m = gregDate.getMonth() + 1;
         const isLeap = new Date(gregDate.getFullYear(), 1, 29).getMonth() === 1;
-        const { info, shareText } = buildDateStory(lang, {
+        const story = buildDateStory(lang, {
             dayName: dName,
             seasonKey: getSeasonKey(m),
             isLeap,
@@ -235,7 +247,14 @@ export default function Home() {
             rawResultText,
             url: getSafeCurrentUrl(),
         });
-        setEnteredDateInfo({ title, info, shareText });
+        const shareText = shareTemplateKey ? renderShareTemplate(dateToolSettings, shareTemplateKey, {
+            toolTitle: title,
+            result: rawResultText,
+            url: getSafeCurrentUrl(),
+            ...shareVariables,
+        }) || story.shareText : story.shareText;
+
+        setEnteredDateInfo({ title, info: story.info, shareText });
     };
 
     const handleShareResult = async () => {
@@ -287,7 +306,11 @@ export default function Home() {
         const durationStr = formatDuration(diff.years, diff.months, diff.days);
         
         setResAgeGreg(`${i18n[lang].resAge} <br><span style="color:inherit;">${durationStr}</span>`);
-        generateDateStory(birthDate, i18n[lang].storyAgeGreg, durationStr);
+        generateDateStory(birthDate, i18n[lang].storyAgeGreg, durationStr, 'ageResult', {
+            toolTitle: dateToolSettings.subtools?.ageCalc,
+            inputLabel: i18n[lang].lblBirth,
+            input: formatInputDate(gAgeInput, i18n[lang].gregorianSuffix.trim()),
+        });
         firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
@@ -309,7 +332,11 @@ export default function Home() {
         setResAgeHijri(`${i18n[lang].resAgeH} <br><span style="color:inherit;">${durationStr}</span>`);
         
         const gregEquivalent = hijriToGregorian(bYear, bMonth, bDay);
-        generateDateStory(gregEquivalent, i18n[lang].storyAgeHijri, durationStr);
+        generateDateStory(gregEquivalent, i18n[lang].storyAgeHijri, durationStr, 'ageResult', {
+            toolTitle: dateToolSettings.subtools?.ageCalc,
+            inputLabel: i18n[lang].lblBirth,
+            input: formatInputDate(hAgeInput, 'هـ'),
+        });
         firebaseApiRef.current.trackToolUsage('ageCalc');
     };
 
@@ -323,7 +350,11 @@ export default function Home() {
         const hDate = new Intl.DateTimeFormat(locale, options).format(gDate);
         
         setResHijriConv(`${i18n[lang].resG2H} <br><span style="color:inherit;">${hDate}</span>`);
-        generateDateStory(gDate, i18n[lang].storyGregToHijri, hDate);
+        generateDateStory(gDate, i18n[lang].storyGregToHijri, hDate, 'dateConversionResult', {
+            toolTitle: dateToolSettings.subtools?.dateConverter,
+            inputLabel: i18n[lang].lblGreg,
+            input: formatInputDate(gConvInput, i18n[lang].gregorianSuffix.trim()),
+        });
         firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 
@@ -339,7 +370,11 @@ export default function Home() {
         const finalRes = `${gDateFormatted}${suffix}`;
         
         setResGregConv(`${i18n[lang].resH2G} <br><span style="color:inherit;">${finalRes}</span>`);
-        generateDateStory(gDateObj, i18n[lang].storyHijriToGreg, finalRes);
+        generateDateStory(gDateObj, i18n[lang].storyHijriToGreg, finalRes, 'dateConversionResult', {
+            toolTitle: dateToolSettings.subtools?.dateConverter,
+            inputLabel: i18n[lang].lblHijri,
+            input: formatInputDate(hConvInput, 'هـ'),
+        });
         firebaseApiRef.current.trackToolUsage('dateConverter');
     };
 

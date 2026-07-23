@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.89.
+الإصدار الحالي للتطبيق هو 0.2.90.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -166,6 +166,7 @@ https://www.date-tool.com
 102. فصل نطاق سنوات أدوات التاريخ، وتحويل فرق التوقيت إلى بحث مدن، وتوحيد نمط أدوات الساعة مع أدوات التاريخ.
 103. تعبئة حقول التاريخ بتاريخ اليوم عند أول تفاعل، وتوحيد عناوين أدوات الساعة، وتحسين بطاقة نصيحة الطقس.
 104. تحسين بطاقات أدوات الساعة لتطابق نمط أدوات التاريخ، واختصار نتيجة فرق التوقيت.
+105. إضافة قوالب مشاركة قابلة للتعديل من إدارة الأدوات، وإعادة بطاقة نصيحة الطقس للشكل الأبسط.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7105,6 +7106,88 @@ PROJECT_MEMO.md
 
 ---
 
+### قوالب مشاركة الأدوات وإعادة نصيحة الطقس - الإصدار 0.2.90
+
+الأعراض:
+
+```txt
+بطاقة نصيحة الخروج في صفحة الطقس أصبحت تحتوي صندوقًا داخليًا داكنًا لا يتناسق مع الشكل المطلوب.
+نص زر/مشاركة تحويل الساعة كان عامًا ولا يوضح أن الوقت المدخل يساوي النتيجة بنظام 12 ساعة.
+نص مشاركة فرق التوقيت لم يكن قابلًا للتخصيص من لوحة الإدارة.
+إدارة محتوى الأدوات لا تعرض جدولًا واضحًا لمعرفات متغيرات المشاركة مثل المدخلات والنتيجة والمدينة.
+```
+
+السبب:
+
+```txt
+تمت إضافة تنسيق خاص لـ advice-card p في CSS أضاف خلفية داخلية منفصلة.
+نصوص المشاركة كانت ثابتة داخل صفحات الواجهة بدل أن تأتي من إعدادات toolSettings.
+normalizeToolSettings لم يكن يحفظ أو يطبّع قوالب مشاركة لكل أداة.
+```
+
+الحل:
+
+```txt
+إزالة التنسيق الداخلي الخاص بنص بطاقة نصيحة الطقس وإرجاعها للنص المباشر داخل الكرت.
+إضافة shareTemplates و SHARE_TEMPLATE_DEFINITIONS إلى app/toolSettings.js لكل من التاريخ والساعة والطقس.
+إضافة renderShareTemplate لاستبدال المتغيرات الآمنة مثل {input} و {result} و {fromCity} و {toCity}.
+إضافة جدول إدارة قوالب المشاركة داخل /admin/tool-management/* يعرض معرف المشاركة والمتغيرات المتاحة وحقل نص المشاركة.
+ربط مشاركة المواعيد ونتائج أدوات التاريخ بقوالب إدارة أداة التاريخ.
+ربط مشاركة تحويل الساعة وفرق التوقيت بقوالب إدارة أداة الساعة، مع عرض نص الزر كجملة مفيدة.
+رفع الإصدار إلى 0.2.90 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح قبل رفع الإصدار.
+✅ git diff --check نجح قبل رفع الإصدار.
+✅ npm run build نجح، مع ظهور رسائل fetch failed بسبب تقييد الشبكة داخل بيئة Codex فقط دون كسر البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.90 على Cloudflare Version ID: 0b3a593e-78cd-45d9-89c5-d343d345a191.
+✅ تم اختبار `/`, `/clock`, `/weather`, و `/admin/tool-management/clock` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "share|مشاركة|settings|toolSettings|subtools|faq|events|advice|نصيحة|tool-result|timezone|ClockPage|WeatherPage|Date" app
+rg -n "admin.*tool|Tool|tools|إدارة الأدوات|toolSettings|subtools|faq|events|share|مشاركة" app\admin app\components app
+node -e "const fs=require('fs'); const s=fs.readFileSync('app/toolSettings.js','utf8'); console.log(s.slice(0,1800));"
+git show HEAD~1:app/globals.css
+git show HEAD~2:app/globals.css
+npm run lint
+git diff --check
+npm version 0.2.90 --no-git-tag-version
+npm run build
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/?v=0.2.90"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/clock?v=0.2.90"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/weather?v=0.2.90"
+curl.exe -s -o NUL -w "%{http_code}" "https://date-tool.com/admin/tool-management/clock?v=0.2.90"
+```
+
+الملفات المتأثرة:
+
+```txt
+app/toolSettings.js
+app/admin/tool-management/ToolContentSettings.jsx
+app/admin/AdminDashboard.css
+app/clock/page.jsx
+app/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7430,6 +7513,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.89 بتحسين بطاقات أدوات الساعة واختصار نتيجة فرق التوقيت
 ✅ تم نشر الإصدار 0.2.89 على Cloudflare Version ID: 98781a64-b9b0-4cd7-9a5a-89575d081f2f
 ✅ تم اختبار `/clock` و `/` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.90 بقوالب مشاركة قابلة للتعديل وإعادة نصيحة الطقس للشكل الأبسط
+✅ تم نشر الإصدار 0.2.90 على Cloudflare Version ID: 0b3a593e-78cd-45d9-89c5-d343d345a191
+✅ تم اختبار `/`, `/clock`, `/weather`, و `/admin/tool-management/clock` على الإنتاج بنجاح
 ```
 
 ---

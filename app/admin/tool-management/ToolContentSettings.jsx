@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings } from '../../toolSettings';
+import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 
 function cloneToolSettings(value) {
     return JSON.parse(JSON.stringify(value));
@@ -51,6 +51,16 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             ...current,
             subtools: {
                 ...(current.subtools || {}),
+                [key]: value,
+            },
+        }));
+    };
+
+    const updateShareTemplate = (key, value) => {
+        setSettings((current) => ({
+            ...current,
+            shareTemplates: {
+                ...(current.shareTemplates || {}),
                 [key]: value,
             },
         }));
@@ -154,6 +164,38 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         <div className="legacy-field">
                             <label>{fallback}</label>
                             <input value={settings.subtools?.[key] || ''} onChange={(event) => updateSubtool(key, event.target.value)} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="tools-list tool-share-templates-list">
+                <div className="tools-table-head">
+                    <span>معرف المشاركة</span>
+                    <span>المتغيرات المتاحة</span>
+                    <span>نص المشاركة</span>
+                </div>
+                {Object.entries(SHARE_TEMPLATE_DEFINITIONS[toolKey] || {}).map(([key, definition]) => (
+                    <div className="tools-item-card compact tool-share-template-row" key={key}>
+                        <div className="tool-share-key">
+                            <strong dir="ltr">{key}</strong>
+                            <small>{definition.label}</small>
+                        </div>
+                        <div className="tool-template-vars">
+                            {Object.entries(definition.variables || {}).map(([variable, description]) => (
+                                <span key={variable} title={description}>
+                                    <code>{`{${variable}}`}</code>
+                                    <small>{description}</small>
+                                </span>
+                            ))}
+                        </div>
+                        <div className="legacy-field">
+                            <label>{definition.label}</label>
+                            <textarea
+                                rows={4}
+                                value={settings.shareTemplates?.[key] || ''}
+                                onChange={(event) => updateShareTemplate(key, event.target.value)}
+                            />
                         </div>
                     </div>
                 ))}
