@@ -3,8 +3,47 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 
+const SHARE_PREVIEW_VALUES = {
+    title: 'مواعيدي القادمة',
+    events: 'الراتب: متبقي 5 أيام\nحساب المواطن: متبقي 12 يوم',
+    toolTitle: 'احسب عمرك بدقة',
+    inputLabel: 'التاريخ المستخدم',
+    input: '23 يوليو 2017',
+    result: '9 سنوات',
+    inputHour: '13',
+    inputMinute: '30',
+    fromCity: 'الرياض',
+    toCity: 'لندن',
+    difference: 'ساعتين',
+    fromTime: '13:30',
+    toTime: '11:30',
+    city: 'الرياض',
+    temperature: '32°',
+    condition: 'سماء صافية',
+    feelsLike: '34°',
+    humidity: '22%',
+    wind: '14 كم/س',
+    rainChance: '0%',
+    uv: '6',
+    advice: 'الأجواء مناسبة للخروج مع تجنب شمس الظهيرة.',
+    forecast: 'اليوم: 32° / 24° - صافي\nغدًا: 31° / 23° - غائم جزئيًا',
+    url: 'https://date-tool.com',
+};
+
 function cloneToolSettings(value) {
     return JSON.parse(JSON.stringify(value));
+}
+
+function renderSharePreview(template = '') {
+    return String(template || '').replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => {
+        const value = SHARE_PREVIEW_VALUES[key];
+        return value === undefined || value === null ? `{${key}}` : String(value);
+    }).trim();
+}
+
+function getTemplateSummary(template = '') {
+    const cleaned = String(template || '').replace(/\s+/g, ' ').trim();
+    return cleaned || 'لا يوجد نص بعد. اضغط القلم لإضافة نص المشاركة.';
 }
 
 export default function ToolContentSettings({ firebaseApi, showMessage, toolKey }) {
@@ -12,6 +51,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     const [settings, setSettings] = useState(() => cloneToolSettings(defaults));
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [shareModal, setShareModal] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -64,6 +104,14 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 [key]: value,
             },
         }));
+    };
+
+    const openShareModal = (mode, key) => {
+        setShareModal({ mode, key });
+    };
+
+    const closeShareModal = () => {
+        setShareModal(null);
     };
 
     const updateFaq = (index, field, value) => {
@@ -125,6 +173,10 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         );
     }
 
+    const activeShareDefinition = shareModal ? SHARE_TEMPLATE_DEFINITIONS[toolKey]?.[shareModal.key] : null;
+    const activeShareTemplate = shareModal ? settings.shareTemplates?.[shareModal.key] || '' : '';
+    const activeSharePreview = renderSharePreview(activeShareTemplate);
+
     return (
         <section className="legacy-google-card tools-section-card tool-content-settings">
             <div className="tools-section-head">
@@ -173,7 +225,8 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 <div className="tools-table-head">
                     <span>معرف المشاركة</span>
                     <span>المتغيرات المتاحة</span>
-                    <span>نص المشاركة</span>
+                    <span>ملخص النص</span>
+                    <span>الإجراءات</span>
                 </div>
                 {Object.entries(SHARE_TEMPLATE_DEFINITIONS[toolKey] || {}).map(([key, definition]) => (
                     <div className="tools-item-card compact tool-share-template-row" key={key}>
@@ -189,17 +242,75 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                                 </span>
                             ))}
                         </div>
-                        <div className="legacy-field">
-                            <label>{definition.label}</label>
-                            <textarea
-                                rows={4}
-                                value={settings.shareTemplates?.[key] || ''}
-                                onChange={(event) => updateShareTemplate(key, event.target.value)}
-                            />
+                        <div className="tool-share-template-summary">
+                            <p>{getTemplateSummary(settings.shareTemplates?.[key])}</p>
+                        </div>
+                        <div className="tools-item-actions tool-share-actions">
+                            <button type="button" onClick={() => openShareModal('edit', key)} title="تعديل نص المشاركة">
+                                <i className="fa-solid fa-pen"></i>
+                            </button>
+                            <button type="button" onClick={() => openShareModal('preview', key)} title="معاينة الرسالة بقيم افتراضية">
+                                <i className="fa-solid fa-eye"></i>
+                            </button>
                         </div>
                     </div>
                 ))}
             </div>
+
+            {shareModal && activeShareDefinition && (
+                <div className="legacy-modal-backdrop" onClick={closeShareModal}>
+                    <div className="legacy-modal-card tool-share-modal" onClick={(event) => event.stopPropagation()}>
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3>{shareModal.mode === 'edit' ? 'تعديل نص المشاركة' : 'معاينة رسالة المشاركة'}</h3>
+                                <p>{activeShareDefinition.label}</p>
+                            </div>
+                            <button type="button" onClick={closeShareModal} aria-label="إغلاق النافذة">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        {shareModal.mode === 'edit' ? (
+                            <>
+                                <label className="legacy-field tool-share-modal-editor">
+                                    <span>نص المشاركة</span>
+                                    <textarea
+                                        rows={10}
+                                        value={activeShareTemplate}
+                                        onChange={(event) => updateShareTemplate(shareModal.key, event.target.value)}
+                                        placeholder="اكتب نص المشاركة واستخدم المتغيرات مثل {result} و {url}"
+                                    />
+                                </label>
+                                <div className="tool-template-vars tool-template-vars-modal">
+                                    {Object.entries(activeShareDefinition.variables || {}).map(([variable, description]) => (
+                                        <span key={variable} title={description}>
+                                            <code>{`{${variable}}`}</code>
+                                            <small>{description}</small>
+                                        </span>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="tool-share-preview-box">
+                                <span>معاينة بقيم افتراضية</span>
+                                <pre>{activeSharePreview || 'لا يوجد نص للمعاينة بعد.'}</pre>
+                            </div>
+                        )}
+
+                        <div className="legacy-modal-actions">
+                            {shareModal.mode === 'edit' && (
+                                <button type="button" className="legacy-secondary-btn" onClick={() => openShareModal('preview', shareModal.key)}>
+                                    <i className="fa-solid fa-eye"></i>
+                                    معاينة الرسالة
+                                </button>
+                            )}
+                            <button type="button" className="legacy-primary-btn" onClick={closeShareModal}>
+                                {shareModal.mode === 'edit' ? 'تم' : 'إغلاق'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="tool-faq-admin">
                 <div className="tools-section-head compact-head">
