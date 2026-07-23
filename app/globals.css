@@ -665,6 +665,58 @@
             font-size: 20px;
         }
 
+        .time-converter-card .tool-widget-title,
+        .timezone-diff-card .tool-widget-title {
+            justify-content: center;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .time-converter-card .tool-widget-title::before,
+        .time-converter-card .tool-widget-title::after,
+        .timezone-diff-card .tool-widget-title::before,
+        .timezone-diff-card .tool-widget-title::after {
+            content: "";
+            height: 1px;
+            flex: 1;
+            background: var(--border-color);
+        }
+
+        .time-converter-card .tool-widget-title i,
+        .timezone-diff-card .tool-widget-title i {
+            display: none;
+        }
+
+        .time-converter-card .tool-widget-title h3,
+        .timezone-diff-card .tool-widget-title h3 {
+            max-width: 68%;
+            color: var(--text-main);
+            font-size: 20px;
+            line-height: 1.35;
+            font-weight: 950;
+        }
+
+        .advice-card {
+            gap: 14px;
+            text-align: center;
+            align-content: start;
+        }
+
+        .advice-card .tool-widget-title {
+            justify-content: center;
+        }
+
+        .advice-card p {
+            margin: 0;
+            padding: 16px;
+            border-radius: 14px;
+            background: var(--input-bg);
+            color: var(--text-sub);
+            font-size: 15px;
+            font-weight: 800;
+            line-height: 1.85;
+        }
+
         .tool-widget input,
         .tool-widget select,
         .weather-search input {
@@ -3080,6 +3132,23 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
 
     .timezone-result span {
         font-size: 12px;
+    }
+
+    .time-converter-card .tool-widget-title,
+    .timezone-diff-card .tool-widget-title {
+        gap: 8px;
+    }
+
+    .time-converter-card .tool-widget-title h3,
+    .timezone-diff-card .tool-widget-title h3 {
+        max-width: 72%;
+        font-size: 17px;
+    }
+
+    .advice-card p {
+        padding: 12px;
+        font-size: 12.5px;
+        line-height: 1.75;
     }
 
     .site-page-content > .card {

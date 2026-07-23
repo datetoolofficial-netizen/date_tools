@@ -391,7 +391,8 @@ export default function Home() {
 
     const todayForYearOptions = new Date();
     const currentGregorianYear = todayForYearOptions.getFullYear();
-    const currentHijriYear = getHijriParts(todayForYearOptions).y;
+    const currentHijriParts = getHijriParts(todayForYearOptions);
+    const currentHijriYear = currentHijriParts.y;
     const maxSupportedGregorianYear = 2100;
     const maxSupportedHijriYear = getHijriParts(new Date(maxSupportedGregorianYear, 11, 31)).y;
 
@@ -408,6 +409,16 @@ export default function Home() {
         gregConvYears: makeYears(maxSupportedGregorianYear, 1900),
         hijriAgeYears: makeYears(currentHijriYear, 1300),
         hijriToolYears: makeYears(maxSupportedHijriYear, 1300),
+        todayGregorian: {
+            d: String(todayForYearOptions.getDate()),
+            m: String(todayForYearOptions.getMonth() + 1).padStart(2, '0'),
+            y: String(currentGregorianYear),
+        },
+        todayHijri: {
+            d: String(currentHijriParts.d),
+            m: String(currentHijriParts.m),
+            y: String(currentHijriYear),
+        },
     };
 
     const homeValues = {

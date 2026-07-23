@@ -96,9 +96,23 @@ export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
     );
 }
 
-function DateDropdowns({ values, onChange, dayMax, months, years, labels }) {
+function DateDropdowns({ values, onChange, dayMax, months, years, labels, defaultValues }) {
+    const fillMissingDate = () => {
+        if (!defaultValues) return;
+
+        const nextValues = {
+            d: values.d || defaultValues.d,
+            m: values.m || defaultValues.m,
+            y: values.y || defaultValues.y,
+        };
+
+        if (nextValues.d !== values.d || nextValues.m !== values.m || nextValues.y !== values.y) {
+            onChange(nextValues);
+        }
+    };
+
     return (
-        <div className="date-dropdowns">
+        <div className="date-dropdowns" onFocusCapture={fillMissingDate} onPointerDownCapture={fillMissingDate}>
             <select
                 value={values.d}
                 onChange={(e) => onChange({ ...values, d: e.target.value })}
@@ -206,6 +220,7 @@ export function AgeCalculatorSection({
                         months={options.gregMonths}
                         years={options.gregAgeYears}
                         labels={labels}
+                        defaultValues={options.todayGregorian}
                     />
                     <button className="action-btn" onClick={actions.calculateAgeGreg}>
                         <i className="fa-solid fa-calculator"></i> <span>{labels.btnCalc}</span>
@@ -221,6 +236,7 @@ export function AgeCalculatorSection({
                         months={options.hijriMonths}
                         years={options.hijriAgeYears}
                         labels={labels}
+                        defaultValues={options.todayHijri}
                     />
                     <button className="action-btn" onClick={actions.calculateAgeHijri}>
                         <i className="fa-solid fa-calculator"></i> <span>{labels.btnCalc}</span>
@@ -258,7 +274,7 @@ export function DateConversionSection({
                 {isGregorian ? (
                     <>
                     <label>{labels.lblGreg}</label>
-                    <DateDropdowns values={values.gConvInput} onChange={setters.setGConvInput} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} />
+                    <DateDropdowns values={values.gConvInput} onChange={setters.setGConvInput} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} defaultValues={options.todayGregorian} />
                     <button className="action-btn" onClick={actions.convertGregToHijri}>
                         <i className="fa-solid fa-rotate"></i> <span>{labels.btnG2H}</span>
                     </button>
@@ -266,7 +282,7 @@ export function DateConversionSection({
                 ) : (
                     <>
                     <label>{labels.lblHijri}</label>
-                    <DateDropdowns values={values.hConvInput} onChange={setters.setHConvInput} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
+                    <DateDropdowns values={values.hConvInput} onChange={setters.setHConvInput} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} defaultValues={options.todayHijri} />
                     <button className="action-btn" onClick={actions.convertHijriToGreg}>
                         <i className="fa-solid fa-rotate"></i> <span>{labels.btnH2G}</span>
                     </button>
@@ -303,9 +319,9 @@ export function DurationSection({
                 {isGregorian ? (
                     <>
                     <label>{labels.lblDate1}</label>
-                    <DateDropdowns values={values.gDiffInput1} onChange={setters.setGDiffInput1} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} />
+                    <DateDropdowns values={values.gDiffInput1} onChange={setters.setGDiffInput1} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} defaultValues={options.todayGregorian} />
                     <label>{labels.lblDate2}</label>
-                    <DateDropdowns values={values.gDiffInput2} onChange={setters.setGDiffInput2} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} />
+                    <DateDropdowns values={values.gDiffInput2} onChange={setters.setGDiffInput2} dayMax={31} months={options.gregMonths} years={options.gregConvYears} labels={labels} defaultValues={options.todayGregorian} />
                     <button className="action-btn" onClick={actions.calcDiffGreg}>
                         <i className="fa-solid fa-clock-rotate-left"></i> <span>{labels.btnDiff}</span>
                     </button>
@@ -313,9 +329,9 @@ export function DurationSection({
                 ) : (
                     <>
                     <label>{labels.lblDate1}</label>
-                    <DateDropdowns values={values.hDiffInput1} onChange={setters.setHDiffInput1} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
+                    <DateDropdowns values={values.hDiffInput1} onChange={setters.setHDiffInput1} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} defaultValues={options.todayHijri} />
                     <label>{labels.lblDate2}</label>
-                    <DateDropdowns values={values.hDiffInput2} onChange={setters.setHDiffInput2} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
+                    <DateDropdowns values={values.hDiffInput2} onChange={setters.setHDiffInput2} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} defaultValues={options.todayHijri} />
                     <button className="action-btn" onClick={actions.calcDiffHijri}>
                         <i className="fa-solid fa-clock-rotate-left"></i> <span>{labels.btnDiff}</span>
                     </button>

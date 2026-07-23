@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.87.
+الإصدار الحالي للتطبيق هو 0.2.88.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -164,6 +164,7 @@ https://www.date-tool.com
 100. تحسين شكل تنبيه تثبيت الأداة وحقل رفع صورة التواصل على الجوال.
 101. ترتيب إشعارات التثبيت والكوكيز داخل مكدس واحد وتحديث كاش أيقونة تطبيق PWA.
 102. فصل نطاق سنوات أدوات التاريخ، وتحويل فرق التوقيت إلى بحث مدن، وتوحيد نمط أدوات الساعة مع أدوات التاريخ.
+103. تعبئة حقول التاريخ بتاريخ اليوم عند أول تفاعل، وتوحيد عناوين أدوات الساعة، وتحسين بطاقة نصيحة الطقس.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6950,6 +6951,81 @@ PROJECT_MEMO.md
 
 ---
 
+### تعبئة تاريخ اليوم وتوحيد عناوين الساعة - الإصدار 0.2.88
+
+الأعراض:
+
+```txt
+حقول التاريخ كانت تظهر placeholders فقط حتى يختار المستخدم اليوم والشهر والسنة يدويًا، مما يجعل الأدوات أقل وضوحًا عند أول استخدام.
+عناوين أدوات الساعة كانت تظهر بأيقونة جانبية مختلفة عن عناوين أدوات التاريخ.
+بطاقة نصيحة الطقس اليومية كانت تحتاج فصل النص داخل مساحة أكثر وضوحًا وتناسقًا.
+```
+
+السبب:
+
+```txt
+DateDropdowns لم يكن يملك قيمة افتراضية لتاريخ اليوم عند أول تفاعل.
+عناوين بطاقات الساعة كانت تعتمد نمط .tool-widget-title العام بدل نمط h2 المستخدم في أدوات التاريخ.
+نص بطاقة النصيحة كان نصًا مباشرًا داخل البطاقة بدون حاوية داخلية شبيهة بخلفية أدوات الإدخال.
+```
+
+الحل:
+
+```txt
+إضافة defaultValues إلى DateDropdowns وتعبئة الحقول الفارغة بتاريخ اليوم عند أول focus أو pointer down فقط.
+تمرير تاريخ اليوم الميلادي والهجري من app/page.jsx إلى كل أدوات التاريخ.
+توحيد عنواني time-converter-card و timezone-diff-card مع عناوين أدوات التاريخ بخطين جانبيين وإخفاء أيقونة العنوان.
+تحسين .advice-card بإضافة خلفية داخلية للنص وتخفيف حجم الخط على الجوال.
+رفع الإصدار إلى 0.2.88 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed أثناء البناء المحلي بسبب تقييد الشبكة في بيئة Codex فقط، لكن البناء اكتمل بنجاح.
+⚠️ npm run deploy رفع Worker والأصول، ثم أرجع Cloudflare API خطأ 503 في خطوة subdomain بعد الرفع.
+✅ تم التأكد أن الإنتاج يعرض الإصدار 0.2.88 بعد النشر.
+✅ تم نشر الإصدار 0.2.88 على Cloudflare Version ID: b929c5ce-7106-424b-8dc6-6d4952b31073.
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+git status --short
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+rg -n "function DateDropdowns|DateDropdowns|tool-widget-title|advice-card|time-select-grid|timezone-search-grid|action-btn|tool-mode-card" app\components\home\HomeSections.jsx app\page.jsx app\clock\page.jsx app\weather\page.jsx app\globals.css
+npm run lint
+git diff --check
+npm version 0.2.88 --no-git-tag-version
+npm run build
+npm run deploy
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/?v=0.2.88
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/clock?v=0.2.88
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/weather?v=0.2.88
+npx wrangler versions list
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/home/HomeSections.jsx
+app/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7268,6 +7344,9 @@ PROJECT_MEMO.md
 ✅ تم اختبار الصفحة الرئيسية والـ manifest على الإنتاج بنجاح
 ✅ تم تحديث الإصدار إلى 0.2.87 بدعم مستقبل أدوات التاريخ وتحويل فرق التوقيت إلى بحث مدن
 ✅ تم نشر الإصدار 0.2.87 على Cloudflare Version ID: a5ff65a1-ce70-427a-944b-15e3fa6e243c
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.88 بتعبئة تاريخ اليوم عند أول تفاعل وتوحيد عناوين أدوات الساعة
+✅ تم نشر الإصدار 0.2.88 على Cloudflare Version ID: b929c5ce-7106-424b-8dc6-6d4952b31073
 ✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
 ```
 
