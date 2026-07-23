@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.94.
+الإصدار الحالي للتطبيق هو 0.2.95.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -171,6 +171,7 @@ https://www.date-tool.com
 107. تثبيت تسمية أزرار المشاركة بصريًا مع إبقاء نصوص المشاركة القابلة للتعديل تعمل من إعدادات الأدوات.
 108. تحسين إدارة قوالب المشاركة بعمود إجراءات يحتوي زر تحرير وزر معاينة بالقيم الافتراضية.
 109. إزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل مباشرة داخل نفس الصف أسفل الملخص.
+110. جعل ملخص قوالب المشاركة يعرض معاينة بالقيم الافتراضية مع إبقاء النص الكامل قابلًا للتعديل.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7475,6 +7476,75 @@ PROJECT_MEMO.md
 
 ---
 
+### معاينة قوالب المشاركة بالقيم الافتراضية - الإصدار 0.2.95
+
+الأعراض:
+
+```txt
+بطاقة ملخص قالب المشاركة داخل `/admin/tool-management/date` كانت تعرض المتغيرات الخام مثل `{toolTitle}` و `{result}`.
+المستخدم أراد أن تعرض البطاقة معاينة مفهومة بالقيم الافتراضية، مع إبقاء مربع النص الكامل كما هو قابلًا للتعديل.
+```
+
+السبب:
+
+```txt
+بعد إزالة أزرار المعاينة في الإصدار السابق أصبحت دالة الملخص تستخدم نص القالب الخام مباشرة بدل تمريره على محرك استبدال المتغيرات.
+```
+
+الحل:
+
+```txt
+إعادة دالة معاينة داخلية آمنة بقيم افتراضية فقط دون إرجاع أزرار القلم/العين أو النوافذ.
+ربط بطاقة الملخص بدالة المعاينة حتى تظهر الرسالة كما ستبدو تقريبًا عند المشاركة.
+إبقاء textarea يعرض النص الأصلي بالمتغيرات حتى يبقى قابلًا للتعديل والحفظ.
+دعم فواصل الأسطر داخل بطاقة الملخص مع الحفاظ على الاختصار البصري.
+رفع الإصدار إلى 0.2.95 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ npm run lint نجح.
+✅ npm run build نجح، مع ظهور رسائل fetch failed بسبب تقييد الشبكة داخل بيئة Codex فقط دون كسر البناء.
+✅ npm run deploy نجح.
+✅ تم نشر الإصدار 0.2.95 على Cloudflare Version ID: 41c3c5b5-825b-4da5-b082-dfc9290d45f4.
+✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بعد النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw AGENTS.md
+Get-Content -Raw PROJECT_MEMO.md
+Get-Content -Raw app\admin\tool-management\ToolContentSettings.jsx
+Get-Content -Raw app\admin\AdminDashboard.css
+Get-Content -Raw app\toolSettings.js
+git status --short
+rg -n "tool-share-template|tool-template-vars" app\admin\AdminDashboard.css app\admin\tool-management\ToolContentSettings.jsx
+npm run lint
+npm version 0.2.95 --no-git-tag-version
+npm run build
+Get-Content -Raw C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -I https://date-tool.com/admin/tool-management/date?v=0.2.95
+curl.exe -I https://date-tool.com/admin/tool-management/clock?v=0.2.95
+curl.exe -I https://date-tool.com/?v=0.2.95
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/tool-management/ToolContentSettings.jsx
+app/admin/AdminDashboard.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7814,6 +7884,9 @@ PROJECT_MEMO.md
 ✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
 ✅ تم تحديث الإصدار إلى 0.2.94 بإزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل داخل الصف
 ✅ تم نشر الإصدار 0.2.94 على Cloudflare Version ID: fdf57462-4433-49ca-bf72-d04e72d3125e
+✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.95 بجعل ملخص قوالب المشاركة يعرض معاينة بالقيم الافتراضية
+✅ تم نشر الإصدار 0.2.95 على Cloudflare Version ID: 41c3c5b5-825b-4da5-b082-dfc9290d45f4
 ✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
 ```
 

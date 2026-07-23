@@ -3,13 +3,47 @@
 import { useEffect, useState } from 'react';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 
+const SHARE_PREVIEW_VALUES = {
+    title: 'مواعيدي القادمة',
+    events: 'الراتب: متبقي 5 أيام\nحساب المواطن: متبقي 12 يوم',
+    toolTitle: 'احسب عمرك بدقة',
+    inputLabel: 'التاريخ المستخدم',
+    input: '23 يوليو 2017',
+    result: '9 سنوات',
+    inputHour: '13',
+    inputMinute: '30',
+    fromCity: 'الرياض',
+    toCity: 'لندن',
+    difference: 'ساعتين',
+    fromTime: '13:30',
+    toTime: '11:30',
+    city: 'الرياض',
+    temperature: '32°',
+    condition: 'سماء صافية',
+    feelsLike: '34°',
+    humidity: '22%',
+    wind: '14 كم/س',
+    rainChance: '0%',
+    uv: '6',
+    advice: 'الأجواء مناسبة للخروج مع تجنب شمس الظهيرة.',
+    forecast: 'اليوم: 32° / 24° - صافي\nغدًا: 31° / 23° - غائم جزئيًا',
+    url: 'https://date-tool.com',
+};
+
 function cloneToolSettings(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
+function renderSharePreview(template = '') {
+    return String(template || '').replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => {
+        const value = SHARE_PREVIEW_VALUES[key];
+        return value === undefined || value === null ? `{${key}}` : String(value);
+    }).trim();
+}
+
 function getTemplateSummary(template = '') {
-    const cleaned = String(template || '').replace(/\s+/g, ' ').trim();
-    return cleaned || 'لا يوجد نص بعد. اكتب نص المشاركة الكامل في المربع أدناه.';
+    const preview = renderSharePreview(template);
+    return preview || 'لا يوجد نص بعد. اكتب نص المشاركة الكامل في المربع أدناه.';
 }
 
 export default function ToolContentSettings({ firebaseApi, showMessage, toolKey }) {
