@@ -768,6 +768,9 @@
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
+            padding: 16px;
+            border-radius: 14px;
+            background: var(--input-bg);
         }
 
         .time-select-grid label {
@@ -778,6 +781,28 @@
             font-weight: 900;
         }
 
+        .timezone-search-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 16px;
+            border-radius: 14px;
+            background: var(--input-bg);
+        }
+
+        .timezone-search-field {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+            color: var(--text-sub);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .timezone-search-field span {
+            color: var(--text-sub);
+        }
+
         .time-select-grid select {
             direction: ltr;
             text-align: center;
@@ -786,6 +811,27 @@
             font-size: clamp(20px, 5vw, 28px);
             font-weight: 950;
             font-variant-numeric: tabular-nums;
+        }
+
+        .time-select-grid select,
+        .timezone-search-grid input {
+            background-color: color-mix(in srgb, var(--bg-card) 86%, var(--primary) 8%);
+        }
+
+        .timezone-result {
+            display: grid;
+            gap: 8px;
+            line-height: 1.7;
+        }
+
+        .timezone-result strong,
+        .timezone-result span {
+            display: block;
+        }
+
+        .timezone-result span {
+            color: var(--result-text);
+            font-size: 0.92rem;
         }
 
         .public-ad-link {
@@ -1881,6 +1927,12 @@
         button.action-btn:active {
             transform: translateY(0);
             box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
+        }
+        button.action-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.72;
+            transform: none;
+            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.12);
         }
         body.dark-mode button.action-btn { color: #0f172a; }
         button.action-btn i { margin: 0; }
@@ -2988,6 +3040,46 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
     .tool-mode-card {
         padding: 18px;
         border-radius: 18px;
+    }
+
+    .tool-widget {
+        padding: 18px;
+        border-radius: 18px;
+        gap: 13px;
+        min-height: auto;
+    }
+
+    .time-select-grid,
+    .timezone-search-grid {
+        padding: 12px;
+        border-radius: 15px;
+        gap: 9px;
+    }
+
+    .timezone-search-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timezone-search-field {
+        gap: 6px;
+        font-size: 12.5px;
+    }
+
+    .time-select-grid select,
+    .timezone-search-grid input {
+        min-height: 42px;
+        border-radius: 10px;
+        font-size: 12px;
+    }
+
+    .timezone-result {
+        gap: 6px;
+        padding: 12px;
+        font-size: 12.5px;
+    }
+
+    .timezone-result span {
+        font-size: 12px;
     }
 
     .site-page-content > .card {

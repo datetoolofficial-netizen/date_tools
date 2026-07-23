@@ -6,15 +6,19 @@ import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings } from '../toolSettings';
 
-const cities = [
-    { name: 'الرياض', zone: 'Asia/Riyadh' },
-    { name: 'مكة', zone: 'Asia/Riyadh' },
-    { name: 'دبي', zone: 'Asia/Dubai' },
-    { name: 'القاهرة', zone: 'Africa/Cairo' },
-    { name: 'لندن', zone: 'Europe/London' },
-    { name: 'نيويورك', zone: 'America/New_York' },
-    { name: 'طوكيو', zone: 'Asia/Tokyo' },
-];
+const defaultFromCity = {
+    query: 'الرياض',
+    label: 'الرياض',
+    zone: 'Asia/Riyadh',
+    resolvedQuery: 'الرياض',
+};
+
+const defaultToCity = {
+    query: 'لندن',
+    label: 'لندن',
+    zone: 'Europe/London',
+    resolvedQuery: 'لندن',
+};
 
 const clockFaq = [
     {
@@ -57,6 +61,47 @@ function getOffsetHours(zone, date) {
     return hours + (hours >= 0 ? minutes : -minutes);
 }
 
+function getCityLabel(place) {
+    return [place.name, place.admin1, place.country].filter(Boolean).join('، ');
+}
+
+async function searchCityTimezone(query) {
+    const cleanQuery = String(query || '').trim();
+    if (!cleanQuery) throw new Error('empty_city');
+
+    const params = new URLSearchParams({
+        name: cleanQuery,
+        count: '1',
+        language: 'ar',
+        format: 'json',
+    });
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params.toString()}`);
+    const data = await response.json();
+    const place = data.results?.[0];
+
+    if (!response.ok || !place?.timezone) throw new Error('city_not_found');
+
+    return {
+        query: cleanQuery,
+        resolvedQuery: cleanQuery,
+        label: getCityLabel(place),
+        zone: place.timezone,
+    };
+}
+
+async function resolveCityInput(city) {
+    const cleanQuery = String(city.query || '').trim();
+    if (city.zone && city.resolvedQuery === cleanQuery) return city;
+    return searchCityTimezone(cleanQuery);
+}
+
+function getDifferenceText(diff, fromCity, toCity) {
+    if (diff === 0) return 'نفس التوقيت';
+
+    const absDiff = Math.abs(diff);
+    return `${toCity.label} ${diff > 0 ? 'أمام' : 'خلف'} ${fromCity.label} بـ ${absDiff} ساعة`;
+}
+
 export default function ClockPage() {
     const {
         configData,
@@ -68,11 +113,13 @@ export default function ClockPage() {
     const [inputMinute, setInputMinute] = useState('30');
     const [convertedTime, setConvertedTime] = useState('');
     const [cityZone, setCityZone] = useState('Asia/Riyadh');
-    const [fromZone, setFromZone] = useState('Asia/Riyadh');
-    const [toZone, setToZone] = useState('Europe/London');
-    const [locationLabel, setLocationLabel] = useState('الرياض');
+    const [fromCity, setFromCity] = useState(defaultFromCity);
+    const [toCity, setToCity] = useState(defaultToCity);
+    const [locationLabel, setLocationLabel] = useState(defaultFromCity.label);
     const [clockHour12, setClockHour12] = useState(false);
-    const [timezoneDiff, setTimezoneDiff] = useState('');
+    const [timezoneDiff, setTimezoneDiff] = useState(null);
+    const [timezoneSearchStatus, setTimezoneSearchStatus] = useState('idle');
+    const [timezoneSearchError, setTimezoneSearchError] = useState('');
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
@@ -82,10 +129,17 @@ export default function ClockPage() {
 
     useEffect(() => {
         if (!currentLocation) return;
+        const label = currentLocation.label || 'موقعك الحالي';
+
         setCityZone(currentLocation.timezone);
-        setFromZone(currentLocation.timezone);
-        setLocationLabel(currentLocation.label || 'موقعك الحالي');
-        setTimezoneDiff('');
+        setFromCity({
+            query: label,
+            label,
+            zone: currentLocation.timezone,
+            resolvedQuery: label,
+        });
+        setLocationLabel(label);
+        setTimezoneDiff(null);
     }, [currentLocation]);
 
     const previewTime = useMemo(() => {
@@ -104,10 +158,44 @@ export default function ClockPage() {
         firebaseApiRef.current.trackToolUsage('clockTools');
     };
 
-    const calculateTimezoneDiff = () => {
-        const diff = Math.round((getOffsetHours(toZone, now) - getOffsetHours(fromZone, now)) * 10) / 10;
-        setTimezoneDiff(diff === 0 ? 'نفس الوقت' : `${Math.abs(diff)} ساعة ${diff > 0 ? 'أمام' : 'خلف'}`);
-        firebaseApiRef.current.trackToolUsage('clockTools');
+    const updateCityQuery = (setter, value) => {
+        setter((current) => ({
+            ...current,
+            query: value,
+            label: '',
+            zone: '',
+            resolvedQuery: '',
+        }));
+        setTimezoneDiff(null);
+        setTimezoneSearchError('');
+    };
+
+    const calculateTimezoneDiff = async () => {
+        setTimezoneSearchStatus('loading');
+        setTimezoneSearchError('');
+        setTimezoneDiff(null);
+
+        try {
+            const [nextFromCity, nextToCity] = await Promise.all([
+                resolveCityInput(fromCity),
+                resolveCityInput(toCity),
+            ]);
+            const diff = Math.round((getOffsetHours(nextToCity.zone, now) - getOffsetHours(nextFromCity.zone, now)) * 10) / 10;
+
+            setFromCity(nextFromCity);
+            setToCity(nextToCity);
+            setTimezoneDiff({
+                diff,
+                text: getDifferenceText(diff, nextFromCity, nextToCity),
+                fromCity: nextFromCity,
+                toCity: nextToCity,
+            });
+            firebaseApiRef.current.trackToolUsage('clockTools');
+        } catch {
+            setTimezoneSearchError('تعذر العثور على إحدى المدينتين. جرّب كتابة اسم المدينة بالعربية أو الإنجليزية.');
+        } finally {
+            setTimezoneSearchStatus('idle');
+        }
     };
 
     const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
@@ -183,36 +271,45 @@ export default function ClockPage() {
 
             <PublicAdSlot configData={configData} slotName="clockMiddle" label="إعلان وسط الساعة" />
 
-            <article className="tool-widget">
+            <article className="tool-widget timezone-diff-card">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-code-compare"></i>
                     <h3>{clockSettings.subtools?.timezoneDiff}</h3>
                 </div>
-                <div className="tool-grid two-columns compact">
-                    <select
-                        value={fromZone}
-                        onChange={(event) => { setFromZone(event.target.value); setTimezoneDiff(''); }}
-                        aria-label="مدينة البداية"
-                        title="مدينة البداية"
-                    >
-                        {cities.map((city) => <option key={`${city.name}-${city.zone}-from`} value={city.zone}>{city.name}</option>)}
-                        {currentLocation?.timezone && (
-                            <option value={currentLocation.timezone}>{currentLocation.label || 'موقعك الحالي'}</option>
-                        )}
-                    </select>
-                    <select
-                        value={toZone}
-                        onChange={(event) => { setToZone(event.target.value); setTimezoneDiff(''); }}
-                        aria-label="مدينة المقارنة"
-                        title="مدينة المقارنة"
-                    >
-                        {cities.map((city) => <option key={`${city.name}-${city.zone}-to`} value={city.zone}>{city.name}</option>)}
-                    </select>
+                <div className="timezone-search-grid">
+                    <label className="timezone-search-field">
+                        <span>المدينة الأولى</span>
+                        <input
+                            value={fromCity.query}
+                            onChange={(event) => updateCityQuery(setFromCity, event.target.value)}
+                            placeholder="مثال: الرياض"
+                            aria-label="ابحث عن المدينة الأولى"
+                            title="ابحث عن المدينة الأولى"
+                        />
+                    </label>
+                    <label className="timezone-search-field">
+                        <span>المدينة الثانية</span>
+                        <input
+                            value={toCity.query}
+                            onChange={(event) => updateCityQuery(setToCity, event.target.value)}
+                            placeholder="مثال: لندن"
+                            aria-label="ابحث عن المدينة الثانية"
+                            title="ابحث عن المدينة الثانية"
+                        />
+                    </label>
                 </div>
-                <button className="action-btn" type="button" onClick={calculateTimezoneDiff}>
-                    <i className="fa-solid fa-code-compare"></i> <span>احسب</span>
+                <button className="action-btn" type="button" onClick={calculateTimezoneDiff} disabled={timezoneSearchStatus === 'loading'}>
+                    <i className={timezoneSearchStatus === 'loading' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-code-compare'}></i>
+                    <span>{timezoneSearchStatus === 'loading' ? 'جاري الحساب...' : 'احسب'}</span>
                 </button>
-                {timezoneDiff && <div className="tool-result">فرق التوقيت: {timezoneDiff}</div>}
+                {timezoneSearchError && <p className="inline-error">{timezoneSearchError}</p>}
+                {timezoneDiff && (
+                    <div className="tool-result timezone-result">
+                        <strong>فرق التوقيت: {timezoneDiff.text}</strong>
+                        <span>{timezoneDiff.fromCity.label}: الساعة الآن {formatTime(now, timezoneDiff.fromCity.zone, clockHour12)}</span>
+                        <span>{timezoneDiff.toCity.label}: الساعة الآن {formatTime(now, timezoneDiff.toCity.zone, clockHour12)}</span>
+                    </div>
+                )}
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />

@@ -266,7 +266,7 @@ export function DateConversionSection({
                 ) : (
                     <>
                     <label>{labels.lblHijri}</label>
-                    <DateDropdowns values={values.hConvInput} onChange={setters.setHConvInput} dayMax={30} months={options.hijriMonths} years={options.hijriAgeYears} labels={labels} />
+                    <DateDropdowns values={values.hConvInput} onChange={setters.setHConvInput} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
                     <button className="action-btn" onClick={actions.convertHijriToGreg}>
                         <i className="fa-solid fa-rotate"></i> <span>{labels.btnH2G}</span>
                     </button>
@@ -313,9 +313,9 @@ export function DurationSection({
                 ) : (
                     <>
                     <label>{labels.lblDate1}</label>
-                    <DateDropdowns values={values.hDiffInput1} onChange={setters.setHDiffInput1} dayMax={30} months={options.hijriMonths} years={options.hijriAgeYears} labels={labels} />
+                    <DateDropdowns values={values.hDiffInput1} onChange={setters.setHDiffInput1} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
                     <label>{labels.lblDate2}</label>
-                    <DateDropdowns values={values.hDiffInput2} onChange={setters.setHDiffInput2} dayMax={30} months={options.hijriMonths} years={options.hijriAgeYears} labels={labels} />
+                    <DateDropdowns values={values.hDiffInput2} onChange={setters.setHDiffInput2} dayMax={30} months={options.hijriMonths} years={options.hijriToolYears} labels={labels} />
                     <button className="action-btn" onClick={actions.calcDiffHijri}>
                         <i className="fa-solid fa-clock-rotate-left"></i> <span>{labels.btnDiff}</span>
                     </button>

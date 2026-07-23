@@ -389,6 +389,12 @@ export default function Home() {
         return years;
     };
 
+    const todayForYearOptions = new Date();
+    const currentGregorianYear = todayForYearOptions.getFullYear();
+    const currentHijriYear = getHijriParts(todayForYearOptions).y;
+    const maxSupportedGregorianYear = 2100;
+    const maxSupportedHijriYear = getHijriParts(new Date(maxSupportedGregorianYear, 11, 31)).y;
+
     const homeOptions = {
         gregMonths: monthNames[lang].greg.map((label, index) => ({
             label,
@@ -398,9 +404,10 @@ export default function Home() {
             label,
             value: index + 1,
         })),
-        gregAgeYears: makeYears(2026, 1900),
-        gregConvYears: makeYears(2026, 1900),
-        hijriAgeYears: makeYears(1447, 1300),
+        gregAgeYears: makeYears(currentGregorianYear, 1900),
+        gregConvYears: makeYears(maxSupportedGregorianYear, 1900),
+        hijriAgeYears: makeYears(currentHijriYear, 1300),
+        hijriToolYears: makeYears(maxSupportedHijriYear, 1300),
     };
 
     const homeValues = {

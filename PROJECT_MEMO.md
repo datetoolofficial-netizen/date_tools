@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.86.
+الإصدار الحالي للتطبيق هو 0.2.87.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -163,6 +163,7 @@ https://www.date-tool.com
 99. توحيد أحجام وهوية أزرار الإجراءات في أدوات التاريخ والساعة والطقس.
 100. تحسين شكل تنبيه تثبيت الأداة وحقل رفع صورة التواصل على الجوال.
 101. ترتيب إشعارات التثبيت والكوكيز داخل مكدس واحد وتحديث كاش أيقونة تطبيق PWA.
+102. فصل نطاق سنوات أدوات التاريخ، وتحويل فرق التوقيت إلى بحث مدن، وتوحيد نمط أدوات الساعة مع أدوات التاريخ.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -6873,6 +6874,82 @@ PROJECT_MEMO.md
 
 ---
 
+### دعم التواريخ المستقبلية وبحث فرق التوقيت - الإصدار 0.2.87
+
+الأعراض:
+
+```txt
+أداتا تحويل التاريخ وحساب المدة كانتا تستخدمان نطاق سنوات قريب من نطاق حاسبة العمر، لذلك لم يكن اختيار السنوات المستقبلية متاحًا كما يجب.
+أداة فرق التوقيت بين مدينتين كانت تعتمد على قائمة مدن ثابتة بدل البحث عن مدينة مثل صفحة الطقس.
+نتيجة فرق التوقيت لم تكن تعرض الوقت الحالي للمدينة الأولى والثانية بعد الحساب.
+حقول أدوات الساعة كانت تحتاج توحيدًا أوضح مع خلفية ومقاسات أدوات التاريخ.
+```
+
+السبب:
+
+```txt
+نطاق سنوات أدوات التاريخ كان مشتركًا جزئيًا بين حاسبة العمر وأدوات التحويل/المدة.
+أداة فرق التوقيت كانت مبنية على zone select ثابت بدل جلب المنطقة الزمنية من نتيجة بحث المدينة.
+تنسيق حقول الساعة لم يكن يملك حاوية داخلية بنفس فكرة tool-mode-card في أدوات التاريخ.
+```
+
+الحل:
+
+```txt
+فصل سنوات حاسبة العمر عن سنوات أدوات التحويل وحساب المدة.
+إبقاء حاسبة العمر حتى السنة الحالية فقط، وجعل التحويل والمدة يدعمان المستقبل حتى 2100 ميلادي وما يقابله هجريًا.
+تحويل فرق التوقيت إلى حقلي بحث عن المدن باستخدام Open-Meteo Geocoding من المتصفح بدون مفاتيح سرية.
+عرض فرق التوقيت مع الوقت الحالي لكل مدينة في النتيجة.
+إضافة تنسيق مشترك لحاويات اختيار الساعة وبحث المدن ونتيجة فرق التوقيت لتقترب من شكل أدوات التاريخ.
+رفع الإصدار إلى 0.2.87 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch failed أثناء البناء المحلي بسبب تقييد الشبكة في بيئة Codex فقط، لكن البناء اكتمل بنجاح.
+✅ تم نشر الإصدار 0.2.87 على Cloudflare Version ID: a5ff65a1-ce70-427a-944b-15e3fa6e243c.
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج ورجعت HTTP 200.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw AGENTS.md
+Get-Content -Raw PROJECT_MEMO.md
+git status --short
+rg -n "gregAgeYears|gregConvYears|hijriAgeYears|hijriToolYears|makeYears|maxSupported" app\page.jsx app\components\home\HomeSections.jsx
+rg -n "defaultFromCity|searchCityTimezone|timezoneSearch|timezone-search|calculateTimezoneDiff|timezoneDiff|time-select-grid|tool-widget" app\clock\page.jsx app\globals.css
+npm version 0.2.87 --no-git-tag-version
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/?v=0.2.87
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/clock?v=0.2.87
+curl.exe -s -o NUL -w "%{http_code}" https://date-tool.com/weather?v=0.2.87
+```
+
+الملفات المتأثرة:
+
+```txt
+app/page.jsx
+app/components/home/HomeSections.jsx
+app/clock/page.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7189,6 +7266,9 @@ PROJECT_MEMO.md
 ✅ تم تحديث الإصدار إلى 0.2.86 وترتيب إشعارات التثبيت والكوكيز داخل مكدس واحد
 ✅ تم نشر الإصدار 0.2.86 على Cloudflare Version ID: c4e3c36e-c039-49b2-ab2e-1b18b0c2f98d
 ✅ تم اختبار الصفحة الرئيسية والـ manifest على الإنتاج بنجاح
+✅ تم تحديث الإصدار إلى 0.2.87 بدعم مستقبل أدوات التاريخ وتحويل فرق التوقيت إلى بحث مدن
+✅ تم نشر الإصدار 0.2.87 على Cloudflare Version ID: a5ff65a1-ce70-427a-944b-15e3fa6e243c
+✅ تم اختبار `/`, `/clock`, و `/weather` على الإنتاج بنجاح
 ```
 
 ---
