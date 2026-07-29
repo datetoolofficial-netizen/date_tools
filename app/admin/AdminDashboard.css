@@ -156,11 +156,40 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-nav-links {
     list-style: none;
-    padding: 0;
+    padding: 8px 0 14px 4px;
     margin: 0;
     flex-grow: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(96, 165, 250, 0.55) rgba(15, 23, 42, 0.08);
+}
+
+.legacy-admin-shell,
+.legacy-admin-shell * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(96, 165, 250, 0.55) rgba(15, 23, 42, 0.08);
+}
+
+.legacy-admin-shell ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.legacy-admin-shell ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+}
+
+.legacy-admin-shell ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(96, 165, 250, 0.85), rgba(59, 130, 246, 0.55));
+    border: 2px solid rgba(15, 23, 42, 0.12);
+    border-radius: 999px;
+}
+
+.legacy-admin-shell ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(147, 197, 253, 0.95), rgba(59, 130, 246, 0.78));
 }
 
 .legacy-nav-links li {
@@ -1426,6 +1455,20 @@ body.dark-mode .legacy-admin-shell {
     line-height: 1.3;
 }
 
+.ad-settings-switch-copy .switch-current-value {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary-color) 11%, transparent);
+    color: var(--primary-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .ad-settings-switch.google.active {
     border-color: rgba(66, 133, 244, 0.4);
     background: linear-gradient(135deg, rgba(66, 133, 244, 0.16), rgba(52, 168, 83, 0.08));
@@ -1757,9 +1800,211 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .tools-section-card#pwa-install-settings,
-.tools-pwa-settings-card {
+.tools-pwa-settings-card,
+.identity-pwa-settings-card {
     --tool-color: #8b5cf6;
     --tool-bg: rgba(139, 92, 246, 0.14);
+}
+
+.identity-pwa-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.identity-pwa-controls {
+    display: grid;
+    gap: 14px;
+}
+
+.legacy-form-grid.no-top-margin {
+    margin-top: 0;
+}
+
+.identity-pwa-preview-card {
+    position: sticky;
+    top: 96px;
+    display: grid;
+    gap: 14px;
+}
+
+.identity-pwa-phone,
+.identity-pwa-shortcuts-preview {
+    border: 1px solid color-mix(in srgb, var(--tool-color, #8b5cf6) 20%, var(--border-color));
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--tool-color, #8b5cf6) 18%, transparent), transparent 34%),
+        var(--bg-container);
+    padding: 18px;
+}
+
+.identity-pwa-phone {
+    text-align: center;
+}
+
+.identity-pwa-phone-label {
+    display: inline-flex;
+    margin-bottom: 12px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.identity-pwa-app-icon {
+    width: 86px;
+    height: 86px;
+    margin: 0 auto 12px;
+    border-radius: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--tool-color, #8b5cf6) 14%, var(--bg-body));
+    border: 1px solid color-mix(in srgb, var(--tool-color, #8b5cf6) 24%, var(--border-color));
+    color: var(--tool-color, #8b5cf6);
+    font-size: 32px;
+}
+
+.identity-pwa-app-icon img,
+.pwa-shortcut-admin-preview img,
+.identity-pwa-shortcut img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 8px;
+}
+
+.identity-pwa-phone strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.identity-pwa-phone p {
+    margin: 6px 0 14px;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.identity-pwa-phone button {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #60a5fa, #6366f1);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 950;
+}
+
+.pwa-shortcut-admin-list {
+    display: grid;
+    gap: 10px;
+}
+
+.pwa-shortcut-admin-row {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--bg-container);
+}
+
+.pwa-shortcut-admin-preview,
+.identity-pwa-shortcut span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--tool-color, #8b5cf6) 22%, var(--border-color));
+    background: color-mix(in srgb, var(--tool-color, #8b5cf6) 10%, var(--bg-body));
+    color: var(--tool-color, #8b5cf6);
+}
+
+.pwa-shortcut-admin-preview {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+}
+
+.pwa-shortcut-admin-row strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 950;
+}
+
+.pwa-shortcut-admin-row small {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pwa-shortcut-upload {
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px dashed color-mix(in srgb, var(--tool-color, #8b5cf6) 36%, var(--border-color));
+    border-radius: 12px;
+    color: var(--tool-color, #8b5cf6);
+    background: color-mix(in srgb, var(--tool-color, #8b5cf6) 9%, transparent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.pwa-shortcut-upload input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.identity-pwa-shortcuts-preview {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.identity-pwa-shortcuts-preview > strong {
+    grid-column: 1 / -1;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 950;
+    text-align: center;
+}
+
+.identity-pwa-shortcut {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+}
+
+.identity-pwa-shortcut span {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+}
+
+.identity-pwa-shortcut small {
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 900;
 }
 
 .pwa-reshow-row {
@@ -2159,20 +2404,20 @@ body.dark-mode .legacy-admin-shell {
 
 .tool-subtools-list .tools-table-head,
 .tool-subtools-list .tools-item-card {
-    min-width: 620px;
+    min-width: 560px;
     display: grid;
-    grid-template-columns: 180px minmax(260px, 1fr);
+    grid-template-columns: minmax(150px, 0.65fr) minmax(260px, 1.35fr);
     gap: 12px;
     align-items: center;
 }
 
 .tool-share-templates-list .tools-table-head,
 .tool-share-template-row {
-    min-width: 860px;
+    min-width: 700px;
     display: grid;
-    grid-template-columns: 190px minmax(250px, 0.8fr) minmax(360px, 1.2fr);
+    grid-template-columns: minmax(150px, 0.7fr) minmax(320px, 1.4fr) 146px;
     gap: 12px;
-    align-items: start;
+    align-items: center;
 }
 
 .tool-subtools-list .tools-table-head {
@@ -2216,11 +2461,13 @@ body.dark-mode .legacy-admin-shell {
 .tool-share-key {
     display: grid;
     gap: 6px;
+    align-content: center;
 }
 
 .tool-share-key strong {
-    color: var(--tool-color);
-    font-size: 13px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 950;
 }
 
 .tool-share-key small,
@@ -2234,6 +2481,10 @@ body.dark-mode .legacy-admin-shell {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.tool-template-vars.in-modal {
+    margin: 12px 0 16px;
 }
 
 .tool-template-vars span {
@@ -2270,6 +2521,19 @@ body.dark-mode .legacy-admin-shell {
 .tool-share-template-summary {
     display: flex;
     align-items: center;
+}
+
+.tool-share-template-summary.full-preview {
+    min-height: 180px;
+    align-items: flex-start;
+}
+
+.tool-share-template-summary.full-preview p {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    display: block;
+    overflow: visible;
+    color: var(--text-main);
 }
 
 .tool-share-template-summary p {
@@ -2312,6 +2576,14 @@ body.dark-mode .legacy-admin-shell {
 .tool-share-template-full textarea:focus {
     border-color: var(--tool-color);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--tool-color) 16%, transparent);
+}
+
+.tool-share-actions {
+    justify-content: center;
+}
+
+.tool-share-modal {
+    width: min(760px, 100%);
 }
 
 .tool-faq-admin {
@@ -2445,11 +2717,13 @@ body.dark-mode .legacy-admin-shell {
     gap: 8px;
     align-items: center;
     justify-content: flex-end;
+    flex-flow: row nowrap;
+    white-space: nowrap;
 }
 
 .tools-item-actions.stacked {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
 }
 
 .tools-item-actions button {
@@ -2463,6 +2737,13 @@ body.dark-mode .legacy-admin-shell {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
+}
+
+.tools-item-actions button.approve {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border-color: color-mix(in srgb, var(--success-text) 28%, var(--border-color));
 }
 
 .tools-item-actions button.danger {
@@ -3126,6 +3407,11 @@ body.dark-mode .legacy-admin-shell {
     font-size: 11px;
 }
 
+.admin-shell-footer {
+    margin-top: 18px;
+    padding-inline: 4px;
+}
+
 .legacy-sidebar-overlay {
     display: none;
     position: fixed;
@@ -3266,11 +3552,13 @@ body.dark-mode .legacy-admin-shell {
         padding: 24px;
     }
 
-    .legacy-identity-layout {
+    .legacy-identity-layout,
+    .identity-pwa-grid {
         grid-template-columns: 1fr;
     }
 
-    .legacy-identity-preview-card {
+    .legacy-identity-preview-card,
+    .identity-pwa-preview-card {
         position: static;
     }
 
@@ -3500,7 +3788,7 @@ body.dark-mode .legacy-admin-shell {
     .tools-item-actions.stacked {
         flex-direction: row;
         justify-content: flex-start;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
     }
 }
 

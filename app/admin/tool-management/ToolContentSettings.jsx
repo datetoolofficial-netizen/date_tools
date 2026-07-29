@@ -46,11 +46,19 @@ function getTemplateSummary(template = '') {
     return preview || 'لا يوجد نص بعد. اكتب نص المشاركة الكامل في المربع أدناه.';
 }
 
+function getSharePlaceLabel(label = '') {
+    return String(label || '')
+        .replace(/^مشاركة\s+/, '')
+        .replace(/^نتيجة\s+/, '')
+        .trim() || 'نص مشاركة';
+}
+
 export default function ToolContentSettings({ firebaseApi, showMessage, toolKey }) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey];
     const [settings, setSettings] = useState(() => cloneToolSettings(defaults));
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [shareModal, setShareModal] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -100,6 +108,16 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             ...current,
             shareTemplates: {
                 ...(current.shareTemplates || {}),
+                [key]: value,
+            },
+        }));
+    };
+
+    const updateShareEnabled = (key, value) => {
+        setSettings((current) => ({
+            ...current,
+            shareEnabled: {
+                ...(current.shareEnabled || {}),
                 [key]: value,
             },
         }));
@@ -210,41 +228,99 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
             <div className="tools-list tool-share-templates-list">
                 <div className="tools-table-head">
-                    <span>معرف المشاركة</span>
-                    <span>المتغيرات المتاحة</span>
-                    <span>نص المشاركة</span>
+                    <span>مكان المشاركة</span>
+                    <span>النص الحالي</span>
+                    <span>الإجراءات</span>
                 </div>
                 {Object.entries(SHARE_TEMPLATE_DEFINITIONS[toolKey] || {}).map(([key, definition]) => (
                     <div className="tools-item-card compact tool-share-template-row" key={key}>
                         <div className="tool-share-key">
-                            <strong dir="ltr">{key}</strong>
-                            <small>{definition.label}</small>
+                            <strong>{getSharePlaceLabel(definition.label)}</strong>
+                            <small>{settings.shareEnabled?.[key] === false ? 'زر المشاركة متوقف' : 'زر المشاركة مفعل'}</small>
                         </div>
-                        <div className="tool-template-vars">
-                            {Object.entries(definition.variables || {}).map(([variable, description]) => (
+                        <div className="tool-share-template-editor">
+                            <div className="tool-share-template-summary">
+                                <p>{getTemplateSummary(settings.shareTemplates?.[key])}</p>
+                            </div>
+                        </div>
+                        <div className="tools-item-actions tool-share-actions">
+                            <button
+                                type="button"
+                                className={settings.shareEnabled?.[key] === false ? 'danger' : 'approve'}
+                                onClick={() => updateShareEnabled(key, settings.shareEnabled?.[key] === false)}
+                                title={settings.shareEnabled?.[key] === false ? 'تفعيل زر المشاركة' : 'إيقاف زر المشاركة'}
+                            >
+                                <i className={`fa-solid ${settings.shareEnabled?.[key] === false ? 'fa-toggle-off' : 'fa-toggle-on'}`}></i>
+                            </button>
+                            <button
+                                type="button"
+                                title="تعديل نص المشاركة"
+                                onClick={() => setShareModal({ mode: 'edit', key, definition })}
+                            >
+                                <i className="fa-solid fa-pen"></i>
+                            </button>
+                            <button
+                                type="button"
+                                title="عرض نص المشاركة"
+                                onClick={() => setShareModal({ mode: 'view', key, definition })}
+                            >
+                                <i className="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {shareModal && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
+                    <div className="legacy-modal-card tool-share-modal">
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3>{shareModal.mode === 'edit' ? 'تعديل نص المشاركة' : 'معاينة نص المشاركة'}</h3>
+                                <p>{getSharePlaceLabel(shareModal.definition.label)}</p>
+                            </div>
+                            <button type="button" onClick={() => setShareModal(null)} aria-label="إغلاق">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div className="tool-template-vars in-modal">
+                            {Object.entries(shareModal.definition.variables || {}).map(([variable, description]) => (
                                 <span key={variable} title={description}>
                                     <code>{`{${variable}}`}</code>
                                     <small>{description}</small>
                                 </span>
                             ))}
                         </div>
-                        <div className="tool-share-template-editor">
-                            <div className="tool-share-template-summary">
-                                <p>{getTemplateSummary(settings.shareTemplates?.[key])}</p>
-                            </div>
+
+                        {shareModal.mode === 'edit' && (
                             <label className="legacy-field tool-share-template-full">
                                 <span>النص الكامل القابل للتعديل</span>
                                 <textarea
-                                    rows={6}
-                                    value={settings.shareTemplates?.[key] || ''}
-                                    onChange={(event) => updateShareTemplate(key, event.target.value)}
+                                    rows={8}
+                                    value={settings.shareTemplates?.[shareModal.key] || ''}
+                                    onChange={(event) => updateShareTemplate(shareModal.key, event.target.value)}
                                     placeholder="اكتب نص المشاركة واستخدم المتغيرات مثل {result} و {url}"
                                 />
                             </label>
+                        )}
+
+                        <div className="tool-share-template-full">
+                            <span>المعاينة بنتائج افتراضية</span>
+                            <div className="tool-share-template-summary full-preview">
+                                <p>{getTemplateSummary(settings.shareTemplates?.[shareModal.key])}</p>
+                            </div>
+                        </div>
+
+                        <div className="legacy-modal-actions">
+                            <button type="button" className="legacy-primary-btn" onClick={() => setShareModal(null)}>
+                                <i className="fa-solid fa-check"></i>
+                                تم
+                            </button>
                         </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            )}
 
             <div className="tool-faq-admin">
                 <div className="tools-section-head compact-head">

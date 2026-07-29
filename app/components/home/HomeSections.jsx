@@ -43,7 +43,7 @@ export function TodayBanner({ lang, todayInfo }) {
     );
 }
 
-export function EventsSection({ lang, upcomingEvents, onShare }) {
+export function EventsSection({ lang, upcomingEvents, onShare, canShare = true }) {
     if (lang !== 'ar' || upcomingEvents.length === 0) return null;
     const labels = i18n[lang] || i18n.ar;
 
@@ -53,9 +53,11 @@ export function EventsSection({ lang, upcomingEvents, onShare }) {
                 <h3 className="section-header-title">
                     <i className="fa-solid fa-bolt" style={{ color: '#f59e0b' }}></i> {labels.eventsTitle}
                 </h3>
-                <button className="share-events-btn" onClick={onShare}>
-                    <i className="fa-solid fa-share-nodes"></i> {labels.shareEvents}
-                </button>
+                {canShare && (
+                    <button className="share-events-btn" onClick={onShare}>
+                        <i className="fa-solid fa-share-nodes"></i> {labels.shareEvents}
+                    </button>
+                )}
             </div>
             <div className="events-grid">
                 {upcomingEvents.map((evt, idx) => (
@@ -87,9 +89,11 @@ export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
                         <span style={{ fontWeight: 'bold' }}>{labels.dateInfo}</span>
                         <p>{enteredDateInfo.info}</p>
                     </div>
-                    <button className="share-btn" onClick={onShare}>
-                        <i className="fa-solid fa-share-nodes"></i> {labels.shareResult}
-                    </button>
+                    {enteredDateInfo.canShare !== false && (
+                        <button className="share-btn" onClick={onShare}>
+                            <i className="fa-solid fa-share-nodes"></i> {labels.shareResult}
+                        </button>
+                    )}
                 </div>
             )}
         </div>

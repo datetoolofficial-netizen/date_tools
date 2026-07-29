@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings, resolveLinkPreview } from '../../linkPreview';
+import { ADMIN_VERSION } from '../../version';
 import '../AdminDashboard.css';
 
 const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
@@ -27,6 +28,9 @@ const IDENTITY_FIELDS = [
     'logoUrl',
     'faviconUrl',
     'appIconUrl',
+    'pwaShortcutDateIconUrl',
+    'pwaShortcutClockIconUrl',
+    'pwaShortcutWeatherIconUrl',
     'copyrightName',
     'copyrightText',
 ];
@@ -39,11 +43,29 @@ const EMPTY_IDENTITY = {
     logoUrl: '',
     faviconUrl: '',
     appIconUrl: '',
+    pwaShortcutDateIconUrl: '',
+    pwaShortcutClockIconUrl: '',
+    pwaShortcutWeatherIconUrl: '',
     copyrightName: '',
     copyrightText: '',
     mainSEO: {},
     linkPreview: DEFAULT_LINK_PREVIEW,
+    pwaInstallPrompt: {
+        enabled: true,
+        text: 'ثبّت الأداة على جهازك لاستخدام أسرع',
+        buttonText: 'ثبّت الأداة',
+        showAgainKey: '',
+    },
 };
+
+function normalizePwaInstallPrompt(value = {}) {
+    return {
+        enabled: value?.enabled !== false,
+        text: String(value?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع'),
+        buttonText: String(value?.buttonText || 'ثبّت الأداة'),
+        showAgainKey: String(value?.showAgainKey || ''),
+    };
+}
 
 function pickIdentity(config = {}) {
     const identityPatch = IDENTITY_FIELDS.reduce((patch, field) => {
@@ -55,6 +77,7 @@ function pickIdentity(config = {}) {
         ...identityPatch,
         mainSEO: config.mainSEO || {},
         linkPreview: normalizeLinkPreviewSettings(config.linkPreview || {}),
+        pwaInstallPrompt: normalizePwaInstallPrompt(config.pwaInstallPrompt || {}),
     };
 }
 
@@ -235,6 +258,16 @@ export default function AdminIdentityPage() {
         }));
     };
 
+    const setPwaInstallPromptField = (field, value) => {
+        setIdentity((current) => ({
+            ...current,
+            pwaInstallPrompt: normalizePwaInstallPrompt({
+                ...(current.pwaInstallPrompt || {}),
+                [field]: value,
+            }),
+        }));
+    };
+
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {
             const next = !current;
@@ -366,6 +399,42 @@ export default function AdminIdentityPage() {
         }
     };
 
+    const showPwaInstallPromptAgain = async () => {
+        const firebaseApi = firebaseApiRef.current;
+        const nextPrompt = normalizePwaInstallPrompt({
+            ...(identity.pwaInstallPrompt || {}),
+            enabled: identity.pwaInstallPrompt?.enabled !== false,
+            showAgainKey: new Date().toISOString(),
+        });
+
+        setIdentity((current) => ({
+            ...current,
+            pwaInstallPrompt: nextPrompt,
+        }));
+
+        if (!firebaseApi?.saveSiteConfigSection) {
+            showMessage('error', 'لم تكتمل تهيئة Firebase بعد.');
+            return;
+        }
+
+        setSaving(true);
+        showMessage('info', 'جاري تفعيل ظهور زر التثبيت مجددًا...');
+
+        try {
+            const savedPatch = await firebaseApi.saveSiteConfigSection({ pwaInstallPrompt: nextPrompt });
+            setIdentity((current) => ({
+                ...current,
+                pwaInstallPrompt: normalizePwaInstallPrompt(savedPatch.pwaInstallPrompt || nextPrompt),
+            }));
+            showMessage('success', 'تم تفعيل ظهور تنبيه التثبيت مجددًا.');
+        } catch (error) {
+            console.error('Error saving PWA install prompt:', error);
+            showMessage('error', 'تعذر حفظ إعدادات إعادة ظهور التثبيت.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const saveIdentity = async () => {
         const firebaseApi = firebaseApiRef.current;
         if (!firebaseApi?.saveSiteConfigSection) {
@@ -403,6 +472,33 @@ export default function AdminIdentityPage() {
     const copyrightPreview = `© ${new Date().getFullYear()} ${identity.copyrightText || 'جميع الحقوق محفوظة'}${identity.copyrightName ? ` لـ ${identity.copyrightName}` : ''}`;
     const linkPreviewData = resolveLinkPreview(identity);
     const linkPreviewImage = safePreviewImageUrl(linkPreviewData.imageUrl || identity.logoUrl || identity.faviconUrl || '');
+    const pwaPreviewIcon = identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '';
+    const pwaShortcutItems = [
+        {
+            key: 'date',
+            label: 'اختصار التاريخ',
+            field: 'pwaShortcutDateIconUrl',
+            category: 'pwa-shortcut-date',
+            fallbackIcon: 'fa-calendar-days',
+            fallbackSrc: '/pwa-shortcut-date-192.png',
+        },
+        {
+            key: 'clock',
+            label: 'اختصار الساعة',
+            field: 'pwaShortcutClockIconUrl',
+            category: 'pwa-shortcut-clock',
+            fallbackIcon: 'fa-clock',
+            fallbackSrc: '/pwa-shortcut-clock-192.png',
+        },
+        {
+            key: 'weather',
+            label: 'اختصار الطقس',
+            field: 'pwaShortcutWeatherIconUrl',
+            category: 'pwa-shortcut-weather',
+            fallbackIcon: 'fa-cloud-sun',
+            fallbackSrc: '/pwa-shortcut-weather-192.png',
+        },
+    ];
 
     return (
         <div className={`legacy-admin-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`} dir="rtl">
@@ -584,34 +680,6 @@ export default function AdminIdentityPage() {
                             </div>
 
                             <div className="legacy-field">
-                                <label>أيقونة التطبيق المثبّت</label>
-                                <label className={`legacy-media-picker ${uploadingTarget === 'appIconUrl' ? 'is-uploading' : ''}`}>
-                                    <span className="legacy-media-picker-preview small">
-                                        {identity.appIconUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
-                                        ) : (
-                                            <i className="fa-solid fa-mobile-screen-button"></i>
-                                        )}
-                                    </span>
-                                    <span className="legacy-media-picker-text">
-                                        <strong>{uploadingTarget === 'appIconUrl' ? 'جاري رفع أيقونة التطبيق...' : 'اختر أو استبدل أيقونة التطبيق'}</strong>
-                                        <small dir="ltr">{identity.appIconUrl || '/api/media/app-icon/...'}</small>
-                                    </span>
-                                    <span className="legacy-media-picker-action">
-                                        <i className="fa-solid fa-cloud-arrow-up"></i>
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept=".png,.jpg,.jpeg,.webp,.ico,image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon"
-                                        disabled={uploadingTarget === 'appIconUrl'}
-                                        onChange={(event) => handleMediaUpload(event, 'app-icon', 'appIconUrl', 'أيقونة التطبيق')}
-                                    />
-                                </label>
-                                <span className="legacy-field-hint">هذه الأيقونة تظهر للتطبيق المثبت. الأفضل صورة مربعة 512×512 بخلفية مناسبة.</span>
-                            </div>
-
-                            <div className="legacy-field">
                                 <label>صاحب الحقوق</label>
                                 <input
                                     type="text"
@@ -698,7 +766,7 @@ export default function AdminIdentityPage() {
 
                     <div className="link-preview-admin-grid">
                         <div className="link-preview-fields">
-                            <label className="ad-settings-switch house compact-switch">
+                            <label className={`ad-settings-switch house compact-switch ${identity.linkPreview?.useSiteTitle !== false ? 'active' : ''}`}>
                                 <input
                                     type="checkbox"
                                     checked={identity.linkPreview?.useSiteTitle !== false}
@@ -708,6 +776,9 @@ export default function AdminIdentityPage() {
                                 <span className="ad-settings-switch-copy">
                                     <strong>استخدم عنوان الهوية الأساسي</strong>
                                     <small>إذا أوقفته يمكنك كتابة عنوان مخصص للمشاركة فقط.</small>
+                                    {identity.linkPreview?.useSiteTitle !== false && (
+                                        <small className="switch-current-value">{identity.mainSEO?.title || identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</small>
+                                    )}
                                 </span>
                             </label>
 
@@ -721,7 +792,7 @@ export default function AdminIdentityPage() {
                                 />
                             </div>
 
-                            <label className="ad-settings-switch google compact-switch">
+                            <label className={`ad-settings-switch google compact-switch ${identity.linkPreview?.useSiteSlogan !== false ? 'active' : ''}`}>
                                 <input
                                     type="checkbox"
                                     checked={identity.linkPreview?.useSiteSlogan !== false}
@@ -731,6 +802,9 @@ export default function AdminIdentityPage() {
                                 <span className="ad-settings-switch-copy">
                                     <strong>استخدم السلوغن الأساسي</strong>
                                     <small>الوصف يظهر غالبًا تحت العنوان في تطبيقات المشاركة.</small>
+                                    {identity.linkPreview?.useSiteSlogan !== false && (
+                                        <small className="switch-current-value">{identity.mainSEO?.description || identity.toolSlogan || 'وصف مختصر يظهر أسفل العنوان عند المشاركة'}</small>
+                                    )}
                                 </span>
                             </label>
 
@@ -745,7 +819,7 @@ export default function AdminIdentityPage() {
                                 />
                             </div>
 
-                            <label className="ad-settings-switch house compact-switch">
+                            <label className={`ad-settings-switch house compact-switch ${identity.linkPreview?.useLogoImage !== false ? 'active' : ''}`}>
                                 <input
                                     type="checkbox"
                                     checked={identity.linkPreview?.useLogoImage !== false}
@@ -821,9 +895,170 @@ export default function AdminIdentityPage() {
                     </div>
                 </section>
 
+                <section className="legacy-google-card tools-section-card identity-pwa-settings-card" id="pwa-install-settings">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-pwa"><i className="fa-solid fa-mobile-screen-button"></i></span>
+                            <div>
+                                <h2>هوية التطبيق والتثبيت</h2>
+                                <p>كل ما يخص تثبيت الموقع كتطبيق: الأيقونة، اسم التطبيق، اختصارات الضغط المطوّل، وزر التثبيت.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="identity-pwa-grid">
+                        <div className="identity-pwa-controls">
+                            <div className="legacy-field">
+                                <label>أيقونة التطبيق المثبّت</label>
+                                <label className={`legacy-media-picker ${uploadingTarget === 'appIconUrl' ? 'is-uploading' : ''}`}>
+                                    <span className="legacy-media-picker-preview small">
+                                        {identity.appIconUrl ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
+                                        ) : (
+                                            <i className="fa-solid fa-mobile-screen-button"></i>
+                                        )}
+                                    </span>
+                                    <span className="legacy-media-picker-text">
+                                        <strong>{uploadingTarget === 'appIconUrl' ? 'جاري رفع أيقونة التطبيق...' : 'اختر أو استبدل أيقونة التطبيق'}</strong>
+                                        <small dir="ltr">{identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '/api/media/app-icon/...'}</small>
+                                    </span>
+                                    <span className="legacy-media-picker-action">
+                                        <i className="fa-solid fa-cloud-arrow-up"></i>
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept=".png,.jpg,.jpeg,.webp,.ico,image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon"
+                                        disabled={uploadingTarget === 'appIconUrl'}
+                                        onChange={(event) => handleMediaUpload(event, 'app-icon', 'appIconUrl', 'أيقونة التطبيق')}
+                                    />
+                                </label>
+                                <span className="legacy-field-hint">تظهر في نافذة التثبيت وأيقونة التطبيق على الجوال والكمبيوتر. الأفضل صورة مربعة 512×512.</span>
+                            </div>
+
+                            <label className={`ad-settings-switch house compact-switch ${identity.pwaInstallPrompt?.enabled !== false ? 'active' : ''}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={identity.pwaInstallPrompt?.enabled !== false}
+                                    onChange={(event) => setPwaInstallPromptField('enabled', event.target.checked)}
+                                />
+                                <span className="ad-settings-switch-icon"><i className="fa-solid fa-download"></i></span>
+                                <span className="ad-settings-switch-copy">
+                                    <strong>إظهار زر تثبيت الأداة</strong>
+                                    <small>يعرض تنبيه التثبيت عندما يدعم المتصفح تثبيت الموقع كتطبيق.</small>
+                                </span>
+                            </label>
+
+                            <div className="legacy-form-grid two-columns no-top-margin">
+                                <div className="legacy-field">
+                                    <label>نص رسالة التثبيت</label>
+                                    <input
+                                        value={identity.pwaInstallPrompt?.text || ''}
+                                        onChange={(event) => setPwaInstallPromptField('text', event.target.value)}
+                                        placeholder="مثال: ثبّت الأداة على جهازك لاستخدام أسرع"
+                                    />
+                                </div>
+                                <div className="legacy-field">
+                                    <label>نص زر التثبيت</label>
+                                    <input
+                                        value={identity.pwaInstallPrompt?.buttonText || ''}
+                                        onChange={(event) => setPwaInstallPromptField('buttonText', event.target.value)}
+                                        placeholder="مثال: ثبّت الأداة"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pwa-reshow-row">
+                                <div>
+                                    <strong>إظهار زر التثبيت مجددًا</strong>
+                                    <small>استخدمه عند وجود تحديث مهم. يظهر التنبيه مرة أخرى لمن أخفاه، ويظهر كرسالة تحديث لمن ثبت التطبيق سابقًا.</small>
+                                </div>
+                                <button type="button" className="legacy-secondary-btn" onClick={showPwaInstallPromptAgain} disabled={saving}>
+                                    <i className="fa-solid fa-rotate-right"></i>
+                                    إظهار مجددًا
+                                </button>
+                            </div>
+
+                            <div className="pwa-shortcut-admin-list">
+                                {pwaShortcutItems.map((item) => {
+                                    const iconValue = identity[item.field] || item.fallbackSrc;
+
+                                    return (
+                                        <div className="pwa-shortcut-admin-row" key={item.key}>
+                                            <div className="pwa-shortcut-admin-preview">
+                                                {iconValue ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={iconValue} alt={item.label} />
+                                                ) : (
+                                                    <i className={`fa-solid ${item.fallbackIcon}`}></i>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <strong>{item.label}</strong>
+                                                <small dir="ltr">{identity[item.field] || item.fallbackSrc}</small>
+                                            </div>
+                                            <label className={`pwa-shortcut-upload ${uploadingTarget === item.field ? 'is-uploading' : ''}`}>
+                                                <i className="fa-solid fa-cloud-arrow-up"></i>
+                                                <span>{uploadingTarget === item.field ? 'رفع...' : 'استبدال'}</span>
+                                                <input
+                                                    type="file"
+                                                    accept=".png,.jpg,.jpeg,.webp,.ico,image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon"
+                                                    disabled={uploadingTarget === item.field}
+                                                    onChange={(event) => handleMediaUpload(event, item.category, item.field, item.label)}
+                                                />
+                                            </label>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <aside className="identity-pwa-preview-card">
+                            <div className="identity-pwa-phone">
+                                <span className="identity-pwa-phone-label">معاينة التثبيت</span>
+                                <div className="identity-pwa-app-icon">
+                                    {pwaPreviewIcon ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={pwaPreviewIcon} alt="أيقونة التطبيق" />
+                                    ) : (
+                                        <i className="fa-solid fa-mobile-screen-button"></i>
+                                    )}
+                                </div>
+                                <strong>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</strong>
+                                <p>{identity.toolSlogan || 'كل الأدوات بين يديك'}</p>
+                                <button type="button">
+                                    <i className="fa-solid fa-mobile-screen-button"></i>
+                                    {identity.pwaInstallPrompt?.buttonText || 'ثبّت الأداة'}
+                                </button>
+                            </div>
+
+                            <div className="identity-pwa-shortcuts-preview">
+                                <strong>اختصارات الضغط المطوّل</strong>
+                                {pwaShortcutItems.map((item) => {
+                                    const iconValue = identity[item.field] || item.fallbackSrc;
+
+                                    return (
+                                        <div className="identity-pwa-shortcut" key={item.key}>
+                                            <span>
+                                                {iconValue ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={iconValue} alt={item.label} />
+                                                ) : (
+                                                    <i className={`fa-solid ${item.fallbackIcon}`}></i>
+                                                )}
+                                            </span>
+                                            <small>{item.label.replace('اختصار ', '')}</small>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+
                 <footer className="legacy-admin-footer">
                     <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>
-                    <div className="legacy-version-badge"><i className="fa-solid fa-palette"></i> إدارة الهوية</div>
+                    <div className="legacy-version-badge"><i className="fa-solid fa-palette"></i> إدارة الهوية v{ADMIN_VERSION}</div>
                 </footer>
             </main>
         </div>

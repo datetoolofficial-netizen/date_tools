@@ -50,7 +50,8 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.95.
+الإصدار الحالي للتطبيق هو 0.2.96.
+نسخة منصة الإدارة الحالية هي 0.1.0.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -172,6 +173,7 @@ https://www.date-tool.com
 108. تحسين إدارة قوالب المشاركة بعمود إجراءات يحتوي زر تحرير وزر معاينة بالقيم الافتراضية.
 109. إزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل مباشرة داخل نفس الصف أسفل الملخص.
 110. جعل ملخص قوالب المشاركة يعرض معاينة بالقيم الافتراضية مع إبقاء النص الكامل قابلًا للتعديل.
+111. نقل إدارة تثبيت التطبيق وهوية PWA إلى صفحة الهوية، مع دعم أيقونة التطبيق واختصارات التاريخ والساعة والطقس من R2 وفصل نسخة الإدارة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7545,6 +7547,80 @@ PROJECT_MEMO.md
 
 ---
 
+### نقل إعدادات تثبيت التطبيق إلى الهوية - الإصدار 0.2.96
+
+الأعراض:
+
+```txt
+إعدادات زر تثبيت التطبيق وهوية التطبيق المثبت كانت موزعة في إدارة الأداة العامة.
+أيقونات اختصارات PWA كانت تعتمد على ملفات ثابتة احتياطية بدل التحكم بها من الهوية.
+رقم نسخة الإدارة كان غير مفصول بوضوح عن رقم نسخة الموقع الأساسي.
+```
+
+السبب:
+
+```txt
+إعدادات PWA أصبحت جزءًا من الهوية البصرية أكثر من كونها إعدادًا عامًا للأداة.
+ملف manifest يحتاج قراءة روابط أيقونات التطبيق والاختصارات من إعدادات الهوية المحفوظة في Firebase مع fallback آمن.
+```
+
+الحل:
+
+```txt
+نقل سيكشن زر تثبيت الأداة من `/admin/tools` إلى `/admin/identity`.
+إضافة رفع أيقونة التطبيق المثبت وأيقونات اختصارات التاريخ والساعة والطقس إلى R2 من صفحة الهوية.
+ربط حقول `pwaShortcutDateIconUrl` و `pwaShortcutClockIconUrl` و `pwaShortcutWeatherIconUrl` بملف manifest.
+إضافة زر "إظهار مجددًا" لتنبيه التثبيت من صفحة الهوية.
+فصل `ADMIN_VERSION` عن `APP_VERSION` وإظهار نسخة الإدارة داخل Shell الإدارة.
+إضافة إمكانية تعطيل زر مشاركة كل قالب من إعدادات الأدوات مع استمرار عرض زر المشاركة باسم ثابت في الواجهة.
+رفع الإصدار إلى 0.2.96 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ npm run deploy لم يتم تنفيذه لأن نشر Cloudflare الإنتاجي يحتاج موافقة نشر صريحة منفصلة.
+⏳ يلزم اختبار حفظ إعدادات PWA من `/admin/identity` بجلسة مدير فعلية بعد النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+Get-Content C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+rg -n "pwaInstallPrompt|appIconUrl|manifest|shareEnabled" app
+npm run lint
+npm run build
+git diff --stat
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/identity/page.jsx
+app/admin/tools/page.jsx
+app/admin/AdminDashboard.css
+app/admin/AdminShell.jsx
+app/admin/tool-management/ToolContentSettings.jsx
+app/api/media/upload/route.js
+app/api/site-config/route.js
+app/firebase.js
+app/manifestConfig.js
+app/toolSettings.js
+app/page.jsx
+app/clock/page.jsx
+app/components/home/HomeSections.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -7926,6 +8002,8 @@ ads top / middle / bottom1 / bottom2
 رفع لوقو حقيقي إلى R2.
 رفع favicon حقيقي إلى R2.
 رفع أيقونة تطبيق حقيقية إلى R2 من حقل أيقونة التطبيق المثبت.
+رفع أيقونات اختصارات التاريخ والساعة والطقس من سيكشن تثبيت التطبيق في `/admin/identity`.
+اختبار زر إظهار تنبيه التثبيت مجددًا والتأكد من تغير `showAgainKey`.
 تعديل إيميل التواصل والحقوق.
 الضغط على حفظ الهوية.
 التأكد من انعكاس القيم على الصفحة الرئيسية والفوتر وmanifest.webmanifest والصفحات التي تستخدم {{contactEmail}}.

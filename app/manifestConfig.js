@@ -94,13 +94,23 @@ async function getInstallIdentity() {
             logoUrl: normalizeIconUrl(getStringField(fields, 'logoUrl')),
             faviconUrl: normalizeIconUrl(getStringField(fields, 'faviconUrl')),
             appIconUrl: normalizeIconUrl(getStringField(fields, 'appIconUrl')),
+            pwaShortcutDateIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutDateIconUrl')),
+            pwaShortcutClockIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutClockIconUrl')),
+            pwaShortcutWeatherIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutWeatherIconUrl')),
         };
     } catch {
         return {};
     }
 }
 
-function getShortcutIcons(tool) {
+function getShortcutIcons(tool, customIconUrl = '') {
+    if (customIconUrl) {
+        return [
+            buildAppIcon(customIconUrl, '192x192', 'any'),
+            buildAppIcon(customIconUrl, '512x512', 'any'),
+        ];
+    }
+
     const paths = shortcutIconPaths[tool] || shortcutIconPaths.date;
 
     return [
@@ -153,19 +163,19 @@ export async function buildManifest() {
                 name,
                 short_name: 'التاريخ',
                 url: '/',
-                icons: getShortcutIcons('date'),
+                icons: getShortcutIcons('date', identity.pwaShortcutDateIconUrl),
             },
             {
                 name: 'أدوات الساعة',
                 short_name: 'الساعة',
                 url: '/clock',
-                icons: getShortcutIcons('clock'),
+                icons: getShortcutIcons('clock', identity.pwaShortcutClockIconUrl),
             },
             {
                 name: 'أدوات الطقس',
                 short_name: 'الطقس',
                 url: '/weather',
-                icons: getShortcutIcons('weather'),
+                icons: getShortcutIcons('weather', identity.pwaShortcutWeatherIconUrl),
             },
         ],
     };

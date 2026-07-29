@@ -114,6 +114,12 @@ export const DEFAULT_TOOL_SETTINGS = {
             dateConversionResult: 'استخدمت {toolTitle} لتحويل التاريخ بدقة.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
             durationResult: 'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
         },
+        shareEnabled: {
+            eventsResult: true,
+            ageResult: true,
+            dateConversionResult: true,
+            durationResult: true,
+        },
         faqs: [],
     },
     clock: {
@@ -127,6 +133,10 @@ export const DEFAULT_TOOL_SETTINGS = {
         shareTemplates: {
             timeConverterResult: 'الساعة {input} تساوي {result} بنظام 12 ساعة\n\n{url}',
             timezoneDiffResult: 'الفرق بين {fromCity} و{toCity}: {difference}\n\n{url}',
+        },
+        shareEnabled: {
+            timeConverterResult: true,
+            timezoneDiffResult: true,
         },
         faqs: [],
     },
@@ -144,6 +154,11 @@ export const DEFAULT_TOOL_SETTINGS = {
             currentWeatherResult: 'الطقس في {city}: {temperature} - {condition}، الإحساس {feelsLike}\n\n{url}',
             outdoorAdviceResult: 'نصيحة الخروج اليوم في {city}: {advice}\n\n{url}',
             forecastResult: 'توقعات الطقس في {city}:\n{forecast}\n\n{url}',
+        },
+        shareEnabled: {
+            currentWeatherResult: true,
+            outdoorAdviceResult: true,
+            forecastResult: true,
         },
         faqs: [],
     },
@@ -199,6 +214,17 @@ function normalizeShareTemplates(toolKey, shareTemplates = {}) {
     );
 }
 
+function normalizeShareEnabled(toolKey, shareEnabled = {}) {
+    const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {};
+
+    return Object.fromEntries(
+        Object.keys(defaults).map((key) => [
+            key,
+            shareEnabled?.[key] !== false,
+        ])
+    );
+}
+
 export function normalizeToolSettings(settings = {}) {
     return Object.fromEntries(
         TOOL_SETTING_KEYS.map((toolKey) => {
@@ -213,6 +239,7 @@ export function normalizeToolSettings(settings = {}) {
                     heroDescription: String(value.heroDescription || defaults.heroDescription).trim() || defaults.heroDescription,
                     subtools: normalizeSubtools(toolKey, value.subtools),
                     shareTemplates: normalizeShareTemplates(toolKey, value.shareTemplates),
+                    shareEnabled: normalizeShareEnabled(toolKey, value.shareEnabled),
                     faqs: normalizeFaqItems(value.faqs),
                 },
             ];
@@ -237,4 +264,8 @@ export function renderShareTemplate(settings, templateKey, variables = {}) {
         const value = variables[key];
         return value === undefined || value === null ? '' : String(value);
     }).trim();
+}
+
+export function isShareTemplateEnabled(settings, templateKey) {
+    return settings?.shareEnabled?.[templateKey] !== false;
 }

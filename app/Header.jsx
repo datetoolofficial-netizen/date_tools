@@ -6,6 +6,13 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { i18n } from './i18n';
 
+function normalizeLinkLocation(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+}
+
 export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
     const pathname = usePathname() || '/';
@@ -15,7 +22,8 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     if (config) {
         if (Array.isArray(config.internalPages)) {
             config.internalPages.forEach((page) => {
-                if (page.location === 'header' || page.location === 'both') {
+                const location = normalizeLinkLocation(page.location);
+                if (location === 'header' || location === 'both' || location === 'header-only') {
                     navLinks.push({
                         title: page.title,
                         url: `/${page.slug}`,
@@ -27,7 +35,8 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
         if (Array.isArray(config.externalLinks)) {
             config.externalLinks.forEach((link) => {
-                if (link.location === 'header' || link.location === 'both') {
+                const location = normalizeLinkLocation(link.location);
+                if (location === 'header' || location === 'both' || location === 'header-only') {
                     navLinks.push({
                         title: link.title,
                         url: link.url,

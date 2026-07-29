@@ -23,7 +23,7 @@ import {
     TodayBanner,
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
-import { getToolFaqs, getToolSettings, renderShareTemplate } from './toolSettings';
+import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from './toolSettings';
 
 function SkeletonBlock({ className = '' }) {
     return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
@@ -211,6 +211,7 @@ export default function Home() {
     }, [configData, generateTodayAndEvents]);
 
     const handleShareEvents = async () => {
+        if (!isShareTemplateEnabled(dateToolSettings, 'eventsResult')) return;
         if (upcomingEvents.length === 0) return;
         
         const labels = i18n[lang] || i18n.ar;
@@ -247,6 +248,7 @@ export default function Home() {
             rawResultText,
             url: getSafeCurrentUrl(),
         });
+        const canShare = shareTemplateKey ? isShareTemplateEnabled(dateToolSettings, shareTemplateKey) : true;
         const shareText = shareTemplateKey ? renderShareTemplate(dateToolSettings, shareTemplateKey, {
             toolTitle: title,
             result: rawResultText,
@@ -258,6 +260,7 @@ export default function Home() {
             title,
             info: story.info,
             shareText,
+            canShare,
         });
     };
 
@@ -527,7 +530,12 @@ export default function Home() {
 
                         <TodayBanner lang={lang} todayInfo={todayInfo} />
                         <PublicAdSlot configData={configData} slotName="dateTop" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
-                        <EventsSection lang={lang} upcomingEvents={upcomingEvents} onShare={handleShareEvents} />
+                        <EventsSection
+                            lang={lang}
+                            upcomingEvents={upcomingEvents}
+                            onShare={handleShareEvents}
+                            canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
+                        />
 
                         <AgeCalculatorSection
                             labels={i18n[lang]}

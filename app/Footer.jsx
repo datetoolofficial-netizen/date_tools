@@ -4,6 +4,13 @@ import Link from 'next/link';
 import { i18n } from './i18n';
 import { APP_VERSION } from './version';
 
+function normalizeLinkLocation(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '-');
+}
+
 export default function Footer({ lang, config }) {
     const footerLinks = [];
     const seenLinks = new Set();
@@ -19,7 +26,8 @@ export default function Footer({ lang, config }) {
     if (config) {
         if (Array.isArray(config.internalPages)) {
             config.internalPages.forEach((page) => {
-                if (page.location === 'footer' || page.location === 'both') {
+                const location = normalizeLinkLocation(page.location);
+                if (location === 'footer' || location === 'both' || location === 'footer-only') {
                     addFooterLink({
                         title: page.title,
                         url: `/${page.slug}`,
@@ -31,7 +39,8 @@ export default function Footer({ lang, config }) {
 
         if (Array.isArray(config.externalLinks)) {
             config.externalLinks.forEach((link) => {
-                if (link.location === 'footer' || link.location === 'both') {
+                const location = normalizeLinkLocation(link.location);
+                if (location === 'footer' || location === 'both' || location === 'footer-only') {
                     addFooterLink({
                         title: link.title,
                         url: link.url,

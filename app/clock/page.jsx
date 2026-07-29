@@ -5,7 +5,7 @@ import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
-import { getToolFaqs, getToolSettings, renderShareTemplate } from '../toolSettings';
+import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from '../toolSettings';
 
 const defaultFromCity = {
     query: 'الرياض',
@@ -231,6 +231,8 @@ export default function ClockPage() {
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock');
     const clockFaqItems = getToolFaqs(configData, 'clock', clockFaq);
+    const canShareTimeConverter = isShareTemplateEnabled(clockSettings, 'timeConverterResult');
+    const canShareTimezoneDiff = isShareTemplateEnabled(clockSettings, 'timezoneDiffResult');
     const currentInputTime = `${String(inputHour).padStart(2, '0')}:${String(inputMinute).padStart(2, '0')}`;
     const timeConverterShareText = convertedTime ? renderShareTemplate(clockSettings, 'timeConverterResult', {
         input: currentInputTime,
@@ -315,9 +317,11 @@ export default function ClockPage() {
                     {convertedTime && (
                         <>
                             <div className="tool-result clock-tool-result">{convertedTime}</div>
-                            <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timeConverterShareText)}>
-                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
-                            </button>
+                            {canShareTimeConverter && (
+                                <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timeConverterShareText)}>
+                                    <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                                </button>
+                            )}
                         </>
                     )}
                 </div>
@@ -365,9 +369,11 @@ export default function ClockPage() {
                                 <span>{timezoneDiff.fromCity.label}: الساعة الآن {formatTime(now, timezoneDiff.fromCity.zone, clockHour12, false)}</span>
                                 <span>{timezoneDiff.toCity.label}: الساعة الآن {formatTime(now, timezoneDiff.toCity.zone, clockHour12, false)}</span>
                             </div>
-                            <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timezoneShareText)}>
-                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
-                            </button>
+                            {canShareTimezoneDiff && (
+                                <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timezoneShareText)}>
+                                    <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                                </button>
+                            )}
                         </>
                     )}
                 </div>

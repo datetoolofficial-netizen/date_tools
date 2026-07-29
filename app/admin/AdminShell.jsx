@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { ADMIN_VERSION } from '../version';
 import './AdminDashboard.css';
 
 const AdminContext = createContext(null);
@@ -384,6 +385,11 @@ export default function AdminShell({ children }) {
                             {children}
                         </AdminPageGuard>
                     </div>
+
+                    <footer className="legacy-admin-footer admin-shell-footer">
+                        <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>
+                        <div className="legacy-version-badge"><i className="fa-solid fa-shield-halved"></i> admin v{ADMIN_VERSION}</div>
+                    </footer>
                 </main>
             </div>
         </AdminContext.Provider>
