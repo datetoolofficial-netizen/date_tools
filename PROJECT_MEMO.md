@@ -7764,6 +7764,58 @@ PROJECT_MEMO.md
 
 ---
 
+### إضافة شعار أساسي كأصل تصميم - بدون تغيير إصدار
+
+الأعراض:
+
+```txt
+احتاج المستخدم شعارًا مناسبًا للموقع الأساسي يكون موجودًا داخل المشروع ويمكن فتحه من Visual Studio Code.
+```
+
+السبب:
+
+```txt
+مجلد public كان يحتوي أيقونات اختصارات PWA فقط، ولم يكن هناك ملف شعار مستقل محفوظ ضمن أصول الهوية في المستودع.
+```
+
+الحل:
+
+```txt
+إضافة شعار Vector بصيغة SVG داخل public/brand باسم date-tools-primary-logo.svg.
+تصميم الشعار يجمع بين الساعة والتقويم وعلامة التحويل بما يناسب أدوات التاريخ والساعة والطقس.
+فتح ملف الشعار في Visual Studio Code من داخل المشروع.
+عدم ربط الشعار تلقائيًا بالإنتاج أو إعدادات R2 حتى يبقى القرار النهائي من لوحة إدارة الهوية.
+عدم تغيير APP_VERSION أو ADMIN_VERSION لأن التعديل أصل تصميم غير منشور وظيفيًا.
+```
+
+الحالة:
+
+```txt
+✅ تم إنشاء ملف الشعار داخل المشروع.
+✅ تم التحقق من صلاحية SVG كملف XML.
+✅ تم فتح الملف في Visual Studio Code.
+⏳ لم يتم نشر الشعار أو ربطه بإعدادات الهوية بعد.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Path PROJECT_MEMO.md -TotalCount 90
+Get-ChildItem -Path public -Force
+[xml](Get-Content -Raw public\brand\date-tools-primary-logo.svg) | Out-Null
+Get-Command code -ErrorAction SilentlyContinue
+code -r public\brand\date-tools-primary-logo.svg
+```
+
+الملفات المتأثرة:
+
+```txt
+public/brand/date-tools-primary-logo.svg
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8110,6 +8162,7 @@ PROJECT_MEMO.md
 ✅ تمت إزالة شاشة التحميل البيضاء من صفحات الإدارة واستبدالها بتحميل داكن متوافق مع الهوية
 ✅ نسخة منصة الإدارة الحالية هي 0.1.1 دون تغيير نسخة الموقع الأساسية 0.2.97
 ✅ تم نشر نسخة الإدارة 0.1.1 على Cloudflare Version ID: aa04eb71-ac54-47fb-b032-a12f193064a4
+✅ تم إضافة شعار SVG أساسي داخل public/brand لاستخدامه كأصل تصميم عند اعتماد الهوية
 ```
 
 ---
