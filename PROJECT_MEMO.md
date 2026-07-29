@@ -51,7 +51,7 @@ https://www.date-tool.com
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
 الإصدار الحالي للتطبيق هو 0.2.97.
-نسخة منصة الإدارة الحالية هي 0.1.2.
+نسخة منصة الإدارة الحالية هي 0.1.3.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -7987,6 +7987,73 @@ PROJECT_MEMO.md
 
 ---
 
+### توحيد زر الخروج في شريط الإدارة على الجوال - admin 0.1.3
+
+الأعراض:
+
+```txt
+زر الخروج في شريط الإدارة على الشاشات الصغيرة كان يظهر كزر ضيق مختلف عن أزرار التحكم الافتراضية بجانبه.
+```
+
+السبب:
+
+```txt
+قاعدة الجوال كانت تخفي نص زر الخروج لكنها لم تثبت ارتفاعه وبادينغه وشكله بنفس قياسات أزرار الناف بار الأخرى.
+```
+
+الحل:
+
+```txt
+تثبيت زر الخروج على قياس مربع 52px في الجوال، وتوسيط الأيقونة، وتوحيد نصف القطر مع أزرار التحكم، مع إبقاء اللون التحذيري الهادئ.
+رفع نسخة منصة الإدارة فقط إلى 0.1.3 دون تغيير نسخة الموقع الأساسية 0.2.97.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ تعديل CSS المطلوب.
+✅ git diff --check نجح.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⚠️ ظهرت رسائل fetch EACCES أثناء build المحلي بسبب تقييد الشبكة، ولم تُفشل البناء.
+✅ npm run deploy نجح.
+✅ تم نشر Worker datetools بنجاح.
+✅ Cloudflare Version ID: 115e8215-fbf6-4519-8dfa-1a464f175b9d.
+✅ https://date-tool.com/admin/ads?v=0.1.3 ردت 200 OK.
+✅ https://date-tool.com/admin?v=0.1.3 ردت 200 OK.
+✅ https://date-tool.com/?v=0.2.97 ردت 200 OK.
+⚠️ ظهر تحذير OpenNext المعتاد بأن Windows ليس البيئة المثلى، ولم يمنع النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Path PROJECT_MEMO.md
+git status --short
+Select-String -Path app\admin\AdminDashboard.css -Pattern "legacy-nav-controls|legacy-theme-toggle|legacy-logout-btn|legacy-mobile-menu-toggle|legacy-user" -Context 0,5
+Get-Content -Path app\admin\AdminDashboard.css | Select-Object -Skip ...
+Get-Content -Path app\version.js
+Get-Content -Path VERSION_LOG.md | Select-Object -First 50
+git diff --check
+npm run lint
+npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/admin/ads?v=0.1.3
+curl.exe -I https://date-tool.com/admin?v=0.1.3
+curl.exe -I https://date-tool.com/?v=0.2.97
+```
+
+الملفات المتأثرة:
+
+```txt
+app/admin/AdminDashboard.css
+app/version.js
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8331,8 +8398,8 @@ PROJECT_MEMO.md
 ✅ تم نشر الإصدار 0.2.95 على Cloudflare Version ID: 41c3c5b5-825b-4da5-b082-dfc9290d45f4
 ✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
 ✅ تمت إزالة شاشة التحميل البيضاء من صفحات الإدارة واستبدالها بتحميل داكن متوافق مع الهوية
-✅ نسخة منصة الإدارة في الكود الحالي هي 0.1.2 دون تغيير نسخة الموقع الأساسية 0.2.97
-✅ تم نشر نسخة الإدارة 0.1.2 على Cloudflare Version ID: d0c97ec4-8e6d-4664-8fa2-9cd62105acae
+✅ نسخة منصة الإدارة في الكود الحالي هي 0.1.3 دون تغيير نسخة الموقع الأساسية 0.2.97
+✅ تم نشر نسخة الإدارة 0.1.3 على Cloudflare Version ID: 115e8215-fbf6-4519-8dfa-1a464f175b9d
 ✅ تم حذف الشعار SVG التجريبي غير المعتمد من public/brand بناءً على طلب المستخدم
 ```
 

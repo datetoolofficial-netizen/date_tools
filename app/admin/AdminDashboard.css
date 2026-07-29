@@ -3992,13 +3992,21 @@ body.dark-mode .legacy-nav-links a.active {
     .legacy-logout-btn {
         width: 52px;
         min-width: 52px;
+        height: 52px;
         justify-content: center;
-        padding: 8px;
-        border-radius: 14px;
+        padding: 0;
+        border-radius: 16px;
+        gap: 0;
+        background: color-mix(in srgb, var(--danger-text) 12%, var(--bg-container));
+        border-color: color-mix(in srgb, var(--danger-text) 34%, var(--border-color));
     }
 
     .legacy-logout-btn span {
         display: none;
+    }
+
+    .legacy-logout-btn i {
+        font-size: 17px;
     }
 
     .legacy-welcome-banner {
