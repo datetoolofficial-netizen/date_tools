@@ -8245,6 +8245,59 @@ PROJECT_MEMO.md
 
 ---
 
+### نشر إشعار تحديث التطبيق المثبت على الإنتاج - 0.2.99 / admin 0.1.4
+
+الأعراض:
+
+```txt
+كانت نسخة 0.2.99 التي تضيف إشعار تحديث التطبيق المثبت موجودة في الكود ومرفوعة إلى GitHub، لكنها لم تكن منشورة على Cloudflare بعد.
+```
+
+السبب:
+
+```txt
+تم انتظار موافقة صريحة من المستخدم قبل تشغيل نشر الإنتاج.
+```
+
+الحل:
+
+```txt
+بعد موافقة المستخدم الصريحة، تم تشغيل npm run deploy.
+نجح OpenNext build ونجح رفع الأصول الجديدة إلى Cloudflare Workers.
+تم نشر Worker datetools على الإنتاج.
+```
+
+الحالة:
+
+```txt
+✅ نجح npm run deploy.
+✅ تم نشر نسخة 0.2.99 / admin 0.1.4 على Cloudflare.
+✅ Cloudflare Version ID: 48fe0e96-1435-4fed-b7a4-136db662ca8b
+✅ تم اختبار https://date-tool.com/ ورجع 200 ويتضمن 0.2.99.
+✅ تم اختبار https://date-tool.com/manifest.webmanifest ورجع 200.
+✅ تم اختبار https://date-tool.com/admin/identity ورجع 200.
+⚠️ ظهرت تحذيرات OpenNext الخاصة بتشغيله على Windows، لكنها لم تمنع النشر.
+✅ تم تحديث PROJECT_MEMO.md بنتيجة النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+npm run deploy
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/manifest.webmanifest
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/admin/identity
+```
+
+الملفات المتأثرة:
+
+```txt
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8594,7 +8647,8 @@ PROJECT_MEMO.md
 ✅ تم تنظيف CSS المشترك للأزرار العامة وجداول الإدارة وتوسيع sitemap لصفحات الأدوات العامة
 ✅ تم نشر نسخة 0.2.98 / admin 0.1.4 على Cloudflare Version ID: 25872a4f-a4b4-4593-8091-3b8af3c27dee
 ✅ تم اختبار `/`, `/sitemap.xml`, و `/admin/ads` على الإنتاج بنجاح
-✅ تم إضافة إشعار تحديث تلقائي للتطبيق المثبت في الكود الحالي ولم يتم نشره على الإنتاج بعد
+✅ تم نشر إشعار تحديث التطبيق المثبت ضمن نسخة 0.2.99 / admin 0.1.4 على Cloudflare Version ID: 48fe0e96-1435-4fed-b7a4-136db662ca8b
+✅ تم اختبار `/`, `/manifest.webmanifest`, و `/admin/identity` على الإنتاج بنجاح
 ✅ نسخة منصة الإدارة السابقة في الكود كانت 0.1.3 دون تغيير نسخة الموقع الأساسية 0.2.97
 ✅ تم نشر نسخة الإدارة 0.1.3 على Cloudflare Version ID: 115e8215-fbf6-4519-8dfa-1a464f175b9d
 ✅ تم حذف الشعار SVG التجريبي غير المعتمد من public/brand بناءً على طلب المستخدم
