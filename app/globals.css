@@ -40,6 +40,13 @@
             --tool-action-pad-x: 18px;
             --tool-action-font-size: 15px;
             --tool-action-icon-gap: 8px;
+            --tool-action-bg: linear-gradient(135deg, var(--primary), #6366f1);
+            --tool-action-color: #fff;
+            --tool-action-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
+            --tool-action-shadow-hover: 0 14px 28px rgba(59, 130, 246, 0.22);
+            --tool-action-shadow-active: 0 8px 18px rgba(59, 130, 246, 0.16);
+            --tool-action-shadow-disabled: 0 8px 18px rgba(59, 130, 246, 0.12);
+            --tool-action-transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
             --soft-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
         }
 
@@ -58,6 +65,7 @@
             --result-text: #4ade80;
             --ad-accent: #f59e0b;
             --tools-hero-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(139, 92, 246, 0.18));
+            --tool-action-color: #0f172a;
         }
 
         body {
@@ -736,33 +744,52 @@
             color: #fff;
         }
 
-        .weather-search button {
+        .weather-search button,
+        button.action-btn {
+            min-height: var(--tool-action-height);
+            padding: 0 var(--tool-action-pad-x);
+            background: var(--tool-action-bg);
+            color: var(--tool-action-color);
             border: 0;
             border-radius: var(--tool-action-radius);
-            min-height: var(--tool-action-height);
-            background: linear-gradient(135deg, var(--primary), #6366f1);
-            color: #fff;
             font: inherit;
             font-size: var(--tool-action-font-size);
             font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
-            transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+            transition: var(--tool-action-transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--tool-action-icon-gap);
+            box-shadow: var(--tool-action-shadow);
         }
 
-        .weather-search button:hover:not(:disabled) {
+        .weather-search button:hover:not(:disabled),
+        button.action-btn:hover:not(:disabled) {
             filter: brightness(1.03);
             transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(59, 130, 246, 0.22);
+            box-shadow: var(--tool-action-shadow-hover);
         }
 
-        .weather-search button:active:not(:disabled) {
+        .weather-search button:active:not(:disabled),
+        button.action-btn:active:not(:disabled) {
             transform: translateY(0);
-            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
+            box-shadow: var(--tool-action-shadow-active);
         }
 
-        body.dark-mode .weather-search button {
-            color: #0f172a;
+        .weather-search button:disabled,
+        button.action-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.72;
+            transform: none;
+            box-shadow: var(--tool-action-shadow-disabled);
+        }
+
+        .weather-search button i,
+        button.action-btn i,
+        html[dir="ltr"] .weather-search button i,
+        html[dir="ltr"] button.action-btn i {
+            margin: 0;
         }
 
         .tool-result,
@@ -1517,11 +1544,6 @@
         }
 
         .weather-search button {
-            padding-inline: var(--tool-action-pad-x);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--tool-action-icon-gap);
             white-space: nowrap;
         }
 
@@ -1545,11 +1567,6 @@
 
         body.dark-mode .weather-location-btn {
             background: rgba(59, 130, 246, 0.16) !important;
-        }
-
-        .weather-search button:disabled {
-            cursor: not-allowed;
-            opacity: 0.72;
         }
 
         .location-consent-card {
@@ -1939,42 +1956,8 @@
         .date-dropdowns select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);}
 
         button.action-btn {
-            min-height: var(--tool-action-height);
-            padding: 0 var(--tool-action-pad-x);
             width: 100%;
-            background: linear-gradient(135deg, var(--primary), #6366f1);
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            font-size: var(--tool-action-font-size);
-            font-weight: 900;
-            font-family: inherit;
-            border-radius: var(--tool-action-radius);
-            transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--tool-action-icon-gap);
-            box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
         }
-        button.action-btn:hover {
-            filter: brightness(1.03);
-            transform: translateY(-1px);
-            box-shadow: 0 14px 28px rgba(59, 130, 246, 0.22);
-        }
-        button.action-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.16);
-        }
-        button.action-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.72;
-            transform: none;
-            box-shadow: 0 8px 18px rgba(59, 130, 246, 0.12);
-        }
-        body.dark-mode button.action-btn { color: #0f172a; }
-        button.action-btn i { margin: 0; }
-        html[dir="ltr"] button.action-btn i { margin: 0; }
         
         .result { 
             margin-top: 15px; padding: 15px; background-color: var(--result-bg); 

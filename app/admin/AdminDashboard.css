@@ -18,6 +18,11 @@
     --legacy-radius: 16px;
     --legacy-gap: clamp(8px, 1.3vw, 14px);
     --legacy-heading-size: clamp(20px, 2.8vw, 30px);
+    --legacy-table-head-pad: 12px 14px;
+    --legacy-table-row-pad: 12px 14px;
+    --legacy-table-head-size: 12px;
+    --legacy-table-head-border: 1px solid color-mix(in srgb, var(--tool-color, var(--primary-color)) 24%, var(--border-color));
+    --legacy-table-row-border: 1px solid var(--border-color);
 
     min-height: 100vh;
     background: var(--bg-body);
@@ -2254,11 +2259,11 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-section-card:is(#pages, #links, #social, #events) .tools-table-head,
 .tools-section-card.date-tool-events .tools-table-head {
-    padding: 12px 14px;
+    padding: var(--legacy-table-head-pad);
     background: var(--tool-bg);
     color: var(--text-main);
-    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
-    font-size: 12px;
+    border-bottom: var(--legacy-table-head-border);
+    font-size: var(--legacy-table-head-size);
     font-weight: 900;
 }
 
@@ -2267,9 +2272,9 @@ body.dark-mode .legacy-nav-links a.active {
 .tools-section-card#social .tools-social-card {
     border: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: var(--legacy-table-row-border);
     background: var(--bg-container);
-    padding: 12px 14px;
+    padding: var(--legacy-table-row-pad);
 }
 
 .tools-section-card:is(#pages, #links, #events) .tools-item-card:last-child,
@@ -2495,20 +2500,20 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-subtools-list .tools-table-head {
-    padding: 12px 14px;
+    padding: var(--legacy-table-head-pad);
     background: var(--tool-bg);
     color: var(--text-main);
-    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
-    font-size: 12px;
+    border-bottom: var(--legacy-table-head-border);
+    font-size: var(--legacy-table-head-size);
     font-weight: 900;
 }
 
 .tool-share-templates-list .tools-table-head {
-    padding: 12px 14px;
+    padding: var(--legacy-table-head-pad);
     background: color-mix(in srgb, var(--tool-color) 12%, var(--bg-container));
     color: var(--text-main);
-    border-bottom: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
-    font-size: 12px;
+    border-bottom: var(--legacy-table-head-border);
+    font-size: var(--legacy-table-head-size);
     font-weight: 900;
 }
 
@@ -2517,9 +2522,9 @@ body.dark-mode .legacy-nav-links a.active {
 .tool-faq-list .tool-faq-row {
     border: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: var(--legacy-table-row-border);
     background: var(--bg-container);
-    padding: 12px 14px;
+    padding: var(--legacy-table-row-pad);
 }
 
 .tool-subtools-list .tools-item-card:last-child,
