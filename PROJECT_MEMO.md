@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.96.
+الإصدار الحالي للتطبيق هو 0.2.97.
 نسخة منصة الإدارة الحالية هي 0.1.0.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -174,6 +174,7 @@ https://www.date-tool.com
 109. إزالة أزرار قوالب المشاركة وجعل النص الكامل قابلًا للتعديل مباشرة داخل نفس الصف أسفل الملخص.
 110. جعل ملخص قوالب المشاركة يعرض معاينة بالقيم الافتراضية مع إبقاء النص الكامل قابلًا للتعديل.
 111. نقل إدارة تثبيت التطبيق وهوية PWA إلى صفحة الهوية، مع دعم أيقونة التطبيق واختصارات التاريخ والساعة والطقس من R2 وفصل نسخة الإدارة.
+112. تصحيح مصدر عنوان ووصف Link Preview عند تفعيل استخدام الهوية الأساسية ليأخذ من اسم الأداة والسلوغن الحاليين بدل SEO القديم.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -7618,6 +7619,64 @@ app/toolSettings.js
 app/page.jsx
 app/clock/page.jsx
 app/components/home/HomeSections.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### تصحيح مصدر Link Preview من الهوية - الإصدار 0.2.97
+
+الأعراض:
+
+```txt
+في `/admin/identity` كان خيار "استخدم عنوان الهوية الأساسي" يعرض "أدوات التاريخ الشاملة" رغم أن اسم الهوية الحالي مختلف.
+خيار "استخدم السلوغن الأساسي" كان يعرض وصفًا قديمًا عند التفعيل.
+```
+
+السبب:
+
+```txt
+دالة عارض الرابط كانت تعطي أولوية لحقول `mainSEO.title` و `mainSEO.description` قبل `toolDisplayName` و `toolSlogan`.
+هذه الحقول قديمة أو منفصلة عن الاسم والسلوغن الحاليين المستخدمين في الهيدر والتطبيق.
+```
+
+الحل:
+
+```txt
+تعديل `resolveLinkPreview` حتى تكون الأولوية لاسم الهوية الحالي `toolDisplayName` ثم SEO كاحتياط.
+تعديل وصف المشاركة حتى تكون الأولوية للسلوغن الحالي `toolSlogan` ثم SEO كاحتياط.
+تحديث المعاينة داخل صفحة الهوية لتعرض القيمة الفعلية نفسها التي ستستخدم عند المشاركة.
+رفع الإصدار إلى 0.2.97 وتوثيقه في VERSION_LOG.md.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ التعديل محليًا.
+✅ npm run lint نجح.
+✅ npm run build نجح.
+⏳ لم يتم تشغيل npm run deploy بعد؛ يحتاج موافقة صريحة على نشر الإنتاج.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Path PROJECT_MEMO.md
+Select-String -Path app\admin\identity\page.jsx -Pattern "useSiteTitle|useSiteSlogan|switch-current-value|mainSEO|toolDisplayName|toolSlogan"
+Select-String -Path app\layout.jsx,app\api\site-config\route.js -Pattern "resolveLinkPreview|mainSEO|toolDisplayName|toolSlogan|linkPreview"
+npm run lint
+npm run build
+```
+
+الملفات المتأثرة:
+
+```txt
+app/linkPreview.js
+app/admin/identity/page.jsx
 app/version.js
 package.json
 package-lock.json

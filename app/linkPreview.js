@@ -24,8 +24,8 @@ export function normalizeLinkPreviewSettings(settings = {}) {
 
 export function resolveLinkPreview(config = {}) {
     const settings = normalizeLinkPreviewSettings(config.linkPreview || {});
-    const titleFallback = config.mainSEO?.title || config.toolDisplayName || 'أدوات التاريخ الشاملة';
-    const descriptionFallback = config.mainSEO?.description || config.toolSlogan || 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة';
+    const titleFallback = config.toolDisplayName || config.mainSEO?.title || 'أدوات التاريخ الشاملة';
+    const descriptionFallback = config.toolSlogan || config.mainSEO?.description || 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة';
     const logoFallback = config.logoUrl || config.faviconUrl || '';
 
     return {

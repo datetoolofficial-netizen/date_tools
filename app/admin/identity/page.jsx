@@ -472,6 +472,8 @@ export default function AdminIdentityPage() {
     const copyrightPreview = `© ${new Date().getFullYear()} ${identity.copyrightText || 'جميع الحقوق محفوظة'}${identity.copyrightName ? ` لـ ${identity.copyrightName}` : ''}`;
     const linkPreviewData = resolveLinkPreview(identity);
     const linkPreviewImage = safePreviewImageUrl(linkPreviewData.imageUrl || identity.logoUrl || identity.faviconUrl || '');
+    const primaryIdentityTitle = identity.toolDisplayName || identity.mainSEO?.title || 'أدوات التاريخ الشاملة';
+    const primaryIdentitySlogan = identity.toolSlogan || identity.mainSEO?.description || 'وصف مختصر يظهر أسفل العنوان عند المشاركة';
     const pwaPreviewIcon = identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '';
     const pwaShortcutItems = [
         {
@@ -777,7 +779,7 @@ export default function AdminIdentityPage() {
                                     <strong>استخدم عنوان الهوية الأساسي</strong>
                                     <small>إذا أوقفته يمكنك كتابة عنوان مخصص للمشاركة فقط.</small>
                                     {identity.linkPreview?.useSiteTitle !== false && (
-                                        <small className="switch-current-value">{identity.mainSEO?.title || identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</small>
+                                        <small className="switch-current-value">{primaryIdentityTitle}</small>
                                     )}
                                 </span>
                             </label>
@@ -788,7 +790,7 @@ export default function AdminIdentityPage() {
                                     value={identity.linkPreview?.title || ''}
                                     onChange={(event) => setLinkPreviewField('title', event.target.value)}
                                     disabled={identity.linkPreview?.useSiteTitle !== false}
-                                    placeholder={identity.mainSEO?.title || identity.toolDisplayName || 'أدوات التاريخ الشاملة'}
+                                    placeholder={primaryIdentityTitle}
                                 />
                             </div>
 
@@ -803,7 +805,7 @@ export default function AdminIdentityPage() {
                                     <strong>استخدم السلوغن الأساسي</strong>
                                     <small>الوصف يظهر غالبًا تحت العنوان في تطبيقات المشاركة.</small>
                                     {identity.linkPreview?.useSiteSlogan !== false && (
-                                        <small className="switch-current-value">{identity.mainSEO?.description || identity.toolSlogan || 'وصف مختصر يظهر أسفل العنوان عند المشاركة'}</small>
+                                        <small className="switch-current-value">{primaryIdentitySlogan}</small>
                                     )}
                                 </span>
                             </label>
@@ -815,7 +817,7 @@ export default function AdminIdentityPage() {
                                     value={identity.linkPreview?.description || ''}
                                     onChange={(event) => setLinkPreviewField('description', event.target.value)}
                                     disabled={identity.linkPreview?.useSiteSlogan !== false}
-                                    placeholder={identity.mainSEO?.description || identity.toolSlogan || 'وصف مختصر يظهر أسفل العنوان عند المشاركة'}
+                                    placeholder={primaryIdentitySlogan}
                                 />
                             </div>
 
