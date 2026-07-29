@@ -7581,7 +7581,9 @@ PROJECT_MEMO.md
 ```txt
 ✅ npm run lint نجح.
 ✅ npm run build نجح.
-⚠️ npm run deploy لم يتم تنفيذه لأن نشر Cloudflare الإنتاجي يحتاج موافقة نشر صريحة منفصلة.
+✅ npm run deploy نجح بعد موافقة صريحة على نشر الإنتاج.
+✅ تم نشر الإصدار 0.2.96 على Cloudflare Version ID: 8abddc3f-347f-4b92-bad1-28026675c476.
+✅ تم اختبار `/`, `/admin/identity`, و `/manifest.webmanifest` على الإنتاج بعد النشر.
 ⏳ يلزم اختبار حفظ إعدادات PWA من `/admin/identity` بجلسة مدير فعلية بعد النشر.
 ```
 
@@ -7593,6 +7595,10 @@ Get-Content C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
 rg -n "pwaInstallPrompt|appIconUrl|manifest|shareEnabled" app
 npm run lint
 npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.96
+curl.exe -I https://date-tool.com/?v=0.2.96
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.96
 git diff --stat
 ```
 
