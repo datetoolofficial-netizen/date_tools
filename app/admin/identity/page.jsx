@@ -568,191 +568,202 @@ export default function AdminIdentityPage() {
                     </button>
                 </section>
 
-                <section className="legacy-identity-layout">
-                    <div className="legacy-google-card legacy-identity-card">
-                        <div className="legacy-page-heading">
+                <section className="legacy-google-card tools-section-card identity-basic-settings-card" id="identity-basic-settings">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-identity"><i className="fa-solid fa-fingerprint"></i></span>
                             <div>
-                                <h2 className="legacy-section-title">
-                                    <i className="fa-solid fa-fingerprint"></i>
-                                    بيانات العلامة
-                                </h2>
-                                <p>هذا القسم يحفظ حقول الهوية فقط، ولا يغيّر إعدادات الإعلانات أو الصفحات.</p>
-                            </div>
-                        </div>
-
-                        <div className="legacy-form-grid">
-                            <div className="legacy-field">
-                                <label>عنوان الأداة</label>
-                                <input
-                                    type="text"
-                                    value={identity.toolDisplayName}
-                                    onChange={(event) => setField('toolDisplayName', event.target.value)}
-                                    placeholder="مثال: أدوات التاريخ الشاملة"
-                                />
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>الوصف القصير</label>
-                                <input
-                                    type="text"
-                                    value={identity.toolSlogan}
-                                    onChange={(event) => setField('toolSlogan', event.target.value)}
-                                    placeholder="مثال: احسب عمرك وحول التواريخ بدقة"
-                                />
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>إيميل التواصل</label>
-                                <input
-                                    type="email"
-                                    dir="ltr"
-                                    value={identity.contactEmail}
-                                    onChange={(event) => setField('contactEmail', event.target.value)}
-                                    placeholder="contact@example.com"
-                                />
-                                <span className="legacy-field-hint">يستخدم أيضًا كقيمة لمتغير صفحات قاعدة البيانات: {'{{contactEmail}}'}</span>
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>إظهار اللوقو</label>
-                                <label className="legacy-switch-row">
-                                    <input
-                                        type="checkbox"
-                                        checked={identity.hasLogo}
-                                        onChange={(event) => setField('hasLogo', event.target.checked)}
-                                    />
-                                    <span>إظهار أو إخفاء اللوقو فقط بدون إخفاء اسم الأداة</span>
-                                </label>
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>رابط اللوقو</label>
-                                <label className={`legacy-media-picker ${uploadingTarget === 'logoUrl' ? 'is-uploading' : ''}`}>
-                                    <span className="legacy-media-picker-preview">
-                                        {identity.logoUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={identity.logoUrl} alt="معاينة اللوقو" />
-                                        ) : (
-                                            <i className="fa-regular fa-image"></i>
-                                        )}
-                                    </span>
-                                    <span className="legacy-media-picker-text">
-                                        <strong>{uploadingTarget === 'logoUrl' ? 'جاري رفع اللوقو...' : 'اختر أو استبدل اللوقو'}</strong>
-                                        <small dir="ltr">{identity.logoUrl || '/api/media/logo/...'}</small>
-                                    </span>
-                                    <span className="legacy-media-picker-action">
-                                        <i className="fa-solid fa-cloud-arrow-up"></i>
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
-                                        disabled={uploadingTarget === 'logoUrl'}
-                                        onChange={(event) => handleMediaUpload(event, 'logo', 'logoUrl', 'اللوقو')}
-                                    />
-                                </label>
-                                <span className="legacy-field-hint">يفضل لوقو PNG أو WEBP بخلفية شفافة.</span>
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>رابط أيقونة المتصفح favicon</label>
-                                <label className={`legacy-media-picker ${uploadingTarget === 'faviconUrl' ? 'is-uploading' : ''}`}>
-                                    <span className="legacy-media-picker-preview small">
-                                        {identity.faviconUrl ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={identity.faviconUrl} alt="معاينة favicon" />
-                                        ) : (
-                                            <i className="fa-regular fa-image"></i>
-                                        )}
-                                    </span>
-                                    <span className="legacy-media-picker-text">
-                                        <strong>{uploadingTarget === 'faviconUrl' ? 'جاري رفع الأيقونة...' : 'اختر أو استبدل أيقونة المتصفح'}</strong>
-                                        <small dir="ltr">{identity.faviconUrl || '/api/media/favicon/...'}</small>
-                                    </span>
-                                    <span className="legacy-media-picker-action">
-                                        <i className="fa-solid fa-cloud-arrow-up"></i>
-                                    </span>
-                                    <input
-                                        type="file"
-                                        accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
-                                        disabled={uploadingTarget === 'faviconUrl'}
-                                        onChange={(event) => handleMediaUpload(event, 'favicon', 'faviconUrl', 'أيقونة المتصفح')}
-                                    />
-                                </label>
-                                <span className="legacy-field-hint">يدعم ICO أو PNG، والحفظ النهائي يتم بزر حفظ الهوية.</span>
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>صاحب الحقوق</label>
-                                <input
-                                    type="text"
-                                    value={identity.copyrightName}
-                                    onChange={(event) => setField('copyrightName', event.target.value)}
-                                    placeholder="مثال: أدوات التاريخ"
-                                />
-                            </div>
-
-                            <div className="legacy-field">
-                                <label>نص الحقوق</label>
-                                <input
-                                    type="text"
-                                    value={identity.copyrightText}
-                                    onChange={(event) => setField('copyrightText', event.target.value)}
-                                    placeholder="مثال: جميع الحقوق محفوظة"
-                                />
+                                <h2>التعديل الأساسي للأداة</h2>
+                                <p>عدّل اسم الأداة، السلوغن، البريد، اللوقو، الأيقونات، وحقوق الموقع من مكان واحد.</p>
                             </div>
                         </div>
                     </div>
 
-                    <aside className="legacy-google-card legacy-identity-preview-card">
-                        <div className="legacy-preview-top">
-                            <div className="legacy-logo-preview">
-                                {identity.hasLogo && identity.logoUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={identity.logoUrl} alt="معاينة اللوقو" />
-                                ) : (
-                                    <i className="fa-solid fa-calendar-days"></i>
-                                )}
+                    <div className="legacy-identity-layout">
+                        <div className="legacy-identity-card">
+                            <div className="identity-card-note">
+                                <span className="identity-card-note-icon"><i className="fa-solid fa-fingerprint"></i></span>
+                                <div>
+                                    <h3>بيانات العلامة</h3>
+                                    <p>هذا القسم يحفظ حقول الهوية فقط، ولا يغيّر إعدادات الإعلانات أو الصفحات.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</h3>
-                                <p>{identity.toolSlogan || 'احسب عمرك وحول التواريخ بدقة'}</p>
+
+                            <div className="legacy-form-grid">
+                                <div className="legacy-field">
+                                    <label>عنوان الأداة</label>
+                                    <input
+                                        type="text"
+                                        value={identity.toolDisplayName}
+                                        onChange={(event) => setField('toolDisplayName', event.target.value)}
+                                        placeholder="مثال: أدوات التاريخ الشاملة"
+                                    />
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>الوصف القصير</label>
+                                    <input
+                                        type="text"
+                                        value={identity.toolSlogan}
+                                        onChange={(event) => setField('toolSlogan', event.target.value)}
+                                        placeholder="مثال: احسب عمرك وحول التواريخ بدقة"
+                                    />
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>إيميل التواصل</label>
+                                    <input
+                                        type="email"
+                                        dir="ltr"
+                                        value={identity.contactEmail}
+                                        onChange={(event) => setField('contactEmail', event.target.value)}
+                                        placeholder="contact@example.com"
+                                    />
+                                    <span className="legacy-field-hint">يستخدم أيضًا كقيمة لمتغير صفحات قاعدة البيانات: {'{{contactEmail}}'}</span>
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>إظهار اللوقو</label>
+                                    <label className="legacy-switch-row">
+                                        <input
+                                            type="checkbox"
+                                            checked={identity.hasLogo}
+                                            onChange={(event) => setField('hasLogo', event.target.checked)}
+                                        />
+                                        <span>إظهار أو إخفاء اللوقو فقط بدون إخفاء اسم الأداة</span>
+                                    </label>
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>رابط اللوقو</label>
+                                    <label className={`legacy-media-picker ${uploadingTarget === 'logoUrl' ? 'is-uploading' : ''}`}>
+                                        <span className="legacy-media-picker-preview">
+                                            {identity.logoUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={identity.logoUrl} alt="معاينة اللوقو" />
+                                            ) : (
+                                                <i className="fa-regular fa-image"></i>
+                                            )}
+                                        </span>
+                                        <span className="legacy-media-picker-text">
+                                            <strong>{uploadingTarget === 'logoUrl' ? 'جاري رفع اللوقو...' : 'اختر أو استبدل اللوقو'}</strong>
+                                            <small dir="ltr">{identity.logoUrl || '/api/media/logo/...'}</small>
+                                        </span>
+                                        <span className="legacy-media-picker-action">
+                                            <i className="fa-solid fa-cloud-arrow-up"></i>
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                            disabled={uploadingTarget === 'logoUrl'}
+                                            onChange={(event) => handleMediaUpload(event, 'logo', 'logoUrl', 'اللوقو')}
+                                        />
+                                    </label>
+                                    <span className="legacy-field-hint">يفضل لوقو PNG أو WEBP بخلفية شفافة.</span>
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>رابط أيقونة المتصفح favicon</label>
+                                    <label className={`legacy-media-picker ${uploadingTarget === 'faviconUrl' ? 'is-uploading' : ''}`}>
+                                        <span className="legacy-media-picker-preview small">
+                                            {identity.faviconUrl ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={identity.faviconUrl} alt="معاينة favicon" />
+                                            ) : (
+                                                <i className="fa-regular fa-image"></i>
+                                            )}
+                                        </span>
+                                        <span className="legacy-media-picker-text">
+                                            <strong>{uploadingTarget === 'faviconUrl' ? 'جاري رفع الأيقونة...' : 'اختر أو استبدل أيقونة المتصفح'}</strong>
+                                            <small dir="ltr">{identity.faviconUrl || '/api/media/favicon/...'}</small>
+                                        </span>
+                                        <span className="legacy-media-picker-action">
+                                            <i className="fa-solid fa-cloud-arrow-up"></i>
+                                        </span>
+                                        <input
+                                            type="file"
+                                            accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                                            disabled={uploadingTarget === 'faviconUrl'}
+                                            onChange={(event) => handleMediaUpload(event, 'favicon', 'faviconUrl', 'أيقونة المتصفح')}
+                                        />
+                                    </label>
+                                    <span className="legacy-field-hint">يدعم ICO أو PNG، والحفظ النهائي يتم بزر حفظ الهوية.</span>
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>صاحب الحقوق</label>
+                                    <input
+                                        type="text"
+                                        value={identity.copyrightName}
+                                        onChange={(event) => setField('copyrightName', event.target.value)}
+                                        placeholder="مثال: أدوات التاريخ"
+                                    />
+                                </div>
+
+                                <div className="legacy-field">
+                                    <label>نص الحقوق</label>
+                                    <input
+                                        type="text"
+                                        value={identity.copyrightText}
+                                        onChange={(event) => setField('copyrightText', event.target.value)}
+                                        placeholder="مثال: جميع الحقوق محفوظة"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="legacy-preview-row">
-                            <span>إيميل التواصل</span>
-                            <strong dir="ltr">{identity.contactEmail || 'غير محدد'}</strong>
-                        </div>
-
-                        <div className="legacy-preview-row">
-                            <span>أيقونة المتصفح</span>
-                            <div className="legacy-favicon-preview">
-                                {identity.faviconUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={identity.faviconUrl} alt="معاينة favicon" />
-                                ) : (
-                                    <i className="fa-regular fa-image"></i>
-                                )}
+                        <aside className="legacy-identity-preview-card">
+                            <div className="legacy-preview-top">
+                                <div className="legacy-logo-preview">
+                                    {identity.hasLogo && identity.logoUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={identity.logoUrl} alt="معاينة اللوقو" />
+                                    ) : (
+                                        <i className="fa-solid fa-calendar-days"></i>
+                                    )}
+                                </div>
+                                <div>
+                                    <span className="legacy-preview-label">معاينة الهوية</span>
+                                    <h3>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</h3>
+                                    <p>{identity.toolSlogan || 'احسب عمرك وحول التواريخ بدقة'}</p>
+                                </div>
                             </div>
-                        </div>
 
-                        <div className="legacy-preview-row">
-                            <span>أيقونة التطبيق</span>
-                            <div className="legacy-favicon-preview">
-                                {identity.appIconUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
-                                ) : (
-                                    <i className="fa-solid fa-mobile-screen-button"></i>
-                                )}
+                            <div className="legacy-preview-row">
+                                <span>إيميل التواصل</span>
+                                <strong dir="ltr">{identity.contactEmail || 'غير محدد'}</strong>
                             </div>
-                        </div>
 
-                        <div className="legacy-rights-preview">
-                            <i className="fa-regular fa-copyright"></i>
-                            <span>{copyrightPreview}</span>
-                        </div>
-                    </aside>
+                            <div className="legacy-preview-row">
+                                <span>أيقونة المتصفح</span>
+                                <div className="legacy-favicon-preview">
+                                    {identity.faviconUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={identity.faviconUrl} alt="معاينة favicon" />
+                                    ) : (
+                                        <i className="fa-regular fa-image"></i>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="legacy-preview-row">
+                                <span>أيقونة التطبيق</span>
+                                <div className="legacy-favicon-preview">
+                                    {identity.appIconUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
+                                    ) : (
+                                        <i className="fa-solid fa-mobile-screen-button"></i>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="legacy-rights-preview">
+                                <i className="fa-regular fa-copyright"></i>
+                                <span>{copyrightPreview}</span>
+                            </div>
+                        </aside>
+                    </div>
                 </section>
 
                 <section className="legacy-google-card tools-section-card identity-link-preview-card" id="link-preview">

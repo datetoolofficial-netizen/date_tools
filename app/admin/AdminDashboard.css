@@ -49,8 +49,10 @@ body.dark-mode .legacy-admin-shell {
 .admin-dashboard-loading,
 .admin-dashboard-error {
     min-height: 100vh;
-    background: #fbfbfb;
-    color: #1e293b;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(59, 130, 246, 0.16), transparent 28%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    color: #f8fafc;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -61,8 +63,22 @@ body.dark-mode .legacy-admin-shell {
 }
 
 .admin-dashboard-loading i {
-    color: #3b82f6;
+    width: 78px;
+    height: 78px;
+    border-radius: 24px;
+    background: rgba(59, 130, 246, 0.13);
+    color: #60a5fa;
     font-size: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-dashboard-loading h3 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 17px;
+    font-weight: 900;
 }
 
 .admin-dashboard-error {
@@ -200,12 +216,12 @@ body.dark-mode .legacy-admin-shell {
     display: flex;
     align-items: center;
     padding: 12px 20px;
-    color: var(--text-sub);
+    color: color-mix(in srgb, var(--text-main) 76%, var(--text-sub));
     text-decoration: none;
     font-weight: 700;
     font-size: 14px;
     border-right: 4px solid transparent;
-    transition: background 0.25s, color 0.25s, border-color 0.25s;
+    transition: background 0.25s, color 0.25s, border-color 0.25s, opacity 0.25s;
 }
 
 .legacy-nav-links a i {
@@ -232,9 +248,19 @@ body.dark-mode .legacy-admin-shell {
 
 .legacy-nav-links a:hover,
 .legacy-nav-links a.active {
-    background: rgba(59, 130, 246, 0.07);
+    background: rgba(59, 130, 246, 0.11);
     color: var(--primary-color);
     border-right-color: var(--primary-color);
+}
+
+body.dark-mode .legacy-nav-links a {
+    color: #cbd5e1;
+}
+
+body.dark-mode .legacy-nav-links a:hover,
+body.dark-mode .legacy-nav-links a.active {
+    background: rgba(59, 130, 246, 0.16);
+    color: #60a5fa;
 }
 
 .legacy-sidebar.collapsed .legacy-sidebar-logo h2,
@@ -1793,6 +1819,12 @@ body.dark-mode .legacy-admin-shell {
     --tool-bg: rgba(37, 99, 235, 0.14);
 }
 
+.tools-section-card#identity-basic-settings,
+.identity-basic-settings-card {
+    --tool-color: #3b82f6;
+    --tool-bg: rgba(59, 130, 246, 0.14);
+}
+
 .tools-section-card#privacy-settings-button,
 .tools-privacy-settings-card {
     --tool-color: #2563eb;
@@ -2932,6 +2964,60 @@ body.dark-mode .legacy-admin-shell {
     margin-bottom: 18px;
 }
 
+.identity-basic-settings-card {
+    background:
+        radial-gradient(circle at 16% 12%, color-mix(in srgb, var(--tool-color) 14%, transparent), transparent 34%),
+        var(--bg-container);
+}
+
+.identity-basic-settings-card .legacy-identity-card,
+.legacy-identity-preview-card {
+    border: 1px solid color-mix(in srgb, var(--tool-color, #3b82f6) 22%, var(--border-color));
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--tool-color, #3b82f6) 12%, transparent), transparent 30%),
+        color-mix(in srgb, var(--bg-container) 86%, var(--bg-body));
+    padding: 18px;
+}
+
+.identity-card-note {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid color-mix(in srgb, var(--tool-color, #3b82f6) 24%, var(--border-color));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--tool-color, #3b82f6) 10%, transparent);
+}
+
+.identity-card-note-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--tool-color, #3b82f6) 16%, var(--bg-body));
+    color: var(--tool-color, #3b82f6);
+    font-size: 20px;
+}
+
+.identity-card-note h3 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 950;
+}
+
+.identity-card-note p {
+    margin: 4px 0 0;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.8;
+}
+
 .legacy-switch-row {
     min-height: 46px;
     display: flex;
@@ -2986,6 +3072,9 @@ body.dark-mode .legacy-admin-shell {
     border-radius: 22px;
     font-size: 28px;
     flex: 0 0 auto;
+    background:
+        radial-gradient(circle at 35% 20%, rgba(96, 165, 250, 0.18), transparent 38%),
+        var(--bg-body);
 }
 
 .legacy-logo-preview img,
@@ -3002,6 +3091,14 @@ body.dark-mode .legacy-admin-shell {
     font-size: 18px;
 }
 
+.legacy-preview-label {
+    display: inline-flex;
+    margin-bottom: 6px;
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 950;
+}
+
 .legacy-preview-top p {
     margin: 0;
     color: var(--text-sub);
@@ -3016,7 +3113,7 @@ body.dark-mode .legacy-admin-shell {
     padding: 14px;
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    background: var(--bg-body);
+    background: color-mix(in srgb, var(--bg-body) 82%, var(--tool-bg, rgba(59, 130, 246, 0.12)));
 }
 
 .legacy-preview-row {
@@ -3503,6 +3600,20 @@ body.dark-mode .legacy-admin-shell {
     color: var(--text-sub);
     line-height: 1.8;
     max-width: 520px;
+}
+
+@media (max-width: 1180px) {
+    .legacy-identity-layout,
+    .identity-pwa-grid,
+    .link-preview-admin-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .legacy-identity-preview-card,
+    .identity-pwa-preview-card {
+        position: static;
+        order: 2;
+    }
 }
 
 @media (max-width: 900px) {
