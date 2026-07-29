@@ -8121,6 +8121,62 @@ PROJECT_MEMO.md
 
 ---
 
+### نشر تنظيف CSS وخريطة الموقع على الإنتاج - 0.2.98 / admin 0.1.4
+
+الأعراض:
+
+```txt
+كانت نسخة 0.2.98 / admin 0.1.4 مرفوعة إلى GitHub فقط بعد مهمة التنظيف العامة، ولم تكن منشورة على Cloudflare بعد.
+```
+
+السبب:
+
+```txt
+تم فصل مهمة التنظيف عن مهمة النشر حتى لا يتم النشر إلا بعد موافقة صريحة من المستخدم.
+```
+
+الحل:
+
+```txt
+بعد موافقة المستخدم الصريحة، تم تشغيل npm run deploy عبر OpenNext for Cloudflare.
+فشلت المحاولة الأولى في مرحلة wrangler deploy بسبب مشكلة اتصال/DNS مؤقتة ظهرت كـ fetch failed و ENOTFOUND firestore.googleapis.com.
+تم فحص DNS و Wrangler auth بنجاح، ثم أعيد تشغيل npm run deploy ونجح النشر.
+```
+
+الحالة:
+
+```txt
+✅ نجح OpenNext build.
+✅ نجح رفع الأصول الجديدة إلى Cloudflare.
+✅ تم نشر Worker datetools على الإنتاج.
+✅ Cloudflare Version ID: 25872a4f-a4b4-4593-8091-3b8af3c27dee
+✅ تم اختبار https://date-tool.com/ ورجع 200.
+✅ تم اختبار https://date-tool.com/sitemap.xml ورجع 200 ويتضمن /clock و /weather.
+✅ تم اختبار https://date-tool.com/admin/ads ورجع 200.
+⚠️ ظهرت تحذيرات OpenNext الخاصة بتشغيله على Windows، لكنها لم تمنع النشر.
+✅ تم تحديث PROJECT_MEMO.md بنتيجة النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+npx wrangler --version
+npx wrangler whoami
+Resolve-DnsName firestore.googleapis.com
+npm run deploy
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/sitemap.xml
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/admin/ads
+```
+
+الملفات المتأثرة:
+
+```txt
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8468,7 +8524,8 @@ PROJECT_MEMO.md
 ✅ نسخة الموقع الأساسية في الكود الحالي هي 0.2.98
 ✅ نسخة منصة الإدارة في الكود الحالي هي 0.1.4
 ✅ تم تنظيف CSS المشترك للأزرار العامة وجداول الإدارة وتوسيع sitemap لصفحات الأدوات العامة
-⏳ لم يتم نشر نسخة 0.2.98 / admin 0.1.4 على الإنتاج ضمن مهمة التنظيف العامة
+✅ تم نشر نسخة 0.2.98 / admin 0.1.4 على Cloudflare Version ID: 25872a4f-a4b4-4593-8091-3b8af3c27dee
+✅ تم اختبار `/`, `/sitemap.xml`, و `/admin/ads` على الإنتاج بنجاح
 ✅ نسخة منصة الإدارة السابقة في الكود كانت 0.1.3 دون تغيير نسخة الموقع الأساسية 0.2.97
 ✅ تم نشر نسخة الإدارة 0.1.3 على Cloudflare Version ID: 115e8215-fbf6-4519-8dfa-1a464f175b9d
 ✅ تم حذف الشعار SVG التجريبي غير المعتمد من public/brand بناءً على طلب المستخدم
