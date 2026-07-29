@@ -7935,6 +7935,58 @@ PROJECT_MEMO.md
 
 ---
 
+### نشر نسخة الإدارة 0.1.2 على الإنتاج
+
+الأعراض:
+
+```txt
+بعد تحسين واجهة إدارة الإعلانات وإدارة الأدوات، وافق المستخدم صراحة على نشر الإنتاج عبر npm run deploy.
+```
+
+السبب:
+
+```txt
+التعديلات كانت قد رُفعت إلى GitHub ولم تكن منشورة بعد على Cloudflare Workers.
+```
+
+الحل:
+
+```txt
+تشغيل npm run deploy باستخدام OpenNext for Cloudflare.
+فحص استجابة صفحات الإنتاج المهمة بعد النشر.
+```
+
+الحالة:
+
+```txt
+✅ npm run deploy نجح.
+✅ تم نشر Worker datetools بنجاح.
+✅ Cloudflare Version ID: d0c97ec4-8e6d-4664-8fa2-9cd62105acae.
+✅ https://date-tool.com/?v=0.2.97 ردت 200 OK.
+✅ https://date-tool.com/admin/ads?v=0.1.2 ردت 200 OK.
+✅ https://date-tool.com/admin/tool-management/date?v=0.1.2 ردت 200 OK.
+⚠️ ظهر تحذير OpenNext المعتاد بأن Windows ليس البيئة المثلى، ولم يمنع النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Path PROJECT_MEMO.md -TotalCount 120
+Get-Content -Path C:\Users\d7mi6\.codex\skills\wrangler\SKILL.md
+npm run deploy
+curl.exe -I https://date-tool.com/admin/ads?v=0.1.2
+curl.exe -I https://date-tool.com/admin/tool-management/date?v=0.1.2
+curl.exe -I https://date-tool.com/?v=0.2.97
+```
+
+الملفات المتأثرة:
+
+```txt
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8280,7 +8332,7 @@ PROJECT_MEMO.md
 ✅ تم اختبار `/admin/tool-management/date`, `/admin/tool-management/clock`, و `/` على الإنتاج بنجاح
 ✅ تمت إزالة شاشة التحميل البيضاء من صفحات الإدارة واستبدالها بتحميل داكن متوافق مع الهوية
 ✅ نسخة منصة الإدارة في الكود الحالي هي 0.1.2 دون تغيير نسخة الموقع الأساسية 0.2.97
-✅ تم نشر نسخة الإدارة 0.1.1 على Cloudflare Version ID: aa04eb71-ac54-47fb-b032-a12f193064a4
+✅ تم نشر نسخة الإدارة 0.1.2 على Cloudflare Version ID: d0c97ec4-8e6d-4664-8fa2-9cd62105acae
 ✅ تم حذف الشعار SVG التجريبي غير المعتمد من public/brand بناءً على طلب المستخدم
 ```
 
