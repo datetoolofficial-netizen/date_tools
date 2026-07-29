@@ -212,14 +212,14 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
             <div className="tools-list tool-subtools-list">
                 <div className="tools-table-head">
-                    <span>معرف الأداة</span>
+                    <span>اسم مختصر</span>
                     <span>الاسم المعروض</span>
                 </div>
                 {Object.entries(defaults.subtools || {}).map(([key, fallback]) => (
                     <div className="tools-item-card compact" key={key}>
-                        <strong dir="ltr">{key}</strong>
+                        <strong>{fallback}</strong>
                         <div className="legacy-field">
-                            <label>{fallback}</label>
+                            <label>الاسم المعروض</label>
                             <input value={settings.subtools?.[key] || ''} onChange={(event) => updateSubtool(key, event.target.value)} />
                         </div>
                     </div>
@@ -229,7 +229,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             <div className="tools-list tool-share-templates-list">
                 <div className="tools-table-head">
                     <span>مكان المشاركة</span>
-                    <span>النص الحالي</span>
                     <span>الإجراءات</span>
                 </div>
                 {Object.entries(SHARE_TEMPLATE_DEFINITIONS[toolKey] || {}).map(([key, definition]) => (
@@ -237,11 +236,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         <div className="tool-share-key">
                             <strong>{getSharePlaceLabel(definition.label)}</strong>
                             <small>{settings.shareEnabled?.[key] === false ? 'زر المشاركة متوقف' : 'زر المشاركة مفعل'}</small>
-                        </div>
-                        <div className="tool-share-template-editor">
-                            <div className="tool-share-template-summary">
-                                <p>{getTemplateSummary(settings.shareTemplates?.[key])}</p>
-                            </div>
                         </div>
                         <div className="tools-item-actions tool-share-actions">
                             <button
@@ -323,15 +317,15 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             )}
 
             <div className="tool-faq-admin">
-                <div className="tools-section-head compact-head">
+                <div className="tools-section-head compact-head faq-head">
                     <div className="tools-section-title">
                         <h2>أسئلة إضافية</h2>
                         <p>تظهر هذه الأسئلة أسفل الأسئلة الافتراضية في صفحة الأداة.</p>
+                        <button type="button" className="legacy-secondary-btn" onClick={addFaq}>
+                            <i className="fa-solid fa-plus"></i>
+                            إضافة سؤال
+                        </button>
                     </div>
-                    <button type="button" className="legacy-secondary-btn" onClick={addFaq}>
-                        <i className="fa-solid fa-plus"></i>
-                        إضافة سؤال
-                    </button>
                 </div>
 
                 <div className="tools-list tool-faq-list">

@@ -363,9 +363,16 @@ body.dark-mode .legacy-nav-links a.active {
     font-size: 16px;
 }
 
+.legacy-theme-toggle i {
+    transition: transform 0.25s ease;
+}
+
 .legacy-theme-toggle:hover {
     background: var(--primary-color);
     color: #ffffff;
+}
+
+.legacy-theme-toggle:hover i {
     transform: rotate(25deg);
 }
 
@@ -906,6 +913,9 @@ body.dark-mode .legacy-nav-links a.active {
 .legacy-row-actions {
     display: flex;
     gap: 8px;
+    align-items: center;
+    flex-flow: row nowrap;
+    white-space: nowrap;
 }
 
 .legacy-row-actions button,
@@ -920,6 +930,7 @@ body.dark-mode .legacy-nav-links a.active {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
 }
 
 .legacy-row-actions button.danger,
@@ -1106,29 +1117,54 @@ body.dark-mode .legacy-nav-links a.active {
 .legacy-ad-kpis {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 12px;
+    margin: 22px 0 18px;
 }
 
 .legacy-ad-kpis div {
-    background: var(--bg-container);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    min-height: 112px;
+    display: grid;
+    place-items: center;
+    gap: 7px;
+    text-align: center;
+    background:
+        radial-gradient(circle at 18% 88%, rgba(59, 130, 246, 0.16), transparent 34%),
+        linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 12%, var(--bg-container)), var(--bg-container));
+    border: 1px solid color-mix(in srgb, var(--primary-color) 18%, var(--border-color));
+    border-radius: 18px;
+    padding: 16px 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+.legacy-ad-kpis div::before {
+    content: "";
+    position: absolute;
+    inset: auto auto -26px -22px;
+    width: 90px;
+    height: 90px;
+    border-radius: 28px;
+    background: rgba(59, 130, 246, 0.1);
+    transform: rotate(12deg);
 }
 
 .legacy-ad-kpis span {
-    display: block;
+    position: relative;
+    z-index: 1;
     color: var(--text-sub);
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 800;
-    margin-bottom: 6px;
+    line-height: 1.45;
 }
 
 .legacy-ad-kpis strong {
+    position: relative;
+    z-index: 1;
     direction: ltr;
     color: var(--text-main);
-    font-size: 22px;
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1;
     font-variant-numeric: tabular-nums;
 }
 
@@ -1154,6 +1190,10 @@ body.dark-mode .legacy-nav-links a.active {
 
 .old-ads-table {
     min-width: 1050px;
+}
+
+.old-ads-table td:last-child {
+    min-width: 238px;
 }
 
 .old-ads-table th {
@@ -1191,7 +1231,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .old-action-btns {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: center;
+    min-width: max-content;
 }
 
 .old-action-btns button {
@@ -2445,9 +2487,9 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tool-share-templates-list .tools-table-head,
 .tool-share-template-row {
-    min-width: 700px;
+    min-width: 560px;
     display: grid;
-    grid-template-columns: minmax(150px, 0.7fr) minmax(320px, 1.4fr) 146px;
+    grid-template-columns: minmax(220px, 1fr) 146px;
     gap: 12px;
     align-items: center;
 }
@@ -2628,6 +2670,23 @@ body.dark-mode .legacy-nav-links a.active {
     justify-items: stretch;
 }
 
+.tools-section-head.compact-head.faq-head {
+    grid-template-columns: 1fr;
+    text-align: center;
+    justify-items: center;
+}
+
+.tools-section-head.compact-head.faq-head .tools-section-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.tools-section-head.compact-head.faq-head .legacy-secondary-btn {
+    align-self: center;
+}
+
 .tool-faq-row {
     grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) 80px;
     align-items: end;
@@ -2727,6 +2786,10 @@ body.dark-mode .legacy-nav-links a.active {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
     align-items: end;
+}
+
+.tool-share-templates-list .tools-item-card.tool-share-template-row {
+    grid-template-columns: minmax(220px, 1fr) 146px;
 }
 
 .tools-item-card.event {
@@ -3924,6 +3987,18 @@ body.dark-mode .legacy-nav-links a.active {
 
     .legacy-top-nav {
         padding: 9px 10px;
+    }
+
+    .legacy-logout-btn {
+        width: 52px;
+        min-width: 52px;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 14px;
+    }
+
+    .legacy-logout-btn span {
+        display: none;
     }
 
     .legacy-welcome-banner {

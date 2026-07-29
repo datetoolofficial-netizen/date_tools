@@ -10,7 +10,6 @@ const toolCards = [
         href: '/admin/tool-management/date',
         icon: 'fa-calendar-days',
         color: 'color-pages',
-        status: 'متاحة الآن',
     },
     {
         title: 'أداة الساعة',
@@ -18,7 +17,6 @@ const toolCards = [
         href: '/admin/tool-management/clock',
         icon: 'fa-clock',
         color: 'color-links',
-        status: 'إدارة مستقلة',
     },
     {
         title: 'أداة الطقس',
@@ -26,7 +24,6 @@ const toolCards = [
         href: '/admin/tool-management/weather',
         icon: 'fa-cloud-sun',
         color: 'color-social',
-        status: 'إدارة مستقلة',
     },
 ];
 
@@ -55,7 +52,6 @@ export default function AdminToolManagementPage() {
                                 <h3>{tool.title}</h3>
                                 <p>{tool.description}</p>
                             </div>
-                            <strong>{tool.status}</strong>
                         </Link>
                     ))}
                 </div>
