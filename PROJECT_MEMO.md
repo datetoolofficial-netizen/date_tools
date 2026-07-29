@@ -8226,7 +8226,7 @@ rg "pwa|install|showAgain|APP_VERSION|ADMIN_VERSION|serviceWorker|manifest|befor
 git diff --check
 npm run lint
 npm run build
-git add .
+git add PROJECT_MEMO.md VERSION_LOG.md app/components/PwaInstallPrompt.jsx app/globals.css app/version.js package.json package-lock.json
 git commit -m "Add PWA update notice"
 git push origin master
 ```
