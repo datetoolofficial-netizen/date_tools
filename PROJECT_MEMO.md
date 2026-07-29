@@ -7659,7 +7659,9 @@ PROJECT_MEMO.md
 ✅ تم تنفيذ التعديل محليًا.
 ✅ npm run lint نجح.
 ✅ npm run build نجح.
-⏳ لم يتم تشغيل npm run deploy بعد؛ يحتاج موافقة صريحة على نشر الإنتاج.
+✅ npm run deploy نجح بعد موافقة صريحة على نشر الإنتاج.
+✅ تم نشر الإصدار 0.2.97 على Cloudflare Version ID: 7c3b2971-b646-4bf0-a534-724cf3242e46.
+✅ تم اختبار `/`, `/admin/identity`, و `/manifest.webmanifest` على الإنتاج بعد النشر.
 ```
 
 الأوامر المستخدمة:
@@ -7670,6 +7672,10 @@ Select-String -Path app\admin\identity\page.jsx -Pattern "useSiteTitle|useSiteSl
 Select-String -Path app\layout.jsx,app\api\site-config\route.js -Pattern "resolveLinkPreview|mainSEO|toolDisplayName|toolSlogan|linkPreview"
 npm run lint
 npm run build
+npm run deploy
+curl.exe -I https://date-tool.com/?v=0.2.97
+curl.exe -I https://date-tool.com/admin/identity?v=0.2.97
+curl.exe -s https://date-tool.com/manifest.webmanifest?v=0.2.97
 ```
 
 الملفات المتأثرة:
