@@ -1,4 +1,5 @@
 import { resolveLinkPreview } from '../linkPreview';
+import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
 import PageClient from './PageClient';
 
 export const dynamic = 'force-dynamic';
@@ -150,8 +151,9 @@ export async function generateMetadata({ params }) {
     const preview = resolveLinkPreview(config);
     const pageTitle = page ? getPageTitle(page) : 'صفحة داخلية';
     const pageDescription = page ? getPageDescription(page) : '';
-    const title = `${pageTitle} | ${preview.siteName || preview.title || 'أدوات التاريخ الشاملة'}`;
-    const description = pageDescription || preview.description || 'صفحة داخلية من موقع أدوات التاريخ الشاملة.';
+    const siteName = preview.siteName || preview.title || config.toolDisplayName || SITE_NAME;
+    const title = `${pageTitle} | ${siteName}`;
+    const description = pageDescription || preview.description || config.toolSlogan || DEFAULT_SITE_DESCRIPTION;
     const imageUrl = absoluteUrl(preview.imageUrl);
 
     return {
@@ -164,7 +166,7 @@ export async function generateMetadata({ params }) {
             title,
             description,
             url: canonicalPath,
-            siteName: preview.siteName || preview.title || 'أدوات التاريخ الشاملة',
+            siteName,
             type: 'article',
             images: imageUrl ? [{ url: imageUrl, alt: title }] : undefined,
         },

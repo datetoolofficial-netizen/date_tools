@@ -2873,6 +2873,29 @@
     font-size: 15px;
     margin-bottom: 15px;
 }
+.tool-seo-content .seo-card h2 {
+    color: var(--text-main);
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.35;
+    margin: 0 0 14px;
+    text-align: center;
+}
+.tool-seo-content .seo-card p,
+.tool-seo-content .seo-card li {
+    color: var(--text-sub);
+    font-size: clamp(14px, 1.45vw, 17px);
+    line-height: 1.9;
+}
+.tool-seo-content .seo-card ul {
+    margin: 12px 0 0;
+    padding-inline-start: 22px;
+}
+.tool-seo-content .seo-source-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--input-bg) 72%, var(--primary));
+}
 
 /* Final homepage surface cleanup: remove section borders while preserving contrast. */
 .result,

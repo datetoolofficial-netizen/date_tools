@@ -1,15 +1,14 @@
 import { Cairo } from 'next/font/google';
 import ExternalIntegrations from './components/ExternalIntegrations';
 import FontAwesomeLoader from './components/FontAwesomeLoader';
-import { i18n } from './i18n';
 import { resolveLinkPreview } from './linkPreview';
+import { DEFAULT_SITE_DESCRIPTION, SITE_NAME, buildSiteJsonLd } from './seoConfig';
 import SiteShell from './SiteShell';
 import { APP_VERSION } from './version';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
 const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
-const meta = i18n.ar;
 const cairo = Cairo({
     subsets: ['arabic', 'latin'],
     weight: ['400', '600', '700', '800'],
@@ -89,8 +88,8 @@ async function getMetadataConfig() {
 export async function generateMetadata() {
     const config = await getMetadataConfig();
     const preview = resolveLinkPreview(config);
-    const title = preview.title || meta.pageTitle;
-    const description = preview.description || meta.pageDescription;
+    const title = preview.title || config.mainSEO?.title || config.toolDisplayName || SITE_NAME;
+    const description = preview.description || config.mainSEO?.description || config.toolSlogan || DEFAULT_SITE_DESCRIPTION;
     const siteName = preview.siteName || title;
     const imageUrl = absoluteUrl(preview.imageUrl);
     const faviconUrl = absoluteUrl(config.faviconUrl || config.appIconUrl || config.logoUrl);
@@ -142,10 +141,16 @@ export async function generateMetadata() {
 }
 
 export default function RootLayout({ children }) {
+    const siteJsonLd = buildSiteJsonLd();
+
     return (
         <html lang="ar" dir="rtl">
             <head>
                 <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+                />
             </head>
             <body className={cairo.className}>
                 <FontAwesomeLoader />
