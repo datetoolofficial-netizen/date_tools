@@ -8379,6 +8379,66 @@ PROJECT_MEMO.md
 
 ---
 
+### نشر المرحلة الأولى من تحسين SEO وأدسنس على الإنتاج - 0.3.0 / admin 0.1.4
+
+الأعراض:
+
+```txt
+كانت تحسينات SEO و JSON-LD والمحتوى النصي وخريطة الموقع الديناميكية موجودة في الكود ومرفوعة إلى GitHub، لكنها لم تكن منشورة على Cloudflare بعد.
+```
+
+السبب:
+
+```txt
+كان يلزم الحصول على موافقة صريحة قبل تشغيل npm run deploy لأن الأمر ينشر مباشرة إلى الإنتاج.
+```
+
+الحل:
+
+```txt
+بعد موافقة المستخدم الصريحة، تم تشغيل npm run deploy.
+نجح OpenNext build ونجح رفع الأصول الجديدة إلى Cloudflare Workers.
+تم نشر Worker datetools على الإنتاج.
+تم اختبار الصفحات العامة ومسارات SEO الأساسية بعد النشر.
+```
+
+الحالة:
+
+```txt
+✅ نجح npm run deploy.
+✅ تم نشر نسخة 0.3.0 / admin 0.1.4 على Cloudflare.
+✅ Cloudflare Version ID: e6dbc554-cb5c-4599-84e3-98008a8ed766
+✅ تم اختبار https://date-tool.com/ ورجع 200 ويتضمن 0.3.0 و JSON-LD.
+✅ تم اختبار https://date-tool.com/clock ورجع 200.
+✅ تم اختبار https://date-tool.com/weather ورجع 200.
+✅ تم اختبار https://date-tool.com/sitemap.xml ورجع 200 ويتضمن /clock و /weather.
+✅ تم اختبار https://date-tool.com/robots.txt ورجع 200 ويتضمن منع /admin و /client.
+✅ تم اختبار https://date-tool.com/admin/identity ورجع 200.
+⚠️ ظهرت تحذيرات OpenNext الخاصة بتشغيله على Windows، لكنها لم تمنع النشر.
+✅ تم تحديث PROJECT_MEMO.md بنتيجة النشر.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+npm run deploy
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/clock
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/weather
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/sitemap.xml
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/robots.txt
+Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/admin/identity
+```
+
+الملفات المتأثرة:
+
+```txt
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8740,6 +8800,8 @@ PROJECT_MEMO.md
 ✅ تمت إضافة noindex لمسارات الإدارة وتسجيل الدخول وبوابة المعلنين والدعم
 ✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.0
 ✅ نسخة منصة الإدارة الحالية في الكود بقيت 0.1.4 لأن التعديل لم يغير منصة الإدارة وظيفيًا
+✅ تم نشر نسخة 0.3.0 / admin 0.1.4 على Cloudflare Version ID: e6dbc554-cb5c-4599-84e3-98008a8ed766
+✅ تم اختبار `/`, `/clock`, `/weather`, `/sitemap.xml`, `/robots.txt`, و `/admin/identity` على الإنتاج بنجاح
 ```
 
 ---
@@ -8752,7 +8814,7 @@ PROJECT_MEMO.md
 زيادة المحتوى النصي المفيد لكل صفحة أداة، خصوصًا /clock و /weather، مع أمثلة استخدام وأسئلة أكثر عمقًا دون حشو.
 تقييم نقل أجزاء إضافية من المحتوى العام إلى Server-rendered content عندما لا يتعارض ذلك مع التفاعل.
 إضافة Schema إضافية عند الحاجة مثل SoftwareApplication و HowTo و Breadcrumb للصفحات الديناميكية بعد تثبيت شكل المحتوى.
-اختبار sitemap.xml على الإنتاج بعد النشر والتأكد من ظهور صفحات قاعدة البيانات الحقيقية فقط.
+مراجعة sitemap.xml داخل Search Console بعد أن تقرأ Google النسخة الجديدة، والتأكد من فهرسة الصفحات العامة المطلوبة فقط.
 اختبار Rich Results و Search Console و PageSpeed بعد النشر، ثم إصلاح أي تحذير فعلي.
 تنظيف نصوص fallback القديمة في app/toolSettings.js و app/i18n.js إذا ظهرت أي مشكلة ترميز في بيئات العرض أو السجلات.
 مراجعة AdSense بعد طلب المراجعة وعدم اعتبار هذه التحسينات ضمانًا للقبول؛ هي أساس تقني ومحتوى أولي يحتاج متابعة.
