@@ -505,7 +505,7 @@ export default function HomePageClient({ children }) {
 
     const isPageLoading = isSiteLoading || configData === null;
     const dateToolSettings = getToolSettings(configData, 'date');
-    const dateFaqItems = getToolFaqs(configData, 'date', i18n.ar.seo.faq);
+    const dateFaqItems = getToolFaqs(configData, 'date');
 
     return (
         <>

@@ -319,8 +319,8 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             <div className="tool-faq-admin">
                 <div className="tools-section-head compact-head faq-head">
                     <div className="tools-section-title">
-                        <h2>أسئلة إضافية</h2>
-                        <p>تظهر هذه الأسئلة أسفل الأسئلة الافتراضية في صفحة الأداة.</p>
+                        <h2>الأسئلة الشائعة</h2>
+                        <p>يظهر قسم الأسئلة الشائعة في صفحة الأداة فقط عند إضافة سؤال وإجابة مكتملين هنا.</p>
                         <button type="button" className="legacy-secondary-btn" onClick={addFaq}>
                             <i className="fa-solid fa-plus"></i>
                             إضافة سؤال
@@ -330,7 +330,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
                 <div className="tools-list tool-faq-list">
                     {(settings.faqs || []).length === 0 && (
-                        <div className="tools-empty">لا توجد أسئلة إضافية بعد.</div>
+                        <div className="tools-empty">لا توجد أسئلة شائعة بعد، لذلك لن يظهر القسم في صفحة الأداة.</div>
                     )}
 
                     {(settings.faqs || []).map((faq, index) => (

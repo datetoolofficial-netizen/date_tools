@@ -28,21 +28,6 @@ const weatherLabels = {
     95: 'عواصف رعدية',
 };
 
-const weatherFaq = [
-    {
-        q: 'من أين تأتي بيانات الطقس في الأداة؟',
-        a: 'تعتمد الأداة على بيانات طقس مباشرة من خدمة Open-Meteo، وتعرض الحرارة الحالية، الإحساس الحراري، الرطوبة، الرياح، الأمطار، ومؤشر UV عند توفرها.',
-    },
-    {
-        q: 'هل يمكن عرض طقس موقعي الحالي تلقائيًا؟',
-        a: 'نعم، إذا وافقت من المتصفح على مشاركة الموقع، تستخدم الأداة إحداثياتك الحالية لعرض الطقس الأقرب لك دون حفظ موقعك في قاعدة البيانات.',
-    },
-    {
-        q: 'لماذا قد تختلف درجة الحرارة عن تطبيقات أخرى؟',
-        a: 'قد تختلف النتائج قليلًا حسب مصدر البيانات، وقت التحديث، والمحطة أو النموذج الجوي الأقرب للمدينة أو الإحداثيات المستخدمة.',
-    },
-];
-
 function WeatherCurrentPlaceholder() {
     return (
         <article className="weather-current-card weather-loading-reserve" aria-hidden="true">
@@ -240,7 +225,7 @@ export default function WeatherPage() {
     const current = weather?.forecast?.current;
     const daily = weather?.forecast?.daily;
     const weatherSettings = getToolSettings(configData, 'weather');
-    const weatherFaqItems = getToolFaqs(configData, 'weather', weatherFaq).slice(weatherFaq.length);
+    const weatherFaqItems = getToolFaqs(configData, 'weather');
     const shouldReserveWeatherResults = isLoading && !current && !error;
 
     return (
@@ -342,7 +327,7 @@ export default function WeatherPage() {
             ) : shouldReserveWeatherResults ? (
                 <WeatherForecastPlaceholder />
             ) : null}
-            <ToolFaqSection items={weatherFaqItems} title="أسئلة إضافية" />
+            <ToolFaqSection items={weatherFaqItems} />
 
         </section>
     );

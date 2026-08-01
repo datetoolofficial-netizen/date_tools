@@ -1,6 +1,5 @@
-import ToolFaqSection from '../components/ToolFaqSection';
 import ToolSeoContent from '../components/ToolSeoContent';
-import { buildToolJsonLd, buildToolMetadata, publicToolSeo } from '../seoConfig';
+import { buildToolJsonLd, buildToolMetadata } from '../seoConfig';
 import WeatherPageClient from './WeatherPageClient';
 
 export const metadata = buildToolMetadata('weather');
@@ -16,7 +15,6 @@ export default function WeatherPage() {
             />
             <WeatherPageClient />
             <ToolSeoContent tool="weather" />
-            <ToolFaqSection items={publicToolSeo.weather.faq} />
         </>
     );
 }

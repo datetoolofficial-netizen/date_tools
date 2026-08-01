@@ -252,9 +252,8 @@ export function getToolSettings(configData, toolKey) {
     return normalized[toolKey] || DEFAULT_TOOL_SETTINGS[toolKey];
 }
 
-export function getToolFaqs(configData, toolKey, defaultFaqs = []) {
-    const customFaqs = getToolSettings(configData, toolKey)?.faqs || [];
-    return [...defaultFaqs, ...customFaqs];
+export function getToolFaqs(configData, toolKey) {
+    return getToolSettings(configData, toolKey)?.faqs || [];
 }
 
 export function renderShareTemplate(settings, templateKey, variables = {}) {

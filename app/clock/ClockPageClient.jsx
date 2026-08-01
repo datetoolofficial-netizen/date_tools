@@ -21,21 +21,6 @@ const defaultToCity = {
     resolvedQuery: 'لندن',
 };
 
-const clockFaq = [
-    {
-        q: 'كيف أحول الوقت من نظام 24 ساعة إلى 12 ساعة؟',
-        a: 'اختر الساعة والدقيقة بنظام 24 ساعة، ثم اضغط تحويل. ستعرض الأداة الوقت بصيغة 12 ساعة مع تحديد الفترة صباحًا أو مساءً.',
-    },
-    {
-        q: 'هل تعتمد الساعة الحالية على موقعي الحقيقي؟',
-        a: 'نعم، عند السماح للموقع بقراءة موقعك من المتصفح يتم استخدام المنطقة الزمنية المناسبة لموقعك الحالي دون حفظ إحداثياتك في قاعدة البيانات.',
-    },
-    {
-        q: 'كيف يتم حساب فرق التوقيت بين مدينتين؟',
-        a: 'تقارن الأداة فرق UTC لكل مدينة في اللحظة الحالية، ثم تعرض الفرق بالساعات مع مراعاة المنطقة الزمنية للمدن المختارة.',
-    },
-];
-
 function formatTime(date, zone, hour12 = false, includeSeconds = true) {
     const options = {
         timeZone: zone,
@@ -230,7 +215,7 @@ export default function ClockPage() {
     const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock');
-    const clockFaqItems = getToolFaqs(configData, 'clock', clockFaq).slice(clockFaq.length);
+    const clockFaqItems = getToolFaqs(configData, 'clock');
     const canShareTimeConverter = isShareTemplateEnabled(clockSettings, 'timeConverterResult');
     const canShareTimezoneDiff = isShareTemplateEnabled(clockSettings, 'timezoneDiffResult');
     const currentInputTime = `${String(inputHour).padStart(2, '0')}:${String(inputMinute).padStart(2, '0')}`;
@@ -380,7 +365,7 @@ export default function ClockPage() {
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
-            <ToolFaqSection items={clockFaqItems} title="أسئلة إضافية" />
+            <ToolFaqSection items={clockFaqItems} />
 
         </section>
     );

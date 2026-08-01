@@ -477,7 +477,7 @@ export function BottomAdSlots({ configData, labels }) {
 export function SeoSections({ lang, faqs }) {
     if (lang !== 'ar') return null;
     const seo = i18n.ar.seo;
-    const faqItems = Array.isArray(faqs) && faqs.length > 0 ? faqs : seo.faq;
+    const faqItems = Array.isArray(faqs) ? faqs : [];
 
     return (
         <div className="seo-sections-wrapper">
@@ -492,15 +492,17 @@ export function SeoSections({ lang, faqs }) {
                 </p>
             </section>
 
-            <section className="seo-card faq-card">
-                <h2 className="seo-title">{seo.faqTitle}</h2>
-                {faqItems.map((item) => (
-                    <div className="faq-item" key={item.q}>
-                        <h4 className="faq-q">{item.q}</h4>
-                        <p className="faq-a">{item.a}</p>
-                    </div>
-                ))}
-            </section>
+            {faqItems.length > 0 && (
+                <section className="seo-card faq-card">
+                    <h2 className="seo-title">{seo.faqTitle}</h2>
+                    {faqItems.map((item) => (
+                        <div className="faq-item" key={item.q}>
+                            <h4 className="faq-q">{item.q}</h4>
+                            <p className="faq-a">{item.a}</p>
+                        </div>
+                    ))}
+                </section>
+            )}
         </div>
     );
 }
