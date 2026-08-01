@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.2.99.
+الإصدار الحالي للتطبيق هو 0.3.1.
 نسخة منصة الإدارة الحالية هي 0.1.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -177,6 +177,7 @@ https://www.date-tool.com
 112. تصحيح مصدر عنوان ووصف Link Preview عند تفعيل استخدام الهوية الأساسية ليأخذ من اسم الأداة والسلوغن الحاليين بدل SEO القديم.
 113. تنظيف آمن لتكرار CSS في أزرار الواجهة وجداول الإدارة، وتوسيع sitemap ليشمل صفحات الأدوات العامة.
 114. إضافة إشعار تحديث تلقائي للتطبيق المثبت عند تغير نسخة الموقع مع خطوات تحديث واضحة.
+115. تقوية المحتوى النصي وبيانات SEO/Schema لصفحات التاريخ والساعة والطقس استعدادًا لمراجعة AdSense.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -8434,6 +8435,77 @@ Invoke-WebRequest -UseBasicParsing -Uri https://date-tool.com/admin/identity
 الملفات المتأثرة:
 
 ```txt
+PROJECT_MEMO.md
+```
+
+---
+
+### تقوية المحتوى النصي لأدوات أدسنس - 0.3.1 / admin 0.1.4
+
+الأعراض:
+
+```txt
+صفحات /clock و /weather والصفحة الرئيسية كانت تحتاج محتوى نصيًا إرشاديًا أقوى حتى لا تظهر كأدوات قليلة المحتوى عند مراجعة AdSense.
+الصفحة الرئيسية لم تكن تعرض محتوى SEO مستقلًا لأداة التاريخ قبل الأسئلة الشائعة.
+ملف SEO المركزي احتاج تصحيحًا للنصوص العربية وتوسيعًا للـ FAQ والوصوف المستخدمة في metadata و JSON-LD.
+```
+
+السبب:
+
+```txt
+إضافة الأدوات الجديدة جعلت قيمة الصفحات تعتمد على التفاعل أكثر من النصوص التوضيحية، بينما قبول AdSense ومحركات البحث يحتاجان محتوى واضحًا يشرح الأداة وحدود الدقة والخصوصية ومتى يستخدم الزائر كل أداة.
+```
+
+الحل:
+
+```txt
+تم توسيع ToolSeoContent ليغطي أدوات التاريخ والساعة والطقس بثلاثة أقسام نصية لكل أداة.
+تم ربط محتوى أداة التاريخ داخل الصفحة الرئيسية قبل قسم الأسئلة الشائعة.
+تم فصل الصفحة الرئيسية إلى Server wrapper في `app/page.jsx` ومكون عميل في `app/HomePageClient.jsx` حتى يظهر محتوى أداة التاريخ و JSON-LD من جهة السيرفر.
+تم تصحيح وتوسيع app/seoConfig.js بعناوين وأوصاف وFAQ عربية سليمة لكل أداة.
+تم إضافة JSON-LD خاص بصفحة التاريخ داخل الصفحة الرئيسية حتى لا تبقى الصفحة الرئيسية أضعف من /clock و /weather.
+تم رفع نسخة الموقع العامة إلى 0.3.1 دون تغيير نسخة الإدارة لأن التعديل يخص الموقع العام فقط.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ تقوية المحتوى النصي للصفحة الرئيسية و /clock و /weather.
+✅ تم تصحيح نصوص SEO المركزية العربية.
+✅ نجح `npm run lint`.
+✅ نجح `npm run build`.
+✅ نجح `git diff --check` مع تحذيرات CRLF المعتادة فقط.
+✅ تم نشر نسخة 0.3.1 / admin 0.1.4 على Cloudflare Version ID: 1dc21452-d3e7-4bc4-97e9-2909cb879268.
+⚠️ أمر النشر انتهى بمهلة أداة Codex بعد ظهور نجاح Cloudflare و Version ID.
+⚠️ فحص الإنتاج الشبكي من الطرف المحلي لم يكتمل لأن طلب الصلاحية رُفض من طبقة المراجعة الآلية، وليس بسبب خطأ ظاهر من الموقع.
+⚠️ محاولة تشغيل `next start` لفحص HTML محليًا لم تكتمل بسبب مشكلة Windows/PowerShell في `Start-Process` مع تكرار متغير PATH.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw PROJECT_MEMO.md
+rg -n "ToolSeoContent|seoContent|clock|weather|date|seo-card|faq-card|tool-seo" app\components\ToolSeoContent.jsx app\seoConfig.js app\page.jsx app\components\home\HomeSections.jsx app\clock\ClockPageClient.jsx app\weather\WeatherPageClient.jsx
+rg -n "APP_VERSION|ADMIN_VERSION|version" app\version.js package.json VERSION_LOG.md PROJECT_MEMO.md
+npm version 0.3.1 --no-git-tag-version
+git diff -- app\components\ToolSeoContent.jsx app\seoConfig.js app\page.jsx
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+```
+
+الملفات المتأثرة:
+
+```txt
+app/components/ToolSeoContent.jsx
+app/HomePageClient.jsx
+app/seoConfig.js
+app/page.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
 PROJECT_MEMO.md
 ```
 
