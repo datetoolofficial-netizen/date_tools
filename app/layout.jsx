@@ -9,6 +9,7 @@ import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
 const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
+const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
 const cairo = Cairo({
     subsets: ['arabic', 'latin'],
     weight: ['400', '600', '700', '800'],
@@ -147,6 +148,9 @@ export default function RootLayout({ children }) {
         <html lang="ar" dir="rtl">
             <head>
                 <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
+                <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+                <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />
+                <link rel="preload" href={fontAwesomeHref} as="style" crossOrigin="anonymous" />
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}

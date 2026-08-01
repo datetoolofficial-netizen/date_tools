@@ -140,6 +140,18 @@ function getPageTitle(page) {
     );
 }
 
+function getFallbackPageTitle(slug, lang = 'ar') {
+    const normalized = normalizeSlug(slug);
+    const titles = {
+        contact: { ar: 'اتصل بنا', en: 'Contact us' },
+        privacy: { ar: 'سياسة الخصوصية', en: 'Privacy Policy' },
+        terms: { ar: 'شروط الاستخدام', en: 'Terms of Use' },
+        'month-names': { ar: 'جدول الأشهر', en: 'Month Names' },
+    };
+
+    return titles[normalized]?.[lang] || titles[normalized]?.ar || (lang === 'ar' ? 'صفحة' : 'Page');
+}
+
 function getPageDescription(page) {
     return (
         page?.description ||
@@ -194,6 +206,32 @@ function PageFrame({ lang, title, children, align = 'right', variant = '' }) {
             <main className="card static-page-card" style={{ '--static-page-align': align }}>
                 {children}
             </main>
+        </div>
+    );
+}
+
+function StaticPageLoading({ isContactPage = false }) {
+    if (isContactPage) {
+        return (
+            <div className="static-page-loading static-contact-loading" aria-busy="true">
+                <span className="skeleton-block static-page-skeleton-line"></span>
+                <div className="static-contact-loading-grid">
+                    <span className="skeleton-block static-contact-skeleton-field"></span>
+                    <span className="skeleton-block static-contact-skeleton-field"></span>
+                </div>
+                <span className="skeleton-block static-contact-skeleton-field"></span>
+                <span className="skeleton-block static-contact-skeleton-textarea"></span>
+                <span className="skeleton-block static-contact-skeleton-upload"></span>
+                <span className="skeleton-block static-contact-skeleton-button"></span>
+            </div>
+        );
+    }
+
+    return (
+        <div className="static-page-loading" aria-busy="true">
+            <span className="skeleton-block static-page-skeleton-title"></span>
+            <span className="skeleton-block static-page-skeleton-line"></span>
+            <span className="skeleton-block static-page-skeleton-line short"></span>
         </div>
     );
 }
@@ -376,14 +414,18 @@ export default function PageClient({ slug }) {
     }, [config, slug]);
 
     if (loading) {
+        const normalizedSlug = normalizeSlug(slug);
+        const isContactPage = normalizedSlug === 'contact';
+
         return (
-            <div className="container static-page-container">
-                <div className="card static-page-card static-page-loading">
-                    <span className="skeleton-block static-page-skeleton-title"></span>
-                    <span className="skeleton-block static-page-skeleton-line"></span>
-                    <span className="skeleton-block static-page-skeleton-line short"></span>
-                </div>
-            </div>
+            <PageFrame
+                lang={lang}
+                title={getFallbackPageTitle(slug, lang)}
+                align={lang === 'ar' ? 'right' : 'left'}
+                variant={isContactPage ? 'static-contact-page' : ''}
+            >
+                <StaticPageLoading isContactPage={isContactPage} />
+            </PageFrame>
         );
     }
 

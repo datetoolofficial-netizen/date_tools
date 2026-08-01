@@ -1134,6 +1134,39 @@
             width: min(420px, 64%);
         }
 
+        .static-contact-loading {
+            width: 100%;
+            min-height: 560px;
+            justify-items: stretch;
+            align-content: start;
+        }
+
+        .static-contact-loading-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .static-contact-skeleton-field {
+            height: 54px;
+            border-radius: 15px;
+        }
+
+        .static-contact-skeleton-textarea {
+            height: 150px;
+            border-radius: 15px;
+        }
+
+        .static-contact-skeleton-upload {
+            height: 66px;
+            border-radius: 16px;
+        }
+
+        .static-contact-skeleton-button {
+            height: 56px;
+            border-radius: 16px;
+        }
+
         .contact-page-form {
             margin-top: 0;
             display: grid;
@@ -1546,6 +1579,74 @@
         body.dark-mode .weather-metrics-inline div {
             background: rgba(15, 23, 42, 0.22);
             border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .weather-loading-reserve {
+            pointer-events: none;
+        }
+
+        .weather-loading-reserve .tool-widget-title h3 {
+            min-width: min(220px, 70%);
+        }
+
+        .weather-skeleton-place {
+            width: min(280px, 76%);
+            height: 18px;
+        }
+
+        .weather-skeleton-temp {
+            width: 76px;
+            height: 42px;
+            margin-top: 10px;
+        }
+
+        .weather-skeleton-copy {
+            width: min(240px, 68%);
+            height: 18px;
+            margin-top: 10px;
+        }
+
+        .weather-skeleton-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+        }
+
+        .weather-skeleton-metric-label {
+            width: 72px;
+            height: 14px;
+        }
+
+        .weather-skeleton-metric-value {
+            width: 56px;
+            height: 22px;
+        }
+
+        .weather-skeleton-heading {
+            width: min(220px, 72%);
+            height: 26px;
+        }
+
+        .weather-skeleton-advice {
+            width: 100%;
+            height: 20px;
+        }
+
+        .weather-skeleton-advice.short {
+            width: 72%;
+        }
+
+        .weather-skeleton-row {
+            width: 100%;
+            height: 16px;
+        }
+
+        .weather-skeleton-row.small {
+            width: 76px;
+        }
+
+        .weather-skeleton-row.tiny {
+            width: 52px;
         }
 
         .weather-search {
@@ -2513,6 +2614,32 @@
         --widget-min-height: 156px;
     }
 
+    .weather-skeleton-place {
+        height: 15px;
+    }
+
+    .weather-skeleton-temp {
+        width: 58px;
+        height: 32px;
+    }
+
+    .weather-skeleton-copy {
+        height: 15px;
+    }
+
+    .weather-skeleton-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .weather-skeleton-heading {
+        height: 22px;
+    }
+
+    .weather-skeleton-advice {
+        height: 17px;
+    }
+
     .site-header {
         gap: 10px;
     }
@@ -3409,9 +3536,42 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         padding: 14px 12px;
     }
 
+    .static-contact-loading {
+        min-height: 470px;
+    }
+
+    .static-contact-skeleton-field {
+        height: 42px;
+        border-radius: 12px;
+    }
+
+    .static-contact-skeleton-textarea {
+        height: 112px;
+        border-radius: 12px;
+    }
+
+    .static-contact-skeleton-upload {
+        height: 54px;
+        border-radius: 13px;
+    }
+
+    .static-contact-skeleton-button {
+        height: 46px;
+        border-radius: 14px;
+    }
+
 }
 
 @media (max-width: 700px) {
+    .static-contact-loading {
+        min-height: 520px;
+    }
+
+    .static-contact-loading-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
     .contact-form-grid {
         grid-template-columns: 1fr;
     }

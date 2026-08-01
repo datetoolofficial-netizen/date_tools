@@ -13,6 +13,7 @@ const reservedSlugs = new Set([
     'manifest.webmanifest',
     'robots.txt',
     'sitemap.xml',
+    'llms.txt',
     'ads.txt',
 ]);
 

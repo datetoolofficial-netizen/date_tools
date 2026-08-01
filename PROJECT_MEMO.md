@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.3.
+الإصدار الحالي للتطبيق هو 0.3.6.
 نسخة منصة الإدارة الحالية هي 0.1.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -180,6 +180,8 @@ https://www.date-tool.com
 115. تقوية المحتوى النصي وبيانات SEO/Schema لصفحات التاريخ والساعة والطقس استعدادًا لمراجعة AdSense.
 116. مراجعة وتحسين الهيدرز الأمنية وتهيئة Cloudflare العامة مع إبقاء CSP لمرحلة report-only مستقلة.
 117. إضافة اختبار CSP بصيغة Report-Only ومحاولة تشغيل PageSpeed فعلي مع توثيق عائق كوتا Google عند عدم توفر مفتاح محلي.
+118. معالجة CLS بحذر في /weather و /contact عبر حجز مساحات التحميل دون تغيير الهوية البصرية.
+119. نقل محتوى SEO والأسئلة الافتراضية في /clock و /weather إلى Server Render مع إبقاء أسئلة الإدارة الإضافية ديناميكية.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -8673,6 +8675,205 @@ PROJECT_MEMO.md
 
 ---
 
+### تحليل تقارير PageSpeed المحفوظة وتحسينات محايدة بصريًا - 0.3.4 / admin 0.1.4
+
+الأعراض:
+
+```txt
+تقارير PageSpeed HTML المحفوظة للصفحة الرئيسية وصفحات /clock و /weather و /contact و /terms و /privacy أظهرت أن Best Practices و SEO جيدة، لكن توجد فرص أداء وتحذيرات متكررة.
+أبرز الملاحظات المتكررة: render-blocking-insight و font-display-insight و unused-css-rules و cls-culprits-insight و image-delivery-insight و llms-txt.
+صفحة /weather كانت الأعلى في CLS ضمن التقارير المحفوظة، بينما TBT كان 0ms في التقارير التي تم استخراجها، ما يعني أن المشكلة ليست حمل JavaScript ثقيلًا بقدر ما هي موارد وأحجام/ثبات عناصر.
+```
+
+السبب:
+
+```txt
+FontAwesome يتم تحميله من CDN ويظهر في تقارير PageSpeed كسلسلة تحميل مؤثرة و CSS غير مستخدم، لكنه مطلوب للحفاظ على الأيقونات الأصلية التي طلب المستخدم إعادتها سابقًا.
+لم يكن هناك مسار llms.txt صالح، فظهر فحص PageSpeed الخاص به كملاحظة ناقصة.
+بعض ملاحظات PageSpeed مثل color-contrast و heading-order و CLS العميق قد تحتاج تغييرات تصميمية أو إعادة ترتيب عناصر مرئية، لذلك لم يتم لمسها في هذه المهمة التزامًا بطلب عدم تغيير التصميم.
+صور الهوية والأيقونات القادمة من R2 قد تحتاج تحسين أبعاد/صيغة لاحقًا من لوحة الإدارة أو عبر مسار صور محسن.
+```
+
+الحل:
+
+```txt
+تمت إضافة مسار /llms.txt بمحتوى Markdown عربي مختصر يشرح الموقع وروابط الصفحات العامة المهمة.
+تم حجز llms.txt في sitemap.js حتى لا يتعامل معه مسار الصفحات الديناميكية كصفحة قاعدة بيانات.
+تمت إضافة dns-prefetch و preconnect و preload لملف FontAwesome CDN في layout.jsx لتحسين اكتشاف المورد وتقليل تأخر الأيقونات بدون تغيير المكتبة أو شكل الأيقونات.
+تم رفع نسخة الموقع العامة إلى 0.3.4 دون تغيير نسخة الإدارة لأن التعديل يخص الموقع العام وSEO/PageSpeed فقط.
+```
+
+الحالة:
+
+```txt
+✅ تم تحليل تقارير PageSpeed المحفوظة محليًا للصفحات العامة المذكورة.
+✅ تم إصلاح ملاحظة llms-txt بإضافة /llms.txt.
+✅ تم تحسين تحميل FontAwesome بشكل آمن دون تغيير التصميم.
+✅ نجح npm run lint.
+✅ نجح npm run build مع استمرار تحذيرات الشبكة المحلية عند محاولة جلب Firestore داخل بيئة Codex المقيدة.
+✅ نجح git diff --check مع تحذيرات CRLF المعتادة فقط.
+⏳ لم يتم نشر نسخة 0.3.4 بعد؛ يلزم npm run deploy بعد موافقة المستخدم.
+⏳ بعد النشر يجب تشغيل PageSpeed جديد من لوحة الإدارة أو API للتحقق من أثر التعديل على النسخة المنتشرة.
+⏳ المتبقي الأكبر للأداء هو معالجة CLS خصوصًا في /weather و /contact بحذر، وتحسين الصور، وربما استبدال FontAwesome لاحقًا بحزمة محلية/Subset بعد موافقة صريحة لأنه قد يغير الأيقونات.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+rg -n "FCP|LCP|TBT|CLS|render-blocking-insight|font-display-insight|unused-css-rules|llms-txt" "C:\Users\d7mi6\Downloads\PageSpeed*.html"
+npm run lint
+npm run build
+git diff --check
+```
+
+الملفات المتأثرة:
+
+```txt
+app/layout.jsx
+app/llms.txt/route.js
+app/sitemap.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### معالجة CLS في /weather و /contact - 0.3.5 / admin 0.1.4
+
+الأعراض:
+
+```txt
+تقارير PageSpeed المحفوظة أظهرت ارتفاع CLS في /weather و /contact مقارنة ببقية الصفحات.
+صفحة /weather كانت تبدأ بدون كروت الطقس ثم تضيف كرت الطقس والنصيحة والتوقعات بعد جلب البيانات.
+صفحة /contact كانت تعرض Skeleton قصيرًا ثم تستبدله بهيدر الصفحة ونموذج تواصل أطول، ما قد يدفع المحتوى والفوتر بعد اكتمال التحميل.
+```
+
+السبب:
+
+```txt
+الصفحتان تعتمدان على بيانات تُجلب من جهة العميل بعد أول تحميل.
+عدم حجز مساحة قريبة من الشكل النهائي قبل وصول البيانات يجعل Lighthouse يحسب انزياحًا في التخطيط.
+```
+
+الحل:
+
+```txt
+إضافة Skeleton احتياطي في /weather يحجز مساحة كرت الطقس الحالي ومقاييسه ونصيحة الخروج وتوقعات 5 أيام أثناء أول تحميل.
+جعل التحميل الابتدائي في /weather يبدأ بحالة loading حتى تظهر المساحات المحجوزة من أول رسم.
+تعديل حالة التحميل في صفحات slug، وخصوصًا /contact، لتستخدم نفس PageFrame ونفس عرض البطاقة النهائي بدل بطاقة قصيرة منفصلة.
+إضافة Skeleton خاص بنموذج التواصل يحاكي ارتفاع الحقول والرفع والزر دون تغيير التصميم النهائي للنموذج.
+رفع نسخة الموقع العامة إلى 0.3.5 دون تغيير نسخة الإدارة لأن التعديل يخص صفحات عامة وأداء PageSpeed فقط.
+```
+
+الحالة:
+
+```txt
+✅ نجح npm run lint.
+✅ نجح npm run build مع استمرار تحذيرات fetch failed بسبب منع الشبكة الخارجية داخل بيئة Codex عند محاولة الوصول إلى Firestore.
+✅ نجح git diff --check مع تحذيرات CRLF المعتادة فقط.
+⏳ لم تُنشر نسخة 0.3.5 منفردة؛ أصبحت مدمجة ضمن نسخة 0.3.6 الحالية غير المنشورة بعد.
+⏳ يلزم تشغيل PageSpeed جديد بعد النشر للتحقق من تحسن CLS فعليًا على بيانات Lighthouse الحديثة.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Select-String -Path app\weather\WeatherPageClient.jsx -Pattern "WeatherCurrentPlaceholder|const current|weather-current-card|daily\?\.time" -Context 2,4
+Select-String -LiteralPath app\[slug]\PageClient.jsx -Pattern "if \(loading\)|function PageFrame|static-page-loading|normalizeSlug" -Context 3,5
+npm run lint
+npm run build
+git diff --check
+git diff --stat
+```
+
+الملفات المتأثرة:
+
+```txt
+app/weather/WeatherPageClient.jsx
+app/[slug]/PageClient.jsx
+app/globals.css
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
+### نقل محتوى SEO الافتراضي للساعة والطقس إلى Server Render - 0.3.6 / admin 0.1.4
+
+الأعراض:
+
+```txt
+صفحتا /clock و /weather كانتا تحتويان على جزء من المحتوى النصي العام والأسئلة الافتراضية داخل Client Components.
+هذا يجعل جزءًا مهمًا من المحتوى المفيد لأدسنس وSEO يعتمد على JavaScript العميل بدل أن يكون موجودًا مباشرة في HTML الأولي.
+```
+
+السبب:
+
+```txt
+مكونات ClockPageClient و WeatherPageClient كانت تعرض ToolSeoContent والأسئلة الافتراضية بعد تحميل مكون العميل.
+المحتوى التفاعلي يجب أن يبقى Client Component، لكن المحتوى النصي الثابت والأسئلة الافتراضية أفضل أن تكون Server-rendered.
+```
+
+الحل:
+
+```txt
+نقل ToolSeoContent والأسئلة الافتراضية لصفحات /clock و /weather إلى app/clock/page.jsx و app/weather/page.jsx.
+استخدام publicToolSeo لعرض FAQ الافتراضي من السيرفر بجانب JSON-LD والmetadata الخاصة بكل صفحة.
+إبقاء الأسئلة الإضافية التي تضيفها الإدارة في مكونات العميل فقط، وعرضها كسكشن "أسئلة إضافية" عند وجودها بدون تكرار الأسئلة الافتراضية.
+إضافة title اختياري لمكون ToolFaqSection حتى يمكن استخدام نفس المكون للأسئلة الافتراضية والإضافية.
+رفع نسخة الموقع العامة إلى 0.3.6 دون تغيير نسخة منصة الإدارة لأن التعديل يخص صفحات عامة وSEO.
+```
+
+الحالة:
+
+```txt
+✅ نجح npm run lint.
+✅ نجح npm run build مع استمرار تحذيرات fetch failed بسبب منع الشبكة الخارجية داخل بيئة Codex عند محاولة الوصول إلى Firestore.
+✅ نجح git diff --check مع تحذيرات CRLF المعتادة فقط.
+✅ تم نشر نسخة 0.3.6 على الإنتاج عبر Cloudflare Worker `datetools`.
+✅ Cloudflare Version ID: d371faca-25c5-46a6-81e5-8b9d80f6f354.
+✅ تم فحص `https://date-tool.com/clock` بعد النشر ورجعت الصفحة status 200.
+⏳ بعد انتشار الكاش يجب فحص Rich Results أو مصدر HTML للتأكد من ظهور المحتوى والأسئلة ضمن HTML الأولي كما هو متوقع.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -Raw app\clock\page.jsx
+Get-Content -Raw app\weather\page.jsx
+Select-String -Path app\clock\ClockPageClient.jsx -Pattern "ToolSeoContent|ToolFaqSection|clockFaqItems|const clockFaq|</section>" -Context 2,3
+Select-String -Path app\weather\WeatherPageClient.jsx -Pattern "ToolSeoContent|ToolFaqSection|weatherFaqItems|const weatherFaq|</section>" -Context 2,3
+npm run lint
+npm run build
+git diff --check
+git diff --stat
+npm run deploy
+Invoke-WebRequest -Uri https://date-tool.com/clock -UseBasicParsing -TimeoutSec 30
+```
+
+الملفات المتأثرة:
+
+```txt
+app/clock/page.jsx
+app/weather/page.jsx
+app/clock/ClockPageClient.jsx
+app/weather/WeatherPageClient.jsx
+app/components/ToolFaqSection.jsx
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -9032,13 +9233,17 @@ PROJECT_MEMO.md
 ✅ تم دعم محتوى نصي إرشادي إضافي لصفحات الساعة والطقس لتقليل خطر انخفاض قيمة المحتوى
 ✅ أصبحت sitemap.xml تجمع الصفحات العامة الثابتة والديناميكية من قاعدة البيانات مع استبعاد المسارات الداخلية
 ✅ تمت إضافة noindex لمسارات الإدارة وتسجيل الدخول وبوابة المعلنين والدعم
-✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.3
-✅ نسخة منصة الإدارة الحالية في الكود بقيت 0.1.4 لأن التعديل لم يغير منصة الإدارة وظيفيًا
 ✅ تم نشر نسخة 0.3.3 / admin 0.1.4 على Cloudflare Version ID: 558fc331-07b8-48d9-a470-04edb96b2f7a
 ✅ تم اختبار `/`, `/clock`, `/weather`, `/sitemap.xml`, `/robots.txt`, و `/admin/identity` على الإنتاج بنجاح
 ✅ تم فحص الهيدرز الأمنية على الإنتاج وتأكيد noindex لمسارات الإدارة وتعطيل X-Powered-By
 ✅ تم تفعيل Content-Security-Policy-Report-Only على الإنتاج دون فرض CSP ملزم
 ✅ يعمل endpoint `/api/csp-report` ويرجع 204 دون تخزين دائم
+✅ تم تحليل تقارير PageSpeed المحفوظة للصفحات العامة وإضافة /llms.txt وتحسين اكتشاف FontAwesome دون تغيير التصميم
+✅ تمت معالجة CLS في /weather و /contact بحذر عبر Skeleton يحجز المساحات أثناء التحميل دون تغيير الهوية البصرية
+✅ تم نقل محتوى SEO والأسئلة الافتراضية في /clock و /weather إلى Server Render
+✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.6
+✅ نسخة منصة الإدارة الحالية في الكود بقيت 0.1.4 لأن التعديل لم يغير منصة الإدارة وظيفيًا
+✅ نسخة 0.3.6 منشورة على الإنتاج عبر Cloudflare Version ID: d371faca-25c5-46a6-81e5-8b9d80f6f354
 ```
 
 ---
@@ -9049,12 +9254,14 @@ PROJECT_MEMO.md
 
 ```txt
 زيادة المحتوى النصي المفيد لكل صفحة أداة، خصوصًا /clock و /weather، مع أمثلة استخدام وأسئلة أكثر عمقًا دون حشو.
-تقييم نقل أجزاء إضافية من المحتوى العام إلى Server-rendered content عندما لا يتعارض ذلك مع التفاعل.
+تقييم نقل إعدادات الإدارة الديناميكية إلى Server-rendered content لاحقًا إذا توفر مسار آمن للقراءة من Firestore دون زيادة زمن التحميل.
 إضافة Schema إضافية عند الحاجة مثل SoftwareApplication و HowTo و Breadcrumb للصفحات الديناميكية بعد تثبيت شكل المحتوى.
 مراجعة sitemap.xml داخل Search Console بعد أن تقرأ Google النسخة الجديدة، والتأكد من فهرسة الصفحات العامة المطلوبة فقط.
 اختبار Rich Results و Search Console و PageSpeed بعد النشر، ثم إصلاح أي تحذير فعلي.
-تشغيل PageSpeed فعلي من لوحة الإدارة أو من الطرفية عند توفير PAGESPEED_API_KEY محليًا؛ الطلب العام بدون مفتاح رجع 429.
+تشغيل PageSpeed فعلي من لوحة الإدارة بعد انتشار 0.3.6 ومقارنة النتائج بتقارير HTML المحفوظة.
 مراقبة تقارير Content-Security-Policy-Report-Only عبر wrangler tail قبل التفكير في فرض CSP ملزم.
+تحسين صور الهوية وأيقونة التطبيق من R2 أو عبر مسار صور محسن دون تغيير التصميم.
+دراسة نقل FontAwesome إلى تحميل محلي/Subset لاحقًا فقط بعد موافقة صريحة، لأن ذلك قد يؤثر على الأيقونات.
 تنظيف نصوص fallback القديمة في app/toolSettings.js و app/i18n.js إذا ظهرت أي مشكلة ترميز في بيئات العرض أو السجلات.
 مراجعة AdSense بعد طلب المراجعة وعدم اعتبار هذه التحسينات ضمانًا للقبول؛ هي أساس تقني ومحتوى أولي يحتاج متابعة.
 ```

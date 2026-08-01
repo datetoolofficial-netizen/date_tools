@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
-import ToolSeoContent from '../components/ToolSeoContent';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings } from '../toolSettings';
 
@@ -44,6 +43,65 @@ const weatherFaq = [
     },
 ];
 
+function WeatherCurrentPlaceholder() {
+    return (
+        <article className="weather-current-card weather-loading-reserve" aria-hidden="true">
+            <div className="weather-current-main">
+                <div>
+                    <span className="skeleton-block weather-skeleton-place"></span>
+                    <span className="skeleton-block weather-skeleton-temp"></span>
+                    <span className="skeleton-block weather-skeleton-copy"></span>
+                </div>
+                <i className="fa-solid fa-temperature-half"></i>
+            </div>
+
+            <div className="weather-metrics weather-metrics-inline">
+                {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index}>
+                        <span className="skeleton-block weather-skeleton-icon"></span>
+                        <span className="skeleton-block weather-skeleton-metric-label"></span>
+                        <span className="skeleton-block weather-skeleton-metric-value"></span>
+                    </div>
+                ))}
+            </div>
+        </article>
+    );
+}
+
+function WeatherAdvicePlaceholder() {
+    return (
+        <article className="tool-widget advice-card weather-loading-reserve" aria-hidden="true">
+            <div className="tool-widget-title">
+                <i className="fa-solid fa-person-walking"></i>
+                <h3><span className="skeleton-block weather-skeleton-heading"></span></h3>
+            </div>
+            <span className="skeleton-block weather-skeleton-advice"></span>
+            <span className="skeleton-block weather-skeleton-advice short"></span>
+        </article>
+    );
+}
+
+function WeatherForecastPlaceholder() {
+    return (
+        <article className="tool-widget weather-loading-reserve" aria-hidden="true">
+            <div className="tool-widget-title">
+                <i className="fa-solid fa-calendar-week"></i>
+                <h3><span className="skeleton-block weather-skeleton-heading"></span></h3>
+            </div>
+            <div className="forecast-list">
+                {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="forecast-row">
+                        <span className="skeleton-block weather-skeleton-row"></span>
+                        <strong><span className="skeleton-block weather-skeleton-row small"></span></strong>
+                        <small><span className="skeleton-block weather-skeleton-row small"></span></small>
+                        <em><span className="skeleton-block weather-skeleton-row tiny"></span></em>
+                    </div>
+                ))}
+            </div>
+        </article>
+    );
+}
+
 function weatherText(code) {
     return weatherLabels[code] || 'حالة جوية متغيرة';
 }
@@ -79,7 +137,7 @@ export default function WeatherPage() {
         requestCurrentLocation,
     } = useSiteContext();
     const [query, setQuery] = useState('Riyadh');
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [weather, setWeather] = useState(null);
     const loadedLocationKeyRef = useRef('');
@@ -182,7 +240,8 @@ export default function WeatherPage() {
     const current = weather?.forecast?.current;
     const daily = weather?.forecast?.daily;
     const weatherSettings = getToolSettings(configData, 'weather');
-    const weatherFaqItems = getToolFaqs(configData, 'weather', weatherFaq);
+    const weatherFaqItems = getToolFaqs(configData, 'weather', weatherFaq).slice(weatherFaq.length);
+    const shouldReserveWeatherResults = isLoading && !current && !error;
 
     return (
         <section className="tools-page">
@@ -226,7 +285,7 @@ export default function WeatherPage() {
 
             <PublicAdSlot configData={configData} slotName="weatherMiddle" label="إعلان وسط الطقس" />
 
-            {current && (
+            {current ? (
                 <>
                     <article className="weather-current-card">
                         <div className="weather-current-main">
@@ -254,11 +313,16 @@ export default function WeatherPage() {
                         <p>{getOutdoorAdvice(current, daily)}</p>
                     </article>
                 </>
-            )}
+            ) : shouldReserveWeatherResults ? (
+                <>
+                    <WeatherCurrentPlaceholder />
+                    <WeatherAdvicePlaceholder />
+                </>
+            ) : null}
 
             <PublicAdSlot configData={configData} slotName="weatherBottom" label="إعلان أسفل الطقس" />
 
-            {daily?.time && (
+            {daily?.time ? (
                 <article className="tool-widget">
                     <div className="tool-widget-title">
                         <i className="fa-solid fa-calendar-week"></i>
@@ -275,9 +339,10 @@ export default function WeatherPage() {
                         ))}
                     </div>
                 </article>
-            )}
-            <ToolSeoContent tool="weather" />
-            <ToolFaqSection items={weatherFaqItems} />
+            ) : shouldReserveWeatherResults ? (
+                <WeatherForecastPlaceholder />
+            ) : null}
+            <ToolFaqSection items={weatherFaqItems} title="أسئلة إضافية" />
 
         </section>
     );

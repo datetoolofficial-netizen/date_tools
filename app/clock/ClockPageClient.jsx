@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
-import ToolSeoContent from '../components/ToolSeoContent';
 import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from '../toolSettings';
@@ -231,7 +230,7 @@ export default function ClockPage() {
     const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock');
-    const clockFaqItems = getToolFaqs(configData, 'clock', clockFaq);
+    const clockFaqItems = getToolFaqs(configData, 'clock', clockFaq).slice(clockFaq.length);
     const canShareTimeConverter = isShareTemplateEnabled(clockSettings, 'timeConverterResult');
     const canShareTimezoneDiff = isShareTemplateEnabled(clockSettings, 'timezoneDiffResult');
     const currentInputTime = `${String(inputHour).padStart(2, '0')}:${String(inputMinute).padStart(2, '0')}`;
@@ -381,8 +380,7 @@ export default function ClockPage() {
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
-            <ToolSeoContent tool="clock" />
-            <ToolFaqSection items={clockFaqItems} />
+            <ToolFaqSection items={clockFaqItems} title="أسئلة إضافية" />
 
         </section>
     );
