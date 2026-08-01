@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.1.
+الإصدار الحالي للتطبيق هو 0.3.2.
 نسخة منصة الإدارة الحالية هي 0.1.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -178,6 +178,7 @@ https://www.date-tool.com
 113. تنظيف آمن لتكرار CSS في أزرار الواجهة وجداول الإدارة، وتوسيع sitemap ليشمل صفحات الأدوات العامة.
 114. إضافة إشعار تحديث تلقائي للتطبيق المثبت عند تغير نسخة الموقع مع خطوات تحديث واضحة.
 115. تقوية المحتوى النصي وبيانات SEO/Schema لصفحات التاريخ والساعة والطقس استعدادًا لمراجعة AdSense.
+116. مراجعة وتحسين الهيدرز الأمنية وتهيئة Cloudflare العامة مع إبقاء CSP لمرحلة report-only مستقلة.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -8511,6 +8512,93 @@ PROJECT_MEMO.md
 
 ---
 
+### مراجعة headers الأمنية وPageSpeed التقنية - 0.3.2 / admin 0.1.4
+
+الأعراض:
+
+```txt
+بعد تقوية محتوى الأدوات لأدسنس، بقيت مرحلة مراجعة الهيدرز الأمنية وتهيئة Cloudflare/PageSpeed.
+كانت صفحات الإدارة والعميل والدعم تعتمد على metadata noindex، لكنها لم تكن تضع X-Robots-Tag من مستوى HTTP Header.
+كان middleware يضع مجموعة هيدرز أساسية، لكنه لم يكن مركزيًا ولم يتضمن بعض رؤوس العزل والتشخيص الحديثة.
+لم يكن `X-Powered-By` معطلًا من إعداد Next.js.
+لم تكن Observability مفعلة في wrangler.jsonc.
+```
+
+السبب:
+
+```txt
+الموقع أصبح أقرب لمتطلبات SEO وأدسنس، لكن تحسين الأمان والفهرسة الداخلية يحتاج طبقة HTTP مباشرة إلى جانب metadata، كما أن Cloudflare Worker يحتاج تشخيصًا أفضل عند ظهور أخطاء إنتاجية.
+فرض CSP كامل الآن قد يكسر AdSense أو Firebase أو Google Tag Manager لأن المشروع يستخدم سكربتات خارجية مشروطة بالموافقة، لذلك يجب تأجيله لمرحلة report-only مدروسة.
+```
+
+الحل:
+
+```txt
+تم إعادة تنظيم middleware.js لتطبيق الهيدرز الأمنية من قائمة مركزية واحدة.
+تم إضافة X-Robots-Tag: noindex, nofollow, noarchive لمسارات /admin و /admin_login و /client و /support و /api.
+تم إضافة Cross-Origin-Opener-Policy و Origin-Agent-Cluster و X-Permitted-Cross-Domain-Policies و X-DNS-Prefetch-Control مع الحفاظ على Permissions-Policy التي تسمح بـ geolocation من نفس الموقع فقط.
+تم إبقاء X-Frame-Options على DENY و Strict-Transport-Security مفعلة للدومينات.
+تم تعطيل ترويسة Next.js الافتراضية عبر poweredByHeader: false في next.config.mjs.
+تم تفعيل observability في wrangler.jsonc بمعدل head_sampling_rate خفيف 0.1.
+تم رفع نسخة الموقع العامة إلى 0.3.2 دون تغيير نسخة الإدارة لأن التعديل يخص الموقع العام وتهيئة Cloudflare.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ تحسينات headers الأمنية.
+✅ تم تعزيز noindex للمسارات الداخلية من مستوى HTTP Header.
+✅ تم تفعيل Observability في إعداد Cloudflare Worker.
+✅ نجح npm run lint.
+✅ نجح git diff --check مع تحذيرات CRLF المعتادة فقط.
+✅ نجح npm run build، مع ظهور تحذيرات fetch failed بسبب منع الشبكة داخل بيئة Codex أثناء جلب Firestore، دون فشل البناء.
+✅ تم النشر عبر npm run deploy على Cloudflare Worker datetools.
+✅ Version ID المنشور: 39b4e32c-dcb2-4922-8160-ad168625efc6.
+✅ فحص الإنتاج أكد أن الصفحة الرئيسية تعمل مع الهيدرز الأمنية وبدون X-Powered-By.
+✅ فحص الإنتاج أكد أن /admin/identity يحمل X-Robots-Tag: noindex, nofollow, noarchive.
+✅ فحص الإنتاج أكد أن www.date-tool.com يحول إلى date-tool.com مع الهيدرز الأمنية.
+✅ فحص الإنتاج أكد أن أيقونات PWA القديمة المحذوفة ترجع 410 مع noindex.
+⚠️ أداة Chrome DevTools MCP الخاصة بقياس Core Web Vitals غير متاحة في جلسة Codex الحالية، لذلك قياس PageSpeed الفعلي يحتاج تقرير PageSpeed أو جلسة DevTools لاحقة.
+⚠️ CSP الكامل مؤجل عمدًا حتى يتم اختباره أولًا بصيغة report-only بسبب AdSense/Firebase/GTM.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Get-Content -LiteralPath PROJECT_MEMO.md -Encoding UTF8 -TotalCount 220
+Get-Content -LiteralPath PROJECT_MEMO.md -Encoding UTF8 | Select-Object -Last 260
+Get-Content -LiteralPath C:\Users\d7mi6\.codex\skills\web-perf\SKILL.md -Encoding UTF8
+Get-Content -LiteralPath C:\Users\d7mi6\.codex\skills\workers-best-practices\SKILL.md -Encoding UTF8
+rg -n "headers\(|NextResponse|Permissions-Policy|Content-Security-Policy|X-Frame|Referrer-Policy|X-Robots-Tag|Strict-Transport|noindex|robots|metadataBase|sitemap|manifest|service-worker|Cache-Control" app middleware.* next.config.* wrangler.jsonc package.json
+Get-Content -LiteralPath middleware.js -Encoding UTF8
+Get-Content -LiteralPath node_modules\wrangler\config-schema.json -Encoding UTF8 -TotalCount 120
+rg -n "observability|head_sampling_rate" node_modules\wrangler\config-schema.json
+npm version 0.3.2 --no-git-tag-version
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+Invoke-WebRequest -Uri https://date-tool.com/
+Invoke-WebRequest -Uri https://date-tool.com/admin/identity
+Invoke-WebRequest -Uri https://www.date-tool.com/
+Invoke-WebRequest -Uri https://date-tool.com/pwa-icon-192.png
+```
+
+الملفات المتأثرة:
+
+```txt
+middleware.js
+next.config.mjs
+wrangler.jsonc
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8870,10 +8958,11 @@ PROJECT_MEMO.md
 ✅ تم دعم محتوى نصي إرشادي إضافي لصفحات الساعة والطقس لتقليل خطر انخفاض قيمة المحتوى
 ✅ أصبحت sitemap.xml تجمع الصفحات العامة الثابتة والديناميكية من قاعدة البيانات مع استبعاد المسارات الداخلية
 ✅ تمت إضافة noindex لمسارات الإدارة وتسجيل الدخول وبوابة المعلنين والدعم
-✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.0
+✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.2
 ✅ نسخة منصة الإدارة الحالية في الكود بقيت 0.1.4 لأن التعديل لم يغير منصة الإدارة وظيفيًا
-✅ تم نشر نسخة 0.3.0 / admin 0.1.4 على Cloudflare Version ID: e6dbc554-cb5c-4599-84e3-98008a8ed766
+✅ تم نشر نسخة 0.3.2 / admin 0.1.4 على Cloudflare Version ID: 39b4e32c-dcb2-4922-8160-ad168625efc6
 ✅ تم اختبار `/`, `/clock`, `/weather`, `/sitemap.xml`, `/robots.txt`, و `/admin/identity` على الإنتاج بنجاح
+✅ تم فحص الهيدرز الأمنية على الإنتاج وتأكيد noindex لمسارات الإدارة وتعطيل X-Powered-By
 ```
 
 ---
@@ -8888,6 +8977,8 @@ PROJECT_MEMO.md
 إضافة Schema إضافية عند الحاجة مثل SoftwareApplication و HowTo و Breadcrumb للصفحات الديناميكية بعد تثبيت شكل المحتوى.
 مراجعة sitemap.xml داخل Search Console بعد أن تقرأ Google النسخة الجديدة، والتأكد من فهرسة الصفحات العامة المطلوبة فقط.
 اختبار Rich Results و Search Console و PageSpeed بعد النشر، ثم إصلاح أي تحذير فعلي.
+تشغيل PageSpeed فعلي بعد انتشار نسخة 0.3.2 لأن جلسة Codex الحالية لا تحتوي أداة Chrome DevTools MCP لقياس Core Web Vitals مباشرة.
+اختبار Content-Security-Policy بصيغة Report-Only أولًا قبل فرضها، حتى لا تتعطل AdSense أو Firebase أو GTM.
 تنظيف نصوص fallback القديمة في app/toolSettings.js و app/i18n.js إذا ظهرت أي مشكلة ترميز في بيئات العرض أو السجلات.
 مراجعة AdSense بعد طلب المراجعة وعدم اعتبار هذه التحسينات ضمانًا للقبول؛ هي أساس تقني ومحتوى أولي يحتاج متابعة.
 ```

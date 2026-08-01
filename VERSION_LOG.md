@@ -1,5 +1,14 @@
 # سجل إصدارات date_tools
 
+## 0.3.2 - 2026-08-01
+
+- تعزيز الهيدرز الأمنية العامة عبر `middleware.js` بإضافة رؤوس عزل وحماية إضافية مثل `Cross-Origin-Opener-Policy` و `Origin-Agent-Cluster` و `X-Permitted-Cross-Domain-Policies`.
+- إضافة `X-Robots-Tag: noindex, nofollow, noarchive` لمسارات الإدارة وتسجيل الدخول وبوابة العميل والدعم والـ API من مستوى HTTP Header بجانب metadata الموجودة.
+- إبقاء CSP مؤجلًا لمرحلة مستقلة حتى لا يكسر AdSense أو Firebase أو سكربتات التكامل قبل اختباره بصيغة report-only.
+- إخفاء ترويسة Next الافتراضية عبر `poweredByHeader: false`.
+- تفعيل Observability في `wrangler.jsonc` بمعدل عينات خفيف لتحسين تشخيص Worker على Cloudflare.
+- لم يتم تغيير نسخة منصة الإدارة لأن التعديل يخص هيدرز الموقع وتهيئة Cloudflare العامة.
+
 ## 0.3.1 - 2026-08-01
 
 - تقوية المحتوى النصي العام لصفحات `/clock` و `/weather` والصفحة الرئيسية `/` بمقاطع إرشادية أوضح لتقليل خطر اعتبار الصفحات أدوات قليلة المحتوى.
