@@ -26,10 +26,30 @@ const SECURITY_HEADERS = [
     ['X-DNS-Prefetch-Control', 'on'],
 ];
 
+const REPORT_ONLY_CSP = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "manifest-src 'self'",
+    "worker-src 'self' blob:",
+    "media-src 'self' data: blob:",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com",
+    "script-src-elem 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com",
+    "connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://api.bigdatacloud.net https://api.open-meteo.com https://geocoding-api.open-meteo.com https://www.clarity.ms https://*.clarity.ms https://*.google.com https://*.googleapis.com https://*.gstatic.com https://*.googlesyndication.com",
+    "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://challenges.cloudflare.com",
+    'report-uri /api/csp-report',
+].join('; ');
+
 function applySecurityHeaders(response) {
     SECURITY_HEADERS.forEach(([key, value]) => {
         response.headers.set(key, value);
     });
+    response.headers.set('Content-Security-Policy-Report-Only', REPORT_ONLY_CSP);
     return response;
 }
 

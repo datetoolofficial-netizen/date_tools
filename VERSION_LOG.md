@@ -1,5 +1,12 @@
 # سجل إصدارات date_tools
 
+## 0.3.3 - 2026-08-01
+
+- إضافة `Content-Security-Policy-Report-Only` في `middleware.js` لاختبار CSP دون تعطيل AdSense أو Firebase أو Google Tag Manager.
+- إضافة endpoint آمن `/api/csp-report` لاستقبال تقارير CSP بدون حفظها في Firebase، مع تنظيف الروابط من query/hash قبل طباعتها في سجلات Cloudflare.
+- توثيق أن PageSpeed API العام أعاد 429 بدون مفتاح API، وأن القياس الفعلي يجب أن يتم من لوحة الإدارة عند توفر `PAGESPEED_API_KEY` أو عبر مفتاح محلي مؤقت.
+- لم يتم تغيير نسخة منصة الإدارة لأن التعديل يخص هيدرز الموقع العامة وتجربة CSP.
+
 ## 0.3.2 - 2026-08-01
 
 - تعزيز الهيدرز الأمنية العامة عبر `middleware.js` بإضافة رؤوس عزل وحماية إضافية مثل `Cross-Origin-Opener-Policy` و `Origin-Agent-Cluster` و `X-Permitted-Cross-Domain-Policies`.

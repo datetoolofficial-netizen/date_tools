@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.2.
+الإصدار الحالي للتطبيق هو 0.3.3.
 نسخة منصة الإدارة الحالية هي 0.1.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -179,6 +179,7 @@ https://www.date-tool.com
 114. إضافة إشعار تحديث تلقائي للتطبيق المثبت عند تغير نسخة الموقع مع خطوات تحديث واضحة.
 115. تقوية المحتوى النصي وبيانات SEO/Schema لصفحات التاريخ والساعة والطقس استعدادًا لمراجعة AdSense.
 116. مراجعة وتحسين الهيدرز الأمنية وتهيئة Cloudflare العامة مع إبقاء CSP لمرحلة report-only مستقلة.
+117. إضافة اختبار CSP بصيغة Report-Only ومحاولة تشغيل PageSpeed فعلي مع توثيق عائق كوتا Google عند عدم توفر مفتاح محلي.
 ---
 
 ## 3. الوضع قبل التعديل
@@ -8599,6 +8600,79 @@ PROJECT_MEMO.md
 
 ---
 
+### اختبار CSP Report-Only ومحاولة PageSpeed الفعلي - 0.3.3 / admin 0.1.4
+
+الأعراض:
+
+```txt
+بعد تقوية الهيدرز الأمنية، بقي اختبار CSP بصيغة Report-Only قبل فرضه فعليًا.
+طلب المستخدم تشغيل PageSpeed فعلي بعد انتشار النسخة، لكن الطلبات العامة إلى Google PageSpeed API بدون مفتاح رجعت 429 Too Many Requests.
+```
+
+السبب:
+
+```txt
+CSP يجب اختباره على الإنتاج بصيغة Report-Only لأن الموقع يستخدم AdSense وFirebase وGoogle Tag Manager وAnalytics وClarity وربما Turnstile، وفرض السياسة مباشرة قد يمنع سكربتات أو إطارات مهمة.
+PageSpeed API العام محدود جدًا بدون مفتاح API، بينما مسار /api/pagespeed في المشروع محمي بصلاحية المدير ويحتاج جلسة مدير أو وجود PAGESPEED_API_KEY في Cloudflare.
+```
+
+الحل:
+
+```txt
+تم إضافة Content-Security-Policy-Report-Only من middleware.js فقط، دون إضافة Content-Security-Policy الملزمة.
+تم السماح مبدئيًا بالمصادر المعروفة المستخدمة في المشروع مثل self و Google/AdSense و Firebase/Google APIs و Open-Meteo و BigDataCloud و FontAwesome CDN و Clarity و Facebook Pixel و Turnstile.
+تم إضافة endpoint آمن /api/csp-report يستقبل تقارير CSP ويرجع 204 ولا يحفظ أي بيانات في Firebase.
+تقارير CSP تنظف document-uri و blocked-uri من query/hash قبل طباعتها في Cloudflare logs لتقليل خطر تسريب بيانات.
+تم رفع نسخة الموقع العامة إلى 0.3.3 دون تغيير نسخة الإدارة لأن التعديل يخص الهيدرز العامة ومراقبة CSP.
+```
+
+الحالة:
+
+```txt
+✅ تم تنفيذ CSP بصيغة Report-Only فقط.
+✅ تم إنشاء /api/csp-report بدون تخزين دائم.
+✅ تم توثيق أن PageSpeed API العام أعاد 429 بسبب الكوتا عند التشغيل من الطرفية بدون مفتاح.
+✅ نجح npm run lint.
+✅ نجح git diff --check مع تحذيرات CRLF المعتادة فقط.
+✅ نجح npm run build مع نفس تحذيرات الشبكة المحلية أثناء جلب Firestore في بيئة Codex.
+✅ تم النشر عبر npm run deploy على Cloudflare Worker datetools.
+✅ Version ID المنشور: 558fc331-07b8-48d9-a470-04edb96b2f7a.
+✅ فحص الإنتاج أكد وجود Content-Security-Policy-Report-Only على الصفحة الرئيسية وصفحة الإدارة.
+✅ فحص الإنتاج أكد عدم وجود Content-Security-Policy ملزم، لذلك لن يتم كسر AdSense/Firebase/GTM.
+✅ فحص الإنتاج أكد أن /api/csp-report يرجع 204 No Content.
+⏳ بعد النشر يجب مراقبة CSP عبر wrangler tail ثم تضييق السياسة أو تحويلها لاحقًا إلى سياسة ملزمة عند الثبات.
+```
+
+الأوامر المستخدمة:
+
+```powershell
+Invoke-RestMethod -Uri https://www.googleapis.com/pagespeedonline/v5/runPagespeed...
+rg -n "https?://|googlesyndication|google-analytics|googletagmanager|firebase|firestore|gstatic|googleapis|cloudflare|adsbygoogle|pagead|doubleclick|analytics|gtag|turnstile|recaptcha|api\\.media|R2|open-meteo|nominatim|bigdatacloud|ipapi|ipinfo" app middleware.js next.config.mjs wrangler.jsonc package.json
+Get-Content -LiteralPath app\api\pagespeed\route.js -Encoding UTF8
+npm version 0.3.3 --no-git-tag-version
+npm run lint
+git diff --check
+npm run build
+npm run deploy
+curl.exe -sS -D - -o NUL https://date-tool.com/
+curl.exe -sS -D - -o NUL https://date-tool.com/admin/identity
+curl.exe -sS -D - -o NUL -X POST -H "Content-Type: application/json" --data-raw '{...}' https://date-tool.com/api/csp-report
+```
+
+الملفات المتأثرة:
+
+```txt
+middleware.js
+app/api/csp-report/route.js
+app/version.js
+package.json
+package-lock.json
+VERSION_LOG.md
+PROJECT_MEMO.md
+```
+
+---
+
 ## 9. الحالة الحالية
 
 ```txt
@@ -8958,11 +9032,13 @@ PROJECT_MEMO.md
 ✅ تم دعم محتوى نصي إرشادي إضافي لصفحات الساعة والطقس لتقليل خطر انخفاض قيمة المحتوى
 ✅ أصبحت sitemap.xml تجمع الصفحات العامة الثابتة والديناميكية من قاعدة البيانات مع استبعاد المسارات الداخلية
 ✅ تمت إضافة noindex لمسارات الإدارة وتسجيل الدخول وبوابة المعلنين والدعم
-✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.2
+✅ نسخة الموقع الأساسية الحالية في الكود هي 0.3.3
 ✅ نسخة منصة الإدارة الحالية في الكود بقيت 0.1.4 لأن التعديل لم يغير منصة الإدارة وظيفيًا
-✅ تم نشر نسخة 0.3.2 / admin 0.1.4 على Cloudflare Version ID: 39b4e32c-dcb2-4922-8160-ad168625efc6
+✅ تم نشر نسخة 0.3.3 / admin 0.1.4 على Cloudflare Version ID: 558fc331-07b8-48d9-a470-04edb96b2f7a
 ✅ تم اختبار `/`, `/clock`, `/weather`, `/sitemap.xml`, `/robots.txt`, و `/admin/identity` على الإنتاج بنجاح
 ✅ تم فحص الهيدرز الأمنية على الإنتاج وتأكيد noindex لمسارات الإدارة وتعطيل X-Powered-By
+✅ تم تفعيل Content-Security-Policy-Report-Only على الإنتاج دون فرض CSP ملزم
+✅ يعمل endpoint `/api/csp-report` ويرجع 204 دون تخزين دائم
 ```
 
 ---
@@ -8977,8 +9053,8 @@ PROJECT_MEMO.md
 إضافة Schema إضافية عند الحاجة مثل SoftwareApplication و HowTo و Breadcrumb للصفحات الديناميكية بعد تثبيت شكل المحتوى.
 مراجعة sitemap.xml داخل Search Console بعد أن تقرأ Google النسخة الجديدة، والتأكد من فهرسة الصفحات العامة المطلوبة فقط.
 اختبار Rich Results و Search Console و PageSpeed بعد النشر، ثم إصلاح أي تحذير فعلي.
-تشغيل PageSpeed فعلي بعد انتشار نسخة 0.3.2 لأن جلسة Codex الحالية لا تحتوي أداة Chrome DevTools MCP لقياس Core Web Vitals مباشرة.
-اختبار Content-Security-Policy بصيغة Report-Only أولًا قبل فرضها، حتى لا تتعطل AdSense أو Firebase أو GTM.
+تشغيل PageSpeed فعلي من لوحة الإدارة أو من الطرفية عند توفير PAGESPEED_API_KEY محليًا؛ الطلب العام بدون مفتاح رجع 429.
+مراقبة تقارير Content-Security-Policy-Report-Only عبر wrangler tail قبل التفكير في فرض CSP ملزم.
 تنظيف نصوص fallback القديمة في app/toolSettings.js و app/i18n.js إذا ظهرت أي مشكلة ترميز في بيئات العرض أو السجلات.
 مراجعة AdSense بعد طلب المراجعة وعدم اعتبار هذه التحسينات ضمانًا للقبول؛ هي أساس تقني ومحتوى أولي يحتاج متابعة.
 ```
