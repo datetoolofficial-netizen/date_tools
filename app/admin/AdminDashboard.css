@@ -373,8 +373,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .legacy-theme-toggle:hover {
-    background: var(--primary-color);
-    color: #ffffff;
+    background: rgba(100, 116, 139, 0.1);
+    color: var(--text-main);
+    filter: brightness(1.08);
 }
 
 .legacy-theme-toggle:hover i {
@@ -384,7 +385,7 @@ body.dark-mode .legacy-nav-links a.active {
 .legacy-logout-btn {
     background: var(--danger-bg);
     color: var(--danger-text);
-    border: 1px solid var(--danger-text);
+    border: 0;
     padding: 8px 15px;
     border-radius: 8px;
     font-weight: 800;
@@ -394,8 +395,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .legacy-logout-btn:hover {
-    background: var(--danger-text);
-    color: #ffffff;
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    filter: brightness(1.08);
 }
 
 .legacy-welcome-banner {
@@ -767,8 +769,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .legacy-primary-btn:hover {
-    background: #2563eb;
-    transform: translateY(-1px);
+    background: var(--primary-color);
+    filter: brightness(1.06);
+    transform: none;
 }
 
 .legacy-primary-btn:disabled {
@@ -784,7 +787,7 @@ body.dark-mode .legacy-nav-links a.active {
 .legacy-secondary-btn {
     background: var(--bg-body);
     color: var(--text-main);
-    border: 1px solid var(--border-color);
+    border: 0;
 }
 
 .legacy-filter-bar,
@@ -928,7 +931,7 @@ body.dark-mode .legacy-nav-links a.active {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid var(--border-color);
+    border: 0;
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
     cursor: pointer;
@@ -2462,33 +2465,41 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-management-hero > div {
+    display: grid;
+    justify-items: center;
+    width: 100%;
     margin-inline: auto;
+    text-align: center;
+}
+
+.tool-management-hero h1 {
+    justify-content: center;
+    width: 100%;
     text-align: center;
 }
 
 .tool-floating-action-dock {
     position: fixed;
-    inset-inline: 0;
+    left: 18px;
     bottom: 14px;
     z-index: 80;
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    width: fit-content;
-    margin-inline: auto;
-    padding: 8px;
-    border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--bg-container) 94%, transparent);
-    box-shadow: 0 16px 38px rgba(2, 6, 23, 0.28);
-    backdrop-filter: blur(14px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 104px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 .tool-floating-action {
-    min-width: 92px;
+    min-width: 0;
+    width: 100%;
     height: 44px;
     padding-inline: 14px;
-    border: 1px solid var(--border-color);
+    border: 0;
     border-radius: 11px;
     display: inline-flex;
     align-items: center;
@@ -2922,7 +2933,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-item-card.event {
     min-width: 980px;
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
     align-items: center;
 }
 
@@ -2933,7 +2944,7 @@ body.dark-mode .legacy-nav-links a.active {
 .date-tool-events .tools-table-head {
     min-width: 980px;
     display: grid;
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
     gap: 12px;
     align-items: center;
     white-space: nowrap;
@@ -2971,7 +2982,7 @@ body.dark-mode .legacy-nav-links a.active {
     width: 38px;
     height: 38px;
     border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border: 0;
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
     cursor: pointer;
@@ -3078,9 +3089,8 @@ body.dark-mode .legacy-nav-links a.active {
 .tools-row-action:hover,
 .tools-color-action:hover,
 .tools-item-actions button:hover {
-    transform: translateY(-2px);
-    background: var(--primary-color);
-    color: #fff;
+    transform: none;
+    filter: brightness(1.08);
 }
 
 .tools-color-action {
@@ -4147,12 +4157,12 @@ body.dark-mode .legacy-nav-links a.active {
     }
 
     .legacy-logout-btn {
-        width: 52px;
-        min-width: 52px;
-        height: 52px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
         justify-content: center;
         padding: 0;
-        border-radius: 16px;
+        border-radius: 13px;
         gap: 0;
         background: color-mix(in srgb, var(--danger-text) 12%, var(--bg-container));
         border-color: color-mix(in srgb, var(--danger-text) 34%, var(--border-color));
@@ -4286,14 +4296,47 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .date-tool-events .tools-item-card.event {
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
+}
+
+/* Date events use the same visual hierarchy as the management tables above. */
+.date-tool-events .tools-section-head,
+.date-tool-events .tools-table-head {
+    border-color: color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
+    background: color-mix(in srgb, var(--primary-color) 14%, var(--bg-container));
+}
+
+.date-tool-events .tools-item-actions {
+    width: max-content;
+    justify-self: center;
+    justify-content: center;
+}
+
+/* Action controls keep their semantic color and never gain a generic border. */
+.legacy-admin-shell button,
+.legacy-admin-shell .legacy-primary-btn,
+.legacy-admin-shell .legacy-secondary-btn,
+.legacy-admin-shell .tool-floating-action,
+.legacy-admin-shell .tools-row-action,
+.legacy-admin-shell .tools-color-action {
+    border: 0;
+}
+
+.legacy-admin-shell button:hover,
+.legacy-admin-shell .legacy-primary-btn:hover,
+.legacy-admin-shell .legacy-secondary-btn:hover,
+.legacy-admin-shell .tool-floating-action:hover,
+.legacy-admin-shell .tools-row-action:hover,
+.legacy-admin-shell .tools-color-action:hover {
+    transform: none;
 }
 
 @media (max-width: 700px) {
     .tool-floating-action-dock {
+        left: 10px;
         bottom: 10px;
-        padding: 6px;
-        border-radius: 14px;
+        width: 92px;
+        padding: 0;
     }
 
     .tool-floating-action {
