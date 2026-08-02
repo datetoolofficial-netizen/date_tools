@@ -110,7 +110,6 @@ function DateToolEvents({ firebaseApi, showMessage }) {
 
                 {!isLoading && events.length > 0 && (
                     <div className="tools-table-head">
-                        <span>تفعيل</span>
                         <span>أيقونة</span>
                         <span>اسم الحدث</span>
                         <span>التاريخ</span>
@@ -122,9 +121,6 @@ function DateToolEvents({ firebaseApi, showMessage }) {
 
                 {!isLoading && events.map((eventItem, index) => (
                     <div className="tools-item-card event" key={`${eventItem.id || eventItem.name}-${index}`}>
-                        <label className="tools-mini-check icon-only" title="تفعيل الحدث">
-                            <input type="checkbox" checked={eventItem.active !== false} onChange={(event) => updateEvent(index, 'active', event.target.checked)} />
-                        </label>
                         <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
                             <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                         </div>
@@ -191,7 +187,6 @@ export default function AdminDateToolPage() {
             loadingTitle="جاري فتح إدارة أداة التاريخ..."
             title="إدارة أداة التاريخ"
             description="إعدادات خاصة بصفحة التاريخ فقط. نقلنا أهم الأحداث هنا حتى تكون كل أداة مستقلة عن إعدادات الموقع العامة."
-            showBackButton
         >
             {({ firebaseApi, showMessage }) => (
                 <>

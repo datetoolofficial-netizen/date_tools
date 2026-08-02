@@ -2455,19 +2455,6 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 10px;
 }
 
-.tool-management-back-btn {
-    position: fixed;
-    inset-inline-end: 22px;
-    bottom: 22px;
-    z-index: 75;
-    min-width: 0;
-    min-height: 48px;
-    padding: 0 16px;
-    border-radius: 14px;
-    box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
-    text-decoration: none;
-}
-
 .tool-management-hero {
     position: relative;
     justify-content: center;
@@ -2479,17 +2466,55 @@ body.dark-mode .legacy-nav-links a.active {
     text-align: center;
 }
 
-.tool-content-save-btn {
+.tool-floating-action-dock {
     position: fixed;
-    inset-inline-start: 22px;
-    bottom: 22px;
-    z-index: 75;
-    width: auto;
-    min-width: 0;
-    min-height: 48px;
-    padding: 0 16px;
-    border-radius: 14px;
-    box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
+    inset-inline: 0;
+    bottom: 14px;
+    z-index: 80;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: fit-content;
+    margin-inline: auto;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 20%, var(--border-color));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--bg-container) 94%, transparent);
+    box-shadow: 0 16px 38px rgba(2, 6, 23, 0.28);
+    backdrop-filter: blur(14px);
+}
+
+.tool-floating-action {
+    min-width: 92px;
+    height: 44px;
+    padding-inline: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.tool-floating-back {
+    background: var(--bg-main);
+    color: var(--text-main);
+}
+
+.tool-floating-save {
+    border-color: color-mix(in srgb, #22c55e 42%, var(--border-color));
+    background: color-mix(in srgb, #22c55e 19%, var(--bg-container));
+    color: #22c55e;
+}
+
+.tool-floating-action:disabled {
+    cursor: wait;
+    opacity: 0.68;
 }
 
 .tool-content-settings {
@@ -2897,7 +2922,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-item-card.event {
     min-width: 980px;
-    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
     align-items: center;
 }
 
@@ -2908,7 +2933,7 @@ body.dark-mode .legacy-nav-links a.active {
 .date-tool-events .tools-table-head {
     min-width: 980px;
     display: grid;
-    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
     gap: 12px;
     align-items: center;
     white-space: nowrap;
@@ -3066,6 +3091,17 @@ body.dark-mode .legacy-nav-links a.active {
     border-color: color-mix(in srgb, var(--warning-text) 24%, var(--border-color));
     font-size: 11px;
     font-weight: 900;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+}
+
+.tools-color-action span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
 .tools-color-action input {
@@ -4250,24 +4286,21 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .date-tool-events .tools-item-card.event {
-    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 160px;
 }
 
 @media (max-width: 700px) {
-    .tool-content-save-btn,
-    .tools-section-head .tool-content-save-btn {
-        inset-inline-start: 12px;
-        bottom: 12px;
-        width: auto;
-        min-width: 48px;
-        padding-inline: 13px;
+    .tool-floating-action-dock {
+        bottom: 10px;
+        padding: 6px;
+        border-radius: 14px;
     }
 
-    .tool-management-back-btn {
-        inset-inline-end: 12px;
-        bottom: 12px;
-        min-width: 48px;
-        padding-inline: 13px;
+    .tool-floating-action {
+        min-width: 84px;
+        height: 40px;
+        padding-inline: 12px;
+        font-size: 12px;
     }
 
     .tool-table-footer-actions {

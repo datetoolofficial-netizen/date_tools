@@ -54,7 +54,6 @@ const EMPTY_IDENTITY = {
         enabled: true,
         text: 'ثبّت الأداة على جهازك لاستخدام أسرع',
         buttonText: 'ثبّت الأداة',
-        showAgainKey: '',
     },
 };
 
@@ -63,7 +62,6 @@ function normalizePwaInstallPrompt(value = {}) {
         enabled: value?.enabled !== false,
         text: String(value?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع'),
         buttonText: String(value?.buttonText || 'ثبّت الأداة'),
-        showAgainKey: String(value?.showAgainKey || ''),
     };
 }
 
@@ -396,42 +394,6 @@ export default function AdminIdentityPage() {
             showMessage('error', getUploadMessage(error.message, 'صورة المشاركة'));
         } finally {
             setUploadingTarget('');
-        }
-    };
-
-    const showPwaInstallPromptAgain = async () => {
-        const firebaseApi = firebaseApiRef.current;
-        const nextPrompt = normalizePwaInstallPrompt({
-            ...(identity.pwaInstallPrompt || {}),
-            enabled: identity.pwaInstallPrompt?.enabled !== false,
-            showAgainKey: new Date().toISOString(),
-        });
-
-        setIdentity((current) => ({
-            ...current,
-            pwaInstallPrompt: nextPrompt,
-        }));
-
-        if (!firebaseApi?.saveSiteConfigSection) {
-            showMessage('error', 'لم تكتمل تهيئة Firebase بعد.');
-            return;
-        }
-
-        setSaving(true);
-        showMessage('info', 'جاري تفعيل ظهور زر التثبيت مجددًا...');
-
-        try {
-            const savedPatch = await firebaseApi.saveSiteConfigSection({ pwaInstallPrompt: nextPrompt });
-            setIdentity((current) => ({
-                ...current,
-                pwaInstallPrompt: normalizePwaInstallPrompt(savedPatch.pwaInstallPrompt || nextPrompt),
-            }));
-            showMessage('success', 'تم تفعيل ظهور تنبيه التثبيت مجددًا.');
-        } catch (error) {
-            console.error('Error saving PWA install prompt:', error);
-            showMessage('error', 'تعذر حفظ إعدادات إعادة ظهور التثبيت.');
-        } finally {
-            setSaving(false);
         }
     };
 
@@ -979,17 +941,6 @@ export default function AdminIdentityPage() {
                                         placeholder="مثال: ثبّت الأداة"
                                     />
                                 </div>
-                            </div>
-
-                            <div className="pwa-reshow-row">
-                                <div>
-                                    <strong>إظهار زر التثبيت مجددًا</strong>
-                                    <small>استخدمه عند وجود تحديث مهم. يظهر التنبيه مرة أخرى لمن أخفاه، ويظهر كرسالة تحديث لمن ثبت التطبيق سابقًا.</small>
-                                </div>
-                                <button type="button" className="legacy-secondary-btn" onClick={showPwaInstallPromptAgain} disabled={saving}>
-                                    <i className="fa-solid fa-rotate-right"></i>
-                                    إظهار مجددًا
-                                </button>
                             </div>
 
                             <div className="pwa-shortcut-admin-list">

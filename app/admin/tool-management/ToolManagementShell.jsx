@@ -78,7 +78,6 @@ export default function ToolManagementShell({
     loadingTitle = 'جاري فتح إدارة الأدوات...',
     title = 'إدارة الأدوات',
     description = 'إدارة مستقلة لكل أداة حتى تبقى إعدادات الموقع العامة نظيفة ومنظمة.',
-    showBackButton = false,
     children,
 }) {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -246,7 +245,7 @@ export default function ToolManagementShell({
                     onClose={() => setMessage(null)}
                 />
 
-                <section className={`legacy-ads-hero tools-hero tool-management-hero ${showBackButton ? 'has-floating-back' : ''}`}>
+                <section className="legacy-ads-hero tools-hero tool-management-hero">
                     <div>
                         <h1>
                             <i className={`fa-solid ${icon}`}></i>
@@ -254,12 +253,6 @@ export default function ToolManagementShell({
                         </h1>
                         <p>{description}</p>
                     </div>
-                    {showBackButton && (
-                        <Link href="/admin/tool-management" className="legacy-secondary-btn tool-management-back-btn">
-                            <i className="fa-solid fa-arrow-right"></i>
-                            رجوع لإدارة الأدوات
-                        </Link>
-                    )}
                 </section>
 
                 {typeof children === 'function' ? children({ firebaseApi, showMessage }) : children}

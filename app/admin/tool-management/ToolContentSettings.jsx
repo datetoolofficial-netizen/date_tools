@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 
 const SHARE_PREVIEW_VALUES = {
@@ -192,10 +193,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     <h2>نصوص الأداة</h2>
                     <p>عدّل عنوان السكشن التعريفي، السلوغن، أسماء الأدوات الفرعية، والأسئلة الإضافية لهذه الأداة.</p>
                 </div>
-                <button type="button" className="legacy-primary-btn tool-content-save-btn" onClick={saveSettings} disabled={isSaving}>
-                    <i className="fa-solid fa-floppy-disk"></i>
-                    {isSaving ? 'جاري الحفظ...' : 'حفظ نصوص الأداة'}
-                </button>
             </div>
 
             <div className="legacy-form-grid tool-content-grid">
@@ -422,6 +419,17 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     </div>
                 </div>
             )}
+
+            <div className="tool-floating-action-dock" aria-label="إجراءات إدارة الأداة">
+                <Link href="/admin/tool-management" className="tool-floating-action tool-floating-back">
+                    <i className="fa-solid fa-arrow-right"></i>
+                    رجوع
+                </Link>
+                <button type="button" className="tool-floating-action tool-floating-save" onClick={saveSettings} disabled={isSaving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {isSaving ? 'يحفظ...' : 'حفظ'}
+                </button>
+            </div>
         </section>
     );
 }

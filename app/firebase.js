@@ -255,7 +255,6 @@ export const defaultSiteConfig = {
         enabled: true,
         text: "ثبّت الأداة على جهازك لاستخدام أسرع",
         buttonText: "ثبّت الأداة",
-        showAgainKey: "",
     },
     customPages: {},
     mainSEO: {
