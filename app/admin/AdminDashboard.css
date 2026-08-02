@@ -21,8 +21,18 @@
     --legacy-table-head-pad: 12px 14px;
     --legacy-table-row-pad: 12px 14px;
     --legacy-table-head-size: 12px;
-    --legacy-table-head-border: 1px solid color-mix(in srgb, var(--tool-color, var(--primary-color)) 24%, var(--border-color));
+    --legacy-table-head-border: 1px solid color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
     --legacy-table-row-border: 1px solid var(--border-color);
+    --admin-control-radius: 12px;
+    --admin-button-pad: 12px 18px;
+    --admin-button-gap: 8px;
+    --admin-icon-button-size: 38px;
+    --admin-icon-button-compact-size: 34px;
+    --admin-section-head-pad: 18px;
+    --admin-section-head-radius: 18px;
+    --admin-section-head-gap: 16px;
+    --admin-control-transition: 0.25s;
+    --admin-table-head-bg: color-mix(in srgb, var(--primary-color) 12%, var(--bg-container));
 
     min-height: 100vh;
     background: var(--bg-body);
@@ -751,16 +761,16 @@ body.dark-mode .legacy-nav-links a.active {
 .legacy-primary-btn,
 .legacy-secondary-btn {
     border: none;
-    border-radius: 12px;
-    padding: 12px 18px;
+    border-radius: var(--admin-control-radius);
+    padding: var(--admin-button-pad);
     font-family: inherit;
     font-weight: 900;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    transition: 0.25s;
+    gap: var(--admin-button-gap);
+    transition: var(--admin-control-transition);
 }
 
 .legacy-primary-btn {
@@ -920,7 +930,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .legacy-row-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--admin-button-gap);
     align-items: center;
     flex-flow: row nowrap;
     white-space: nowrap;
@@ -928,9 +938,9 @@ body.dark-mode .legacy-nav-links a.active {
 
 .legacy-row-actions button,
 .legacy-modal-head button {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: var(--admin-icon-button-size);
+    height: var(--admin-icon-button-size);
+    border-radius: var(--admin-control-radius);
     border: 0;
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
@@ -939,6 +949,7 @@ body.dark-mode .legacy-nav-links a.active {
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
+    transition: var(--admin-control-transition);
 }
 
 .legacy-row-actions button.danger,
@@ -1387,9 +1398,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .legacy-media-picker-action {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: var(--admin-icon-button-size);
+    height: var(--admin-icon-button-size);
+    border-radius: var(--admin-control-radius);
     background: rgba(59, 130, 246, 0.12);
     color: var(--primary-color);
     border: 1px dashed rgba(59, 130, 246, 0.3);
@@ -2147,10 +2158,10 @@ body.dark-mode .legacy-nav-links a.active {
     grid-template-columns: 1fr;
     justify-items: center;
     align-items: center;
-    gap: 16px;
-    padding: 18px;
+    gap: var(--admin-section-head-gap);
+    padding: var(--admin-section-head-pad);
     border: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
-    border-radius: 18px;
+    border-radius: var(--admin-section-head-radius);
     background: var(--tool-bg);
     margin-bottom: 16px;
     text-align: center;
@@ -2221,6 +2232,17 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 12px;
 }
 
+/* Shared management table header; table-specific rules only define columns. */
+.tools-table-head {
+    padding: var(--legacy-table-head-pad);
+    background: var(--admin-table-head-bg);
+    color: var(--text-main);
+    border-bottom: var(--legacy-table-head-border);
+    font-size: var(--legacy-table-head-size);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
 .tools-section-card:is(#pages, #links, #events) .tools-list,
 .tools-section-card.date-tool-events .tools-list,
 .tools-section-card#social .tools-social-grid {
@@ -2250,9 +2272,7 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tools-section-card#events .tools-table-head,
-.tools-section-card#events .tools-item-card.event,
-.tools-section-card.date-tool-events .tools-table-head,
-.tools-section-card.date-tool-events .tools-item-card.event {
+.tools-section-card#events .tools-item-card.event {
     min-width: 980px;
     display: grid;
     grid-template-columns: 76px 76px minmax(160px, 1fr) 150px 130px minmax(150px, 0.9fr) 128px;
@@ -2262,12 +2282,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-section-card:is(#pages, #links, #social, #events) .tools-table-head,
 .tools-section-card.date-tool-events .tools-table-head {
-    padding: var(--legacy-table-head-pad);
-    background: var(--tool-bg);
-    color: var(--text-main);
-    border-bottom: var(--legacy-table-head-border);
-    font-size: var(--legacy-table-head-size);
-    font-weight: 900;
+    background: var(--admin-table-head-bg);
 }
 
 .tools-section-card:is(#pages, #links, #events) .tools-item-card,
@@ -2574,21 +2589,11 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-subtools-list .tools-table-head {
-    padding: var(--legacy-table-head-pad);
-    background: var(--tool-bg);
-    color: var(--text-main);
-    border-bottom: var(--legacy-table-head-border);
-    font-size: var(--legacy-table-head-size);
-    font-weight: 900;
+    background: var(--admin-table-head-bg);
 }
 
 .tool-share-templates-list .tools-table-head {
-    padding: var(--legacy-table-head-pad);
-    background: color-mix(in srgb, var(--tool-color) 12%, var(--bg-container));
-    color: var(--text-main);
-    border-bottom: var(--legacy-table-head-border);
-    font-size: var(--legacy-table-head-size);
-    font-weight: 900;
+    background: var(--admin-table-head-bg);
 }
 
 .tool-subtools-list .tools-item-card,
@@ -2791,13 +2796,7 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-faq-list .tools-table-head {
-    padding: var(--legacy-table-head-pad);
-    background: color-mix(in srgb, var(--tool-color) 12%, var(--bg-container));
-    border-bottom: var(--legacy-table-head-border);
-    color: var(--text-main);
-    font-size: var(--legacy-table-head-size);
-    font-weight: 900;
-    white-space: nowrap;
+    background: var(--admin-table-head-bg);
 }
 
 .tool-faq-question,
@@ -2954,13 +2953,7 @@ body.dark-mode .legacy-nav-links a.active {
     grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
     gap: 12px;
     align-items: center;
-    white-space: nowrap;
-    padding: var(--legacy-table-head-pad);
-    background: color-mix(in srgb, var(--tool-color, var(--primary-color)) 12%, var(--bg-container));
-    color: var(--text-main);
-    border-bottom: var(--legacy-table-head-border);
-    font-size: var(--legacy-table-head-size);
-    font-weight: 900;
+    background: var(--admin-table-head-bg);
 }
 
 .date-tool-events .tools-item-card.event {
@@ -3016,7 +3009,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-item-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--admin-button-gap);
     align-items: center;
     justify-content: flex-end;
     flex-flow: row nowrap;
@@ -3029,9 +3022,9 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tools-item-actions button {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: var(--admin-icon-button-size);
+    height: var(--admin-icon-button-size);
+    border-radius: var(--admin-control-radius);
     border: 0;
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
@@ -3122,9 +3115,9 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-row-action,
 .tools-color-action {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
+    width: var(--admin-icon-button-size);
+    height: var(--admin-icon-button-size);
+    border-radius: var(--admin-control-radius);
     border: 1px solid var(--border-color);
     background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
@@ -3133,7 +3126,7 @@ body.dark-mode .legacy-nav-links a.active {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    transition: var(--admin-control-transition);
 }
 
 .tools-row-action:hover,
@@ -4353,7 +4346,7 @@ body.dark-mode .legacy-nav-links a.active {
 .date-tool-events .tools-section-head,
 .date-tool-events .tools-table-head {
     border-color: color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
-    background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-container));
+    background: var(--admin-table-head-bg);
 }
 
 .date-tool-events .tools-item-actions {
@@ -4363,8 +4356,8 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .date-tool-events .tools-item-actions button {
-    width: 34px;
-    height: 34px;
+    width: var(--admin-icon-button-compact-size);
+    height: var(--admin-icon-button-compact-size);
 }
 
 .date-event-modal {
