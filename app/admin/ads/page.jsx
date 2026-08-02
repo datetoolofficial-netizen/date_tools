@@ -601,8 +601,6 @@ export default function AdminAdsPage() {
     };
 
     const deleteCampaign = async (campaign) => {
-        if (!window.confirm('هل تريد حذف هذا الإعلان نهائيًا؟')) return;
-
         try {
             const { deleteDoc, doc } = await import('firebase/firestore');
             await deleteDoc(doc(firebaseApiRef.current.db, 'campaigns', campaign.id));

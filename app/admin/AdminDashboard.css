@@ -2513,8 +2513,15 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-floating-back {
-    background: var(--bg-main);
+    background: color-mix(in srgb, var(--primary-color) 13%, var(--bg-container));
     color: var(--text-main);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--primary-color) 12%, transparent);
+}
+
+.tool-floating-back:hover {
+    background: color-mix(in srgb, var(--primary-color) 13%, var(--bg-container));
+    color: var(--text-main);
+    filter: brightness(1.08);
 }
 
 .tool-floating-save {
@@ -2933,7 +2940,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-item-card.event {
     min-width: 980px;
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
+    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
     align-items: center;
 }
 
@@ -2944,7 +2951,7 @@ body.dark-mode .legacy-nav-links a.active {
 .date-tool-events .tools-table-head {
     min-width: 980px;
     display: grid;
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
+    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
     gap: 12px;
     align-items: center;
     white-space: nowrap;
@@ -4296,7 +4303,7 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .date-tool-events .tools-item-card.event {
-    grid-template-columns: 72px minmax(170px, 1fr) 160px 150px 170px 142px;
+    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
 }
 
 /* Date events use the same visual hierarchy as the management tables above. */
@@ -4310,6 +4317,56 @@ body.dark-mode .legacy-nav-links a.active {
     width: max-content;
     justify-self: center;
     justify-content: center;
+}
+
+.date-tool-events .tools-item-actions button {
+    width: 34px;
+    height: 34px;
+}
+
+.date-tool-events .tools-color-action {
+    width: 42px;
+    height: 34px;
+    padding: 0 7px;
+}
+
+.admin-delete-confirm-card {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.admin-delete-confirm-card h3,
+.admin-delete-confirm-card p {
+    margin: 0;
+}
+
+.admin-delete-confirm-card p {
+    color: var(--text-sub);
+    line-height: 1.8;
+}
+
+.admin-delete-confirm-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: var(--danger-bg);
+    color: var(--danger-text);
+}
+
+.admin-delete-confirm-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.admin-delete-confirm-actions .danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
 }
 
 /* Action controls keep their semantic color and never gain a generic border. */

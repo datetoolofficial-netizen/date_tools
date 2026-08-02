@@ -194,7 +194,9 @@ export default function AdminShell({ children }) {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [loadError, setLoadError] = useState('');
+    const [pendingDeleteButton, setPendingDeleteButton] = useState(null);
     const firebaseApiRef = useRef(null);
+    const approvedDeleteButtonsRef = useRef(new WeakSet());
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -266,7 +268,44 @@ export default function AdminShell({ children }) {
 
     useEffect(() => {
         setIsMobileSidebarOpen(false);
+        setPendingDeleteButton(null);
     }, [pathname]);
+
+    useEffect(() => {
+        const interceptDelete = (event) => {
+            if (!(event.target instanceof Element)) return;
+            const button = event.target.closest('button');
+            if (!button || !button.closest('.legacy-admin-shell')) return;
+
+            const isDeleteButton = button.querySelector('.fa-trash') || button.dataset.confirmDelete === 'true';
+            if (!isDeleteButton) return;
+
+            if (approvedDeleteButtonsRef.current.has(button)) {
+                approvedDeleteButtonsRef.current.delete(button);
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            setPendingDeleteButton(button);
+        };
+
+        document.addEventListener('click', interceptDelete, true);
+        return () => document.removeEventListener('click', interceptDelete, true);
+    }, []);
+
+    const confirmDelete = () => {
+        if (!pendingDeleteButton) return;
+        const button = pendingDeleteButton;
+        if (!button.isConnected) {
+            setPendingDeleteButton(null);
+            return;
+        }
+        approvedDeleteButtonsRef.current.add(button);
+        setPendingDeleteButton(null);
+        window.setTimeout(() => button.click(), 0);
+    };
 
     const permissionSet = useMemo(() => getPermissionSet(adminProfile || {}), [adminProfile]);
     const activeNavId = getActiveNavId(pathname);
@@ -391,6 +430,25 @@ export default function AdminShell({ children }) {
                         <div className="legacy-version-badge"><i className="fa-solid fa-shield-halved"></i> admin v{ADMIN_VERSION}</div>
                     </footer>
                 </main>
+
+                {pendingDeleteButton && (
+                    <div className="legacy-modal-backdrop admin-delete-confirm" role="dialog" aria-modal="true" aria-labelledby="admin-delete-confirm-title">
+                        <div className="legacy-modal-card small admin-delete-confirm-card">
+                            <div className="admin-delete-confirm-icon"><i className="fa-solid fa-trash"></i></div>
+                            <h3 id="admin-delete-confirm-title">تأكيد الحذف</h3>
+                            <p>هل تريد حذف هذا العنصر نهائيًا؟ يمكنك استخدام زر إيقاف التفعيل بدل الحذف عندما يكون متاحًا.</p>
+                            <div className="legacy-modal-actions admin-delete-confirm-actions">
+                                <button type="button" className="legacy-primary-btn danger" onClick={confirmDelete}>
+                                    <i className="fa-solid fa-trash"></i>
+                                    حذف
+                                </button>
+                                <button type="button" className="legacy-secondary-btn" onClick={() => setPendingDeleteButton(null)}>
+                                    إلغاء
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminContext.Provider>
     );
