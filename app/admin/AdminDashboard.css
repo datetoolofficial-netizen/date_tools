@@ -2937,23 +2937,40 @@ body.dark-mode .legacy-nav-links a.active {
     grid-template-columns: minmax(170px, 0.65fr) minmax(320px, 1.35fr) 170px;
 }
 
-.tools-item-card.event {
-    min-width: 980px;
-    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
-    align-items: center;
+.date-tool-events .tools-list {
+    --date-events-table-width: 880px;
+    --date-events-grid: 64px minmax(220px, 1.5fr) 135px 110px 135px 112px;
+    overflow-x: auto;
+    direction: rtl;
 }
 
-.date-tool-events .tools-list {
-    overflow-x: auto;
+.date-tool-events .tools-table-head,
+.date-tool-events .tools-item-card.event {
+    width: max(100%, var(--date-events-table-width));
+    min-width: var(--date-events-table-width);
+    display: grid;
+    grid-template-columns: var(--date-events-grid);
+    gap: 12px;
+    align-items: center;
+    direction: rtl;
+    text-align: right;
 }
 
 .date-tool-events .tools-table-head {
-    min-width: 980px;
-    display: grid;
-    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
-    gap: 12px;
-    align-items: center;
     background: var(--admin-table-head-bg);
+}
+
+.date-tool-events .tools-table-head > span,
+.date-tool-events .tools-item-card.event > * {
+    min-width: 0;
+    text-align: right;
+}
+
+.date-tool-events .tools-table-head > span:first-child,
+.date-tool-events .tools-event-icon,
+.date-tool-events .tools-item-actions {
+    justify-self: center;
+    text-align: center;
 }
 
 .date-tool-events .tools-item-card.event {
@@ -2987,8 +3004,16 @@ body.dark-mode .legacy-nav-links a.active {
     font-weight: 750;
 }
 
+.tools-event-value-ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: right;
+}
+
 .tools-event-code {
     direction: ltr;
+    unicode-bidi: isolate;
+    text-align: right;
     color: var(--primary-color);
     font-size: 13px;
 }
@@ -4336,10 +4361,6 @@ body.dark-mode .legacy-nav-links a.active {
 .tool-content-settings .tool-faq-list .tools-table-head,
 .tool-content-settings .tool-faq-list .tool-faq-row {
     grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.2fr) 190px;
-}
-
-.date-tool-events .tools-item-card.event {
-    grid-template-columns: 72px minmax(230px, 1.35fr) 160px 150px 170px 126px;
 }
 
 /* Date events use the same visual hierarchy as the management tables above. */

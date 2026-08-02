@@ -147,7 +147,7 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                             <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                         </div>
                         <strong className="tools-event-name">{eventItem.name || 'بدون اسم'}</strong>
-                        <span className="tools-event-value" dir="ltr">{eventItem.date || '-'}</span>
+                        <span className="tools-event-value tools-event-value-ltr">{eventItem.date || '-'}</span>
                         <span className="tools-event-value">
                             {eventItem.repeat === 'monthly' ? 'شهريًا' : eventItem.repeat === 'yearly' ? 'سنويًا' : 'مرة واحدة'}
                         </span>
