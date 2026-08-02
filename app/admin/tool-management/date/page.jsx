@@ -19,6 +19,7 @@ function DateToolEvents({ firebaseApi, showMessage }) {
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [eventModal, setEventModal] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -57,13 +58,34 @@ function DateToolEvents({ firebaseApi, showMessage }) {
     };
 
     const addEvent = () => {
-        setEvents((current) => [
+        setEventModal({
+            index: -1,
+            draft: { ...EMPTY_EVENT, id: `event-${Date.now()}` },
+        });
+    };
+
+    const editEvent = (index) => {
+        setEventModal({ index, draft: { ...events[index] } });
+    };
+
+    const updateEventDraft = (field, value) => {
+        setEventModal((current) => ({
             ...current,
-            {
-                ...EMPTY_EVENT,
-                id: `event-${Date.now()}`,
-            },
-        ]);
+            draft: { ...current.draft, [field]: value },
+        }));
+    };
+
+    const applyEventDraft = () => {
+        if (!eventModal?.draft?.name?.trim() || !eventModal?.draft?.date) {
+            showMessage('error', 'أدخل اسم الحدث وتاريخه قبل الحفظ.');
+            return;
+        }
+
+        setEvents((current) => {
+            if (eventModal.index < 0) return [...current, eventModal.draft];
+            return current.map((item, index) => (index === eventModal.index ? eventModal.draft : item));
+        });
+        setEventModal(null);
     };
 
     const removeEvent = (index) => {
@@ -124,26 +146,12 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                         <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
                             <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                         </div>
-                        <div className="legacy-field">
-                            <label>اسم الحدث</label>
-                            <input value={eventItem.name || ''} onChange={(event) => updateEvent(index, 'name', event.target.value)} />
-                        </div>
-                        <div className="legacy-field">
-                            <label>التاريخ</label>
-                            <input type="date" value={eventItem.date || ''} onChange={(event) => updateEvent(index, 'date', event.target.value)} />
-                        </div>
-                        <div className="legacy-field">
-                            <label>التكرار</label>
-                            <select value={eventItem.repeat || 'once'} onChange={(event) => updateEvent(index, 'repeat', event.target.value)}>
-                                <option value="once">مرة واحدة</option>
-                                <option value="monthly">شهريًا</option>
-                                <option value="yearly">سنويًا</option>
-                            </select>
-                        </div>
-                        <div className="legacy-field">
-                            <label>الأيقونة</label>
-                            <input dir="ltr" value={eventItem.icon || ''} onChange={(event) => updateEvent(index, 'icon', event.target.value)} placeholder="fa-star" />
-                        </div>
+                        <strong className="tools-event-name">{eventItem.name || 'بدون اسم'}</strong>
+                        <span className="tools-event-value" dir="ltr">{eventItem.date || '-'}</span>
+                        <span className="tools-event-value">
+                            {eventItem.repeat === 'monthly' ? 'شهريًا' : eventItem.repeat === 'yearly' ? 'سنويًا' : 'مرة واحدة'}
+                        </span>
+                        <code className="tools-event-code">{eventItem.icon || 'fa-star'}</code>
                         <div className="tools-item-actions">
                             <button
                                 type="button"
@@ -153,10 +161,9 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                             >
                                 <i className={`fa-solid ${eventItem.active === false ? 'fa-toggle-off' : 'fa-toggle-on'}`}></i>
                             </button>
-                            <label className="tools-color-action" title="لون الحدث">
-                                <input className="tools-event-color" type="color" value={eventItem.color || '#3b82f6'} onChange={(event) => updateEvent(index, 'color', event.target.value)} />
-                                <span>لون</span>
-                            </label>
+                            <button type="button" className="edit" onClick={() => editEvent(index)} title="تعديل الحدث">
+                                <i className="fa-solid fa-pen"></i>
+                            </button>
                             <button type="button" className="danger" onClick={() => removeEvent(index)} title="حذف الحدث">
                                 <i className="fa-solid fa-trash"></i>
                             </button>
@@ -175,6 +182,55 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                     {isSaving ? 'جاري الحفظ...' : 'حفظ أحداث التاريخ'}
                 </button>
             </div>
+
+            {eventModal && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+                    <div className="legacy-modal-card date-event-modal">
+                        <div className="legacy-modal-head date-event-modal-head">
+                            <div>
+                                <h3 id="event-modal-title">{eventModal.index < 0 ? 'إضافة حدث' : 'تعديل الحدث'}</h3>
+                                <p>أدخل بيانات الحدث ثم احفظه ليظهر في جدول العرض.</p>
+                            </div>
+                            <button type="button" className="legacy-icon-btn" onClick={() => setEventModal(null)} aria-label="إغلاق">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div className="legacy-form-grid date-event-modal-grid">
+                            <label className="legacy-field">
+                                <span>اسم الحدث</span>
+                                <input value={eventModal.draft.name || ''} onChange={(event) => updateEventDraft('name', event.target.value)} />
+                            </label>
+                            <label className="legacy-field">
+                                <span>التاريخ</span>
+                                <input type="date" value={eventModal.draft.date || ''} onChange={(event) => updateEventDraft('date', event.target.value)} />
+                            </label>
+                            <label className="legacy-field">
+                                <span>التكرار</span>
+                                <select value={eventModal.draft.repeat || 'once'} onChange={(event) => updateEventDraft('repeat', event.target.value)}>
+                                    <option value="once">مرة واحدة</option>
+                                    <option value="monthly">شهريًا</option>
+                                    <option value="yearly">سنويًا</option>
+                                </select>
+                            </label>
+                            <label className="legacy-field">
+                                <span>كود الأيقونة</span>
+                                <input dir="ltr" value={eventModal.draft.icon || ''} onChange={(event) => updateEventDraft('icon', event.target.value)} placeholder="fa-star" />
+                            </label>
+                            <label className="legacy-field date-event-color-field">
+                                <span>لون الحدث</span>
+                                <input type="color" value={eventModal.draft.color || '#3b82f6'} onChange={(event) => updateEventDraft('color', event.target.value)} />
+                            </label>
+                        </div>
+                        <div className="legacy-modal-actions">
+                            <button type="button" className="legacy-secondary-btn" onClick={() => setEventModal(null)}>إلغاء</button>
+                            <button type="button" className="legacy-primary-btn" onClick={applyEventDraft}>
+                                <i className="fa-solid fa-floppy-disk"></i>
+                                حفظ الحدث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

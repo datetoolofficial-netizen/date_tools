@@ -2955,6 +2955,49 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 12px;
     align-items: center;
     white-space: nowrap;
+    padding: var(--legacy-table-head-pad);
+    background: color-mix(in srgb, var(--tool-color, var(--primary-color)) 12%, var(--bg-container));
+    color: var(--text-main);
+    border-bottom: var(--legacy-table-head-border);
+    font-size: var(--legacy-table-head-size);
+    font-weight: 900;
+}
+
+.date-tool-events .tools-item-card.event {
+    border: 0;
+    border-radius: 0;
+    border-bottom: var(--legacy-table-row-border);
+    background: var(--bg-container);
+    padding: var(--legacy-table-row-pad);
+}
+
+.date-tool-events .tools-item-card.event:last-child {
+    border-bottom: 0;
+}
+
+.tools-event-name,
+.tools-event-value,
+.tools-event-code {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tools-event-name {
+    color: var(--text-main);
+    font-weight: 900;
+}
+
+.tools-event-value {
+    color: var(--text-sub);
+    font-weight: 750;
+}
+
+.tools-event-code {
+    direction: ltr;
+    color: var(--primary-color);
+    font-size: 13px;
 }
 
 .tools-item-card.event .legacy-field label {
@@ -4310,7 +4353,7 @@ body.dark-mode .legacy-nav-links a.active {
 .date-tool-events .tools-section-head,
 .date-tool-events .tools-table-head {
     border-color: color-mix(in srgb, var(--primary-color) 24%, var(--border-color));
-    background: color-mix(in srgb, var(--primary-color) 14%, var(--bg-container));
+    background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-container));
 }
 
 .date-tool-events .tools-item-actions {
@@ -4324,10 +4367,44 @@ body.dark-mode .legacy-nav-links a.active {
     height: 34px;
 }
 
-.date-tool-events .tools-color-action {
-    width: 42px;
-    height: 34px;
-    padding: 0 7px;
+.date-event-modal {
+    width: min(720px, 100%);
+}
+
+.date-event-modal-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.date-event-modal-head h3,
+.date-event-modal-head p {
+    margin: 0;
+}
+
+.date-event-modal-head p {
+    margin-top: 6px;
+    color: var(--text-sub);
+}
+
+.date-event-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.date-event-color-field input[type='color'] {
+    width: 100%;
+    min-height: 48px;
+    padding: 6px;
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .date-event-modal-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .admin-delete-confirm-card {
