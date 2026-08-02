@@ -11,6 +11,7 @@ export default function AdminClockToolPage() {
             loadingTitle="جاري فتح إدارة أداة الساعة..."
             title="إدارة أداة الساعة"
             description="إعدادات خاصة بصفحة الساعة: عنوان السكشن التعريفي، السلوغن، أسماء أدوات الساعة، والأسئلة الإضافية."
+            showBackButton
         >
             {({ firebaseApi, showMessage }) => (
                 <ToolContentSettings firebaseApi={firebaseApi} showMessage={showMessage} toolKey="clock" />

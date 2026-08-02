@@ -180,6 +180,7 @@ export function normalizeFaqItems(items = []) {
         .map((item) => ({
             q: String(item?.q || '').trim(),
             a: String(item?.a || '').trim(),
+            active: item?.active !== false,
         }))
         .filter((item) => item.q && item.a)
         .slice(0, 12);
@@ -253,7 +254,7 @@ export function getToolSettings(configData, toolKey) {
 }
 
 export function getToolFaqs(configData, toolKey) {
-    return getToolSettings(configData, toolKey)?.faqs || [];
+    return (getToolSettings(configData, toolKey)?.faqs || []).filter((item) => item.active !== false);
 }
 
 export function renderShareTemplate(settings, templateKey, variables = {}) {

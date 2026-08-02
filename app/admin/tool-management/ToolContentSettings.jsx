@@ -59,6 +59,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [shareModal, setShareModal] = useState(null);
+    const [faqModal, setFaqModal] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -135,10 +136,12 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     };
 
     const addFaq = () => {
+        const nextIndex = (settings.faqs || []).length;
         setSettings((current) => ({
             ...current,
-            faqs: [...(current.faqs || []), { q: '', a: '' }],
+            faqs: [...(current.faqs || []), { q: '', a: '', active: true }],
         }));
+        setFaqModal({ mode: 'edit', index: nextIndex });
     };
 
     const removeFaq = (index) => {
@@ -189,7 +192,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     <h2>نصوص الأداة</h2>
                     <p>عدّل عنوان السكشن التعريفي، السلوغن، أسماء الأدوات الفرعية، والأسئلة الإضافية لهذه الأداة.</p>
                 </div>
-                <button type="button" className="legacy-primary-btn" onClick={saveSettings} disabled={isSaving}>
+                <button type="button" className="legacy-primary-btn tool-content-save-btn" onClick={saveSettings} disabled={isSaving}>
                     <i className="fa-solid fa-floppy-disk"></i>
                     {isSaving ? 'جاري الحفظ...' : 'حفظ نصوص الأداة'}
                 </button>
@@ -229,6 +232,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             <div className="tools-list tool-share-templates-list">
                 <div className="tools-table-head">
                     <span>مكان المشاركة</span>
+                    <span>النص الحالي</span>
                     <span>الإجراءات</span>
                 </div>
                 {Object.entries(SHARE_TEMPLATE_DEFINITIONS[toolKey] || {}).map(([key, definition]) => (
@@ -236,6 +240,9 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         <div className="tool-share-key">
                             <strong>{getSharePlaceLabel(definition.label)}</strong>
                             <small>{settings.shareEnabled?.[key] === false ? 'زر المشاركة متوقف' : 'زر المشاركة مفعل'}</small>
+                        </div>
+                        <div className="tool-share-current-text" title={getTemplateSummary(settings.shareTemplates?.[key])}>
+                            {getTemplateSummary(settings.shareTemplates?.[key])}
                         </div>
                         <div className="tools-item-actions tool-share-actions">
                             <button
@@ -321,29 +328,40 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     <div className="tools-section-title">
                         <h2>الأسئلة الشائعة</h2>
                         <p>يظهر قسم الأسئلة الشائعة في صفحة الأداة فقط عند إضافة سؤال وإجابة مكتملين هنا.</p>
-                        <button type="button" className="legacy-secondary-btn" onClick={addFaq}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة سؤال
-                        </button>
                     </div>
                 </div>
 
                 <div className="tools-list tool-faq-list">
+                    {(settings.faqs || []).length > 0 && (
+                        <div className="tools-table-head">
+                            <span>السؤال</span>
+                            <span>الإجابة</span>
+                            <span>الإجراءات</span>
+                        </div>
+                    )}
                     {(settings.faqs || []).length === 0 && (
                         <div className="tools-empty">لا توجد أسئلة شائعة بعد، لذلك لن يظهر القسم في صفحة الأداة.</div>
                     )}
 
                     {(settings.faqs || []).map((faq, index) => (
                         <div className="tools-item-card tool-faq-row" key={`${faq.q}-${index}`}>
-                            <div className="legacy-field">
-                                <label>السؤال</label>
-                                <input value={faq.q || ''} onChange={(event) => updateFaq(index, 'q', event.target.value)} />
-                            </div>
-                            <div className="legacy-field">
-                                <label>الإجابة</label>
-                                <textarea rows={3} value={faq.a || ''} onChange={(event) => updateFaq(index, 'a', event.target.value)} />
-                            </div>
+                            <strong className="tool-faq-question">{faq.q || 'سؤال جديد غير مكتمل'}</strong>
+                            <p className="tool-faq-answer">{faq.a || 'لم تُكتب الإجابة بعد.'}</p>
                             <div className="tools-item-actions">
+                                <button
+                                    type="button"
+                                    className={faq.active === false ? 'danger' : 'approve'}
+                                    onClick={() => updateFaq(index, 'active', faq.active === false)}
+                                    title={faq.active === false ? 'تفعيل السؤال' : 'إيقاف السؤال'}
+                                >
+                                    <i className={`fa-solid ${faq.active === false ? 'fa-toggle-off' : 'fa-toggle-on'}`}></i>
+                                </button>
+                                <button type="button" onClick={() => setFaqModal({ mode: 'edit', index })} title="تعديل السؤال والإجابة">
+                                    <i className="fa-solid fa-pen"></i>
+                                </button>
+                                <button type="button" onClick={() => setFaqModal({ mode: 'view', index })} title="معاينة الإجابة">
+                                    <i className="fa-solid fa-eye"></i>
+                                </button>
                                 <button type="button" className="danger" onClick={() => removeFaq(index)} title="حذف السؤال">
                                     <i className="fa-solid fa-trash"></i>
                                 </button>
@@ -351,7 +369,59 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         </div>
                     ))}
                 </div>
+
+                <div className="tool-management-actions tool-table-footer-actions">
+                    <button type="button" className="legacy-secondary-btn" onClick={addFaq}>
+                        <i className="fa-solid fa-plus"></i>
+                        إضافة سؤال
+                    </button>
+                    <button type="button" className="legacy-primary-btn" onClick={saveSettings} disabled={isSaving}>
+                        <i className="fa-solid fa-floppy-disk"></i>
+                        {isSaving ? 'جاري الحفظ...' : 'حفظ الأسئلة'}
+                    </button>
+                </div>
             </div>
+
+            {faqModal && settings.faqs?.[faqModal.index] && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
+                    <div className="legacy-modal-card tool-faq-modal">
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3>{faqModal.mode === 'edit' ? 'تعديل السؤال' : 'معاينة السؤال والإجابة'}</h3>
+                                <p>{settings.faqs[faqModal.index].active === false ? 'السؤال متوقف حاليًا' : 'السؤال مفعّل وسيظهر بعد الحفظ'}</p>
+                            </div>
+                            <button type="button" onClick={() => setFaqModal(null)} aria-label="إغلاق">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        {faqModal.mode === 'edit' ? (
+                            <div className="legacy-form-grid tool-faq-modal-fields">
+                                <label className="legacy-field full-width">
+                                    <span>السؤال</span>
+                                    <input value={settings.faqs[faqModal.index].q || ''} onChange={(event) => updateFaq(faqModal.index, 'q', event.target.value)} />
+                                </label>
+                                <label className="legacy-field full-width">
+                                    <span>الإجابة</span>
+                                    <textarea rows={7} value={settings.faqs[faqModal.index].a || ''} onChange={(event) => updateFaq(faqModal.index, 'a', event.target.value)} />
+                                </label>
+                            </div>
+                        ) : (
+                            <div className="tool-faq-preview">
+                                <strong>{settings.faqs[faqModal.index].q || 'سؤال غير مكتمل'}</strong>
+                                <p>{settings.faqs[faqModal.index].a || 'لم تُكتب الإجابة بعد.'}</p>
+                            </div>
+                        )}
+
+                        <div className="legacy-modal-actions">
+                            <button type="button" className="legacy-primary-btn" onClick={() => setFaqModal(null)}>
+                                <i className="fa-solid fa-check"></i>
+                                تم
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

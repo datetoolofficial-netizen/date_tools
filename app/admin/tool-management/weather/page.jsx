@@ -11,6 +11,7 @@ export default function AdminWeatherToolPage() {
             loadingTitle="جاري فتح إدارة أداة الطقس..."
             title="إدارة أداة الطقس"
             description="إعدادات خاصة بصفحة الطقس: عنوان السكشن التعريفي، السلوغن، أسماء أدوات الطقس، والأسئلة الإضافية."
+            showBackButton
         >
             {({ firebaseApi, showMessage }) => (
                 <ToolContentSettings firebaseApi={firebaseApi} showMessage={showMessage} toolKey="weather" />

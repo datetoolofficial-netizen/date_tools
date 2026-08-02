@@ -97,16 +97,6 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                     <h2>أهم الأحداث</h2>
                     <p>هذه الأحداث تخص صفحة أداة التاريخ فقط، وتظهر في واجهة التاريخ مع اللون والأيقونة المحددين لكل حدث.</p>
                 </div>
-                <div className="tool-management-actions">
-                    <button type="button" className="legacy-secondary-btn" onClick={addEvent}>
-                        <i className="fa-solid fa-plus"></i>
-                        إضافة حدث
-                    </button>
-                    <button type="button" className="legacy-primary-btn" onClick={saveEvents} disabled={isSaving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {isSaving ? 'جاري الحفظ...' : 'حفظ أحداث التاريخ'}
-                    </button>
-                </div>
             </div>
 
             <div className="tools-list">
@@ -138,29 +128,35 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                         <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
                             <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                         </div>
-                        <div className="tools-item-main">
-                            <div className="legacy-field">
-                                <label>اسم الحدث</label>
-                                <input value={eventItem.name || ''} onChange={(event) => updateEvent(index, 'name', event.target.value)} />
-                            </div>
-                            <div className="legacy-field">
-                                <label>التاريخ</label>
-                                <input type="date" value={eventItem.date || ''} onChange={(event) => updateEvent(index, 'date', event.target.value)} />
-                            </div>
-                            <div className="legacy-field">
-                                <label>التكرار</label>
-                                <select value={eventItem.repeat || 'once'} onChange={(event) => updateEvent(index, 'repeat', event.target.value)}>
-                                    <option value="once">مرة واحدة</option>
-                                    <option value="monthly">شهريًا</option>
-                                    <option value="yearly">سنويًا</option>
-                                </select>
-                            </div>
-                            <div className="legacy-field">
-                                <label>الأيقونة</label>
-                                <input dir="ltr" value={eventItem.icon || ''} onChange={(event) => updateEvent(index, 'icon', event.target.value)} placeholder="fa-star" />
-                            </div>
+                        <div className="legacy-field">
+                            <label>اسم الحدث</label>
+                            <input value={eventItem.name || ''} onChange={(event) => updateEvent(index, 'name', event.target.value)} />
+                        </div>
+                        <div className="legacy-field">
+                            <label>التاريخ</label>
+                            <input type="date" value={eventItem.date || ''} onChange={(event) => updateEvent(index, 'date', event.target.value)} />
+                        </div>
+                        <div className="legacy-field">
+                            <label>التكرار</label>
+                            <select value={eventItem.repeat || 'once'} onChange={(event) => updateEvent(index, 'repeat', event.target.value)}>
+                                <option value="once">مرة واحدة</option>
+                                <option value="monthly">شهريًا</option>
+                                <option value="yearly">سنويًا</option>
+                            </select>
+                        </div>
+                        <div className="legacy-field">
+                            <label>الأيقونة</label>
+                            <input dir="ltr" value={eventItem.icon || ''} onChange={(event) => updateEvent(index, 'icon', event.target.value)} placeholder="fa-star" />
                         </div>
                         <div className="tools-item-actions">
+                            <button
+                                type="button"
+                                className={eventItem.active === false ? 'danger' : 'approve'}
+                                onClick={() => updateEvent(index, 'active', eventItem.active === false)}
+                                title={eventItem.active === false ? 'تفعيل الحدث' : 'إيقاف الحدث'}
+                            >
+                                <i className={`fa-solid ${eventItem.active === false ? 'fa-toggle-off' : 'fa-toggle-on'}`}></i>
+                            </button>
                             <label className="tools-color-action" title="لون الحدث">
                                 <input className="tools-event-color" type="color" value={eventItem.color || '#3b82f6'} onChange={(event) => updateEvent(index, 'color', event.target.value)} />
                                 <span>لون</span>
@@ -171,6 +167,17 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            <div className="tool-management-actions tool-table-footer-actions">
+                <button type="button" className="legacy-secondary-btn" onClick={addEvent}>
+                    <i className="fa-solid fa-plus"></i>
+                    إضافة حدث
+                </button>
+                <button type="button" className="legacy-primary-btn" onClick={saveEvents} disabled={isSaving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {isSaving ? 'جاري الحفظ...' : 'حفظ أحداث التاريخ'}
+                </button>
             </div>
         </section>
     );
@@ -184,6 +191,7 @@ export default function AdminDateToolPage() {
             loadingTitle="جاري فتح إدارة أداة التاريخ..."
             title="إدارة أداة التاريخ"
             description="إعدادات خاصة بصفحة التاريخ فقط. نقلنا أهم الأحداث هنا حتى تكون كل أداة مستقلة عن إعدادات الموقع العامة."
+            showBackButton
         >
             {({ firebaseApi, showMessage }) => (
                 <>

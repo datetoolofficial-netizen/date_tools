@@ -2456,9 +2456,40 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-management-back-btn {
-    align-self: center;
-    min-width: 190px;
+    position: fixed;
+    inset-inline-end: 22px;
+    bottom: 22px;
+    z-index: 75;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
     text-decoration: none;
+}
+
+.tool-management-hero {
+    position: relative;
+    justify-content: center;
+    text-align: center;
+}
+
+.tool-management-hero > div {
+    margin-inline: auto;
+    text-align: center;
+}
+
+.tool-content-save-btn {
+    position: fixed;
+    inset-inline-start: 22px;
+    bottom: 22px;
+    z-index: 75;
+    width: auto;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(2, 6, 23, 0.24);
 }
 
 .tool-content-settings {
@@ -2492,9 +2523,9 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tool-share-templates-list .tools-table-head,
 .tool-share-template-row {
-    min-width: 560px;
+    min-width: 760px;
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) 146px;
+    grid-template-columns: minmax(170px, 0.65fr) minmax(320px, 1.35fr) 170px;
     gap: 12px;
     align-items: center;
 }
@@ -2554,6 +2585,17 @@ body.dark-mode .legacy-nav-links a.active {
     color: var(--text-muted);
     font-size: 11px;
     line-height: 1.5;
+}
+
+.tool-share-current-text {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.6;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tool-template-vars {
@@ -2693,8 +2735,64 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-faq-row {
-    grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr) 80px;
-    align-items: end;
+    grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.2fr) 190px;
+    align-items: center;
+}
+
+.tool-faq-list .tools-table-head,
+.tool-faq-list .tool-faq-row {
+    min-width: 790px;
+    display: grid;
+    grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.2fr) 190px;
+    gap: 12px;
+}
+
+.tool-faq-list .tools-table-head {
+    padding: var(--legacy-table-head-pad);
+    background: color-mix(in srgb, var(--tool-color) 12%, var(--bg-container));
+    border-bottom: var(--legacy-table-head-border);
+    color: var(--text-main);
+    font-size: var(--legacy-table-head-size);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.tool-faq-question,
+.tool-faq-answer {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tool-faq-answer {
+    color: var(--text-sub);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.tool-faq-preview {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--tool-color) 8%, var(--bg-main));
+}
+
+.tool-faq-preview p {
+    margin: 0;
+    color: var(--text-sub);
+    line-height: 1.9;
+}
+
+.tool-table-footer-actions {
+    margin-top: 16px;
+    flex-wrap: nowrap;
+}
+
+.tool-table-footer-actions > * {
+    min-width: 150px;
 }
 
 .link-preview-admin-grid {
@@ -2794,12 +2892,30 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-share-templates-list .tools-item-card.tool-share-template-row {
-    grid-template-columns: minmax(220px, 1fr) 146px;
+    grid-template-columns: minmax(170px, 0.65fr) minmax(320px, 1.35fr) 170px;
 }
 
 .tools-item-card.event {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    min-width: 980px;
+    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
     align-items: center;
+}
+
+.date-tool-events .tools-list {
+    overflow-x: auto;
+}
+
+.date-tool-events .tools-table-head {
+    min-width: 980px;
+    display: grid;
+    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+    gap: 12px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.tools-item-card.event .legacy-field label {
+    display: none;
 }
 
 .tools-item-main {
@@ -4119,5 +4235,52 @@ body.dark-mode .legacy-nav-links a.active {
     .link-preview-media img {
         height: 150px;
         min-height: 150px;
+    }
+}
+
+/* Tool management tables keep their column model and scroll inside their card. */
+.tool-content-settings .tool-share-templates-list .tools-table-head,
+.tool-content-settings .tool-share-templates-list .tool-share-template-row {
+    grid-template-columns: minmax(170px, 0.65fr) minmax(320px, 1.35fr) 170px;
+}
+
+.tool-content-settings .tool-faq-list .tools-table-head,
+.tool-content-settings .tool-faq-list .tool-faq-row {
+    grid-template-columns: minmax(210px, 0.8fr) minmax(320px, 1.2fr) 190px;
+}
+
+.date-tool-events .tools-item-card.event {
+    grid-template-columns: 64px 72px minmax(170px, 1fr) 160px 150px 170px 160px;
+}
+
+@media (max-width: 700px) {
+    .tool-content-save-btn,
+    .tools-section-head .tool-content-save-btn {
+        inset-inline-start: 12px;
+        bottom: 12px;
+        width: auto;
+        min-width: 48px;
+        padding-inline: 13px;
+    }
+
+    .tool-management-back-btn {
+        inset-inline-end: 12px;
+        bottom: 12px;
+        min-width: 48px;
+        padding-inline: 13px;
+    }
+
+    .tool-table-footer-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tool-table-footer-actions .legacy-primary-btn,
+    .tool-table-footer-actions .legacy-secondary-btn {
+        min-width: 0;
+        width: 100%;
+        padding-inline: 8px;
+        font-size: 12px;
     }
 }
