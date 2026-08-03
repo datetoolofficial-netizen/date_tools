@@ -522,9 +522,9 @@ export default function AdminIdentityPage() {
                             <i className="fa-solid fa-palette"></i>
                             إدارة الهوية البصرية
                         </h1>
-                        <p>اسم الأداة، الشعار، أيقونة المتصفح، وحقوق الموقع بنفس أسلوب الإدارة القديمة</p>
+                        <p>اسم الأداة، الشعار، أيقونة المتصفح، وحقوق الموقع من مكان واحد.</p>
                     </div>
-                    <button className="legacy-primary-btn" onClick={saveIdentity} disabled={saving}>
+                    <button className="legacy-primary-btn admin-page-save-action" onClick={saveIdentity} disabled={saving}>
                         <i className="fa-solid fa-floppy-disk"></i>
                         {saving ? 'جاري الحفظ...' : 'حفظ الهوية'}
                     </button>

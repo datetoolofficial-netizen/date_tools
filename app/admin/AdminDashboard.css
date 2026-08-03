@@ -4718,3 +4718,160 @@ body.dark-mode .legacy-nav-links a.active {
         font-size: 12px;
     }
 }
+
+/* Shared page chrome: one title language and one page-level save action. */
+.legacy-admin-shell .legacy-ads-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 0 18px;
+    margin-bottom: 24px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.legacy-admin-shell .legacy-ads-hero > div {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    width: min(760px, 100%);
+}
+
+.legacy-admin-shell .legacy-ads-hero h1 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--text-main);
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1.3;
+    text-align: center;
+}
+
+.legacy-admin-shell .legacy-ads-hero h1 i {
+    flex: 0 0 auto;
+    color: var(--primary-color);
+    font-size: 0.9em;
+}
+
+.legacy-admin-shell .legacy-ads-hero p {
+    max-width: 680px;
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 14px;
+    font-weight: 750;
+    line-height: 1.8;
+    text-align: center;
+}
+
+.legacy-admin-shell .legacy-ads-hero > button:not(.admin-page-save-action),
+.legacy-admin-shell .legacy-ads-hero > a {
+    align-self: center;
+    margin-top: 6px;
+}
+
+.legacy-admin-shell .admin-page-save-action {
+    position: fixed;
+    left: 18px;
+    bottom: 14px;
+    z-index: 90;
+    width: 112px;
+    min-width: 112px;
+    height: 44px;
+    margin: 0;
+    padding-inline: 14px;
+    border: 0;
+    border-radius: 11px;
+    background: color-mix(in srgb, #22c55e 19%, var(--bg-container));
+    color: #22c55e;
+    box-shadow: 0 10px 24px color-mix(in srgb, #22c55e 12%, transparent);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.legacy-admin-shell .admin-page-save-action:hover {
+    background: color-mix(in srgb, #22c55e 24%, var(--bg-container));
+    color: var(--success-text);
+    filter: brightness(1.06);
+}
+
+/* Inputs use their surface color for separation instead of repeated outlines. */
+.legacy-admin-shell :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+    select,
+    textarea,
+    [contenteditable='true']
+) {
+    border: 0 !important;
+    background-clip: padding-box;
+}
+
+.legacy-admin-shell :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+    select,
+    textarea,
+    [contenteditable='true']
+):focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary-color) 68%, transparent);
+    outline-offset: 2px;
+}
+
+/* All identity previews remain visible while editing on wide screens. */
+.identity-link-preview-card .link-preview-card {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+}
+
+/* Table actions need breathing room from both the table and each other. */
+.legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) {
+    gap: 14px;
+    margin: 20px 0 6px;
+    padding-inline: 4px;
+}
+
+@media (max-width: 1180px) {
+    .identity-link-preview-card .link-preview-card {
+        position: static;
+        order: 2;
+    }
+}
+
+@media (max-width: 700px) {
+    .legacy-admin-shell .legacy-ads-hero {
+        align-items: center;
+        padding-block: 4px 14px;
+    }
+
+    .legacy-admin-shell .legacy-ads-hero h1 {
+        font-size: clamp(21px, 6.5vw, 27px);
+    }
+
+    .legacy-admin-shell .legacy-ads-hero p {
+        font-size: 12px;
+    }
+
+    .legacy-admin-shell .admin-page-save-action {
+        left: 10px;
+        bottom: 10px;
+        width: 92px;
+        min-width: 92px;
+        height: 40px;
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) {
+        gap: 10px;
+        margin-top: 16px;
+        padding-inline: 0;
+    }
+}
