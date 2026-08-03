@@ -303,8 +303,8 @@ export default function AdminShell({ children }) {
             return;
         }
         approvedDeleteButtonsRef.current.add(button);
+        button.click();
         setPendingDeleteButton(null);
-        window.setTimeout(() => button.click(), 0);
     };
 
     const permissionSet = useMemo(() => getPermissionSet(adminProfile || {}), [adminProfile]);

@@ -22,6 +22,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     if (config) {
         if (Array.isArray(config.internalPages)) {
             config.internalPages.forEach((page) => {
+                if (page?.enabled === false) return;
                 const location = normalizeLinkLocation(page.location);
                 if (location === 'header' || location === 'both' || location === 'header-only') {
                     navLinks.push({
@@ -35,6 +36,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
         if (Array.isArray(config.externalLinks)) {
             config.externalLinks.forEach((link) => {
+                if (link?.enabled === false) return;
                 const location = normalizeLinkLocation(link.location);
                 if (location === 'header' || location === 'both' || location === 'header-only') {
                     navLinks.push({

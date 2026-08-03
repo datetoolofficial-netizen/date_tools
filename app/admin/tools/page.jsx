@@ -19,20 +19,28 @@ const EMPTY_SOCIAL = {
     icon: 'fa-x-twitter',
     url: '',
     color: '#111827',
+    enabled: true,
 };
 
 const EMPTY_EXTERNAL_LINK = {
     title: '',
     url: '',
     location: 'footer',
+    enabled: true,
 };
+
+function normalizeManagedItems(items) {
+    return Array.isArray(items)
+        ? items.map((item) => ({ ...item, enabled: item?.enabled !== false }))
+        : [];
+}
 
 function pickToolsConfig(config = {}) {
     return {
-        internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
+        internalPages: normalizeManagedItems(config.internalPages),
         customPages: config.customPages || {},
-        socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
-        externalLinks: Array.isArray(config.externalLinks) ? config.externalLinks : [],
+        socialLinks: normalizeManagedItems(config.socialLinks),
+        externalLinks: normalizeManagedItems(config.externalLinks),
         privacySettingsButton: {
             enabled: config.privacySettingsButton?.enabled === true,
             pages: Array.isArray(config.privacySettingsButton?.pages) ? config.privacySettingsButton.pages : [],
@@ -82,6 +90,16 @@ function normalizePagePath(value) {
     if (!cleanValue || cleanValue === '/') return '/';
     const withoutQuery = cleanValue.split('?')[0].split('#')[0].replace(/\/+$/, '');
     return withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`;
+}
+
+function getLocationLabel(location) {
+    if (location === 'header') return 'الهيدر فقط';
+    if (location === 'both') return 'الهيدر والفوتر';
+    return 'الفوتر فقط';
+}
+
+function getSocialLabel(icon) {
+    return SOCIAL_PRESETS.find((preset) => preset.icon === icon)?.label || 'حساب تواصل';
 }
 
 function getPrivacyPageChoices(pages = []) {
@@ -229,6 +247,8 @@ export default function AdminToolsPage() {
     const [toolsConfig, setToolsConfig] = useState(pickToolsConfig());
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
+    const [editingRow, setEditingRow] = useState(null);
+    const [addItemModal, setAddItemModal] = useState(null);
     const firebaseApiRef = useRef(null);
     const messageTimerRef = useRef(null);
 
@@ -417,6 +437,16 @@ export default function AdminToolsPage() {
             ...current,
             [key]: (current[key] || []).filter((_, itemIndex) => itemIndex !== index),
         }));
+
+        setEditingRow(null);
+    };
+
+    const isRowEditing = (key, index) => editingRow?.key === key && editingRow?.index === index;
+
+    const toggleRowEditing = (key, index) => {
+        setEditingRow((current) => (
+            current?.key === key && current?.index === index ? null : { key, index }
+        ));
     };
 
     const updatePrivacySettingsButton = (field, value) => {
@@ -448,43 +478,93 @@ export default function AdminToolsPage() {
         });
     };
 
-    const addExternalLink = () => {
-        setToolsConfig((current) => ({
-            ...current,
-            externalLinks: [...(current.externalLinks || []), EMPTY_EXTERNAL_LINK],
-        }));
+    const openAddItemModal = (type) => {
+        if (type === 'page') {
+            setAddItemModal({
+                type,
+                title: '',
+                slug: createUniqueSlug('page', toolsConfig.internalPages || []),
+                location: 'footer',
+            });
+            return;
+        }
+
+        if (type === 'link') {
+            setAddItemModal({ type, ...EMPTY_EXTERNAL_LINK });
+            return;
+        }
+
+        setAddItemModal({ type: 'social', ...EMPTY_SOCIAL });
     };
 
-    const addSocialLink = () => {
-        setToolsConfig((current) => ({
-            ...current,
-            socialLinks: [...(current.socialLinks || []), EMPTY_SOCIAL],
-        }));
+    const updateAddItemModal = (field, value) => {
+        setAddItemModal((current) => (current ? { ...current, [field]: value } : current));
     };
 
-    const addPage = () => {
-        setToolsConfig((current) => {
-            const slug = createUniqueSlug('page', current.internalPages || []);
+    const submitAddItemModal = () => {
+        if (!addItemModal) return;
 
-            return {
+        if (addItemModal.type === 'page') {
+            const title = String(addItemModal.title || '').trim();
+            const slug = normalizeSlug(addItemModal.slug);
+            if (!title || !slug) {
+                showMessage('error', 'أدخل عنوان الصفحة ومسارها قبل الإضافة.');
+                return;
+            }
+            if ((toolsConfig.internalPages || []).some((page) => normalizeSlug(page.slug) === slug)) {
+                showMessage('error', `المسار "${slug}" مستخدم بالفعل.`);
+                return;
+            }
+
+            setToolsConfig((current) => ({
                 ...current,
-                internalPages: [
-                    ...(current.internalPages || []),
-                    {
-                        title: 'صفحة جديدة',
-                        slug,
-                        location: 'footer',
-                    },
-                ],
+                internalPages: [...(current.internalPages || []), {
+                    title,
+                    slug,
+                    location: addItemModal.location || 'footer',
+                    enabled: true,
+                }],
                 customPages: {
                     ...(current.customPages || {}),
-                    [slug]: {
-                        title: 'صفحة جديدة',
-                        content: '<p>اكتب محتوى الصفحة هنا...</p>',
-                    },
+                    [slug]: { title, content: '<p>اكتب محتوى الصفحة هنا...</p>' },
                 },
-            };
-        });
+            }));
+        } else if (addItemModal.type === 'link') {
+            const title = String(addItemModal.title || '').trim();
+            const url = String(addItemModal.url || '').trim();
+            if (!title || !url) {
+                showMessage('error', 'أدخل اسم الرابط وعنوانه قبل الإضافة.');
+                return;
+            }
+            setToolsConfig((current) => ({
+                ...current,
+                externalLinks: [...(current.externalLinks || []), {
+                    title,
+                    url,
+                    location: addItemModal.location || 'footer',
+                    enabled: true,
+                }],
+            }));
+        } else {
+            const url = String(addItemModal.url || '').trim();
+            if (!url) {
+                showMessage('error', 'أدخل رابط حساب السوشيال قبل الإضافة.');
+                return;
+            }
+            setToolsConfig((current) => ({
+                ...current,
+                socialLinks: [...(current.socialLinks || []), {
+                    icon: addItemModal.icon || EMPTY_SOCIAL.icon,
+                    url,
+                    color: addItemModal.color || EMPTY_SOCIAL.color,
+                    enabled: true,
+                }],
+            }));
+        }
+
+        setEditingRow(null);
+        setAddItemModal(null);
+        showMessage('success', 'تمت الإضافة إلى الجدول. اضغط زر الحفظ لاعتمادها.');
     };
 
     const updatePage = (index, field, value) => {
@@ -559,6 +639,7 @@ export default function AdminToolsPage() {
         };
 
         setToolsConfig(nextConfig);
+        setEditingRow(null);
         if (pageModalIndex === index) closePageModal();
 
         if (!firebaseApi?.saveSiteConfigSection) {
@@ -767,19 +848,15 @@ export default function AdminToolsPage() {
                                 <p>أنشئ صفحات بسيطة تظهر في الهيدر أو الفوتر أو كلاهما.</p>
                             </div>
                         </div>
-                        <button type="button" className="legacy-primary-btn" onClick={addPage}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة صفحة
-                        </button>
                     </div>
 
-                    <div className="tools-list">
+                    <div className="tools-list tools-managed-table">
                         {(toolsConfig.internalPages || []).length === 0 && (
                             <div className="tools-empty">لا توجد صفحات بعد.</div>
                         )}
 
                         {(toolsConfig.internalPages || []).length > 0 && (
-                            <div className="tools-table-head">
+                            <div className="tools-table-head tools-managed-table-head">
                                 <span>عنوان الصفحة</span>
                                 <span>المسار</span>
                                 <span>مكان الظهور</span>
@@ -788,30 +865,48 @@ export default function AdminToolsPage() {
                         )}
 
                         {(toolsConfig.internalPages || []).map((page, index) => (
-                            <div className="tools-item-card" key={`${page.slug}-${index}`}>
+                            <div className={`tools-item-card tools-managed-table-row ${page.enabled === false ? 'is-disabled' : ''}`} key={`${page.slug}-${index}`}>
                                 <div className="tools-item-main">
-                                    <div className="legacy-field">
-                                        <label>عنوان الصفحة</label>
-                                        <input value={page.title || ''} onChange={(event) => updatePage(index, 'title', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>المسار</label>
-                                        <input dir="ltr" value={page.slug || ''} onChange={(event) => updatePage(index, 'slug', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>مكان الظهور</label>
-                                        <select value={page.location || 'footer'} onChange={(event) => updatePage(index, 'location', event.target.value)}>
-                                            <option value="header">الهيدر فقط</option>
-                                            <option value="footer">الفوتر فقط</option>
-                                            <option value="both">الهيدر والفوتر</option>
-                                        </select>
-                                    </div>
+                                    {isRowEditing('internalPages', index) ? (
+                                        <>
+                                            <div className="legacy-field">
+                                                <label>عنوان الصفحة</label>
+                                                <input value={page.title || ''} onChange={(event) => updatePage(index, 'title', event.target.value)} />
+                                            </div>
+                                            <div className="legacy-field">
+                                                <label>المسار</label>
+                                                <input dir="ltr" value={page.slug || ''} onChange={(event) => updatePage(index, 'slug', event.target.value)} />
+                                            </div>
+                                            <div className="legacy-field">
+                                                <label>مكان الظهور</label>
+                                                <select value={page.location || 'footer'} onChange={(event) => updatePage(index, 'location', event.target.value)}>
+                                                    <option value="header">الهيدر فقط</option>
+                                                    <option value="footer">الفوتر فقط</option>
+                                                    <option value="both">الهيدر والفوتر</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <strong className="tools-table-value">{page.title || 'بدون عنوان'}</strong>
+                                            <code className="tools-table-value tools-table-value-ltr">/{page.slug || '-'}</code>
+                                            <span className="tools-table-value">{getLocationLabel(page.location)}</span>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="tools-item-actions">
+                                    <button
+                                        type="button"
+                                        className={page.enabled !== false ? 'approve' : 'inactive'}
+                                        onClick={() => updatePage(index, 'enabled', page.enabled === false)}
+                                        title={page.enabled !== false ? 'تعطيل الصفحة' : 'تفعيل الصفحة'}
+                                    >
+                                        <i className={`fa-solid ${page.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                                    </button>
                                     <button type="button" onClick={() => openPageModal(index)} title="معاينة الصفحة">
                                         <i className="fa-solid fa-eye"></i>
                                     </button>
-                                    <button type="button" onClick={() => openPageModal(index, true)} title="تعديل المحتوى">
+                                    <button type="button" onClick={() => toggleRowEditing('internalPages', index)} title={isRowEditing('internalPages', index) ? 'إنهاء التعديل' : 'تعديل الصفحة'}>
                                         <i className="fa-solid fa-pen"></i>
                                     </button>
                                     <button type="button" className="danger" onClick={() => removePage(index)} title="حذف الصفحة">
@@ -820,6 +915,17 @@ export default function AdminToolsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    <div className="tools-table-footer-actions">
+                        <button type="button" className="legacy-secondary-btn" onClick={() => openAddItemModal('page')}>
+                            <i className="fa-solid fa-plus"></i>
+                            إضافة صفحة
+                        </button>
+                        <button type="button" className="legacy-primary-btn" onClick={saveTools} disabled={saving}>
+                            <i className="fa-solid fa-floppy-disk"></i>
+                            حفظ الصفحات
+                        </button>
                     </div>
                 </section>
 
@@ -832,19 +938,15 @@ export default function AdminToolsPage() {
                                 <p>روابط خارجية بسيطة تظهر في الهيدر أو الفوتر.</p>
                             </div>
                         </div>
-                        <button type="button" className="legacy-primary-btn" onClick={addExternalLink}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة رابط
-                        </button>
                     </div>
 
-                    <div className="tools-list">
+                    <div className="tools-list tools-managed-table">
                         {(toolsConfig.externalLinks || []).length === 0 && (
                             <div className="tools-empty">لا توجد روابط خارجية بعد.</div>
                         )}
 
                         {(toolsConfig.externalLinks || []).length > 0 && (
-                            <div className="tools-table-head">
+                            <div className="tools-table-head tools-managed-table-head">
                                 <span>اسم الرابط</span>
                                 <span>الرابط</span>
                                 <span>مكان الظهور</span>
@@ -853,26 +955,47 @@ export default function AdminToolsPage() {
                         )}
 
                         {(toolsConfig.externalLinks || []).map((link, index) => (
-                            <div className="tools-item-card compact" key={`${link.url}-${index}`}>
+                            <div className={`tools-item-card compact tools-managed-table-row ${link.enabled === false ? 'is-disabled' : ''}`} key={`${link.url}-${index}`}>
                                 <div className="tools-item-main">
-                                    <div className="legacy-field">
-                                        <label>اسم الرابط</label>
-                                        <input value={link.title || ''} onChange={(event) => updateArrayItem('externalLinks', index, 'title', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>الرابط</label>
-                                        <input dir="ltr" type="url" value={link.url || ''} onChange={(event) => updateArrayItem('externalLinks', index, 'url', event.target.value)} />
-                                    </div>
-                                    <div className="legacy-field">
-                                        <label>مكان الظهور</label>
-                                        <select value={link.location || 'footer'} onChange={(event) => updateArrayItem('externalLinks', index, 'location', event.target.value)}>
-                                            <option value="header">الهيدر فقط</option>
-                                            <option value="footer">الفوتر فقط</option>
-                                            <option value="both">الهيدر والفوتر</option>
-                                        </select>
-                                    </div>
+                                    {isRowEditing('externalLinks', index) ? (
+                                        <>
+                                            <div className="legacy-field">
+                                                <label>اسم الرابط</label>
+                                                <input value={link.title || ''} onChange={(event) => updateArrayItem('externalLinks', index, 'title', event.target.value)} />
+                                            </div>
+                                            <div className="legacy-field">
+                                                <label>الرابط</label>
+                                                <input dir="ltr" type="url" value={link.url || ''} onChange={(event) => updateArrayItem('externalLinks', index, 'url', event.target.value)} />
+                                            </div>
+                                            <div className="legacy-field">
+                                                <label>مكان الظهور</label>
+                                                <select value={link.location || 'footer'} onChange={(event) => updateArrayItem('externalLinks', index, 'location', event.target.value)}>
+                                                    <option value="header">الهيدر فقط</option>
+                                                    <option value="footer">الفوتر فقط</option>
+                                                    <option value="both">الهيدر والفوتر</option>
+                                                </select>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <strong className="tools-table-value">{link.title || 'بدون اسم'}</strong>
+                                            <code className="tools-table-value tools-table-value-ltr">{link.url || '-'}</code>
+                                            <span className="tools-table-value">{getLocationLabel(link.location)}</span>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="tools-item-actions">
+                                    <button
+                                        type="button"
+                                        className={link.enabled !== false ? 'approve' : 'inactive'}
+                                        onClick={() => updateArrayItem('externalLinks', index, 'enabled', link.enabled === false)}
+                                        title={link.enabled !== false ? 'تعطيل الرابط' : 'تفعيل الرابط'}
+                                    >
+                                        <i className={`fa-solid ${link.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                                    </button>
+                                    <button type="button" onClick={() => toggleRowEditing('externalLinks', index)} title={isRowEditing('externalLinks', index) ? 'إنهاء التعديل' : 'تعديل الرابط'}>
+                                        <i className="fa-solid fa-pen"></i>
+                                    </button>
                                     <a className="tools-row-action" href={link.url || '#'} target="_blank" rel="noopener noreferrer" title="فتح الرابط">
                                         <i className="fa-solid fa-up-right-from-square"></i>
                                     </a>
@@ -882,6 +1005,17 @@ export default function AdminToolsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    <div className="tools-table-footer-actions">
+                        <button type="button" className="legacy-secondary-btn" onClick={() => openAddItemModal('link')}>
+                            <i className="fa-solid fa-plus"></i>
+                            إضافة رابط
+                        </button>
+                        <button type="button" className="legacy-primary-btn" onClick={saveTools} disabled={saving}>
+                            <i className="fa-solid fa-floppy-disk"></i>
+                            حفظ الروابط
+                        </button>
                     </div>
                 </section>
 
@@ -894,19 +1028,15 @@ export default function AdminToolsPage() {
                                 <p>روابط التواصل مع ألوان أيقونات مرحة وواضحة.</p>
                             </div>
                         </div>
-                        <button type="button" className="legacy-primary-btn" onClick={addSocialLink}>
-                            <i className="fa-solid fa-plus"></i>
-                            إضافة حساب
-                        </button>
                     </div>
 
-                    <div className="tools-social-grid">
+                    <div className="tools-social-grid tools-managed-table">
                         {(toolsConfig.socialLinks || []).length === 0 && (
                             <div className="tools-empty">لا توجد حسابات سوشيال بعد.</div>
                         )}
 
                         {(toolsConfig.socialLinks || []).length > 0 && (
-                            <div className="tools-table-head">
+                            <div className="tools-table-head tools-managed-table-head">
                                 <span>الأيقونة</span>
                                 <span>المنصة</span>
                                 <span>الرابط</span>
@@ -916,31 +1046,57 @@ export default function AdminToolsPage() {
                         )}
 
                         {(toolsConfig.socialLinks || []).map((social, index) => (
-                            <div className="tools-social-card" key={`${social.url}-${index}`}>
+                            <div className={`tools-social-card tools-managed-table-row ${social.enabled === false ? 'is-disabled' : ''}`} key={`${social.url}-${index}`}>
                                 <div className="tools-social-preview" style={{ color: social.color || '#3b82f6' }}>
                                     <i className={`fa-brands ${social.icon || 'fa-x-twitter'}`}></i>
                                 </div>
-                                <div className="legacy-field">
-                                    <label>المنصة</label>
-                                    <select
-                                        value={social.icon || 'fa-x-twitter'}
-                                        onChange={(event) => {
-                                            const preset = SOCIAL_PRESETS.find((item) => item.icon === event.target.value);
-                                            updateArrayItem('socialLinks', index, 'icon', event.target.value);
-                                            if (preset) updateArrayItem('socialLinks', index, 'color', preset.color);
-                                        }}
+                                {isRowEditing('socialLinks', index) ? (
+                                    <>
+                                        <div className="legacy-field">
+                                            <label>المنصة</label>
+                                            <select
+                                                value={social.icon || 'fa-x-twitter'}
+                                                onChange={(event) => {
+                                                    const preset = SOCIAL_PRESETS.find((item) => item.icon === event.target.value);
+                                                    updateArrayItem('socialLinks', index, 'icon', event.target.value);
+                                                    if (preset) updateArrayItem('socialLinks', index, 'color', preset.color);
+                                                }}
+                                            >
+                                                {SOCIAL_PRESETS.map((preset) => (
+                                                    <option value={preset.icon} key={preset.icon}>{preset.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="legacy-field">
+                                            <label>الرابط</label>
+                                            <input dir="ltr" type="url" value={social.url || ''} onChange={(event) => updateArrayItem('socialLinks', index, 'url', event.target.value)} />
+                                        </div>
+                                        <div className="tools-color-row">
+                                            <input type="color" value={social.color || '#3b82f6'} onChange={(event) => updateArrayItem('socialLinks', index, 'color', event.target.value)} />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <strong className="tools-table-value">{getSocialLabel(social.icon)}</strong>
+                                        <code className="tools-table-value tools-table-value-ltr">{social.url || '-'}</code>
+                                        <span className="tools-social-color-display">
+                                            <i style={{ backgroundColor: social.color || '#3b82f6' }}></i>
+                                            <code>{social.color || '#3b82f6'}</code>
+                                        </span>
+                                    </>
+                                )}
+                                <div className="tools-item-actions">
+                                    <button
+                                        type="button"
+                                        className={social.enabled !== false ? 'approve' : 'inactive'}
+                                        onClick={() => updateArrayItem('socialLinks', index, 'enabled', social.enabled === false)}
+                                        title={social.enabled !== false ? 'تعطيل الحساب' : 'تفعيل الحساب'}
                                     >
-                                        {SOCIAL_PRESETS.map((preset) => (
-                                            <option value={preset.icon} key={preset.icon}>{preset.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="legacy-field">
-                                    <label>الرابط</label>
-                                    <input dir="ltr" type="url" value={social.url || ''} onChange={(event) => updateArrayItem('socialLinks', index, 'url', event.target.value)} />
-                                </div>
-                                <div className="tools-color-row">
-                                    <input type="color" value={social.color || '#3b82f6'} onChange={(event) => updateArrayItem('socialLinks', index, 'color', event.target.value)} />
+                                        <i className={`fa-solid ${social.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
+                                    </button>
+                                    <button type="button" onClick={() => toggleRowEditing('socialLinks', index)} title={isRowEditing('socialLinks', index) ? 'إنهاء التعديل' : 'تعديل الحساب'}>
+                                        <i className="fa-solid fa-pen"></i>
+                                    </button>
                                     <a className="tools-row-action" href={social.url || '#'} target="_blank" rel="noopener noreferrer" title="فتح الحساب">
                                         <i className="fa-solid fa-up-right-from-square"></i>
                                     </a>
@@ -951,6 +1107,17 @@ export default function AdminToolsPage() {
                             </div>
                         ))}
                     </div>
+
+                    <div className="tools-table-footer-actions">
+                        <button type="button" className="legacy-secondary-btn" onClick={() => openAddItemModal('social')}>
+                            <i className="fa-solid fa-plus"></i>
+                            إضافة حساب
+                        </button>
+                        <button type="button" className="legacy-primary-btn" onClick={saveTools} disabled={saving}>
+                            <i className="fa-solid fa-floppy-disk"></i>
+                            حفظ الحسابات
+                        </button>
+                    </div>
                 </section>
 
                 <footer className="legacy-admin-footer">
@@ -958,6 +1125,94 @@ export default function AdminToolsPage() {
                     <div className="legacy-version-badge"><i className="fa-solid fa-screwdriver-wrench"></i> إعدادات الأداة</div>
                 </footer>
             </main>
+
+            {addItemModal && (
+                <div className="legacy-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="managed-add-modal-title" onClick={() => setAddItemModal(null)}>
+                    <div className="legacy-modal-card admin-managed-add-modal" onClick={(event) => event.stopPropagation()}>
+                        <div className="legacy-modal-head">
+                            <div>
+                                <h3 id="managed-add-modal-title">
+                                    {addItemModal.type === 'page' ? 'إضافة صفحة' : addItemModal.type === 'link' ? 'إضافة رابط' : 'إضافة حساب سوشيال'}
+                                </h3>
+                                <p>أدخل البيانات المطلوبة ثم أضفها إلى الجدول. لن تُحفظ نهائيًا قبل الضغط على زر الحفظ أسفل الجدول.</p>
+                            </div>
+                            <button type="button" className="legacy-icon-btn" onClick={() => setAddItemModal(null)} aria-label="إغلاق النافذة">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div className="legacy-form-grid admin-managed-add-fields">
+                            {addItemModal.type === 'page' && (
+                                <>
+                                    <label className="legacy-field">
+                                        <span>عنوان الصفحة</span>
+                                        <input autoFocus value={addItemModal.title || ''} onChange={(event) => updateAddItemModal('title', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>المسار</span>
+                                        <input dir="ltr" value={addItemModal.slug || ''} onChange={(event) => updateAddItemModal('slug', normalizeSlug(event.target.value))} />
+                                    </label>
+                                </>
+                            )}
+
+                            {addItemModal.type === 'link' && (
+                                <>
+                                    <label className="legacy-field">
+                                        <span>اسم الرابط</span>
+                                        <input autoFocus value={addItemModal.title || ''} onChange={(event) => updateAddItemModal('title', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>الرابط</span>
+                                        <input dir="ltr" type="url" value={addItemModal.url || ''} placeholder="https://..." onChange={(event) => updateAddItemModal('url', event.target.value)} />
+                                    </label>
+                                </>
+                            )}
+
+                            {(addItemModal.type === 'page' || addItemModal.type === 'link') && (
+                                <label className="legacy-field full-width">
+                                    <span>مكان الظهور</span>
+                                    <select value={addItemModal.location || 'footer'} onChange={(event) => updateAddItemModal('location', event.target.value)}>
+                                        <option value="header">الهيدر فقط</option>
+                                        <option value="footer">الفوتر فقط</option>
+                                        <option value="both">الهيدر والفوتر</option>
+                                    </select>
+                                </label>
+                            )}
+
+                            {addItemModal.type === 'social' && (
+                                <>
+                                    <label className="legacy-field">
+                                        <span>المنصة</span>
+                                        <select value={addItemModal.icon || EMPTY_SOCIAL.icon} onChange={(event) => {
+                                            const preset = SOCIAL_PRESETS.find((item) => item.icon === event.target.value);
+                                            updateAddItemModal('icon', event.target.value);
+                                            if (preset) updateAddItemModal('color', preset.color);
+                                        }}>
+                                            {SOCIAL_PRESETS.map((preset) => <option value={preset.icon} key={preset.icon}>{preset.label}</option>)}
+                                        </select>
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>الرابط</span>
+                                        <input autoFocus dir="ltr" type="url" value={addItemModal.url || ''} placeholder="https://..." onChange={(event) => updateAddItemModal('url', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field full-width">
+                                        <span>لون الأيقونة</span>
+                                        <input className="admin-managed-color-input" type="color" value={addItemModal.color || EMPTY_SOCIAL.color} onChange={(event) => updateAddItemModal('color', event.target.value)} />
+                                    </label>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="legacy-modal-actions admin-managed-add-actions">
+                            <button type="button" className="legacy-secondary-btn" onClick={() => setAddItemModal(null)}>إلغاء</button>
+                            <button type="button" className="legacy-primary-btn" onClick={submitAddItemModal}>
+                                <i className="fa-solid fa-plus"></i>
+                                إضافة إلى الجدول
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {selectedPage && (
                 <div className="legacy-modal-backdrop" onClick={closePageModal}>

@@ -2232,7 +2232,12 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 12px;
 }
 
-/* Shared management table header; table-specific rules only define columns. */
+/* Shared managed-table primitives. Table-specific rules only define columns. */
+.tools-managed-table {
+    direction: rtl;
+    text-align: right;
+}
+
 .tools-table-head {
     padding: var(--legacy-table-head-pad);
     background: var(--admin-table-head-bg);
@@ -2255,18 +2260,18 @@ body.dark-mode .legacy-nav-links a.active {
 
 .tools-section-card:is(#pages, #links) .tools-table-head,
 .tools-section-card:is(#pages, #links) .tools-item-card {
-    min-width: 720px;
+    min-width: 820px;
     display: grid;
-    grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1fr) minmax(140px, 0.8fr) 126px;
+    grid-template-columns: minmax(190px, 1.2fr) minmax(200px, 1fr) minmax(150px, 0.8fr) 190px;
     gap: 12px;
     align-items: center;
 }
 
 .tools-section-card#social .tools-table-head,
 .tools-section-card#social .tools-social-card {
-    min-width: 760px;
+    min-width: 920px;
     display: grid;
-    grid-template-columns: 76px minmax(160px, 0.9fr) minmax(220px, 1.4fr) 110px 126px;
+    grid-template-columns: 76px minmax(150px, 0.9fr) minmax(220px, 1.4fr) 120px 190px;
     gap: 12px;
     align-items: center;
 }
@@ -2320,6 +2325,61 @@ body.dark-mode .legacy-nav-links a.active {
 .tools-section-card.date-tool-events .tools-item-actions,
 .tools-section-card#social .tools-color-row {
     justify-content: center;
+}
+
+.tools-managed-table-row.is-disabled {
+    opacity: 0.58;
+}
+
+.tools-table-value {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.6;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tools-table-value-ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: right;
+}
+
+.tools-social-color-display {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    direction: ltr;
+    color: var(--text-sub);
+    white-space: nowrap;
+}
+
+.tools-social-color-display i {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border-radius: 7px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.tools-table-footer-actions {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.tools-table-footer-actions .legacy-primary-btn,
+.tools-table-footer-actions .legacy-secondary-btn {
+    flex: 1 1 210px;
+    max-width: 320px;
 }
 
 .tools-empty {
@@ -3064,6 +3124,11 @@ body.dark-mode .legacy-nav-links a.active {
     background: var(--success-bg);
     color: var(--success-text);
     border-color: color-mix(in srgb, var(--success-text) 28%, var(--border-color));
+}
+
+.tools-item-actions button.inactive {
+    background: color-mix(in srgb, var(--text-sub) 12%, transparent);
+    color: var(--text-sub);
 }
 
 .tools-item-actions button.danger {
@@ -4504,6 +4569,151 @@ body.dark-mode .legacy-nav-links a.active {
     .tool-table-footer-actions .legacy-secondary-btn {
         min-width: 0;
         width: 100%;
+        padding-inline: 8px;
+        font-size: 12px;
+    }
+}
+
+/* Shared admin presentation: sections, tables and actions inherit one system. */
+.legacy-admin-shell :is(.legacy-google-card, .legacy-table-card, .tools-section-card) {
+    border: 0;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+}
+
+.legacy-admin-shell .tools-section-head,
+.legacy-admin-shell .tools-section-card#pages .tools-section-head,
+.legacy-admin-shell :is(.legacy-google-card, .legacy-table-card) > .legacy-page-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-items: center;
+    gap: var(--admin-section-head-gap);
+    width: 100%;
+    padding: var(--admin-section-head-pad);
+    margin-bottom: 16px;
+    border: 0;
+    border-radius: var(--admin-section-head-radius);
+    background: var(--tool-bg, rgba(59, 130, 246, 0.12));
+    text-align: center;
+}
+
+.legacy-admin-shell .tools-section-title,
+.legacy-admin-shell .tools-section-card#pages .tools-section-title,
+.legacy-admin-shell :is(.legacy-google-card, .legacy-table-card) > .legacy-page-heading > div {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: 100%;
+    max-width: 680px;
+    text-align: center;
+}
+
+.legacy-admin-shell .tools-section-title h2,
+.legacy-admin-shell .tools-section-card#pages .tools-section-title h2,
+.legacy-admin-shell .legacy-section-title {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 20px;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.legacy-admin-shell .tools-section-title p,
+.legacy-admin-shell .tools-section-card#pages .tools-section-title p,
+.legacy-admin-shell :is(.legacy-google-card, .legacy-table-card) > .legacy-page-heading p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.75;
+    text-align: center;
+}
+
+.legacy-admin-shell .tools-table-head,
+.legacy-admin-shell .legacy-ads-table thead,
+.legacy-admin-shell .ad-settings-table thead {
+    background: var(--admin-table-head-bg);
+    color: var(--text-main);
+}
+
+.legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: var(--admin-control-gap);
+    margin-top: var(--admin-control-gap);
+}
+
+.legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) > *,
+.legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) .legacy-primary-btn,
+.legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) .legacy-secondary-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+}
+
+.legacy-admin-shell .legacy-modal-actions {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+    justify-content: flex-end;
+}
+
+.admin-managed-add-modal {
+    width: min(680px, 100%);
+}
+
+.admin-managed-add-fields .full-width {
+    grid-column: 1 / -1;
+}
+
+.admin-managed-color-input {
+    width: 100%;
+    min-height: 48px;
+    padding: 6px;
+    cursor: pointer;
+}
+
+.admin-managed-add-actions > * {
+    min-width: 150px;
+}
+
+@media (max-width: 700px) {
+    .legacy-admin-shell .tools-section-head,
+    .legacy-admin-shell .tools-section-card#pages .tools-section-head,
+    .legacy-admin-shell :is(.legacy-google-card, .legacy-table-card) > .legacy-page-heading {
+        padding: 15px;
+    }
+
+    .legacy-admin-shell :is(.tools-table-footer-actions, .tool-table-footer-actions) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .legacy-admin-shell .legacy-modal-actions {
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .legacy-admin-shell .legacy-modal-actions > * {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .legacy-admin-shell .tools-section-title h2,
+    .legacy-admin-shell .tools-section-card#pages .tools-section-title h2,
+    .legacy-admin-shell .legacy-section-title {
+        font-size: 18px;
+    }
+
+    .legacy-admin-shell .tools-section-title p,
+    .legacy-admin-shell .tools-section-card#pages .tools-section-title p,
+    .legacy-admin-shell :is(.legacy-google-card, .legacy-table-card) > .legacy-page-heading p {
+        font-size: 12px;
+    }
+
+    .admin-managed-add-actions > * {
         padding-inline: 8px;
         font-size: 12px;
     }

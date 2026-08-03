@@ -26,6 +26,7 @@ export default function Footer({ lang, config }) {
     if (config) {
         if (Array.isArray(config.internalPages)) {
             config.internalPages.forEach((page) => {
+                if (page?.enabled === false) return;
                 const location = normalizeLinkLocation(page.location);
                 if (location === 'footer' || location === 'both' || location === 'footer-only') {
                     addFooterLink({
@@ -39,6 +40,7 @@ export default function Footer({ lang, config }) {
 
         if (Array.isArray(config.externalLinks)) {
             config.externalLinks.forEach((link) => {
+                if (link?.enabled === false) return;
                 const location = normalizeLinkLocation(link.location);
                 if (location === 'footer' || location === 'both' || location === 'footer-only') {
                     addFooterLink({
@@ -76,9 +78,9 @@ export default function Footer({ lang, config }) {
                     </nav>
                 )}
 
-                {Array.isArray(config?.socialLinks) && config.socialLinks.length > 0 && (
+                {Array.isArray(config?.socialLinks) && config.socialLinks.some((social) => social?.enabled !== false) && (
                     <div className="footer-social" aria-label={labels.socialLinks}>
-                        {config.socialLinks.map((social, idx) => {
+                        {config.socialLinks.filter((social) => social?.enabled !== false).map((social, idx) => {
                             const socialLabel = social.label || social.title || social.name || social.platform || labels.socialLinks;
 
                             return (
