@@ -1,11 +1,15 @@
 import ToolSeoContent from '../components/ToolSeoContent';
-import { buildToolJsonLd, buildToolMetadata } from '../seoConfig';
+import ToolPageHero from '../components/ToolPageHero';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
 import ClockPageClient from './ClockPageClient';
 
-export const metadata = buildToolMetadata('clock');
+export async function generateMetadata() {
+    return buildManagedToolMetadata('clock');
+}
 
-export default function ClockPage() {
-    const jsonLd = buildToolJsonLd('clock');
+export default async function ClockPage() {
+    const page = await getManagedToolPage('clock');
+    const jsonLd = buildManagedToolJsonLd(page, page.settings.faqs);
 
     return (
         <>
@@ -13,7 +17,8 @@ export default function ClockPage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <ClockPageClient />
+            <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-clock" className="clock-hero" />
+            <ClockPageClient hideHero />
             <ToolSeoContent tool="clock" />
         </>
     );

@@ -1,4 +1,5 @@
 import { SITE_URL, publicToolSeo } from './seoConfig';
+import { DATE_SUBTOOL_ROUTES, normalizeToolSettings } from './toolSettings';
 
 export const revalidate = 3600;
 
@@ -17,14 +18,14 @@ const reservedSlugs = new Set([
     'ads.txt',
 ]);
 
+const legacyAliasSlugs = new Set(['about']);
+const DEFAULT_LAST_MODIFIED = '2026-08-04';
+
 const staticEntries = [
-    { path: publicToolSeo.date.path, changeFrequency: 'daily', priority: 1 },
-    { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85 },
-    { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85 },
-    { path: '/month-names', changeFrequency: 'monthly', priority: 0.6 },
-    { path: '/privacy', changeFrequency: 'monthly', priority: 0.5 },
-    { path: '/terms', changeFrequency: 'monthly', priority: 0.5 },
-    { path: '/contact', changeFrequency: 'monthly', priority: 0.5 },
+    { path: '/month-names', changeFrequency: 'monthly', priority: 0.6, lastModified: DEFAULT_LAST_MODIFIED },
+    { path: '/privacy', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
+    { path: '/terms', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
+    { path: '/contact', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
 ];
 
 function decodeFirestoreValue(value) {
@@ -63,6 +64,7 @@ function normalizePublicPath(page, fallbackSlug) {
 
     const slug = path.toLowerCase();
     if (reservedSlugs.has(slug)) return '';
+    if (legacyAliasSlugs.has(slug)) return '';
 
     return `/${path}`;
 }
@@ -81,11 +83,15 @@ function collectDynamicPages(settings = {}) {
         settings.customPages,
         settings.pages,
         settings.internalPages,
-    ].filter((group) => group && typeof group === 'object' && !Array.isArray(group));
+    ].filter((group) => group && typeof group === 'object');
 
     const entries = [];
     groups.forEach((group) => {
-        Object.entries(group).forEach(([fallbackSlug, page]) => {
+        const pages = Array.isArray(group)
+            ? group.map((page, index) => [page?.slug || page?.path || String(index), page])
+            : Object.entries(group);
+
+        pages.forEach(([fallbackSlug, page]) => {
             if (!page || typeof page !== 'object') return;
             if (!isPageVisible(page)) return;
 
@@ -96,6 +102,7 @@ function collectDynamicPages(settings = {}) {
                 path,
                 changeFrequency: 'monthly',
                 priority: 0.5,
+                lastModified: page.lastModified || page.updatedAt || page.modifiedAt || page.publishedAt,
             });
         });
     });
@@ -103,34 +110,56 @@ function collectDynamicPages(settings = {}) {
     return entries;
 }
 
-async function getDynamicEntries() {
+async function getSettings() {
     try {
         const response = await fetch(firestoreSettingsUrl, {
             headers: { Accept: 'application/json' },
             next: { revalidate },
         });
 
-        if (!response.ok) return [];
+        if (!response.ok) return {};
 
         const payload = await response.json();
-        const settings = decodeFirestoreFields(payload.fields || {});
-        return collectDynamicPages(settings);
+        return decodeFirestoreFields(payload.fields || {});
     } catch {
-        return [];
+        return {};
     }
 }
 
+function normalizeLastModified(value) {
+    const parsed = value ? new Date(value) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
+}
+
+function collectToolEntries(settings = {}) {
+    const tools = normalizeToolSettings(settings.toolSettings || {});
+    const dateSubtools = tools.date.subtoolSeo || {};
+
+    return [
+        { path: publicToolSeo.date.path, changeFrequency: 'weekly', priority: 1, lastModified: tools.date.seo?.lastModified },
+        { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.clock.seo?.lastModified },
+        { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.weather.seo?.lastModified },
+        { path: DATE_SUBTOOL_ROUTES.ageCalc, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.ageCalc?.lastModified },
+        { path: DATE_SUBTOOL_ROUTES.dateConverter, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.dateConverter?.lastModified },
+        { path: DATE_SUBTOOL_ROUTES.durationCalc, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.durationCalc?.lastModified },
+    ];
+}
+
 export default async function sitemap() {
-    const now = new Date();
+    const settings = await getSettings();
     const entriesByPath = new Map();
 
-    [...staticEntries, ...(await getDynamicEntries())].forEach((entry) => {
+    [...staticEntries, ...collectToolEntries(settings), ...collectDynamicPages(settings)].forEach((entry) => {
         entriesByPath.set(entry.path, entry);
     });
 
-    return Array.from(entriesByPath.values()).map(({ path, ...entry }) => ({
-        url: path === '/' ? SITE_URL : `${SITE_URL}${path}`,
-        lastModified: now,
-        ...entry,
-    }));
+    return Array.from(entriesByPath.values()).map(({ path, lastModified, ...entry }) => {
+        const normalizedDate = normalizeLastModified(lastModified);
+
+        return {
+            url: path === '/' ? SITE_URL : `${SITE_URL}${path}`,
+            ...(normalizedDate ? { lastModified: normalizedDate } : {}),
+            ...entry,
+        };
+    });
 }

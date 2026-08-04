@@ -1,5 +1,12 @@
+import Link from 'next/link';
+
 const toolContent = {
     date: {
+        links: [
+            { href: '/age-calculator', label: 'حاسبة العمر' },
+            { href: '/date-converter', label: 'تحويل التاريخ' },
+            { href: '/date-difference', label: 'حساب المدة بين تاريخين' },
+        ],
         sections: [
             {
                 title: 'دليل أدوات التاريخ',
@@ -91,12 +98,64 @@ const toolContent = {
     },
 };
 
-export default function ToolSeoContent({ tool }) {
-    const content = toolContent[tool];
+const dateSubtoolContent = {
+    ageCalc: {
+        sections: [
+            {
+                title: 'كيف تعمل حاسبة العمر؟',
+                paragraphs: [
+                    'تستخدم حاسبة العمر تاريخ الميلاد الذي تختاره وتقارنه بتاريخ اليوم، ثم تعرض العمر بالسنوات والأشهر والأيام. ويمكنك التبديل بين التقويم الميلادي والهجري وفق التاريخ المتاح لديك.',
+                    'تفيد النتيجة في الاستخدام الشخصي والتخطيط للمواعيد، لكنها لا تستبدل المستندات الرسمية عندما تكون الجهة المعنية بحاجة إلى إثبات معتمد للعمر.',
+                ],
+            },
+            {
+                title: 'نصائح للحصول على نتيجة دقيقة',
+                items: [
+                    'اختر اليوم والشهر والسنة كما تظهر في مستندك الرسمي.',
+                    'تأكد من اختيار نوع التقويم الصحيح قبل بدء الحساب.',
+                    'قد يختلف العمر الهجري عن الميلادي بسبب اختلاف طول السنة في كل تقويم.',
+                ],
+                paragraphs: [],
+            },
+        ],
+    },
+    dateConverter: {
+        sections: [
+            {
+                title: 'تحويل التاريخ بين الهجري والميلادي',
+                paragraphs: [
+                    'تساعدك أداة تحويل التاريخ على مطابقة تاريخ مكتوب بالتقويم الميلادي مع ما يقابله بالتقويم الهجري، أو تنفيذ التحويل في الاتجاه العكسي. اختر التقويم المصدر ثم أدخل اليوم والشهر والسنة واضغط زر التحويل.',
+                    'النتيجة مناسبة للمواعيد والاستخدام اليومي. وقد تختلف بعض التواريخ الهجرية يومًا واحدًا بحسب التقويم الرسمي أو ثبوت دخول الشهر، لذلك راجع الجهة الرسمية عند استخدام النتيجة في معاملة حساسة.',
+                ],
+            },
+        ],
+    },
+    durationCalc: {
+        sections: [
+            {
+                title: 'طريقة حساب المدة بين تاريخين',
+                paragraphs: [
+                    'اختر التاريخ الأول والتاريخ الثاني لتحصل على المدة الفاصلة بينهما بصورة واضحة. تدعم الأداة التواريخ الماضية والمستقبلية، لذلك تناسب حساب مدة خدمة أو عقد أو دراسة أو المدة المتبقية حتى موعد قادم.',
+                    'تعرض النتيجة بناءً على ترتيب التاريخين اللذين أدخلتهما، مع مراعاة اختلاف عدد أيام الأشهر والسنوات الكبيسة عند استخدام التقويم الميلادي.',
+                ],
+            },
+        ],
+    },
+};
+
+export default function ToolSeoContent({ tool, subtool = '' }) {
+    const content = subtool ? dateSubtoolContent[subtool] : toolContent[tool];
     if (!content) return null;
 
     return (
         <div className="seo-sections-wrapper tool-seo-content">
+            {Array.isArray(content.links) && content.links.length > 0 && (
+                <nav className="tool-seo-links" aria-label="روابط أدوات التاريخ المتخصصة">
+                    {content.links.map((link) => (
+                        <Link href={link.href} key={link.href}>{link.label}</Link>
+                    ))}
+                </nav>
+            )}
             {content.sections.map((section) => (
                 <section className="seo-card tool-seo-card" key={section.title}>
                     <h2>{section.title}</h2>

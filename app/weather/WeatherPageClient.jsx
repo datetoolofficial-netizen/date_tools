@@ -113,7 +113,7 @@ async function fetchForecast(latitude, longitude) {
     return forecastResponse.json();
 }
 
-export default function WeatherPage() {
+export default function WeatherPage({ hideHero = false }) {
     const {
         configData,
         firebaseApiRef,
@@ -230,13 +230,13 @@ export default function WeatherPage() {
 
     return (
         <section className="tools-page">
-            <div className="tools-hero weather-hero">
+            {!hideHero && <div className="tools-hero weather-hero">
                 <i className="fa-solid fa-cloud-sun-rain"></i>
                 <div>
-                    <h2>{weatherSettings.heroTitle}</h2>
+                    <h1>{weatherSettings.seo?.h1 || weatherSettings.heroTitle}</h1>
                     <p>{weatherSettings.heroDescription}</p>
                 </div>
-            </div>
+            </div>}
 
             <PublicAdSlot configData={configData} slotName="weatherTop" label="إعلان أعلى الطقس" />
 

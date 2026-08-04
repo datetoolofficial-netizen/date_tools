@@ -54,6 +54,10 @@ function getSharePlaceLabel(label = '') {
         .trim() || 'نص مشاركة';
 }
 
+function getSearchPreviewUrl(canonical = '/') {
+    return `https://date-tool.com${canonical === '/' ? '' : canonical}`;
+}
+
 export default function ToolContentSettings({ firebaseApi, showMessage, toolKey }) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey];
     const [settings, setSettings] = useState(() => cloneToolSettings(defaults));
@@ -101,6 +105,29 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             subtools: {
                 ...(current.subtools || {}),
                 [key]: value,
+            },
+        }));
+    };
+
+    const updateSeo = (field, value) => {
+        setSettings((current) => ({
+            ...current,
+            seo: {
+                ...(current.seo || {}),
+                [field]: value,
+            },
+        }));
+    };
+
+    const updateSubtoolSeo = (subtoolKey, field, value) => {
+        setSettings((current) => ({
+            ...current,
+            subtoolSeo: {
+                ...(current.subtoolSeo || {}),
+                [subtoolKey]: {
+                    ...(current.subtoolSeo?.[subtoolKey] || {}),
+                    [field]: value,
+                },
             },
         }));
     };
@@ -162,9 +189,20 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             setIsSaving(true);
             showMessage('info', 'جاري حفظ إعدادات الأداة...');
             const config = await firebaseApi.getSiteConfig();
+            const lastModified = new Date().toISOString().slice(0, 10);
+            const settingsWithModifiedDate = {
+                ...settings,
+                seo: { ...(settings.seo || {}), lastModified },
+                subtoolSeo: Object.fromEntries(
+                    Object.entries(settings.subtoolSeo || {}).map(([key, value]) => [
+                        key,
+                        { ...value, lastModified },
+                    ])
+                ),
+            };
             const normalized = normalizeToolSettings({
                 ...(config.toolSettings || {}),
-                [toolKey]: settings,
+                [toolKey]: settingsWithModifiedDate,
             });
             const savedPatch = await firebaseApi.saveSiteConfigSection({ toolSettings: normalized });
             const savedSettings = normalizeToolSettings(savedPatch.toolSettings || normalized);
@@ -208,6 +246,32 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     <span>نص السلوغن / الوصف</span>
                     <textarea rows={3} value={settings.heroDescription || ''} onChange={(event) => updateField('heroDescription', event.target.value)} />
                 </label>
+            </div>
+
+            <div className="tool-seo-admin">
+                <div className="tools-section-head compact-head">
+                    <div className="tools-section-title">
+                        <h2>SEO وظهور الأداة في البحث</h2>
+                        <p>هذه الحقول تتحكم في عنوان نتائج البحث والوصف والعنوان الرئيسي والكلمات المستهدفة دون تغيير ألوان أو مقاسات الصفحة.</p>
+                    </div>
+                </div>
+
+                <SeoFields
+                    seo={settings.seo}
+                    onChange={updateSeo}
+                    previewLabel={settings.label}
+                />
+
+                {Object.entries(defaults.subtoolSeo || {}).map(([subtoolKey]) => (
+                    <div className="tool-subtool-seo" key={subtoolKey}>
+                        <h3>{settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}</h3>
+                        <SeoFields
+                            seo={settings.subtoolSeo?.[subtoolKey]}
+                            onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
+                            previewLabel={settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
+                        />
+                    </div>
+                ))}
             </div>
 
             <div className="tools-list tool-subtools-list">
@@ -431,5 +495,50 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 </button>
             </div>
         </section>
+    );
+}
+
+function SeoFields({ seo = {}, onChange, previewLabel = '' }) {
+    const searchTitle = seo.searchTitle || previewLabel;
+    const description = seo.metaDescription || '';
+
+    return (
+        <div className="tool-seo-fields-layout">
+            <div className="legacy-form-grid tool-seo-fields">
+                <label className="legacy-field full-width">
+                    <span>عنوان نتائج البحث</span>
+                    <input value={seo.searchTitle || ''} onChange={(event) => onChange('searchTitle', event.target.value)} maxLength={65} />
+                    <small>{String(seo.searchTitle || '').length}/65</small>
+                </label>
+                <label className="legacy-field full-width">
+                    <span>وصف نتائج البحث</span>
+                    <textarea rows={3} value={seo.metaDescription || ''} onChange={(event) => onChange('metaDescription', event.target.value)} maxLength={170} />
+                    <small>{String(seo.metaDescription || '').length}/170</small>
+                </label>
+                <label className="legacy-field">
+                    <span>عنوان H1 الرئيسي</span>
+                    <input value={seo.h1 || ''} onChange={(event) => onChange('h1', event.target.value)} />
+                </label>
+                <label className="legacy-field">
+                    <span>العبارة الرئيسية</span>
+                    <input value={seo.primaryKeyword || ''} onChange={(event) => onChange('primaryKeyword', event.target.value)} />
+                </label>
+                <label className="legacy-field full-width">
+                    <span>العبارات المساندة</span>
+                    <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder="افصل بينها بفاصلة" />
+                </label>
+                <label className="legacy-field full-width">
+                    <span>الرابط الأساسي Canonical</span>
+                    <input dir="ltr" value={seo.canonical || '/'} onChange={(event) => onChange('canonical', event.target.value)} placeholder="/clock" />
+                </label>
+            </div>
+
+            <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
+                <small>{getSearchPreviewUrl(seo.canonical)}</small>
+                <strong>{searchTitle || 'عنوان نتيجة البحث'}</strong>
+                <p>{description || 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.'}</p>
+                <span>H1: {seo.h1 || previewLabel}</span>
+            </aside>
+        </div>
     );
 }

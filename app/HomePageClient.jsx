@@ -81,7 +81,7 @@ function HomePageSkeleton() {
     );
 }
 
-export default function HomePageClient({ children }) {
+export default function HomePageClient({ children, focusTool = '', hideHero = false }) {
     const { lang, configData, isSiteLoading, firebaseApiRef } = useSiteContext();
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
     const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
@@ -520,24 +520,24 @@ export default function HomePageClient({ children }) {
                 <HomePageSkeleton />
             ) : (
                 <>
-                        <div className="tools-hero date-tools-hero">
+                        {!hideHero && <div className="tools-hero date-tools-hero">
                             <i className="fa-solid fa-calendar-days"></i>
                             <div>
-                                <h2>{dateToolSettings.heroTitle || i18n[lang].pageTitle}</h2>
+                                <h1>{dateToolSettings.seo?.h1 || dateToolSettings.heroTitle || i18n[lang].pageTitle}</h1>
                                 <p>{dateToolSettings.heroDescription || i18n[lang].pageDescription}</p>
                             </div>
-                        </div>
+                        </div>}
 
-                        <TodayBanner lang={lang} todayInfo={todayInfo} />
+                        {!focusTool && <TodayBanner lang={lang} todayInfo={todayInfo} />}
                         <PublicAdSlot configData={configData} slotName="dateTop" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
-                        <EventsSection
+                        {!focusTool && <EventsSection
                             lang={lang}
                             upcomingEvents={upcomingEvents}
                             onShare={handleShareEvents}
                             canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
-                        />
+                        />}
 
-                        <AgeCalculatorSection
+                        {(!focusTool || focusTool === 'ageCalc') && <AgeCalculatorSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.ageCalc}
                             lang={lang}
@@ -550,11 +550,11 @@ export default function HomePageClient({ children }) {
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />
+                        />}
 
                         <PublicAdSlot configData={configData} slotName="dateMiddle" label={i18n[lang].featuredAd || 'إعلان مميز'} />
 
-                        <DateConversionSection
+                        {(!focusTool || focusTool === 'dateConverter') && <DateConversionSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.dateConverter}
                             lang={lang}
@@ -567,9 +567,9 @@ export default function HomePageClient({ children }) {
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />
+                        />}
 
-                        <DurationSection
+                        {(!focusTool || focusTool === 'durationCalc') && <DurationSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.durationCalc}
                             lang={lang}
@@ -582,7 +582,7 @@ export default function HomePageClient({ children }) {
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />
+                        />}
 
                         <PublicAdSlot configData={configData} slotName="dateBottom" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
                         {children}

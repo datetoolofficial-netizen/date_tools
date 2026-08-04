@@ -1,9 +1,15 @@
 import HomePageClient from './HomePageClient';
 import ToolSeoContent from './components/ToolSeoContent';
-import { buildToolJsonLd } from './seoConfig';
+import ToolPageHero from './components/ToolPageHero';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from './toolSeoServer';
 
-export default function Home() {
-    const dateJsonLd = buildToolJsonLd('date');
+export async function generateMetadata() {
+    return buildManagedToolMetadata('date');
+}
+
+export default async function Home() {
+    const page = await getManagedToolPage('date');
+    const dateJsonLd = buildManagedToolJsonLd(page, page.settings.faqs);
 
     return (
         <>
@@ -11,7 +17,13 @@ export default function Home() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(dateJsonLd) }}
             />
-            <HomePageClient>
+            <ToolPageHero
+                title={page.title}
+                description={page.description}
+                icon="fa-solid fa-calendar-days"
+                className="date-tools-hero"
+            />
+            <HomePageClient hideHero>
                 <ToolSeoContent tool="date" />
             </HomePageClient>
         </>

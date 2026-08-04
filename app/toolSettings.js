@@ -1,5 +1,13 @@
 export const TOOL_SETTING_KEYS = ['date', 'clock', 'weather'];
 
+const DEFAULT_SEO_LAST_MODIFIED = '2026-08-04';
+
+export const DATE_SUBTOOL_ROUTES = {
+    ageCalc: '/age-calculator',
+    dateConverter: '/date-converter',
+    durationCalc: '/date-difference',
+};
+
 export const SHARE_TEMPLATE_DEFINITIONS = {
     date: {
         eventsResult: {
@@ -103,6 +111,44 @@ export const DEFAULT_TOOL_SETTINGS = {
         label: 'أداة التاريخ',
         heroTitle: 'أدوات التاريخ الشاملة',
         heroDescription: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
+        seo: {
+            searchTitle: 'حاسبة العمر وتحويل التاريخ وحساب المدة | الأدوات الشاملة',
+            metaDescription: 'احسب عمرك بالهجري والميلادي، وحوّل التاريخ بين التقويمين، واحسب المدة بين تاريخين عبر أدوات عربية سريعة وواضحة.',
+            h1: 'حاسبة العمر وتحويل التاريخ وحساب المدة',
+            primaryKeyword: 'حاسبة العمر وتحويل التاريخ',
+            supportingKeywords: 'حساب العمر, تحويل التاريخ الهجري والميلادي, حساب المدة بين تاريخين',
+            canonical: '/',
+            lastModified: DEFAULT_SEO_LAST_MODIFIED,
+        },
+        subtoolSeo: {
+            ageCalc: {
+                searchTitle: 'حاسبة العمر بالهجري والميلادي - احسب عمرك بدقة',
+                metaDescription: 'احسب عمرك بدقة بالسنوات والأشهر والأيام باستخدام تاريخ الميلاد الهجري أو الميلادي عبر حاسبة عمر عربية سهلة.',
+                h1: 'حاسبة العمر بالهجري والميلادي',
+                primaryKeyword: 'حاسبة العمر',
+                supportingKeywords: 'حساب العمر بالهجري, حساب العمر بالميلادي, احسب عمرك',
+                canonical: DATE_SUBTOOL_ROUTES.ageCalc,
+                lastModified: DEFAULT_SEO_LAST_MODIFIED,
+            },
+            dateConverter: {
+                searchTitle: 'تحويل التاريخ من هجري إلى ميلادي والعكس',
+                metaDescription: 'حوّل التاريخ من هجري إلى ميلادي أو من ميلادي إلى هجري بسرعة، مع نتيجة واضحة مناسبة للمواعيد والوثائق.',
+                h1: 'تحويل التاريخ الهجري والميلادي',
+                primaryKeyword: 'تحويل التاريخ',
+                supportingKeywords: 'تحويل هجري لميلادي, تحويل ميلادي لهجري, محول التاريخ',
+                canonical: DATE_SUBTOOL_ROUTES.dateConverter,
+                lastModified: DEFAULT_SEO_LAST_MODIFIED,
+            },
+            durationCalc: {
+                searchTitle: 'حساب المدة بين تاريخين بالهجري والميلادي',
+                metaDescription: 'احسب الفرق والمدة بين تاريخين بالسنوات والأشهر والأيام، سواء كان التاريخان في الماضي أو المستقبل.',
+                h1: 'حساب المدة بين تاريخين',
+                primaryKeyword: 'حساب المدة بين تاريخين',
+                supportingKeywords: 'الفرق بين تاريخين, حاسبة الأيام, حساب المدة بالهجري والميلادي',
+                canonical: DATE_SUBTOOL_ROUTES.durationCalc,
+                lastModified: DEFAULT_SEO_LAST_MODIFIED,
+            },
+        },
         subtools: {
             ageCalc: 'احسب عمرك بدقة',
             dateConverter: 'تحويل التاريخ',
@@ -126,6 +172,16 @@ export const DEFAULT_TOOL_SETTINGS = {
         label: 'أداة الساعة',
         heroTitle: 'أدوات الساعة والوقت',
         heroDescription: 'تحويل نظام الساعة، معرفة الوقت الحالي، وحساب فرق التوقيت بسرعة.',
+        seo: {
+            searchTitle: 'تحويل الساعة وحساب فرق التوقيت بين المدن',
+            metaDescription: 'حوّل الوقت من نظام 24 إلى 12 ساعة، واعرف الوقت الحالي، واحسب فرق التوقيت بين مدينتين بسهولة.',
+            h1: 'تحويل الساعة وحساب فرق التوقيت',
+            primaryKeyword: 'تحويل الساعة',
+            supportingKeywords: 'فرق التوقيت بين المدن, الساعة الآن, تحويل 24 إلى 12',
+            canonical: '/clock',
+            lastModified: DEFAULT_SEO_LAST_MODIFIED,
+        },
+        subtoolSeo: {},
         subtools: {
             timeConverter: 'تحويل الساعة من 24 إلى 12',
             timezoneDiff: 'فرق التوقيت بين مدينتين',
@@ -144,6 +200,16 @@ export const DEFAULT_TOOL_SETTINGS = {
         label: 'أداة الطقس',
         heroTitle: 'أدوات الطقس',
         heroDescription: 'اعرف طقس مدينتك، مؤشر الحرارة المحسوسة، الرطوبة، الرياح وUV بسرعة.',
+        seo: {
+            searchTitle: 'حالة الطقس اليوم وتوقعات 5 أيام',
+            metaDescription: 'اعرف طقس مدينتك ودرجة الحرارة المحسوسة والرطوبة والرياح وتوقع المطر ومؤشر UV مع توقعات الأيام القادمة.',
+            h1: 'حالة الطقس اليوم وتوقعات الأيام القادمة',
+            primaryKeyword: 'حالة الطقس اليوم',
+            supportingKeywords: 'توقعات الطقس, نسبة المطر, درجة الحرارة, مؤشر UV',
+            canonical: '/weather',
+            lastModified: DEFAULT_SEO_LAST_MODIFIED,
+        },
+        subtoolSeo: {},
         subtools: {
             weatherSearch: 'عرض الطقس',
             currentWeather: 'الطقس الحالي',
@@ -197,6 +263,36 @@ function normalizeSubtools(toolKey, subtools = {}) {
     );
 }
 
+function normalizeSeoRecord(value = {}, defaults = {}) {
+    const requestedCanonical = String(value?.canonical || defaults.canonical || '').trim();
+    const canonical = requestedCanonical.startsWith('/') && !requestedCanonical.startsWith('//')
+        ? requestedCanonical.split('?')[0].split('#')[0]
+        : String(defaults.canonical || '/').trim();
+
+    return {
+        searchTitle: String(value?.searchTitle || defaults.searchTitle || '').trim(),
+        metaDescription: String(value?.metaDescription || defaults.metaDescription || '').trim(),
+        h1: String(value?.h1 || defaults.h1 || '').trim(),
+        primaryKeyword: String(value?.primaryKeyword || defaults.primaryKeyword || '').trim(),
+        supportingKeywords: Array.isArray(value?.supportingKeywords)
+            ? value.supportingKeywords.join(', ')
+            : String(value?.supportingKeywords || defaults.supportingKeywords || '').trim(),
+        canonical,
+        lastModified: String(value?.lastModified || defaults.lastModified || DEFAULT_SEO_LAST_MODIFIED).trim(),
+    };
+}
+
+function normalizeSubtoolSeo(toolKey, subtoolSeo = {}) {
+    const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.subtoolSeo || {};
+
+    return Object.fromEntries(
+        Object.entries(defaults).map(([key, fallback]) => [
+            key,
+            normalizeSeoRecord(subtoolSeo?.[key], fallback),
+        ])
+    );
+}
+
 function normalizeShareTemplates(toolKey, shareTemplates = {}) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {};
     const legacyDefaults = LEGACY_SHARE_TEMPLATES[toolKey] || {};
@@ -238,6 +334,8 @@ export function normalizeToolSettings(settings = {}) {
                     label: String(value.label || defaults.label).trim() || defaults.label,
                     heroTitle: String(value.heroTitle || defaults.heroTitle).trim() || defaults.heroTitle,
                     heroDescription: String(value.heroDescription || defaults.heroDescription).trim() || defaults.heroDescription,
+                    seo: normalizeSeoRecord(value.seo, defaults.seo),
+                    subtoolSeo: normalizeSubtoolSeo(toolKey, value.subtoolSeo),
                     subtools: normalizeSubtools(toolKey, value.subtools),
                     shareTemplates: normalizeShareTemplates(toolKey, value.shareTemplates),
                     shareEnabled: normalizeShareEnabled(toolKey, value.shareEnabled),

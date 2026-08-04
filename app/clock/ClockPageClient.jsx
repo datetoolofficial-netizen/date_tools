@@ -101,7 +101,7 @@ function getDifferenceText(diff) {
     return formatHourDifference(diff);
 }
 
-export default function ClockPage() {
+export default function ClockPage({ hideHero = false }) {
     const {
         configData,
         firebaseApiRef,
@@ -237,13 +237,13 @@ export default function ClockPage() {
 
     return (
         <section className="tools-page">
-            <div className="tools-hero clock-hero">
+            {!hideHero && <div className="tools-hero clock-hero">
                 <i className="fa-solid fa-clock"></i>
                 <div>
-                    <h2>{clockSettings.heroTitle}</h2>
+                    <h1>{clockSettings.seo?.h1 || clockSettings.heroTitle}</h1>
                     <p>{clockSettings.heroDescription}</p>
                 </div>
-            </div>
+            </div>}
 
             <div className="today-info-banner clock-now-banner">
                 <div className="today-content">

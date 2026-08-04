@@ -50,8 +50,8 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.9.
-نسخة منصة الإدارة الحالية هي 0.1.17.
+الإصدار الحالي للتطبيق هو 0.3.10.
+نسخة منصة الإدارة الحالية هي 0.1.18.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -9764,6 +9764,59 @@ curl.exe -s -o NUL -w "%{http_code}" <url>
 - منجز ومفحوص ومنشور على Cloudflare Workers برقم `701df817-8828-4f52-8fea-983f56ff0be2`.
 - نجح التحقق الحي من `/admin/identity` و`/admin/tools` و`/admin/ad-settings` و`/admin/integrations` و`/admin/pagespeed`، وأعادت جميعها `200 OK`.
 - نجح البناء كاملًا. ظهرت رسائل اتصال `EACCES` بفايربيس بسبب منع الشبكة داخل بيئة الفحص المحلية، ولم تؤثر في نتيجة البناء أو النشر.
+
+### إدارة SEO ومسارات أدوات التاريخ المستقلة 0.3.10 / admin 0.1.18
+
+ما تم إنجازه:
+
+- إضافة نموذج SEO مركزي إلى إعدادات التاريخ والساعة والطقس، يشمل عنوان نتيجة البحث، الوصف، عنوان `H1`، العبارة الرئيسية، العبارات المساندة، الرابط الأساسي `canonical` وتاريخ التعديل الفعلي.
+- إضافة حقول مستقلة للأدوات الفرعية الثلاث في إدارة أداة التاريخ مع معاينة فورية لشكل نتيجة البحث وحفظ القيم في `toolSettings` داخل Firestore.
+- نقل عناوين أدوات التاريخ والساعة والطقس الأساسية إلى Server Components حتى يصل `H1` والمحتوى التعريفي وبيانات `metadata` إلى محركات البحث في HTML الأولي.
+- إنشاء مسارات مستقلة: `/age-calculator` و`/date-converter` و`/date-difference`، مع إبقاء الأدوات نفسها داخل الصفحة الرئيسية دون تغيير سلوكها الحالي.
+- إضافة محتوى نصي مخصص وروابط داخلية وبيانات منظمة `WebApplication` و`BreadcrumbList` و`FAQPage` للمسارات العامة.
+- إصلاح `sitemap.xml` بحيث لا يتغير `lastmod` عند كل طلب، بل يأخذ التاريخ المحفوظ عند تعديل إعدادات SEO أو الصفحة الديناميكية.
+- استبعاد المسار القديم `/about` من خريطة الموقع وإضافة تحويل دائم إلى `/about-us` لمنع فهرسة نسختين من المحتوى نفسه.
+- إبقاء تصميم البطاقات والأدوات وألوان الموقع دون تغيير؛ أضيفت فقط نصوص أدق وروابط دليل نصية وإدارة SEO.
+
+الملفات المتأثرة:
+
+- `app/toolSettings.js`
+- `app/toolSeoServer.js`
+- `app/components/ToolPageHero.jsx`
+- `app/components/ToolSeoContent.jsx`
+- `app/page.jsx`
+- `app/HomePageClient.jsx`
+- `app/clock/page.jsx`
+- `app/clock/ClockPageClient.jsx`
+- `app/weather/page.jsx`
+- `app/weather/WeatherPageClient.jsx`
+- `app/age-calculator/page.jsx`
+- `app/date-converter/page.jsx`
+- `app/date-difference/page.jsx`
+- `app/sitemap.js`
+- `app/[slug]/page.jsx`
+- `app/admin/tool-management/ToolContentSettings.jsx`
+- `app/admin/AdminDashboard.css`
+- `app/globals.css`
+- `app/version.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm run lint
+npm run build
+git diff --check
+```
+
+الحالة:
+
+- منجز ومفحوص محليًا؛ نجح `npm run lint` ونجح بناء جميع صفحات Next.js بما فيها المسارات الجديدة.
+- ظهرت رسائل اتصال `EACCES` أثناء البناء لأن بيئة الفحص المحلية تمنع اتصال Firestore الخارجي، واستخدمت الصفحات القيم الافتراضية الآمنة ولم يفشل البناء.
+- المتبقي خارج الكود: نشر النسخة، إعادة إرسال `sitemap.xml` في Search Console، وطلب فهرسة المسارات الجديدة ثم مراقبة تقرير Queries بعد بدء ظهور الانطباعات.
 
 ### منع وميض الثيم وتنظيف حدود صفحة الهوية 0.1.17
 
