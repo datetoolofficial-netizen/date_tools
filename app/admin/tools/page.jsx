@@ -774,11 +774,12 @@ export default function AdminToolsPage() {
                         </h1>
                         <p>صفحة خفيفة لإدارة الروابط والصفحات والسوشيال ميديا والأحداث فقط.</p>
                     </div>
-                    <button className="legacy-primary-btn admin-page-save-action" onClick={saveTools} disabled={saving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {saving ? 'جاري الحفظ...' : 'حفظ إعدادات الأداة'}
-                    </button>
                 </section>
+
+                <button className="legacy-primary-btn admin-page-save-action" onClick={saveTools} disabled={saving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {saving ? 'جاري الحفظ...' : 'حفظ إعدادات الأداة'}
+                </button>
 
                 <div className="tools-quick-grid">
                     <a href="#pages" className="tools-quick-card color-pages">

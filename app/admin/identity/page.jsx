@@ -524,11 +524,12 @@ export default function AdminIdentityPage() {
                         </h1>
                         <p>اسم الأداة، الشعار، أيقونة المتصفح، وحقوق الموقع من مكان واحد.</p>
                     </div>
-                    <button className="legacy-primary-btn admin-page-save-action" onClick={saveIdentity} disabled={saving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {saving ? 'جاري الحفظ...' : 'حفظ الهوية'}
-                    </button>
                 </section>
+
+                <button className="legacy-primary-btn admin-page-save-action" onClick={saveIdentity} disabled={saving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {saving ? 'جاري الحفظ...' : 'حفظ الهوية'}
+                </button>
 
                 <section className="legacy-google-card tools-section-card identity-basic-settings-card" id="identity-basic-settings">
                     <div className="tools-section-head">

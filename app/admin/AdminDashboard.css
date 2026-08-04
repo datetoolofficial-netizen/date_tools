@@ -2899,7 +2899,7 @@ body.dark-mode .legacy-nav-links a.active {
 
 .link-preview-admin-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    grid-template-columns: minmax(0, 1fr) 330px;
     gap: 18px;
     align-items: start;
 }
@@ -4783,18 +4783,26 @@ body.dark-mode .legacy-nav-links a.active {
     left: 18px;
     bottom: 14px;
     z-index: 90;
-    width: 112px;
-    min-width: 112px;
-    height: 44px;
+    width: 132px;
+    min-width: 132px;
+    height: 48px;
     margin: 0;
     padding-inline: 14px;
     border: 0;
     border-radius: 11px;
     background: color-mix(in srgb, #22c55e 19%, var(--bg-container));
     color: #22c55e;
-    box-shadow: 0 10px 24px color-mix(in srgb, #22c55e 12%, transparent);
+    box-shadow:
+        0 10px 24px color-mix(in srgb, #22c55e 12%, transparent),
+        0 0 18px color-mix(in srgb, #22c55e 18%, transparent);
     font-size: 13px;
     font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .legacy-admin-shell .admin-page-save-action:hover {
@@ -4829,6 +4837,32 @@ body.dark-mode .legacy-nav-links a.active {
     position: sticky;
     top: 96px;
     align-self: start;
+    width: 100%;
+    max-width: 330px;
+}
+
+/* Identity settings use surface contrast; dashed upload targets keep their borders. */
+#identity-basic-settings :is(
+    .legacy-identity-card,
+    .legacy-identity-preview-card,
+    .identity-card-note,
+    .legacy-switch-row,
+    .legacy-preview-top,
+    .legacy-logo-preview,
+    .legacy-favicon-preview,
+    .legacy-preview-row,
+    .legacy-rights-preview
+),
+#link-preview :is(.ad-settings-switch, .link-preview-card),
+#pwa-install-settings :is(
+    .identity-pwa-phone,
+    .identity-pwa-shortcuts-preview,
+    .identity-pwa-app-icon,
+    .pwa-shortcut-admin-row,
+    .pwa-shortcut-admin-preview,
+    .identity-pwa-shortcut span
+) {
+    border: 0;
 }
 
 /* Table actions need breathing room from both the table and each other. */
@@ -4842,6 +4876,7 @@ body.dark-mode .legacy-nav-links a.active {
     .identity-link-preview-card .link-preview-card {
         position: static;
         order: 2;
+        max-width: none;
     }
 }
 
@@ -4862,10 +4897,10 @@ body.dark-mode .legacy-nav-links a.active {
     .legacy-admin-shell .admin-page-save-action {
         left: 10px;
         bottom: 10px;
-        width: 92px;
-        min-width: 92px;
-        height: 40px;
-        padding-inline: 10px;
+        width: 118px;
+        min-width: 118px;
+        height: 44px;
+        padding-inline: 12px;
         font-size: 12px;
     }
 

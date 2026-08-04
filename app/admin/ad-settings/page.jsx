@@ -439,11 +439,12 @@ export default function AdminAdSettingsPage() {
                         </h1>
                         <p>إعدادات مواضع العرض وGoogle AdSense وAds.txt مستقلة عن جدول الحملات.</p>
                     </div>
-                    <button className="legacy-primary-btn admin-page-save-action" onClick={saveAdSettings} disabled={saving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-                    </button>
                 </section>
+
+                <button className="legacy-primary-btn admin-page-save-action" onClick={saveAdSettings} disabled={saving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+                </button>
 
                 <section className="legacy-table-card ad-settings-table-card">
                     <table className="legacy-ads-table ad-settings-table">

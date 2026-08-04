@@ -10,6 +10,14 @@ import './globals.css';
 const siteUrl = 'https://date-tool.com';
 const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+const themeBootstrapScript = `(() => {
+    try {
+        if (!window.location.pathname.startsWith('/admin')) return;
+        const savedTheme = localStorage.getItem('site_theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.siteTheme = (savedTheme ? savedTheme === 'dark' : prefersDark) ? 'dark' : 'light';
+    } catch {}
+})();`;
 const cairo = Cairo({
     subsets: ['arabic', 'latin'],
     weight: ['400', '600', '700', '800'],
@@ -145,8 +153,9 @@ export default function RootLayout({ children }) {
     const siteJsonLd = buildSiteJsonLd();
 
     return (
-        <html lang="ar" dir="rtl">
+        <html lang="ar" dir="rtl" suppressHydrationWarning>
             <head>
+                <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
                 <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
                 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
                 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />

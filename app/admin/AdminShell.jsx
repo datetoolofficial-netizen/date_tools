@@ -214,7 +214,10 @@ export default function AdminShell({ children }) {
 
                 firebaseApiRef.current = { auth, signOut };
 
-                if (document.body.classList.contains('dark-mode')) {
+                if (
+                    document.documentElement.dataset.siteTheme === 'dark'
+                    || document.body.classList.contains('dark-mode')
+                ) {
                     setIsDarkMode(true);
                 }
 
@@ -333,8 +336,13 @@ export default function AdminShell({ children }) {
     };
 
     const toggleDarkMode = () => {
-        document.body.classList.toggle('dark-mode');
-        setIsDarkMode((current) => !current);
+        setIsDarkMode((current) => {
+            const nextDarkMode = !current;
+            document.documentElement.dataset.siteTheme = nextDarkMode ? 'dark' : 'light';
+            document.body.classList.toggle('dark-mode', nextDarkMode);
+            window.localStorage.setItem('site_theme', nextDarkMode ? 'dark' : 'light');
+            return nextDarkMode;
+        });
     };
 
     const handleLogout = async () => {

@@ -343,11 +343,12 @@ export default function AdminIntegrationsPage() {
                         </h1>
                         <p>إدارة معرفات التحليلات والتحقق والتتبع الخارجية من مكان واحد، بدون لصق أكواد JavaScript خام.</p>
                     </div>
-                    <button className="legacy-primary-btn admin-page-save-action" onClick={saveIntegrations} disabled={saving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {saving ? 'جاري الحفظ...' : 'حفظ الربط الخارجي'}
-                    </button>
                 </section>
+
+                <button className="legacy-primary-btn admin-page-save-action" onClick={saveIntegrations} disabled={saving}>
+                    <i className="fa-solid fa-floppy-disk"></i>
+                    {saving ? 'جاري الحفظ...' : 'حفظ الربط الخارجي'}
+                </button>
 
                 <section className="legacy-google-card integrations-card">
                     <div className="legacy-page-heading">
