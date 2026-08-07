@@ -1,21 +1,10 @@
 import { NextResponse } from 'next/server';
+import { TOOL_SECTION_REDIRECTS } from './toolSectionRoutes';
 
 const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-icon-192.png',
     '/pwa-icon-512.png',
     '/pwa-maskable-512.png',
-]);
-
-const TOOL_SECTION_REDIRECTS = new Map([
-    ['/age-calculator', { pathname: '/', hash: 'age-calculator' }],
-    ['/date-converter', { pathname: '/', hash: 'date-converter' }],
-    ['/date-difference', { pathname: '/', hash: 'date-difference' }],
-    ['/time-converter', { pathname: '/clock', hash: 'time-converter' }],
-    ['/timezone-difference', { pathname: '/clock', hash: 'timezone-difference' }],
-    ['/weather-search', { pathname: '/weather', hash: 'weather-search' }],
-    ['/current-weather', { pathname: '/weather', hash: 'current-weather' }],
-    ['/outdoor-advice', { pathname: '/weather', hash: 'outdoor-advice' }],
-    ['/weather-forecast', { pathname: '/weather', hash: 'weather-forecast' }],
 ]);
 
 const INTERNAL_NO_INDEX_PREFIXES = [

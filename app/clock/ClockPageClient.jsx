@@ -226,7 +226,10 @@ export default function ClockPage({ hideHero = false }) {
         }
     };
 
-    const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 13));
+    const hourOptions = [
+        ...Array.from({ length: 11 }, (_, index) => String(index + 13)),
+        '00',
+    ];
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock');
     const clockFaqItems = getToolFaqs(configData, 'clock');

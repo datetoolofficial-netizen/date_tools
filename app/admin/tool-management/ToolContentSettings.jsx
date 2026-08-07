@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
+import { TOOL_SECTION_ROUTES } from '../../../toolSectionRoutes';
 
 const SHARE_PREVIEW_VALUES = {
     title: 'مواعيدي القادمة',
@@ -269,6 +270,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             seo={settings.subtoolSeo?.[subtoolKey]}
                             onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
                             previewLabel={settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
+                            publicPath={TOOL_SECTION_ROUTES[toolKey]?.[subtoolKey]?.publicPath}
                         />
                     </div>
                 ))}
@@ -498,7 +500,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     );
 }
 
-function SeoFields({ seo = {}, onChange, previewLabel = '' }) {
+function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
 
@@ -531,6 +533,19 @@ function SeoFields({ seo = {}, onChange, previewLabel = '' }) {
                     <span>الرابط الأساسي Canonical</span>
                     <input dir="ltr" value={seo.canonical || '/'} onChange={(event) => onChange('canonical', event.target.value)} placeholder="/clock" />
                 </label>
+                {publicPath && (
+                    <div className="legacy-field full-width tool-seo-public-link">
+                        <span>رابط الأداة المخصص</span>
+                        <div className="tool-seo-public-link-row">
+                            <code dir="ltr">{getSearchPreviewUrl(publicPath)}</code>
+                            <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة المخصص">
+                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                                فتح
+                            </Link>
+                        </div>
+                        <small>يفتح الصفحة الأساسية وينتقل مباشرة إلى هذه الأداة.</small>
+                    </div>
+                )}
             </div>
 
             <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
