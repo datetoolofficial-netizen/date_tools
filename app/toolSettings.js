@@ -120,7 +120,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حاسبة العمر بالهجري والميلادي',
                 primaryKeyword: 'حاسبة العمر',
                 supportingKeywords: 'حساب العمر بالهجري, حساب العمر بالميلادي, احسب عمرك',
-                canonical: '/',
+                canonical: '/age-calculator',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
             dateConverter: {
@@ -129,7 +129,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'تحويل التاريخ الهجري والميلادي',
                 primaryKeyword: 'تحويل التاريخ',
                 supportingKeywords: 'تحويل هجري لميلادي, تحويل ميلادي لهجري, محول التاريخ',
-                canonical: '/',
+                canonical: '/date-converter',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
             durationCalc: {
@@ -138,7 +138,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حساب المدة بين تاريخين',
                 primaryKeyword: 'حساب المدة بين تاريخين',
                 supportingKeywords: 'الفرق بين تاريخين, حاسبة الأيام, حساب المدة بالهجري والميلادي',
-                canonical: '/',
+                canonical: '/date-difference',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
         },
@@ -178,7 +178,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'تحويل الساعة من 24 إلى 12 ساعة',
                 primaryKeyword: 'تحويل الساعة من 24 إلى 12',
                 supportingKeywords: 'محول الوقت, نظام 12 ساعة, نظام 24 ساعة, تحويل التوقيت',
-                canonical: '/clock',
+                canonical: '/time-converter',
                 lastModified: '2026-08-07',
             },
             timezoneDiff: {
@@ -187,7 +187,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حساب فرق التوقيت بين مدينتين',
                 primaryKeyword: 'فرق التوقيت بين مدينتين',
                 supportingKeywords: 'حساب فرق التوقيت, الساعة الآن في المدن, فرق الساعات بين الدول',
-                canonical: '/clock',
+                canonical: '/timezone-difference',
                 lastModified: '2026-08-07',
             },
         },
@@ -222,7 +222,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'عرض الطقس حسب المدينة',
                 primaryKeyword: 'طقس المدينة',
                 supportingKeywords: 'البحث عن الطقس, حالة الطقس الآن, درجة الحرارة في مدينتي',
-                canonical: '/weather',
+                canonical: '/weather-search',
                 lastModified: '2026-08-07',
             },
             currentWeather: {
@@ -231,7 +231,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حالة الطقس الآن',
                 primaryKeyword: 'حالة الطقس الآن',
                 supportingKeywords: 'درجة الحرارة المحسوسة, الرطوبة, سرعة الرياح, احتمال المطر',
-                canonical: '/weather',
+                canonical: '/current-weather',
                 lastModified: '2026-08-07',
             },
             outdoorAdvice: {
@@ -240,7 +240,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'نصيحة الخروج اليوم',
                 primaryKeyword: 'نصيحة الطقس اليوم',
                 supportingKeywords: 'هل الطقس مناسب للخروج, مؤشر UV, احتمال المطر اليوم',
-                canonical: '/weather',
+                canonical: '/outdoor-advice',
                 lastModified: '2026-08-07',
             },
             forecast: {
@@ -249,7 +249,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'توقعات الطقس للأيام القادمة',
                 primaryKeyword: 'توقعات الطقس 5 أيام',
                 supportingKeywords: 'طقس الأيام القادمة, توقع المطر, درجات الحرارة المتوقعة',
-                canonical: '/weather',
+                canonical: '/weather-forecast',
                 lastModified: '2026-08-07',
             },
         },
@@ -327,17 +327,22 @@ function normalizeSeoRecord(value = {}, defaults = {}) {
 
 function normalizeSubtoolSeo(toolKey, subtoolSeo = {}) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.subtoolSeo || {};
+    const parentCanonical = DEFAULT_TOOL_SETTINGS[toolKey]?.seo?.canonical || '/';
 
     return Object.fromEntries(
         Object.entries(defaults).map(([key, fallback]) => {
             const normalized = normalizeSeoRecord(subtoolSeo?.[key], fallback);
             const publicPath = TOOL_SECTION_ROUTES[toolKey]?.[key]?.publicPath;
+            const storedCanonical = String(subtoolSeo?.[key]?.canonical || '').trim();
+            const canonical = !storedCanonical || storedCanonical === parentCanonical
+                ? publicPath || normalized.canonical
+                : normalized.canonical;
 
             return [
                 key,
                 {
                     ...normalized,
-                    canonical: publicPath || normalized.canonical,
+                    canonical,
                 },
             ];
         })

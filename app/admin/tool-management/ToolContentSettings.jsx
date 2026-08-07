@@ -474,7 +474,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
-    const canonical = publicPath || seo.canonical || '/';
+    const canonical = seo.canonical || publicPath || '/';
 
     return (
         <div className="tool-seo-fields-layout">
@@ -501,12 +501,10 @@ function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
                     <span>العبارات المساندة</span>
                     <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder="افصل بينها بفاصلة" />
                 </label>
-                {!publicPath && (
-                    <label className="legacy-field full-width">
-                        <span>الرابط الأساسي Canonical</span>
-                        <input dir="ltr" value={canonical} onChange={(event) => onChange('canonical', event.target.value)} placeholder="/clock" />
-                    </label>
-                )}
+                <label className="legacy-field full-width">
+                    <span>الرابط الأساسي Canonical</span>
+                    <input dir="ltr" value={canonical} onChange={(event) => onChange('canonical', event.target.value)} placeholder={publicPath || '/clock'} />
+                </label>
             </div>
 
             <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
