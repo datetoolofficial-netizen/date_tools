@@ -5,6 +5,9 @@ import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings } from '../toolSettings';
+import { useSectionHashScroll } from '../useSectionHashScroll';
+
+const WEATHER_SECTION_IDS = ['weather-search', 'current-weather', 'outdoor-advice', 'weather-forecast'];
 
 const weatherLabels = {
     0: 'سماء صافية',
@@ -228,6 +231,8 @@ export default function WeatherPage({ hideHero = false }) {
     const weatherFaqItems = getToolFaqs(configData, 'weather');
     const shouldReserveWeatherResults = isLoading && !current && !error;
 
+    useSectionHashScroll(WEATHER_SECTION_IDS, !isLoading);
+
     return (
         <section className="tools-page">
             {!hideHero && <div className="tools-hero weather-hero">
@@ -240,7 +245,7 @@ export default function WeatherPage({ hideHero = false }) {
 
             <PublicAdSlot configData={configData} slotName="weatherTop" label="إعلان أعلى الطقس" />
 
-            <form className="weather-search" onSubmit={(event) => { event.preventDefault(); loadWeather(); }}>
+            <form className="weather-search" id="weather-search" onSubmit={(event) => { event.preventDefault(); loadWeather(); }}>
                 <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
@@ -272,7 +277,7 @@ export default function WeatherPage({ hideHero = false }) {
 
             {current ? (
                 <>
-                    <article className="weather-current-card">
+                    <article className="weather-current-card" id="current-weather">
                         <div className="weather-current-main">
                             <div>
                                 <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
@@ -290,7 +295,7 @@ export default function WeatherPage({ hideHero = false }) {
                         </div>
                     </article>
 
-                    <article className="tool-widget advice-card">
+                    <article className="tool-widget advice-card" id="outdoor-advice">
                         <div className="tool-widget-title">
                             <i className="fa-solid fa-person-walking"></i>
                             <h3>{weatherSettings.subtools?.outdoorAdvice}</h3>
@@ -308,7 +313,7 @@ export default function WeatherPage({ hideHero = false }) {
             <PublicAdSlot configData={configData} slotName="weatherBottom" label="إعلان أسفل الطقس" />
 
             {daily?.time ? (
-                <article className="tool-widget">
+                <article className="tool-widget" id="weather-forecast">
                     <div className="tool-widget-title">
                         <i className="fa-solid fa-calendar-week"></i>
                         <h3>{weatherSettings.subtools?.forecast}</h3>

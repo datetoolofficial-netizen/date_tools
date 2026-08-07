@@ -3573,6 +3573,12 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
 
 #age-calculator,
 #date-converter,
-#date-difference {
+#date-difference,
+#time-converter,
+#timezone-difference,
+#weather-search,
+#current-weather,
+#outdoor-advice,
+#weather-forecast {
     scroll-margin-top: 24px;
 }

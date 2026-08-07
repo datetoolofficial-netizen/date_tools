@@ -6,6 +6,9 @@ import ToolFaqSection from '../components/ToolFaqSection';
 import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from '../toolSettings';
+import { useSectionHashScroll } from '../useSectionHashScroll';
+
+const CLOCK_SECTION_IDS = ['time-converter', 'timezone-difference'];
 
 const defaultFromCity = {
     query: 'الرياض',
@@ -122,9 +125,20 @@ export default function ClockPage({ hideHero = false }) {
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
-        const timer = window.setInterval(() => setNow(new Date()), 1000);
-        return () => window.clearInterval(timer);
+        let timer;
+        const minuteDelay = 60000 - (Date.now() % 60000) + 25;
+        const minuteStart = window.setTimeout(() => {
+            setNow(new Date());
+            timer = window.setInterval(() => setNow(new Date()), 60000);
+        }, minuteDelay);
+
+        return () => {
+            window.clearTimeout(minuteStart);
+            if (timer) window.clearInterval(timer);
+        };
     }, [firebaseApiRef]);
+
+    useSectionHashScroll(CLOCK_SECTION_IDS);
 
     useEffect(() => {
         if (!currentLocation) return;
@@ -212,7 +226,7 @@ export default function ClockPage({ hideHero = false }) {
         }
     };
 
-    const hourOptions = Array.from({ length: 24 }, (_, index) => String(index).padStart(2, '0'));
+    const hourOptions = Array.from({ length: 12 }, (_, index) => String(index + 13));
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock');
     const clockFaqItems = getToolFaqs(configData, 'clock');
@@ -260,13 +274,13 @@ export default function ClockPage({ hideHero = false }) {
                         <i className="fa-regular fa-clock"></i>
                         <span>الساعة الآن في {locationLabel}</span>
                     </span>
-                    <strong>{formatTime(now, cityZone, clockHour12)}</strong>
+                    <strong>{formatTime(now, cityZone, clockHour12, false)}</strong>
                 </div>
             </div>
 
             <PublicAdSlot configData={configData} slotName="clockTop" label="إعلان أعلى الساعة" />
 
-            <article className="tool-widget time-converter-card">
+            <article className="tool-widget time-converter-card" id="time-converter">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-repeat"></i>
                     <h3>{clockSettings.subtools?.timeConverter}</h3>
@@ -314,7 +328,7 @@ export default function ClockPage({ hideHero = false }) {
 
             <PublicAdSlot configData={configData} slotName="clockMiddle" label="إعلان وسط الساعة" />
 
-            <article className="tool-widget timezone-diff-card">
+            <article className="tool-widget timezone-diff-card" id="timezone-difference">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-code-compare"></i>
                     <h3>{clockSettings.subtools?.timezoneDiff}</h3>

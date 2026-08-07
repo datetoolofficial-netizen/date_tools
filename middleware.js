@@ -6,10 +6,16 @@ const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-maskable-512.png',
 ]);
 
-const DATE_TOOL_SECTION_REDIRECTS = new Map([
-    ['/age-calculator', 'age-calculator'],
-    ['/date-converter', 'date-converter'],
-    ['/date-difference', 'date-difference'],
+const TOOL_SECTION_REDIRECTS = new Map([
+    ['/age-calculator', { pathname: '/', hash: 'age-calculator' }],
+    ['/date-converter', { pathname: '/', hash: 'date-converter' }],
+    ['/date-difference', { pathname: '/', hash: 'date-difference' }],
+    ['/time-converter', { pathname: '/clock', hash: 'time-converter' }],
+    ['/timezone-difference', { pathname: '/clock', hash: 'timezone-difference' }],
+    ['/weather-search', { pathname: '/weather', hash: 'weather-search' }],
+    ['/current-weather', { pathname: '/weather', hash: 'current-weather' }],
+    ['/outdoor-advice', { pathname: '/weather', hash: 'outdoor-advice' }],
+    ['/weather-forecast', { pathname: '/weather', hash: 'weather-forecast' }],
 ]);
 
 const INTERNAL_NO_INDEX_PREFIXES = [
@@ -85,11 +91,12 @@ export function middleware(request) {
         }));
     }
 
-    if (DATE_TOOL_SECTION_REDIRECTS.has(pathname)) {
+    if (TOOL_SECTION_REDIRECTS.has(pathname)) {
+        const destination = TOOL_SECTION_REDIRECTS.get(pathname);
         const url = request.nextUrl.clone();
-        url.pathname = '/';
+        url.pathname = destination.pathname;
         url.search = '';
-        url.hash = DATE_TOOL_SECTION_REDIRECTS.get(pathname);
+        url.hash = destination.hash;
         return applySecurityHeaders(NextResponse.redirect(url, 308));
     }
 

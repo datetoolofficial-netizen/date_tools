@@ -24,6 +24,9 @@ import {
 } from './components/home/HomeSections';
 import { getHijriParts, hijriToGregorian } from './components/home/homeDateUtils';
 import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from './toolSettings';
+import { useSectionHashScroll } from './useSectionHashScroll';
+
+const DATE_SECTION_IDS = ['age-calculator', 'date-converter', 'date-difference'];
 
 function SkeletonBlock({ className = '' }) {
     return <span className={`skeleton-block ${className}`} aria-hidden="true" />;
@@ -505,24 +508,7 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
 
     const isPageLoading = isSiteLoading || configData === null;
 
-    useEffect(() => {
-        if (isPageLoading || focusTool || typeof window === 'undefined') return undefined;
-
-        const targetId = window.location.hash.replace(/^#/, '');
-        const validTargets = new Set(['age-calculator', 'date-converter', 'date-difference']);
-        if (!validTargets.has(targetId)) return undefined;
-
-        const frameId = window.requestAnimationFrame(() => {
-            window.requestAnimationFrame(() => {
-                document.getElementById(targetId)?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start',
-                });
-            });
-        });
-
-        return () => window.cancelAnimationFrame(frameId);
-    }, [focusTool, isPageLoading]);
+    useSectionHashScroll(DATE_SECTION_IDS, !isPageLoading && !focusTool);
     const dateToolSettings = getToolSettings(configData, 'date');
     const dateFaqItems = getToolFaqs(configData, 'date');
 
