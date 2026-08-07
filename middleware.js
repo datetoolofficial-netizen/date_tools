@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { TOOL_SECTION_REDIRECTS } from './toolSectionRoutes';
 
 const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-icon-192.png',
@@ -78,15 +77,6 @@ export function middleware(request) {
                 'X-Robots-Tag': 'noindex, nofollow, noarchive',
             },
         }));
-    }
-
-    if (TOOL_SECTION_REDIRECTS.has(pathname)) {
-        const destination = TOOL_SECTION_REDIRECTS.get(pathname);
-        const url = request.nextUrl.clone();
-        url.pathname = destination.pathname;
-        url.search = '';
-        url.hash = destination.hash;
-        return applySecurityHeaders(NextResponse.redirect(url, 308));
     }
 
     if (RETIRED_PWA_ICON_PATHS.has(pathname)) {

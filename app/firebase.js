@@ -9,7 +9,7 @@ import {
 } from "firebase/firestore";
 
 import { sanitizeHtml } from "./sanitizeHtml";
-import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings } from "./toolSettings";
+import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings, serializeToolSettings } from "./toolSettings";
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPreview";
 
 const firebaseConfig = {
@@ -348,7 +348,7 @@ export async function saveSiteConfig(config) {
         internalPages: Array.isArray(config.internalPages) ? config.internalPages : [],
         socialLinks: Array.isArray(config.socialLinks) ? config.socialLinks : [],
         adCampaigns: deleteField(),
-        toolSettings: normalizeToolSettings(config.toolSettings || {}),
+        toolSettings: serializeToolSettings(config.toolSettings || {}),
         linkPreview: normalizeLinkPreviewSettings(config.linkPreview || {}),
 
         adImages: deleteField(),
@@ -375,6 +375,7 @@ export async function saveSiteConfig(config) {
     };
 
     await setDoc(configRef, cleanConfig, { merge: true });
+    await setDoc(configRef, { toolSettings: cleanConfig.toolSettings }, { mergeFields: ['toolSettings'] });
 
     return cleanConfig;
 }
@@ -413,9 +414,10 @@ export async function saveSiteConfigSection(sectionPatch) {
         };
     }
 
-    if ('toolSettings' in cleanPatch) {
-        cleanPatch.toolSettings = normalizeToolSettings(cleanPatch.toolSettings || {});
-    }
+    const savedToolSettings = 'toolSettings' in cleanPatch
+        ? serializeToolSettings(cleanPatch.toolSettings || {})
+        : null;
+    if (savedToolSettings) delete cleanPatch.toolSettings;
 
     if ('linkPreview' in cleanPatch) {
         cleanPatch.linkPreview = normalizeLinkPreviewSettings(cleanPatch.linkPreview || {});
@@ -442,9 +444,15 @@ export async function saveSiteConfigSection(sectionPatch) {
         };
     }
 
+    if (savedToolSettings) {
+        await setDoc(configRef, { toolSettings: savedToolSettings }, { mergeFields: ['toolSettings'] });
+    }
     await setDoc(configRef, cleanPatch, { merge: true });
 
-    return cleanPatch;
+    return {
+        ...cleanPatch,
+        ...(savedToolSettings ? { toolSettings: savedToolSettings } : {}),
+    };
 }
 
 /* =========================

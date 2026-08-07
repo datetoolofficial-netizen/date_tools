@@ -104,7 +104,7 @@ function getDifferenceText(diff) {
     return formatHourDifference(diff);
 }
 
-export default function ClockPage({ hideHero = false }) {
+export default function ClockPage({ hideHero = false, initialSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -138,7 +138,7 @@ export default function ClockPage({ hideHero = false }) {
         };
     }, [firebaseApiRef]);
 
-    useSectionHashScroll(CLOCK_SECTION_IDS);
+    useSectionHashScroll(CLOCK_SECTION_IDS, true, initialSectionId);
 
     useEffect(() => {
         if (!currentLocation) return;
@@ -257,8 +257,8 @@ export default function ClockPage({ hideHero = false }) {
             {!hideHero && <div className="tools-hero clock-hero">
                 <i className="fa-solid fa-clock"></i>
                 <div>
-                    <h1>{clockSettings.seo?.h1 || clockSettings.heroTitle}</h1>
-                    <p>{clockSettings.heroDescription}</p>
+                    <h1>{clockSettings.seo?.h1}</h1>
+                    <p>{clockSettings.seo?.metaDescription}</p>
                 </div>
             </div>}
 

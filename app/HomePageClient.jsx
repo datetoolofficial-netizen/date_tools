@@ -84,7 +84,7 @@ function HomePageSkeleton() {
     );
 }
 
-export default function HomePageClient({ children, focusTool = '', hideHero = false }) {
+export default function HomePageClient({ children, focusTool = '', hideHero = false, initialSectionId = '' }) {
     const { lang, configData, isSiteLoading, firebaseApiRef } = useSiteContext();
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
     const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
@@ -508,7 +508,7 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
 
     const isPageLoading = isSiteLoading || configData === null;
 
-    useSectionHashScroll(DATE_SECTION_IDS, !isPageLoading && !focusTool);
+    useSectionHashScroll(DATE_SECTION_IDS, !isPageLoading, initialSectionId);
     const dateToolSettings = getToolSettings(configData, 'date');
     const dateFaqItems = getToolFaqs(configData, 'date');
 
@@ -528,8 +528,8 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                         {!hideHero && <div className="tools-hero date-tools-hero">
                             <i className="fa-solid fa-calendar-days"></i>
                             <div>
-                                <h1>{dateToolSettings.seo?.h1 || dateToolSettings.heroTitle || i18n[lang].pageTitle}</h1>
-                                <p>{dateToolSettings.heroDescription || i18n[lang].pageDescription}</p>
+                                <h1>{dateToolSettings.seo?.h1 || i18n[lang].pageTitle}</h1>
+                                <p>{dateToolSettings.seo?.metaDescription || i18n[lang].pageDescription}</p>
                             </div>
                         </div>}
 

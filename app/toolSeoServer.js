@@ -54,8 +54,8 @@ export async function getManagedToolPage(toolKey, subtoolKey = '') {
         config,
         settings,
         seo,
-        title: seo?.h1 || settings.heroTitle,
-        description: subtoolKey ? seo?.metaDescription : settings.heroDescription,
+        title: seo?.h1,
+        description: seo?.metaDescription,
         path: seo?.canonical || '/',
         keywords: [seo?.primaryKeyword, ...splitKeywords(seo?.supportingKeywords)].filter(Boolean),
     };

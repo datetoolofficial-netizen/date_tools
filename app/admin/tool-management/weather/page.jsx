@@ -10,7 +10,7 @@ export default function AdminWeatherToolPage() {
             icon="fa-cloud-sun"
             loadingTitle="جاري فتح إدارة أداة الطقس..."
             title="إدارة أداة الطقس"
-            description="إعدادات خاصة بصفحة الطقس: عنوان السكشن التعريفي، السلوغن، أسماء أدوات الطقس، والأسئلة الإضافية."
+            description="إعدادات خاصة بصفحة الطقس: SEO، أسماء أدوات الطقس، نصوص المشاركة، والأسئلة الإضافية."
         >
             {({ firebaseApi, showMessage }) => (
                 <ToolContentSettings firebaseApi={firebaseApi} showMessage={showMessage} toolKey="weather" />

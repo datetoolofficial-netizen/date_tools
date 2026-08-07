@@ -116,7 +116,7 @@ async function fetchForecast(latitude, longitude) {
     return forecastResponse.json();
 }
 
-export default function WeatherPage({ hideHero = false }) {
+export default function WeatherPage({ hideHero = false, initialSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -231,15 +231,15 @@ export default function WeatherPage({ hideHero = false }) {
     const weatherFaqItems = getToolFaqs(configData, 'weather');
     const shouldReserveWeatherResults = isLoading && !current && !error;
 
-    useSectionHashScroll(WEATHER_SECTION_IDS, !isLoading);
+    useSectionHashScroll(WEATHER_SECTION_IDS, !isLoading, initialSectionId);
 
     return (
         <section className="tools-page">
             {!hideHero && <div className="tools-hero weather-hero">
                 <i className="fa-solid fa-cloud-sun-rain"></i>
                 <div>
-                    <h1>{weatherSettings.seo?.h1 || weatherSettings.heroTitle}</h1>
-                    <p>{weatherSettings.heroDescription}</p>
+                    <h1>{weatherSettings.seo?.h1}</h1>
+                    <p>{weatherSettings.seo?.metaDescription}</p>
                 </div>
             </div>}
 

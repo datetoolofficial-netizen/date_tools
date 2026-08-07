@@ -137,7 +137,7 @@ const dateSubtoolContent = {
 };
 
 export default function ToolSeoContent({ tool, subtool = '' }) {
-    const content = subtool ? dateSubtoolContent[subtool] : toolContent[tool];
+    const content = subtool ? dateSubtoolContent[subtool] || toolContent[tool] : toolContent[tool];
     if (!content) return null;
 
     return (

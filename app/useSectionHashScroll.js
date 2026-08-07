@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-export function useSectionHashScroll(validTargetIds, ready = true) {
+export function useSectionHashScroll(validTargetIds, ready = true, initialTargetId = '') {
     useEffect(() => {
         if (!ready || typeof window === 'undefined') return undefined;
 
@@ -10,7 +10,7 @@ export function useSectionHashScroll(validTargetIds, ready = true) {
         let nestedFrameId = 0;
 
         const scrollToHashTarget = () => {
-            const targetId = window.location.hash.replace(/^#/, '');
+            const targetId = window.location.hash.replace(/^#/, '') || initialTargetId;
             if (!validTargetIds.includes(targetId)) return;
 
             frameId = window.requestAnimationFrame(() => {
@@ -31,5 +31,5 @@ export function useSectionHashScroll(validTargetIds, ready = true) {
             window.cancelAnimationFrame(frameId);
             window.cancelAnimationFrame(nestedFrameId);
         };
-    }, [ready, validTargetIds]);
+    }, [initialTargetId, ready, validTargetIds]);
 }

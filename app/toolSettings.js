@@ -1,3 +1,5 @@
+import { TOOL_SECTION_ROUTES } from '../toolSectionRoutes';
+
 export const TOOL_SETTING_KEYS = ['date', 'clock', 'weather'];
 
 const DEFAULT_SEO_LAST_MODIFIED = '2026-08-04';
@@ -102,9 +104,6 @@ export const SHARE_TEMPLATE_DEFINITIONS = {
 
 export const DEFAULT_TOOL_SETTINGS = {
     date: {
-        label: 'أداة التاريخ',
-        heroTitle: 'أدوات التاريخ الشاملة',
-        heroDescription: 'أداة شاملة لحساب العمر وتحويل التواريخ بدقة',
         seo: {
             searchTitle: 'حاسبة العمر وتحويل التاريخ وحساب المدة | الأدوات الشاملة',
             metaDescription: 'احسب عمرك بالهجري والميلادي، وحوّل التاريخ بين التقويمين، واحسب المدة بين تاريخين عبر أدوات عربية سريعة وواضحة.',
@@ -163,9 +162,6 @@ export const DEFAULT_TOOL_SETTINGS = {
         faqs: [],
     },
     clock: {
-        label: 'أداة الساعة',
-        heroTitle: 'أدوات الساعة والوقت',
-        heroDescription: 'تحويل نظام الساعة، معرفة الوقت الحالي، وحساب فرق التوقيت بسرعة.',
         seo: {
             searchTitle: 'تحويل الساعة وحساب فرق التوقيت بين المدن',
             metaDescription: 'حوّل الوقت من نظام 24 إلى 12 ساعة، واعرف الوقت الحالي، واحسب فرق التوقيت بين مدينتين بسهولة.',
@@ -210,9 +206,6 @@ export const DEFAULT_TOOL_SETTINGS = {
         faqs: [],
     },
     weather: {
-        label: 'أداة الطقس',
-        heroTitle: 'أدوات الطقس',
-        heroDescription: 'اعرف طقس مدينتك، مؤشر الحرارة المحسوسة، الرطوبة، الرياح وUV بسرعة.',
         seo: {
             searchTitle: 'حالة الطقس اليوم وتوقعات 5 أيام',
             metaDescription: 'اعرف طقس مدينتك ودرجة الحرارة المحسوسة والرطوبة والرياح وتوقع المطر ومؤشر UV مع توقعات الأيام القادمة.',
@@ -336,10 +329,18 @@ function normalizeSubtoolSeo(toolKey, subtoolSeo = {}) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.subtoolSeo || {};
 
     return Object.fromEntries(
-        Object.entries(defaults).map(([key, fallback]) => [
-            key,
-            normalizeSeoRecord(subtoolSeo?.[key], fallback),
-        ])
+        Object.entries(defaults).map(([key, fallback]) => {
+            const normalized = normalizeSeoRecord(subtoolSeo?.[key], fallback);
+            const publicPath = TOOL_SECTION_ROUTES[toolKey]?.[key]?.publicPath;
+
+            return [
+                key,
+                {
+                    ...normalized,
+                    canonical: publicPath || normalized.canonical,
+                },
+            ];
+        })
     );
 }
 
@@ -381,9 +382,6 @@ export function normalizeToolSettings(settings = {}) {
             return [
                 toolKey,
                 {
-                    label: String(value.label || defaults.label).trim() || defaults.label,
-                    heroTitle: String(value.heroTitle || defaults.heroTitle).trim() || defaults.heroTitle,
-                    heroDescription: String(value.heroDescription || defaults.heroDescription).trim() || defaults.heroDescription,
                     seo: normalizeSeoRecord(value.seo, defaults.seo),
                     subtoolSeo: normalizeSubtoolSeo(toolKey, value.subtoolSeo),
                     subtools: normalizeSubtools(toolKey, value.subtools),
@@ -393,6 +391,24 @@ export function normalizeToolSettings(settings = {}) {
                 },
             ];
         })
+    );
+}
+
+export function serializeToolSettings(settings = {}) {
+    const normalized = normalizeToolSettings(settings);
+
+    return Object.fromEntries(
+        Object.entries(normalized).map(([toolKey, value]) => [
+            toolKey,
+            {
+                seo: value.seo,
+                subtoolSeo: value.subtoolSeo,
+                subtools: value.subtools,
+                shareTemplates: value.shareTemplates,
+                shareEnabled: value.shareEnabled,
+                faqs: value.faqs,
+            },
+        ])
     );
 }
 

@@ -12,15 +12,21 @@ export const TOOL_SECTION_ROUTES = Object.freeze({
         weatherSearch: Object.freeze({ publicPath: '/weather-search', pagePath: '/weather', sectionId: 'weather-search' }),
         currentWeather: Object.freeze({ publicPath: '/current-weather', pagePath: '/weather', sectionId: 'current-weather' }),
         outdoorAdvice: Object.freeze({ publicPath: '/outdoor-advice', pagePath: '/weather', sectionId: 'outdoor-advice' }),
-        weatherForecast: Object.freeze({ publicPath: '/weather-forecast', pagePath: '/weather', sectionId: 'weather-forecast' }),
+        forecast: Object.freeze({ publicPath: '/weather-forecast', pagePath: '/weather', sectionId: 'weather-forecast' }),
     }),
 });
 
-export const TOOL_SECTION_REDIRECTS = new Map(
-    Object.values(TOOL_SECTION_ROUTES)
-        .flatMap((routes) => Object.values(routes))
-        .map(({ publicPath, pagePath, sectionId }) => [
-            publicPath,
-            { pathname: pagePath, hash: sectionId },
-        ])
+export const TOOL_SECTION_ROUTE_ENTRIES = Object.freeze(
+    Object.entries(TOOL_SECTION_ROUTES).flatMap(([toolKey, routes]) => (
+        Object.entries(routes).map(([subtoolKey, route]) => Object.freeze({
+            toolKey,
+            subtoolKey,
+            ...route,
+        }))
+    ))
 );
+
+export function getToolSectionRouteBySlug(slug = '') {
+    const publicPath = `/${String(slug).trim().replace(/^\/+|\/+$/g, '')}`;
+    return TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === publicPath) || null;
+}

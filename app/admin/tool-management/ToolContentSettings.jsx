@@ -93,13 +93,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         };
     }, [defaults, firebaseApi, showMessage, toolKey]);
 
-    const updateField = (field, value) => {
-        setSettings((current) => ({
-            ...current,
-            [field]: value,
-        }));
-    };
-
     const updateSubtool = (key, value) => {
         setSettings((current) => ({
             ...current,
@@ -227,28 +220,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
     return (
         <section className="legacy-google-card tools-section-card tool-content-settings">
-            <div className="tools-section-head">
-                <div className="tools-section-title">
-                    <h2>نصوص الأداة</h2>
-                    <p>عدّل عنوان السكشن التعريفي، السلوغن، أسماء الأدوات الفرعية، والأسئلة الإضافية لهذه الأداة.</p>
-                </div>
-            </div>
-
-            <div className="legacy-form-grid tool-content-grid">
-                <label className="legacy-field">
-                    <span>اسم الأداة في الإدارة</span>
-                    <input value={settings.label || ''} onChange={(event) => updateField('label', event.target.value)} />
-                </label>
-                <label className="legacy-field">
-                    <span>عنوان السكشن التعريفي</span>
-                    <input value={settings.heroTitle || ''} onChange={(event) => updateField('heroTitle', event.target.value)} />
-                </label>
-                <label className="legacy-field full-width">
-                    <span>نص السلوغن / الوصف</span>
-                    <textarea rows={3} value={settings.heroDescription || ''} onChange={(event) => updateField('heroDescription', event.target.value)} />
-                </label>
-            </div>
-
             <div className="tool-seo-admin">
                 <div className="tools-section-head compact-head">
                     <div className="tools-section-title">
@@ -260,7 +231,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 <SeoFields
                     seo={settings.seo}
                     onChange={updateSeo}
-                    previewLabel={settings.label}
+                    previewLabel={settings.seo?.h1 || defaults.seo?.h1}
                 />
 
                 {Object.entries(defaults.subtoolSeo || {}).map(([subtoolKey]) => (
@@ -503,6 +474,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
+    const canonical = publicPath || seo.canonical || '/';
 
     return (
         <div className="tool-seo-fields-layout">
@@ -529,27 +501,23 @@ function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
                     <span>العبارات المساندة</span>
                     <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder="افصل بينها بفاصلة" />
                 </label>
-                <label className="legacy-field full-width">
-                    <span>الرابط الأساسي Canonical</span>
-                    <input dir="ltr" value={seo.canonical || '/'} onChange={(event) => onChange('canonical', event.target.value)} placeholder="/clock" />
-                </label>
-                {publicPath && (
-                    <div className="legacy-field full-width tool-seo-public-link">
-                        <span>رابط الأداة المخصص</span>
-                        <div className="tool-seo-public-link-row">
-                            <code dir="ltr">{getSearchPreviewUrl(publicPath)}</code>
-                            <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة المخصص">
-                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
-                                فتح
-                            </Link>
-                        </div>
-                        <small>يفتح الصفحة الأساسية وينتقل مباشرة إلى هذه الأداة.</small>
-                    </div>
+                {!publicPath && (
+                    <label className="legacy-field full-width">
+                        <span>الرابط الأساسي Canonical</span>
+                        <input dir="ltr" value={canonical} onChange={(event) => onChange('canonical', event.target.value)} placeholder="/clock" />
+                    </label>
                 )}
             </div>
 
             <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
-                <small>{getSearchPreviewUrl(seo.canonical)}</small>
+                <div className="tool-search-preview-url">
+                    <small>{getSearchPreviewUrl(canonical)}</small>
+                    {publicPath && (
+                        <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة">
+                            <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                        </Link>
+                    )}
+                </div>
                 <strong>{searchTitle || 'عنوان نتيجة البحث'}</strong>
                 <p>{description || 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.'}</p>
                 <span>H1: {seo.h1 || previewLabel}</span>

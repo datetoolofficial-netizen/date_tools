@@ -1,5 +1,6 @@
 import { SITE_URL, publicToolSeo } from './seoConfig';
 import { normalizeToolSettings } from './toolSettings';
+import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 
 export const revalidate = 3600;
 
@@ -16,6 +17,7 @@ const reservedSlugs = new Set([
     'sitemap.xml',
     'llms.txt',
     'ads.txt',
+    ...TOOL_SECTION_ROUTE_ENTRIES.map(({ publicPath }) => publicPath.slice(1)),
 ]);
 
 const legacyAliasSlugs = new Set(['about']);
@@ -133,11 +135,20 @@ function normalizeLastModified(value) {
 
 function collectToolEntries(settings = {}) {
     const tools = normalizeToolSettings(settings.toolSettings || {});
-    return [
+    const mainTools = [
         { path: publicToolSeo.date.path, changeFrequency: 'weekly', priority: 1, lastModified: tools.date.seo?.lastModified },
         { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.clock.seo?.lastModified },
         { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.weather.seo?.lastModified },
     ];
+
+    const subtools = TOOL_SECTION_ROUTE_ENTRIES.map(({ toolKey, subtoolKey, publicPath }) => ({
+        path: publicPath,
+        changeFrequency: 'weekly',
+        priority: toolKey === 'date' ? 0.9 : 0.8,
+        lastModified: tools[toolKey]?.subtoolSeo?.[subtoolKey]?.lastModified,
+    }));
+
+    return [...mainTools, ...subtools];
 }
 
 export default async function sitemap() {
