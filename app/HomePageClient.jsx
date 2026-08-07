@@ -504,6 +504,25 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
     };
 
     const isPageLoading = isSiteLoading || configData === null;
+
+    useEffect(() => {
+        if (isPageLoading || focusTool || typeof window === 'undefined') return undefined;
+
+        const targetId = window.location.hash.replace(/^#/, '');
+        const validTargets = new Set(['age-calculator', 'date-converter', 'date-difference']);
+        if (!validTargets.has(targetId)) return undefined;
+
+        const frameId = window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                document.getElementById(targetId)?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            });
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
+    }, [focusTool, isPageLoading]);
     const dateToolSettings = getToolSettings(configData, 'date');
     const dateFaqItems = getToolFaqs(configData, 'date');
 

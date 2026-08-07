@@ -6,6 +6,12 @@ const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-maskable-512.png',
 ]);
 
+const DATE_TOOL_SECTION_REDIRECTS = new Map([
+    ['/age-calculator', 'age-calculator'],
+    ['/date-converter', 'date-converter'],
+    ['/date-difference', 'date-difference'],
+]);
+
 const INTERNAL_NO_INDEX_PREFIXES = [
     '/admin',
     '/admin_login',
@@ -66,6 +72,24 @@ export function middleware(request) {
     if (host.toLowerCase() === 'www.date-tool.com') {
         const url = request.nextUrl.clone();
         url.hostname = 'date-tool.com';
+        return applySecurityHeaders(NextResponse.redirect(url, 308));
+    }
+
+    if (pathname === '/about') {
+        return applySecurityHeaders(new NextResponse('', {
+            status: 404,
+            headers: {
+                'Cache-Control': 'no-store',
+                'X-Robots-Tag': 'noindex, nofollow, noarchive',
+            },
+        }));
+    }
+
+    if (DATE_TOOL_SECTION_REDIRECTS.has(pathname)) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        url.search = '';
+        url.hash = DATE_TOOL_SECTION_REDIRECTS.get(pathname);
         return applySecurityHeaders(NextResponse.redirect(url, 308));
     }
 

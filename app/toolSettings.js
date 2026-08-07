@@ -2,12 +2,6 @@ export const TOOL_SETTING_KEYS = ['date', 'clock', 'weather'];
 
 const DEFAULT_SEO_LAST_MODIFIED = '2026-08-04';
 
-export const DATE_SUBTOOL_ROUTES = {
-    ageCalc: '/age-calculator',
-    dateConverter: '/date-converter',
-    durationCalc: '/date-difference',
-};
-
 export const SHARE_TEMPLATE_DEFINITIONS = {
     date: {
         eventsResult: {
@@ -127,7 +121,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حاسبة العمر بالهجري والميلادي',
                 primaryKeyword: 'حاسبة العمر',
                 supportingKeywords: 'حساب العمر بالهجري, حساب العمر بالميلادي, احسب عمرك',
-                canonical: DATE_SUBTOOL_ROUTES.ageCalc,
+                canonical: '/',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
             dateConverter: {
@@ -136,7 +130,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'تحويل التاريخ الهجري والميلادي',
                 primaryKeyword: 'تحويل التاريخ',
                 supportingKeywords: 'تحويل هجري لميلادي, تحويل ميلادي لهجري, محول التاريخ',
-                canonical: DATE_SUBTOOL_ROUTES.dateConverter,
+                canonical: '/',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
             durationCalc: {
@@ -145,7 +139,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 h1: 'حساب المدة بين تاريخين',
                 primaryKeyword: 'حساب المدة بين تاريخين',
                 supportingKeywords: 'الفرق بين تاريخين, حاسبة الأيام, حساب المدة بالهجري والميلادي',
-                canonical: DATE_SUBTOOL_ROUTES.durationCalc,
+                canonical: '/',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
         },

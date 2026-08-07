@@ -85,6 +85,51 @@ function validatePageSlugs(pages = []) {
     return { isValid: true, message: '' };
 }
 
+function getPageSnapshots(config = {}) {
+    const snapshots = new Map();
+
+    (config.internalPages || []).forEach((page) => {
+        const slug = normalizeSlug(page?.slug);
+        if (!slug) return;
+        const customPage = config.customPages?.[slug] || {};
+        snapshots.set(slug, JSON.stringify({
+            title: page?.title || '',
+            location: page?.location || 'footer',
+            enabled: page?.enabled !== false,
+            contentTitle: customPage?.title || '',
+            content: customPage?.content || '',
+        }));
+    });
+
+    return snapshots;
+}
+
+function getChangedPageSlugs(previousConfig = {}, nextConfig = {}) {
+    const previous = getPageSnapshots(previousConfig);
+    const next = getPageSnapshots(nextConfig);
+    const slugs = new Set([...previous.keys(), ...next.keys()]);
+    return Array.from(slugs).filter((slug) => previous.get(slug) !== next.get(slug));
+}
+
+function stampChangedPages(config, changedSlugs, timestamp) {
+    const changed = new Set(changedSlugs);
+    if (changed.size === 0) return config;
+
+    return {
+        ...config,
+        internalPages: (config.internalPages || []).map((page) => {
+            const slug = normalizeSlug(page?.slug);
+            return changed.has(slug) ? { ...page, lastModified: timestamp } : page;
+        }),
+        customPages: Object.fromEntries(
+            Object.entries(config.customPages || {}).map(([slug, page]) => [
+                slug,
+                changed.has(normalizeSlug(slug)) ? { ...page, lastModified: timestamp } : page,
+            ])
+        ),
+    };
+}
+
 function normalizePagePath(value) {
     const cleanValue = String(value || '/').trim();
     if (!cleanValue || cleanValue === '/') return '/';
@@ -250,6 +295,7 @@ export default function AdminToolsPage() {
     const [editingRow, setEditingRow] = useState(null);
     const [addItemModal, setAddItemModal] = useState(null);
     const firebaseApiRef = useRef(null);
+    const persistedToolsConfigRef = useRef(pickToolsConfig());
     const messageTimerRef = useRef(null);
 
     useEffect(() => {
@@ -289,7 +335,9 @@ export default function AdminToolsPage() {
 
                         setAdminName(adminProfile.name || adminProfile.email || 'أيها المدير');
                         setAdminRole(adminProfile.role === 'super_admin' ? 'المدير العام' : 'مدير');
-                        setToolsConfig(pickToolsConfig(await getSiteConfig()));
+                        const loadedConfig = pickToolsConfig(await getSiteConfig());
+                        persistedToolsConfigRef.current = loadedConfig;
+                        setToolsConfig(loadedConfig);
                     } catch (error) {
                         console.error('Error loading tools page:', error);
                         if (isMounted) setLoadError('حدث خطأ في قراءة إعدادات الأداة.');
@@ -346,6 +394,27 @@ export default function AdminToolsPage() {
         }
     };
 
+    const notifyIndexNow = async (slugs) => {
+        const currentUser = firebaseApiRef.current?.auth?.currentUser;
+        if (!currentUser || slugs.length === 0) return;
+
+        try {
+            const token = await currentUser.getIdToken();
+            const response = await fetch('/api/admin/indexnow', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ urls: slugs.map((slug) => `/${normalizeSlug(slug)}`) }),
+            });
+
+            if (!response.ok) throw new Error(`indexnow_${response.status}`);
+        } catch (error) {
+            console.warn('IndexNow notification failed:', error);
+        }
+    };
+
     const saveTools = async () => {
         const firebaseApi = firebaseApiRef.current;
         if (!firebaseApi?.saveSiteConfigSection) {
@@ -359,12 +428,18 @@ export default function AdminToolsPage() {
             return;
         }
 
+        const changedPageSlugs = getChangedPageSlugs(persistedToolsConfigRef.current, toolsConfig);
+        const configToSave = stampChangedPages(toolsConfig, changedPageSlugs, new Date().toISOString());
+
         setSaving(true);
         showMessage('info', 'جاري حفظ إعدادات الأداة...');
 
         try {
-            const savedPatch = await firebaseApi.saveSiteConfigSection(toolsConfig);
-            setToolsConfig(pickToolsConfig(savedPatch));
+            const savedPatch = await firebaseApi.saveSiteConfigSection(configToSave);
+            const savedConfig = pickToolsConfig(savedPatch);
+            persistedToolsConfigRef.current = savedConfig;
+            setToolsConfig(savedConfig);
+            await notifyIndexNow(changedPageSlugs);
             showMessage('success', 'تم حفظ إعدادات الأداة بنجاح.');
         } catch (error) {
             console.error('Error saving tools:', error);
@@ -656,6 +731,8 @@ export default function AdminToolsPage() {
                     ? { ...customPages, [slug]: { __delete: true } }
                     : customPages,
             });
+            persistedToolsConfigRef.current = nextConfig;
+            await notifyIndexNow(slug ? [slug] : []);
             showMessage('success', 'تم حذف الصفحة من Firebase بنجاح.');
         } catch (error) {
             console.error('Error deleting page:', error);

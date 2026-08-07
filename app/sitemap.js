@@ -1,5 +1,5 @@
 import { SITE_URL, publicToolSeo } from './seoConfig';
-import { DATE_SUBTOOL_ROUTES, normalizeToolSettings } from './toolSettings';
+import { normalizeToolSettings } from './toolSettings';
 
 export const revalidate = 3600;
 
@@ -133,15 +133,10 @@ function normalizeLastModified(value) {
 
 function collectToolEntries(settings = {}) {
     const tools = normalizeToolSettings(settings.toolSettings || {});
-    const dateSubtools = tools.date.subtoolSeo || {};
-
     return [
         { path: publicToolSeo.date.path, changeFrequency: 'weekly', priority: 1, lastModified: tools.date.seo?.lastModified },
         { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.clock.seo?.lastModified },
         { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.weather.seo?.lastModified },
-        { path: DATE_SUBTOOL_ROUTES.ageCalc, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.ageCalc?.lastModified },
-        { path: DATE_SUBTOOL_ROUTES.dateConverter, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.dateConverter?.lastModified },
-        { path: DATE_SUBTOOL_ROUTES.durationCalc, changeFrequency: 'weekly', priority: 0.9, lastModified: dateSubtools.durationCalc?.lastModified },
     ];
 }
 

@@ -1,7 +1,7 @@
 import { resolveLinkPreview } from '../linkPreview';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
 import PageClient from './PageClient';
-import { permanentRedirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,7 +146,7 @@ async function getMetadataConfig() {
 export async function generateMetadata({ params }) {
     const resolvedParams = await params;
     const slug = normalizeSlug(resolvedParams?.slug || '');
-    const canonicalPath = slug === 'about' ? '/about-us' : (slug ? `/${slug}` : '/');
+    const canonicalPath = slug ? `/${slug}` : '/';
     const config = await getMetadataConfig();
     const page = findPageBySlug(config, slug);
     const preview = resolveLinkPreview(config);
@@ -184,7 +184,7 @@ export default async function Page({ params }) {
     const resolvedParams = await params;
     const slug = normalizeSlug(resolvedParams?.slug || '');
 
-    if (slug === 'about') permanentRedirect('/about-us');
+    if (slug === 'about') notFound();
 
     return <PageClient slug={slug} />;
 }

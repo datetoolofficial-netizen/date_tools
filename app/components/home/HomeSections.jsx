@@ -210,7 +210,7 @@ export function AgeCalculatorSection({
     const result = isGregorian ? results.resAgeGreg : results.resAgeHijri;
 
     return (
-        <div className="card">
+        <div className="card" id="age-calculator">
             <h2>{title || labels.hCalcAge}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
@@ -271,7 +271,7 @@ export function DateConversionSection({
     const result = isGregorian ? results.resHijriConv : results.resGregConv;
 
     return (
-        <div className="card">
+        <div className="card" id="date-converter">
             <h2>{title || labels.hConv}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />
@@ -316,7 +316,7 @@ export function DurationSection({
     const result = isGregorian ? results.resDiffGreg : results.resDiffHijri;
 
     return (
-        <div className="card">
+        <div className="card" id="date-difference">
             <h2>{title || labels.hDiff}</h2>
             <div className="tool-mode-card">
                 <CalendarModeSwitch labels={labels} value={calendarMode} onChange={onCalendarModeChange} />

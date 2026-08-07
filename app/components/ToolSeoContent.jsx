@@ -1,12 +1,5 @@
-import Link from 'next/link';
-
 const toolContent = {
     date: {
-        links: [
-            { href: '/age-calculator', label: 'حاسبة العمر' },
-            { href: '/date-converter', label: 'تحويل التاريخ' },
-            { href: '/date-difference', label: 'حساب المدة بين تاريخين' },
-        ],
         sections: [
             {
                 title: 'دليل أدوات التاريخ',
@@ -149,13 +142,6 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
 
     return (
         <div className="seo-sections-wrapper tool-seo-content">
-            {Array.isArray(content.links) && content.links.length > 0 && (
-                <nav className="tool-seo-links" aria-label="روابط أدوات التاريخ المتخصصة">
-                    {content.links.map((link) => (
-                        <Link href={link.href} key={link.href}>{link.label}</Link>
-                    ))}
-                </nav>
-            )}
             {content.sections.map((section) => (
                 <section className="seo-card tool-seo-card" key={section.title}>
                     <h2>{section.title}</h2>
