@@ -209,7 +209,7 @@ export default function AdminSupportPage() {
             <main className="legacy-main-wrapper">
                 <section className="legacy-ads-hero admin-support-hero">
                     <div>
-                        <h1><i className="fa-solid fa-headset"></i> إدارة التذاكر</h1>
+                        <h1><i className="fa-solid fa-ticket"></i> إدارة التذاكر</h1>
                         <p>متابعة رسائل العملاء، المرفقات، وحالة كل طلب دعم من مكان واحد.</p>
                     </div>
                 </section>
@@ -222,10 +222,26 @@ export default function AdminSupportPage() {
                 )}
 
                 <section className="admin-support-kpis" aria-label="إحصاءات التذاكر">
-                    <div><span>إجمالي التذاكر</span><strong>{counters.all}</strong></div>
-                    <div><span>جديدة</span><strong>{counters.new}</strong></div>
-                    <div><span>قيد المعالجة</span><strong>{counters.active}</strong></div>
-                    <div><span>مغلقة</span><strong>{counters.closed}</strong></div>
+                    <div className="all">
+                        <i className="fa-solid fa-ticket" aria-hidden="true"></i>
+                        <span>إجمالي التذاكر</span>
+                        <strong>{counters.all}</strong>
+                    </div>
+                    <div className="new">
+                        <i className="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
+                        <span>جديدة</span>
+                        <strong>{counters.new}</strong>
+                    </div>
+                    <div className="active">
+                        <i className="fa-solid fa-spinner" aria-hidden="true"></i>
+                        <span>قيد المعالجة</span>
+                        <strong>{counters.active}</strong>
+                    </div>
+                    <div className="closed">
+                        <i className="fa-solid fa-circle-check" aria-hidden="true"></i>
+                        <span>مغلقة</span>
+                        <strong>{counters.closed}</strong>
+                    </div>
                 </section>
 
                 <section className="legacy-google-card tools-section-card admin-support-section">
