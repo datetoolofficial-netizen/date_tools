@@ -18,8 +18,9 @@ export default async function WeatherPage() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-cloud-sun-rain" className="weather-hero" />
-            <WeatherPageClient hideHero />
-            <ToolSeoContent tool="weather" />
+            <WeatherPageClient hideHero>
+                <ToolSeoContent tool="weather" />
+            </WeatherPageClient>
         </>
     );
 }

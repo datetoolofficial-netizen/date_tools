@@ -226,16 +226,14 @@ export default async function Page({ params }) {
                     </HomePageClient>
                 )}
                 {toolRoute.toolKey === 'clock' && (
-                    <>
-                        <ClockPageClient hideHero initialSectionId={toolRoute.sectionId} />
+                    <ClockPageClient hideHero initialSectionId={toolRoute.sectionId}>
                         <ToolSeoContent tool="clock" subtool={toolRoute.subtoolKey} />
-                    </>
+                    </ClockPageClient>
                 )}
                 {toolRoute.toolKey === 'weather' && (
-                    <>
-                        <WeatherPageClient hideHero initialSectionId={toolRoute.sectionId} />
+                    <WeatherPageClient hideHero initialSectionId={toolRoute.sectionId}>
                         <ToolSeoContent tool="weather" subtool={toolRoute.subtoolKey} />
-                    </>
+                    </WeatherPageClient>
                 )}
             </>
         );

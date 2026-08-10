@@ -399,7 +399,20 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         const durationStr = formatDuration(diff.years, diff.months, diff.days);
         
         setResDiffGreg(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
-        setEnteredDateInfo(null);
+        const inputLabel = `${i18n[lang].lblDate1} / ${i18n[lang].lblDate2}`;
+        const input = `${formatInputDate(gDiffInput1)} - ${formatInputDate(gDiffInput2)}`;
+        setEnteredDateInfo({
+            title: dateToolSettings.subtools?.durationCalc,
+            info: `${inputLabel}: ${input}`,
+            shareText: renderShareTemplate(dateToolSettings, 'durationResult', {
+                toolTitle: dateToolSettings.subtools?.durationCalc,
+                inputLabel,
+                input,
+                result: durationStr,
+                url: getSafeCurrentUrl(),
+            }),
+            canShare: isShareTemplateEnabled(dateToolSettings, 'durationResult'),
+        });
         firebaseApiRef.current.trackToolUsage('durationCalc');
     };
 
@@ -424,7 +437,20 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         
         const durationStr = formatDuration(years, months, days);
         setResDiffHijri(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
-        setEnteredDateInfo(null);
+        const inputLabel = `${i18n[lang].lblDate1} / ${i18n[lang].lblDate2}`;
+        const input = `${formatInputDate(hDiffInput1, 'هـ')} - ${formatInputDate(hDiffInput2, 'هـ')}`;
+        setEnteredDateInfo({
+            title: dateToolSettings.subtools?.durationCalc,
+            info: `${inputLabel}: ${input}`,
+            shareText: renderShareTemplate(dateToolSettings, 'durationResult', {
+                toolTitle: dateToolSettings.subtools?.durationCalc,
+                inputLabel,
+                input,
+                result: durationStr,
+                url: getSafeCurrentUrl(),
+            }),
+            canShare: isShareTemplateEnabled(dateToolSettings, 'durationResult'),
+        });
         firebaseApiRef.current.trackToolUsage('durationCalc');
     };
 

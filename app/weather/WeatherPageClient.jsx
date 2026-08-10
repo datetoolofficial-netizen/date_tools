@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
+import { getSafeCurrentUrl } from '../privacyConsent';
 import { useSiteContext } from '../SiteContext';
-import { getToolFaqs, getToolSettings } from '../toolSettings';
+import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from '../toolSettings';
 import { useSectionHashScroll } from '../useSectionHashScroll';
 
 const WEATHER_SECTION_IDS = ['weather-search', 'current-weather', 'outdoor-advice', 'weather-forecast'];
@@ -116,7 +117,7 @@ async function fetchForecast(latitude, longitude) {
     return forecastResponse.json();
 }
 
-export default function WeatherPage({ hideHero = false, initialSectionId = '' }) {
+export default function WeatherPage({ children, hideHero = false, initialSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -230,6 +231,31 @@ export default function WeatherPage({ hideHero = false, initialSectionId = '' })
     const weatherSettings = getToolSettings(configData, 'weather');
     const weatherFaqItems = getToolFaqs(configData, 'weather');
     const shouldReserveWeatherResults = isLoading && !current && !error;
+    const cityLabel = weather?.place?.name || query;
+    const adviceText = getOutdoorAdvice(current, daily);
+    const forecastText = daily?.time?.map((day, index) => (
+        `${new Intl.DateTimeFormat('ar-SA', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(day))}: ${Math.round(daily.temperature_2m_max[index])}° / ${Math.round(daily.temperature_2m_min[index])}° - ${weatherText(daily.weather_code[index])}`
+    )).join('\n') || '';
+
+    const shareWeatherResult = async (templateKey, variables) => {
+        if (!isShareTemplateEnabled(weatherSettings, templateKey)) return;
+
+        const text = renderShareTemplate(weatherSettings, templateKey, {
+            ...variables,
+            url: getSafeCurrentUrl(),
+        });
+        if (!text) return;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({ text });
+                return;
+            }
+            await navigator.clipboard?.writeText(text);
+        } catch {
+            // Closing the native share sheet should not interrupt the weather tool.
+        }
+    };
 
     useSectionHashScroll(WEATHER_SECTION_IDS, !isLoading, initialSectionId);
 
@@ -293,6 +319,20 @@ export default function WeatherPage({ hideHero = false, initialSectionId = '' })
                             <div><i className="fa-solid fa-umbrella"></i><span>توقع المطر</span><strong>{daily?.precipitation_probability_max?.[0] ?? 0}%</strong></div>
                             <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
                         </div>
+                        {isShareTemplateEnabled(weatherSettings, 'currentWeatherResult') && (
+                            <button className="share-btn" type="button" onClick={() => shareWeatherResult('currentWeatherResult', {
+                                city: cityLabel,
+                                temperature: `${Math.round(current.temperature_2m)}°`,
+                                condition: weatherText(current.weather_code),
+                                feelsLike: `${Math.round(current.apparent_temperature)}°`,
+                                humidity: `${current.relative_humidity_2m}%`,
+                                wind: `${Math.round(current.wind_speed_10m)} كم/س`,
+                                rainChance: `${daily?.precipitation_probability_max?.[0] ?? 0}%`,
+                                uv: String(Math.round(daily?.uv_index_max?.[0] || 0)),
+                            })}>
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                            </button>
+                        )}
                     </article>
 
                     <article className="tool-widget advice-card" id="outdoor-advice">
@@ -300,7 +340,15 @@ export default function WeatherPage({ hideHero = false, initialSectionId = '' })
                             <i className="fa-solid fa-person-walking"></i>
                             <h3>{weatherSettings.subtools?.outdoorAdvice}</h3>
                         </div>
-                        <p>{getOutdoorAdvice(current, daily)}</p>
+                        <p>{adviceText}</p>
+                        {isShareTemplateEnabled(weatherSettings, 'outdoorAdviceResult') && (
+                            <button className="share-btn" type="button" onClick={() => shareWeatherResult('outdoorAdviceResult', {
+                                city: cityLabel,
+                                advice: adviceText,
+                            })}>
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                            </button>
+                        )}
                     </article>
                 </>
             ) : shouldReserveWeatherResults ? (
@@ -328,10 +376,19 @@ export default function WeatherPage({ hideHero = false, initialSectionId = '' })
                             </div>
                         ))}
                     </div>
+                    {isShareTemplateEnabled(weatherSettings, 'forecastResult') && (
+                        <button className="share-btn" type="button" onClick={() => shareWeatherResult('forecastResult', {
+                            city: cityLabel,
+                            forecast: forecastText,
+                        })}>
+                            <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                        </button>
+                    )}
                 </article>
             ) : shouldReserveWeatherResults ? (
                 <WeatherForecastPlaceholder />
             ) : null}
+            {children}
             <ToolFaqSection items={weatherFaqItems} />
 
         </section>

@@ -104,7 +104,7 @@ function getDifferenceText(diff) {
     return formatHourDifference(diff);
 }
 
-export default function ClockPage({ hideHero = false, initialSectionId = '' }) {
+export default function ClockPage({ children, hideHero = false, initialSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -382,6 +382,7 @@ export default function ClockPage({ hideHero = false, initialSectionId = '' }) {
             </article>
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label="إعلان أسفل الساعة" />
+            {children}
             <ToolFaqSection items={clockFaqItems} />
 
         </section>

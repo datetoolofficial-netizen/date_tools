@@ -5,46 +5,41 @@ import Link from 'next/link';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 import { TOOL_SECTION_ROUTES } from '../../../toolSectionRoutes';
 
-const SHARE_PREVIEW_VALUES = {
+const COMMON_SHARE_PREVIEW_VALUES = {
     title: 'مواعيدي القادمة',
     events: 'الراتب: متبقي 5 أيام\nحساب المواطن: متبقي 12 يوم',
-    toolTitle: 'احسب عمرك بدقة',
-    inputLabel: 'التاريخ المستخدم',
-    input: '23 يوليو 2017',
-    result: '9 سنوات',
-    inputHour: '13',
-    inputMinute: '30',
-    fromCity: 'الرياض',
-    toCity: 'لندن',
-    difference: 'ساعتين',
-    fromTime: '13:30',
-    toTime: '11:30',
-    city: 'الرياض',
-    temperature: '32°',
-    condition: 'سماء صافية',
-    feelsLike: '34°',
-    humidity: '22%',
-    wind: '14 كم/س',
-    rainChance: '0%',
-    uv: '6',
-    advice: 'الأجواء مناسبة للخروج مع تجنب شمس الظهيرة.',
-    forecast: 'اليوم: 32° / 24° - صافي\nغدًا: 31° / 23° - غائم جزئيًا',
     url: 'https://date-tool.com',
+};
+
+const SHARE_PREVIEW_VALUES_BY_TEMPLATE = {
+    ageResult: { toolTitle: 'احسب عمرك بدقة', inputLabel: 'تاريخ الميلاد المستخدم', input: '23 يوليو 2017', result: '9 سنوات' },
+    dateConversionResult: { toolTitle: 'تحويل التاريخ', inputLabel: 'التاريخ المستخدم', input: '23 يوليو 2026', result: '8 صفر 1448 هـ' },
+    durationResult: { toolTitle: 'حساب المدة بين تاريخين', inputLabel: 'التاريخان المستخدمان', input: '23 يوليو 2017 و23 يوليو 2026', result: '9 سنوات' },
+    timeConverterResult: { input: '13:30', inputHour: '13', inputMinute: '30', result: '1:30 م' },
+    timezoneDiffResult: { fromCity: 'الرياض', toCity: 'لندن', difference: 'ساعتين', fromTime: '13:30', toTime: '11:30' },
+    currentWeatherResult: { city: 'الرياض', temperature: '32°', condition: 'سماء صافية', feelsLike: '34°', humidity: '22%', wind: '14 كم/س', rainChance: '0%', uv: '6' },
+    outdoorAdviceResult: { city: 'الرياض', advice: 'الأجواء مناسبة للخروج مع تجنب شمس الظهيرة.' },
+    forecastResult: { city: 'الرياض', forecast: 'اليوم: 32° / 24° - صافي\nغدًا: 31° / 23° - غائم جزئيًا' },
 };
 
 function cloneToolSettings(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-function renderSharePreview(template = '') {
+function renderSharePreview(template = '', templateKey = '') {
+    const previewValues = {
+        ...COMMON_SHARE_PREVIEW_VALUES,
+        ...(SHARE_PREVIEW_VALUES_BY_TEMPLATE[templateKey] || {}),
+    };
+
     return String(template || '').replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key) => {
-        const value = SHARE_PREVIEW_VALUES[key];
+        const value = previewValues[key];
         return value === undefined || value === null ? `{${key}}` : String(value);
     }).trim();
 }
 
-function getTemplateSummary(template = '') {
-    const preview = renderSharePreview(template);
+function getTemplateSummary(template = '', templateKey = '') {
+    const preview = renderSharePreview(template, templateKey);
     return preview || 'لا يوجد نص بعد. اكتب نص المشاركة الكامل في المربع أدناه.';
 }
 
@@ -275,8 +270,8 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             <strong>{getSharePlaceLabel(definition.label)}</strong>
                             <small>{settings.shareEnabled?.[key] === false ? 'زر المشاركة متوقف' : 'زر المشاركة مفعل'}</small>
                         </div>
-                        <div className="tool-share-current-text" title={getTemplateSummary(settings.shareTemplates?.[key])}>
-                            {getTemplateSummary(settings.shareTemplates?.[key])}
+                        <div className="tool-share-current-text" title={getTemplateSummary(settings.shareTemplates?.[key], key)}>
+                            {getTemplateSummary(settings.shareTemplates?.[key], key)}
                         </div>
                         <div className="tools-item-actions tool-share-actions">
                             <button
@@ -343,7 +338,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         <div className="tool-share-template-full">
                             <span>المعاينة بنتائج افتراضية</span>
                             <div className="tool-share-template-summary full-preview">
-                                <p>{getTemplateSummary(settings.shareTemplates?.[shareModal.key])}</p>
+                                <p>{getTemplateSummary(settings.shareTemplates?.[shareModal.key], shareModal.key)}</p>
                             </div>
                         </div>
 
