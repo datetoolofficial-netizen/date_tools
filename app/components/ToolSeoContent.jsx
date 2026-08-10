@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 const toolContent = {
     date: {
         sections: [
@@ -234,31 +232,11 @@ const subtoolContentByTool = {
     weather: weatherSubtoolContent,
 };
 
-const relatedToolLinks = {
-    date: [
-        { key: 'ageCalc', href: '/age-calculator', label: 'حاسبة العمر' },
-        { key: 'dateConverter', href: '/date-converter', label: 'تحويل التاريخ' },
-        { key: 'durationCalc', href: '/date-difference', label: 'حساب المدة بين تاريخين' },
-    ],
-    clock: [
-        { key: 'timeConverter', href: '/time-converter', label: 'تحويل الساعة من 24 إلى 12' },
-        { key: 'timezoneDiff', href: '/timezone-difference', label: 'فرق التوقيت بين مدينتين' },
-    ],
-    weather: [
-        { key: 'weatherSearch', href: '/weather-search', label: 'البحث عن الطقس حسب المدينة' },
-        { key: 'currentWeather', href: '/current-weather', label: 'حالة الطقس الحالية' },
-        { key: 'outdoorAdvice', href: '/outdoor-advice', label: 'نصيحة الخروج اليوم' },
-        { key: 'forecast', href: '/weather-forecast', label: 'توقعات الطقس لخمسة أيام' },
-    ],
-};
-
 export default function ToolSeoContent({ tool, subtool = '' }) {
     const content = subtool
         ? subtoolContentByTool[tool]?.[subtool] || toolContent[tool]
         : toolContent[tool];
     if (!content) return null;
-
-    const links = relatedToolLinks[tool] || [];
 
     return (
         <div className="seo-sections-wrapper tool-seo-content">
@@ -277,22 +255,6 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
                     )}
                 </section>
             ))}
-            {links.length > 0 && (
-                <nav className="seo-card tool-related-links" aria-label="روابط الأدوات المرتبطة">
-                    <h2>أدوات مرتبطة</h2>
-                    <div className="tool-related-links-grid">
-                        {links.map((link) => (
-                            <Link
-                                className={subtool === link.key ? 'active' : undefined}
-                                href={link.href}
-                                key={link.key}
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                    </div>
-                </nav>
-            )}
         </div>
     );
 }
