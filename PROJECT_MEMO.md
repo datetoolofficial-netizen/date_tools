@@ -9396,8 +9396,7 @@ app/admin/components/SaveButton.jsx
 اختبار إنشاء حملة فعلية من /client/create-campaign.
 اختبار ظهور الحملة في /client/dashboard لصاحبها فقط.
 إضافة إدارة حملات Firestore داخل لوحة الإدارة بدل جدول adCampaigns المحلي فقط.
-إضافة إدارة تذاكر support_tickets داخل لوحة الإدارة.
-إضافة واجهة إدارة/عرض مرفقات التذاكر في لوحة الإدارة؛ الرفع إلى R2 أصبح موجودًا من `/api/support` لكن مفاتيح `support/...` لا تُعرض عبر `/api/media` العام.
+اختبار صفحة `/admin/support` بجلسة مدير فعلية على الإنتاج: عرض التذاكر، تغيير الحالة، حفظ الملاحظة الداخلية، تنزيل مرفق خاص، وحذف تذكرة تجريبية مع مرفقها من R2.
 تحديد سياسة تفعيل الحملات من الإدارة وربط الحملات المقبولة بمواقع الإعلان على الصفحة الرئيسية.
 تفعيل Cloudflare Turnstile فعليًا لصفحات تسجيل/دخول/استعادة كلمة مرور الكلاينت بعد توفير صلاحية إنشاء Widget وSecret/Worker تحقق، وعدم الاكتفاء بواجهة شكلية.
 ```
@@ -10420,3 +10419,53 @@ git diff --check
 - احتوت صفحات `privacy` و`terms` و`about-us` على عنصر `static-page-content` في HTML الخام ولم يظهر هيكل `static-page-loading`.
 - احتوت صفحة `contact` على نموذج `contact-page-form` داخل HTML الخام دون هيكل تحميل.
 - لا يوجد تغيير بصري، وما زالت النصوص قابلة للتعديل من منصة الإدارة وتظهر خادميًا في الطلب التالي بعد مدة إعادة التحقق القصيرة.
+
+### إدارة تذاكر الدعم 0.3.21 / admin 0.1.26
+
+ما تم إنجازه:
+
+- إضافة صفحة `/admin/support` داخل هيكل الإدارة الثابت لعرض تذاكر `support_tickets` نفسها التي ينشئها نموذج التواصل العام.
+- إضافة عدادات إجمالية، بحث بالرقم والاسم والبريد والعنوان والنص، وتصفية حسب حالة التذكرة.
+- بناء جدول تذاكر متوافق مع ستايل جداول الإدارة الموحد، مع إجراءات عرض التفاصيل، تنزيل المرفق الخاص، وحذف التذكرة.
+- إضافة نافذة تفاصيل تسمح بتغيير الحالة بين: جديدة، قيد المتابعة، بانتظار العميل، ومغلقة، مع حفظ ملاحظة داخلية والرد على العميل عبر البريد.
+- إضافة مسار `/api/admin/support` للتحقق من Firebase ID Token ومن أن حساب الإدارة نشط قبل أي قراءة أو تحديث أو حذف.
+- إبقاء مفاتيح `support/...` خاصة وعدم تمريرها إلى `/api/media` العام؛ تنزيل المرفق يتم عبر استجابة خاصة غير مخزنة بعد التحقق من المدير.
+- حذف مرفق R2 عند حذف التذكرة لمنع الملفات اليتيمة، مع منع حذف مفاتيح لا تبدأ بالمسار الآمن `support/`.
+- توجيه عنصر "الدعم" في القائمة الثابتة وجميع القوائم الداخلية القديمة إلى `/admin/support`، وإتاحته للمساعد عند منحه صلاحية `support` أو `tickets`.
+- تحميل Firebase Auth عند الطلب داخل الصفحة لتقليل حجم JavaScript الأولي، وعدم تغيير نسخة الموقع العام.
+
+الملفات المتأثرة:
+
+- `app/admin/support/page.jsx`
+- `app/api/admin/support/route.js`
+- `app/admin/AdminShell.jsx`
+- `app/admin/AdminDashboard.css`
+- `app/admin/page.jsx`
+- `app/admin/ad-settings/page.jsx`
+- `app/admin/ads/page.jsx`
+- `app/admin/identity/page.jsx`
+- `app/admin/integrations/page.jsx`
+- `app/admin/pagespeed/page.jsx`
+- `app/admin/tools/page.jsx`
+- `app/admin/tool-management/ToolManagementShell.jsx`
+- `app/version.js`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm run lint
+npm run build
+npm start -- -p 3110
+Invoke-WebRequest http://localhost:3110/admin/support
+Invoke-WebRequest http://localhost:3110/api/admin/support
+git diff --check
+```
+
+الحالة:
+
+- نجح `npm run lint` دون أخطاء.
+- نجح `npm run build` وأضيفت صفحة `/admin/support` ومسار `/api/admin/support` إلى مخرجات Next.js؛ رسائل `EACCES` تخص منع اتصال Firebase الخارجي داخل بيئة الفحص ولم توقف البناء.
+- أعادت صفحة الإدارة محليًا استجابة `200`، وأعاد مسار API دون رمز مدير استجابة `401` كما يجب.
+- المتبقي اختبار دورة فعلية بعد وصول النسخة للإنتاج: فتح تذكرة حقيقية، تغيير حالتها، تنزيل مرفق، ثم حذف تذكرة تجريبية والتأكد من إزالة كائن R2.

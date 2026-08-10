@@ -75,11 +75,10 @@ const NAV_ITEMS = [
     },
     {
         id: 'support',
-        href: '/support',
+        href: '/admin/support',
         label: 'الدعم',
         icon: 'fa-headset',
         permissionKeys: ['support', 'tickets'],
-        externalToAdmin: true,
     },
 ];
 

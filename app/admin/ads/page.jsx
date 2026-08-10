@@ -210,7 +210,7 @@ function AdminNav({ active = 'ads' }) {
                 </Link>
             </li>
             <li>
-                <Link href="/support">
+                <Link href="/admin/support">
                     <i className="fa-solid fa-headset"></i>
                     <span className="nav-text">الدعم</span>
                 </Link>
