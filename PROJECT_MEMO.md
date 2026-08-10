@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.20.
+الإصدار الحالي للتطبيق هو 0.3.21.
 نسخة منصة الإدارة الحالية هي 0.1.25.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
@@ -10376,3 +10376,47 @@ rg -n "GoogleAdsenseUnit|adsbygoogle|PublicAdSlot|ca-pub|adsense" app
 
 - الربط الأساسي وملف `ads.txt` يعملان، لكن تقرير AdSense ما زال يرفض الموقع لأسباب جودة المحتوى وقيمة الشاشات الإعلانية.
 - لا يوجد ضمان للقبول بعد الإصلاح؛ قرار المراجعة النهائي بيد Google وقد يستغرق عدة أيام أو حتى بضعة أسابيع.
+
+### العرض الخادمي للصفحات المدارة من Firebase 0.3.21 / admin 0.1.25
+
+ما تم إنجازه:
+
+- جلب الصفحة العامة المطلوبة من مستند إعدادات Firebase داخل مسار `[slug]` الخادمي وتمريرها إلى مكوّن الصفحة قبل الترطيب.
+- جعل محتوى صفحات مثل `privacy` و`terms` و`about-us` موجودًا داخل HTML الأولي بدل انتظار طلب `/api/site-config` بعد تشغيل JavaScript.
+- إبقاء طلب إعدادات الصفحات في المتصفح للمزامنة اللاحقة، مع الاحتفاظ بالمحتوى الخادمي إذا تعذر الاتصال بدل إظهار رسالة خطأ للزائر.
+- تمرير الصفحة المطلوبة وبريد التواصل العام فقط إلى المكوّن، وعدم تضمين إعدادات Firebase الكاملة في HTML.
+- الحفاظ على نموذج `contact` التفاعلي وعلى التنسيق والهوية البصرية دون تعديل CSS.
+- رفع نسخة الموقع العام إلى `0.3.21` مع إبقاء نسخة الإدارة `0.1.25` لأن التعديل يخص إخراج الصفحات العامة.
+
+الملفات المتأثرة:
+
+- `app/[slug]/page.jsx`
+- `app/[slug]/PageClient.jsx`
+- `app/version.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm run lint
+npm run build
+npm start -- -p 3102
+Invoke-WebRequest http://localhost:3102/privacy
+Invoke-WebRequest http://localhost:3102/terms
+Invoke-WebRequest http://localhost:3102/about-us
+Invoke-WebRequest http://localhost:3102/contact
+npm version 0.3.21 --no-git-tag-version
+git diff --check
+```
+
+الحالة:
+
+- نجح `npm run lint` دون أخطاء.
+- نجح `npm run build` واكتمل توليد 30 صفحة؛ ظهرت رسائل `EACCES` لاتصال Firebase أثناء البناء داخل البيئة المقيدة، ثم اكتمل البناء بالقيم الاحتياطية الآمنة.
+- نجح الفحص المحلي مع اتصال Firebase: أعادت الصفحات الأربع استجابة `200`.
+- احتوت صفحات `privacy` و`terms` و`about-us` على عنصر `static-page-content` في HTML الخام ولم يظهر هيكل `static-page-loading`.
+- احتوت صفحة `contact` على نموذج `contact-page-form` داخل HTML الخام دون هيكل تحميل.
+- لا يوجد تغيير بصري، وما زالت النصوص قابلة للتعديل من منصة الإدارة وتظهر خادميًا في الطلب التالي بعد مدة إعادة التحقق القصيرة.

@@ -241,5 +241,17 @@ export default async function Page({ params }) {
 
     if (slug === 'about') notFound();
 
-    return <PageClient slug={slug} />;
+    const config = await getMetadataConfig();
+    const page = findPageBySlug(config, slug);
+    const initialPage = page?.isActive === false || page?.enabled === false
+        ? null
+        : page;
+
+    return (
+        <PageClient
+            slug={slug}
+            initialPage={initialPage}
+            initialConfig={{ contactEmail: config.contactEmail || '' }}
+        />
+    );
 }

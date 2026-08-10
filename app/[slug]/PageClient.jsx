@@ -355,9 +355,10 @@ function ContactForm() {
         </section>
     );
 }
-export default function PageClient({ slug }) {
-    const [config, setConfig] = useState(null);
-    const [loading, setLoading] = useState(true);
+export default function PageClient({ slug, initialPage = null, initialConfig = null }) {
+    const hasInitialPage = Boolean(initialPage);
+    const [config, setConfig] = useState(initialConfig);
+    const [loading, setLoading] = useState(!hasInitialPage);
     const [error, setError] = useState('');
     const [lang, setLang] = useState('ar');
 
@@ -379,7 +380,7 @@ export default function PageClient({ slug }) {
 
         async function loadPage() {
             try {
-                setLoading(true);
+                if (!hasInitialPage) setLoading(true);
                 setError('');
 
                 const response = await fetch('/api/site-config?include=pages');
@@ -392,7 +393,7 @@ export default function PageClient({ slug }) {
             } catch (err) {
                 console.error('خطأ في قراءة صفحة slug من Firestore:', err);
 
-                if (isMounted) {
+                if (isMounted && !hasInitialPage) {
                     setError('تعذر تحميل الصفحة. يرجى المحاولة لاحقًا.');
                 }
             } finally {
@@ -407,11 +408,11 @@ export default function PageClient({ slug }) {
         return () => {
             isMounted = false;
         };
-    }, []);
+    }, [hasInitialPage]);
 
     const page = useMemo(() => {
-        return findPageBySlug(config, slug);
-    }, [config, slug]);
+        return findPageBySlug(config, slug) || initialPage;
+    }, [config, initialPage, slug]);
 
     if (loading) {
         const normalizedSlug = normalizeSlug(slug);
