@@ -480,7 +480,7 @@ export function SeoSections({ lang, faqs }) {
     const faqItems = Array.isArray(faqs) ? faqs : [];
 
     return (
-        <div className="seo-sections-wrapper">
+        <div className="seo-sections-wrapper date-guide-sections">
             <section className="seo-card">
                 <h2 className="seo-title"><i className="fa-solid fa-book-open"></i> {seo.guideTitle}</h2>
                 <p className="seo-text">

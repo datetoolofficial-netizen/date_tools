@@ -38,8 +38,8 @@ export const SHARE_TEMPLATE_DEFINITIONS = {
             label: 'مشاركة نتيجة حساب المدة',
             variables: {
                 toolTitle: 'اسم الأداة الفرعية',
-                inputLabel: 'وصف المدخلات',
-                input: 'التاريخان المدخلان',
+                firstDate: 'التاريخ الأول المدخل',
+                secondDate: 'التاريخ الثاني المدخل',
                 result: 'نتيجة حساب المدة',
                 url: 'رابط الصفحة الحالي بدون بيانات شخصية',
             },
@@ -151,7 +151,7 @@ export const DEFAULT_TOOL_SETTINGS = {
             eventsResult: 'هذه مواعيدي القادمة عبر {title}:\n\n{events}\n\n{url}',
             ageResult: 'استخدمت {toolTitle} لمعرفة عمري بدقة.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
             dateConversionResult: 'استخدمت {toolTitle} لتحويل التاريخ بدقة.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
-            durationResult: 'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
+            durationResult: 'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\nالتاريخ الأول: {firstDate}\nالتاريخ الثاني: {secondDate}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
         },
         shareEnabled: {
             eventsResult: true,
@@ -278,7 +278,10 @@ const LEGACY_SHARE_TEMPLATES = {
         eventsResult: '{title}\n\n{events}\n\n{url}',
         ageResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
         dateConversionResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
-        durationResult: '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+        durationResult: [
+            '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
+            'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
+        ],
     },
 };
 
@@ -356,8 +359,12 @@ function normalizeShareTemplates(toolKey, shareTemplates = {}) {
     return Object.fromEntries(
         Object.entries(defaults).map(([key, fallback]) => {
             const storedValue = String(shareTemplates?.[key] || '').trim();
-            const legacyValue = String(legacyDefaults[key] || '').trim();
-            const shouldUseFallback = !storedValue || (legacyValue && storedValue === legacyValue);
+            const legacyValues = (Array.isArray(legacyDefaults[key])
+                ? legacyDefaults[key]
+                : [legacyDefaults[key]])
+                .map((value) => String(value || '').trim())
+                .filter(Boolean);
+            const shouldUseFallback = !storedValue || legacyValues.includes(storedValue);
 
             return [
                 key,

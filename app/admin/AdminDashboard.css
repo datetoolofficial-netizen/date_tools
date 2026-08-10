@@ -2793,6 +2793,8 @@ body.dark-mode .legacy-nav-links a.active {
 .tool-share-template-full textarea {
     width: 100%;
     min-height: 150px;
+    border: 0;
+    background: color-mix(in srgb, var(--bg-body) 88%, #000);
     color: var(--text-main);
     font-family: inherit;
     font-size: 12px;

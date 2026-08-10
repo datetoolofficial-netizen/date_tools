@@ -14,7 +14,14 @@ const COMMON_SHARE_PREVIEW_VALUES = {
 const SHARE_PREVIEW_VALUES_BY_TEMPLATE = {
     ageResult: { toolTitle: 'احسب عمرك بدقة', inputLabel: 'تاريخ الميلاد المستخدم', input: '23 يوليو 2017', result: '9 سنوات' },
     dateConversionResult: { toolTitle: 'تحويل التاريخ', inputLabel: 'التاريخ المستخدم', input: '23 يوليو 2026', result: '8 صفر 1448 هـ' },
-    durationResult: { toolTitle: 'حساب المدة بين تاريخين', inputLabel: 'التاريخان المستخدمان', input: '23 يوليو 2017 و23 يوليو 2026', result: '9 سنوات' },
+    durationResult: {
+        toolTitle: 'حساب المدة بين تاريخين',
+        inputLabel: 'التاريخان المستخدمان',
+        input: '23 يوليو 2017 و23 يوليو 2026',
+        firstDate: '23 يوليو 2017',
+        secondDate: '23 يوليو 2026',
+        result: '9 سنوات',
+    },
     timeConverterResult: { input: '13:30', inputHour: '13', inputMinute: '30', result: '1:30 م' },
     timezoneDiffResult: { fromCity: 'الرياض', toCity: 'لندن', difference: 'ساعتين', fromTime: '13:30', toTime: '11:30' },
     currentWeatherResult: { city: 'الرياض', temperature: '32°', condition: 'سماء صافية', feelsLike: '34°', humidity: '22%', wind: '14 كم/س', rainChance: '0%', uv: '6' },

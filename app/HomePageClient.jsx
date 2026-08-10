@@ -400,7 +400,9 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         
         setResDiffGreg(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
         const inputLabel = `${i18n[lang].lblDate1} / ${i18n[lang].lblDate2}`;
-        const input = `${formatInputDate(gDiffInput1)} - ${formatInputDate(gDiffInput2)}`;
+        const firstDate = formatInputDate(gDiffInput1);
+        const secondDate = formatInputDate(gDiffInput2);
+        const input = `${firstDate} - ${secondDate}`;
         setEnteredDateInfo({
             title: dateToolSettings.subtools?.durationCalc,
             info: `${inputLabel}: ${input}`,
@@ -408,6 +410,8 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                 toolTitle: dateToolSettings.subtools?.durationCalc,
                 inputLabel,
                 input,
+                firstDate,
+                secondDate,
                 result: durationStr,
                 url: getSafeCurrentUrl(),
             }),
@@ -438,7 +442,9 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         const durationStr = formatDuration(years, months, days);
         setResDiffHijri(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
         const inputLabel = `${i18n[lang].lblDate1} / ${i18n[lang].lblDate2}`;
-        const input = `${formatInputDate(hDiffInput1, 'هـ')} - ${formatInputDate(hDiffInput2, 'هـ')}`;
+        const firstDate = formatInputDate(hDiffInput1, 'هـ');
+        const secondDate = formatInputDate(hDiffInput2, 'هـ');
+        const input = `${firstDate} - ${secondDate}`;
         setEnteredDateInfo({
             title: dateToolSettings.subtools?.durationCalc,
             info: `${inputLabel}: ${input}`,
@@ -446,6 +452,8 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                 toolTitle: dateToolSettings.subtools?.durationCalc,
                 inputLabel,
                 input,
+                firstDate,
+                secondDate,
                 result: durationStr,
                 url: getSafeCurrentUrl(),
             }),
