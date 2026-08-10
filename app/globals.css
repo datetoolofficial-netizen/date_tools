@@ -1583,13 +1583,6 @@
             height: 18px;
         }
 
-        .weather-skeleton-share {
-            width: 82px;
-            height: 38px;
-            border-radius: 8px;
-            flex: 0 0 auto;
-        }
-
         .weather-skeleton-temp {
             width: 76px;
             height: 42px;
@@ -2967,32 +2960,6 @@
     font-size: 13px;
 }
 .share-btn:hover { background: var(--primary); color: white; }
-
-.weather-current-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-width: 0;
-}
-
-.weather-current-heading .muted-text {
-    min-width: 0;
-    margin: 0;
-}
-
-.share-btn.weather-card-share-btn {
-    width: auto;
-    min-height: 38px;
-    padding: 7px 12px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    flex: 0 0 auto;
-    white-space: nowrap;
-}
 
 /* أقسام السيو (الدليل والأسئلة الشائعة) */
 .seo-sections-wrapper { margin-top: 40px; }

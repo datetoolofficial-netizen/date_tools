@@ -35,12 +35,9 @@ const weatherLabels = {
 function WeatherCurrentPlaceholder() {
     return (
         <article className="weather-current-card weather-loading-reserve" aria-hidden="true">
-            <div className="weather-current-heading">
-                <span className="skeleton-block weather-skeleton-place"></span>
-                <span className="skeleton-block weather-skeleton-share"></span>
-            </div>
             <div className="weather-current-main">
                 <div>
+                    <span className="skeleton-block weather-skeleton-place"></span>
                     <span className="skeleton-block weather-skeleton-temp"></span>
                     <span className="skeleton-block weather-skeleton-copy"></span>
                 </div>
@@ -307,26 +304,9 @@ export default function WeatherPage({ children, hideHero = false, initialSection
             {current ? (
                 <>
                     <article className="weather-current-card" id="current-weather">
-                        <div className="weather-current-heading">
-                            <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
-                            {isShareTemplateEnabled(weatherSettings, 'currentWeatherResult') && (
-                                <button className="share-btn weather-card-share-btn" type="button" onClick={() => shareWeatherResult('currentWeatherResult', {
-                                    city: cityLabel,
-                                    temperature: `${Math.round(current.temperature_2m)}°`,
-                                    condition: weatherText(current.weather_code),
-                                    feelsLike: `${Math.round(current.apparent_temperature)}°`,
-                                    humidity: `${current.relative_humidity_2m}%`,
-                                    wind: `${Math.round(current.wind_speed_10m)} كم/س`,
-                                    rainChance: `${daily?.precipitation_probability_max?.[0] ?? 0}%`,
-                                    uv: String(Math.round(daily?.uv_index_max?.[0] || 0)),
-                                })}>
-                                    <i className="fa-solid fa-share-nodes"></i>
-                                    <span>مشاركة</span>
-                                </button>
-                            )}
-                        </div>
                         <div className="weather-current-main">
                             <div>
+                                <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
                                 <h3>{Math.round(current.temperature_2m)}°</h3>
                                 <p>{weatherText(current.weather_code)} - الإحساس {Math.round(current.apparent_temperature)}°</p>
                             </div>
@@ -339,6 +319,20 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                             <div><i className="fa-solid fa-umbrella"></i><span>توقع المطر</span><strong>{daily?.precipitation_probability_max?.[0] ?? 0}%</strong></div>
                             <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
                         </div>
+                        {isShareTemplateEnabled(weatherSettings, 'currentWeatherResult') && (
+                            <button className="share-btn" type="button" onClick={() => shareWeatherResult('currentWeatherResult', {
+                                city: cityLabel,
+                                temperature: `${Math.round(current.temperature_2m)}°`,
+                                condition: weatherText(current.weather_code),
+                                feelsLike: `${Math.round(current.apparent_temperature)}°`,
+                                humidity: `${current.relative_humidity_2m}%`,
+                                wind: `${Math.round(current.wind_speed_10m)} كم/س`,
+                                rainChance: `${daily?.precipitation_probability_max?.[0] ?? 0}%`,
+                                uv: String(Math.round(daily?.uv_index_max?.[0] || 0)),
+                            })}>
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة معلومات الطقس
+                            </button>
+                        )}
                     </article>
 
                     <article className="tool-widget advice-card" id="outdoor-advice">
@@ -352,7 +346,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                                 city: cityLabel,
                                 advice: adviceText,
                             })}>
-                                <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                                <i className="fa-solid fa-share-nodes"></i> مشاركة نصيحة اليوم
                             </button>
                         )}
                     </article>
@@ -387,7 +381,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                             city: cityLabel,
                             forecast: forecastText,
                         })}>
-                            <i className="fa-solid fa-share-nodes"></i> مشاركة النتيجة
+                            <i className="fa-solid fa-share-nodes"></i> مشاركة توقعات الطقس
                         </button>
                     )}
                 </article>
