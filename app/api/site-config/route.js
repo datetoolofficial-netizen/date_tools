@@ -1,31 +1,8 @@
+import { pickPublicSiteConfig } from '../../publicSiteConfig';
+
 const FIRESTORE_SETTINGS_URL = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 
 export const revalidate = 300;
-
-const PUBLIC_CONFIG_KEYS = [
-    'toolDisplayName',
-    'toolSlogan',
-    'contactEmail',
-    'hasLogo',
-    'logoUrl',
-    'faviconUrl',
-    'appIconUrl',
-    'pwaShortcutDateIconUrl',
-    'pwaShortcutClockIconUrl',
-    'pwaShortcutWeatherIconUrl',
-    'googleAdSlots',
-    'copyrightName',
-    'copyrightText',
-    'internalPages',
-    'socialLinks',
-    'externalLinks',
-    'events',
-    'toolSettings',
-    'linkPreview',
-    'privacySettingsButton',
-    'pwaInstallPrompt',
-    'mainSEO',
-];
 
 function jsonResponse(body, status = 200, cacheControl = 'public, s-maxage=300, stale-while-revalidate=86400') {
     return Response.json(body, {
@@ -63,54 +40,6 @@ function decodeFirestoreFields(fields = {}) {
     }, {});
 }
 
-function cleanPublicExternalIntegrations(value = {}) {
-    return {
-        googleTagId: String(value.googleTagId || '').trim(),
-        googleTagManagerId: String(value.googleTagManagerId || '').trim(),
-        googleAdsenseClient: String(value.googleAdsenseClient || '').trim(),
-        googleSiteVerification: String(value.googleSiteVerification || '').trim(),
-        bingSiteVerification: String(value.bingSiteVerification || '').trim(),
-        microsoftClarityProjectId: String(value.microsoftClarityProjectId || '').trim(),
-        metaPixelId: String(value.metaPixelId || '').trim(),
-    };
-}
-
-function cleanInternalPages(pages, includeContent) {
-    if (!Array.isArray(pages)) return [];
-    if (includeContent) return pages;
-
-    return pages.map((page = {}) => ({
-        title: page.title || page.name || page.label || '',
-        slug: page.slug || page.path || page.url || '',
-        path: page.path || '',
-        url: page.url || '',
-        location: page.location || '',
-        isActive: page.isActive !== false,
-        order: Number(page.order || 0),
-    }));
-}
-
-function pickPublicConfig(config = {}, includeContent = false) {
-    const publicConfig = PUBLIC_CONFIG_KEYS.reduce((result, key) => {
-        if (key in config) result[key] = config[key];
-        return result;
-    }, {});
-
-    publicConfig.externalIntegrations = cleanPublicExternalIntegrations(config.externalIntegrations || {});
-    publicConfig.internalPages = cleanInternalPages(publicConfig.internalPages, includeContent);
-    publicConfig.externalLinks = Array.isArray(publicConfig.externalLinks) ? publicConfig.externalLinks : [];
-    publicConfig.socialLinks = Array.isArray(publicConfig.socialLinks) ? publicConfig.socialLinks : [];
-    publicConfig.events = Array.isArray(publicConfig.events) ? publicConfig.events : [];
-    publicConfig.adCampaigns = [];
-
-    if (includeContent) {
-        publicConfig.customPages = config.customPages || {};
-        publicConfig.pages = config.pages || {};
-    }
-
-    return publicConfig;
-}
-
 export async function GET(request) {
     try {
         const url = new URL(request.url);
@@ -125,7 +54,7 @@ export async function GET(request) {
         }
 
         const payload = await response.json();
-        const config = pickPublicConfig(decodeFirestoreFields(payload.fields || {}), includeContent);
+        const config = pickPublicSiteConfig(decodeFirestoreFields(payload.fields || {}), includeContent);
 
         return jsonResponse({ ok: true, config });
     } catch {

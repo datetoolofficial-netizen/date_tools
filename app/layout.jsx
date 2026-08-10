@@ -2,8 +2,10 @@ import { Cairo } from 'next/font/google';
 import ExternalIntegrations from './components/ExternalIntegrations';
 import FontAwesomeLoader from './components/FontAwesomeLoader';
 import { resolveLinkPreview } from './linkPreview';
+import { pickPublicSiteConfig } from './publicSiteConfig';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME, buildSiteJsonLd } from './seoConfig';
 import SiteShell from './SiteShell';
+import { getManagedSiteConfig } from './toolSeoServer';
 import { APP_VERSION } from './version';
 import './globals.css';
 
@@ -149,8 +151,9 @@ export async function generateMetadata() {
     };
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
     const siteJsonLd = buildSiteJsonLd();
+    const initialSiteConfig = pickPublicSiteConfig(await getManagedSiteConfig());
 
     return (
         <html lang="ar" dir="rtl" suppressHydrationWarning>
@@ -168,7 +171,7 @@ export default function RootLayout({ children }) {
             <body className={cairo.className}>
                 <FontAwesomeLoader />
                 <ExternalIntegrations />
-                <SiteShell>{children}</SiteShell>
+                <SiteShell initialConfig={initialSiteConfig}>{children}</SiteShell>
             </body>
         </html>
     );

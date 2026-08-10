@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const toolContent = {
     date: {
         sections: [
@@ -136,9 +138,127 @@ const dateSubtoolContent = {
     },
 };
 
+const clockSubtoolContent = {
+    timeConverter: {
+        sections: [
+            {
+                title: 'تحويل الساعة من نظام 24 إلى 12',
+                paragraphs: [
+                    'يستخدم نظام 24 ساعة الأرقام من 00 إلى 23، بينما يقسم نظام 12 ساعة اليوم إلى فترتي صباح ومساء. اختر الساعة والدقيقة لتعرض الأداة المقابل بصيغة 12 ساعة مباشرة، مثل تحويل 13:30 إلى 1:30 مساءً.',
+                    'تفيد هذه الصيغة عند قراءة مواعيد الرحلات والجداول الرسمية أو مشاركة وقت واضح مع شخص يستخدم نظام 12 ساعة. لا ترسل الأداة الوقت المدخل إلى عنوان الصفحة أو رابط المشاركة.',
+                ],
+            },
+            {
+                title: 'حالات التحويل المهمة',
+                items: [
+                    'الساعة 00:00 تقابل 12:00 صباحًا في بداية اليوم.',
+                    'الساعات من 13 إلى 23 تُطرح منها 12 وتعرض ضمن الفترة المسائية.',
+                    'الساعة 12:00 تبقى 12:00 وتعرض ظهرًا ضمن الفترة المسائية.',
+                ],
+                paragraphs: [],
+            },
+        ],
+    },
+    timezoneDiff: {
+        sections: [
+            {
+                title: 'حساب فرق التوقيت بين مدينتين',
+                paragraphs: [
+                    'ابحث عن المدينة الأولى ثم المدينة الثانية لتحدد الأداة المنطقة الزمنية لكل منهما وتحسب عدد الساعات الفاصلة بينهما. تعرض النتيجة الوقت الحالي في المدينتين لتسهيل اختيار موعد مناسب للاتصال أو الاجتماع.',
+                    'قد يتغير الفرق خلال العام في الدول التي تطبق التوقيت الصيفي، لذلك تعتمد النتيجة على المنطقة الزمنية والتاريخ الحالي بدل الاعتماد على فرق ثابت محفوظ مسبقًا.',
+                ],
+            },
+            {
+                title: 'متى يفيد فرق التوقيت؟',
+                items: [
+                    'تنسيق الاجتماعات والمكالمات مع أشخاص في مدن مختلفة.',
+                    'متابعة أوقات الرحلات والوصول والمغادرة.',
+                    'معرفة وقت بث حدث أو موعد دولي في مدينتك.',
+                ],
+                paragraphs: [],
+            },
+        ],
+    },
+};
+
+const weatherSubtoolContent = {
+    weatherSearch: {
+        sections: [
+            {
+                title: 'البحث عن الطقس حسب المدينة',
+                paragraphs: [
+                    'اكتب اسم المدينة واختر النتيجة المطابقة لعرض حالة الطقس الحالية ودرجات الحرارة والمؤشرات الجوية الأساسية. يمكنك البحث يدويًا عن أي مدينة دون منح المتصفح إذن الوصول إلى موقعك.',
+                    'استخدم اسمًا واضحًا للمدينة، وراجع اسم الدولة الظاهر مع النتيجة عند وجود مدن متشابهة في أكثر من دولة.',
+                ],
+            },
+        ],
+    },
+    currentWeather: {
+        sections: [
+            {
+                title: 'قراءة حالة الطقس الحالية',
+                paragraphs: [
+                    'تجمع بطاقة الطقس الحالي درجة الحرارة الفعلية والمحسوسة والرطوبة وسرعة الرياح واحتمال هطول المطر ومؤشر الأشعة فوق البنفسجية في مكان واحد. تساعد هذه المؤشرات على فهم الحالة الفعلية بصورة أوضح من قراءة درجة الحرارة وحدها.',
+                    'تتحدث البيانات بحسب أحدث قراءة متاحة من مزود الطقس، وقد تختلف قليلًا عن محطة محلية بسبب وقت التحديث أو أقرب نقطة قياس للمدينة.',
+                ],
+            },
+        ],
+    },
+    outdoorAdvice: {
+        sections: [
+            {
+                title: 'كيف تُبنى نصيحة الخروج اليوم؟',
+                paragraphs: [
+                    'تعتمد النصيحة المختصرة على درجة الحرارة واحتمال المطر ومؤشر الأشعة فوق البنفسجية والظروف الجوية المتاحة. هدفها مساعدتك في التخطيط السريع للملابس أو وقت الخروج أو الحاجة إلى مظلة وحماية من الشمس.',
+                    'النصيحة إرشادية وليست تنبيهًا رسميًا. عند وجود ظروف جوية شديدة أو قرار سفر، راجع تنبيهات الجهة الرسمية المختصة في منطقتك.',
+                ],
+            },
+        ],
+    },
+    forecast: {
+        sections: [
+            {
+                title: 'فهم توقعات الطقس للأيام القادمة',
+                paragraphs: [
+                    'تعرض توقعات خمسة أيام أعلى وأدنى درجة حرارة والحالة العامة واحتمال هطول المطر لكل يوم. تفيد هذه النظرة المختصرة في ترتيب المواعيد والرحلات والأنشطة الخارجية خلال الأيام القريبة.',
+                    'تزداد احتمالية تغير التوقع كلما ابتعد اليوم عن الوقت الحالي، لذلك ارجع إلى الصفحة قبل موعد النشاط للحصول على قراءة أحدث.',
+                ],
+            },
+        ],
+    },
+};
+
+const subtoolContentByTool = {
+    date: dateSubtoolContent,
+    clock: clockSubtoolContent,
+    weather: weatherSubtoolContent,
+};
+
+const relatedToolLinks = {
+    date: [
+        { key: 'ageCalc', href: '/age-calculator', label: 'حاسبة العمر' },
+        { key: 'dateConverter', href: '/date-converter', label: 'تحويل التاريخ' },
+        { key: 'durationCalc', href: '/date-difference', label: 'حساب المدة بين تاريخين' },
+    ],
+    clock: [
+        { key: 'timeConverter', href: '/time-converter', label: 'تحويل الساعة من 24 إلى 12' },
+        { key: 'timezoneDiff', href: '/timezone-difference', label: 'فرق التوقيت بين مدينتين' },
+    ],
+    weather: [
+        { key: 'weatherSearch', href: '/weather-search', label: 'البحث عن الطقس حسب المدينة' },
+        { key: 'currentWeather', href: '/current-weather', label: 'حالة الطقس الحالية' },
+        { key: 'outdoorAdvice', href: '/outdoor-advice', label: 'نصيحة الخروج اليوم' },
+        { key: 'forecast', href: '/weather-forecast', label: 'توقعات الطقس لخمسة أيام' },
+    ],
+};
+
 export default function ToolSeoContent({ tool, subtool = '' }) {
-    const content = subtool ? dateSubtoolContent[subtool] || toolContent[tool] : toolContent[tool];
+    const content = subtool
+        ? subtoolContentByTool[tool]?.[subtool] || toolContent[tool]
+        : toolContent[tool];
     if (!content) return null;
+
+    const links = relatedToolLinks[tool] || [];
 
     return (
         <div className="seo-sections-wrapper tool-seo-content">
@@ -157,6 +277,22 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
                     )}
                 </section>
             ))}
+            {links.length > 0 && (
+                <nav className="seo-card tool-related-links" aria-label="روابط الأدوات المرتبطة">
+                    <h2>أدوات مرتبطة</h2>
+                    <div className="tool-related-links-grid">
+                        {links.map((link) => (
+                            <Link
+                                className={subtool === link.key ? 'active' : undefined}
+                                href={link.href}
+                                key={link.key}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }

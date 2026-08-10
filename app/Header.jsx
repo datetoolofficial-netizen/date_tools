@@ -102,7 +102,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     )}
 
                     <Link href="/" className="site-brand-text">
-                        <h1 className="tool-title">{toolName}</h1>
+                        <span className="tool-title">{toolName}</span>
                         {toolSlogan && <p className="tool-slogan">{toolSlogan}</p>}
                     </Link>
                 </div>

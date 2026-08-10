@@ -21,14 +21,19 @@ const reservedSlugs = new Set([
 ]);
 
 const legacyAliasSlugs = new Set(['about']);
-const DEFAULT_LAST_MODIFIED = '2026-08-04';
-
 const staticEntries = [
-    { path: '/month-names', changeFrequency: 'monthly', priority: 0.6, lastModified: DEFAULT_LAST_MODIFIED },
-    { path: '/privacy', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
-    { path: '/terms', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
-    { path: '/contact', changeFrequency: 'monthly', priority: 0.5, lastModified: DEFAULT_LAST_MODIFIED },
+    { path: '/month-names', changeFrequency: 'monthly', priority: 0.6 },
+    { path: '/privacy', changeFrequency: 'monthly', priority: 0.5 },
+    { path: '/terms', changeFrequency: 'monthly', priority: 0.5 },
+    { path: '/contact', changeFrequency: 'monthly', priority: 0.5 },
 ];
+
+// Update only the affected family when its public page content changes.
+const toolContentLastModified = {
+    date: '2026-08-10',
+    clock: '2026-08-10',
+    weather: '2026-08-10',
+};
 
 function decodeFirestoreValue(value) {
     if (!value || typeof value !== 'object') return undefined;
@@ -133,19 +138,29 @@ function normalizeLastModified(value) {
     return parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
 }
 
+function latestLastModified(...values) {
+    return values
+        .map(normalizeLastModified)
+        .filter(Boolean)
+        .sort((a, b) => b.getTime() - a.getTime())[0];
+}
+
 function collectToolEntries(settings = {}) {
     const tools = normalizeToolSettings(settings.toolSettings || {});
     const mainTools = [
-        { path: publicToolSeo.date.path, changeFrequency: 'weekly', priority: 1, lastModified: tools.date.seo?.lastModified },
-        { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.clock.seo?.lastModified },
-        { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: tools.weather.seo?.lastModified },
+        { path: publicToolSeo.date.path, changeFrequency: 'weekly', priority: 1, lastModified: latestLastModified(tools.date.seo?.lastModified, toolContentLastModified.date) },
+        { path: publicToolSeo.clock.path, changeFrequency: 'weekly', priority: 0.85, lastModified: latestLastModified(tools.clock.seo?.lastModified, toolContentLastModified.clock) },
+        { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: latestLastModified(tools.weather.seo?.lastModified, toolContentLastModified.weather) },
     ];
 
     const subtools = TOOL_SECTION_ROUTE_ENTRIES.map(({ toolKey, subtoolKey, publicPath }) => ({
         path: publicPath,
         changeFrequency: 'weekly',
         priority: toolKey === 'date' ? 0.9 : 0.8,
-        lastModified: tools[toolKey]?.subtoolSeo?.[subtoolKey]?.lastModified,
+        lastModified: latestLastModified(
+            tools[toolKey]?.subtoolSeo?.[subtoolKey]?.lastModified,
+            toolContentLastModified[toolKey]
+        ),
     }));
 
     return [...mainTools, ...subtools];

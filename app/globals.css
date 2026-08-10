@@ -3007,6 +3007,26 @@
     margin: 12px 0 0;
     padding-inline-start: 22px;
 }
+.tool-related-links-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+.tool-related-links-grid a {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.tool-related-links-grid a:hover,
+.tool-related-links-grid a.active {
+    background: color-mix(in srgb, var(--primary) 16%, var(--input-bg));
+    color: var(--primary);
+}
 .tool-seo-content .seo-source-note {
     margin-top: 18px;
     padding: 14px 16px;

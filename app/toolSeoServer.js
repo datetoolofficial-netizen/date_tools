@@ -21,7 +21,7 @@ function decodeFirestoreFields(fields = {}) {
     );
 }
 
-async function getSiteConfig() {
+export async function getManagedSiteConfig() {
     try {
         const response = await fetch(firestoreSettingsUrl, {
             headers: { Accept: 'application/json' },
@@ -44,7 +44,7 @@ function splitKeywords(value = '') {
 }
 
 export async function getManagedToolPage(toolKey, subtoolKey = '') {
-    const config = await getSiteConfig();
+    const config = await getManagedSiteConfig();
     const settings = getToolSettings(config, toolKey) || DEFAULT_TOOL_SETTINGS[toolKey];
     const seo = subtoolKey
         ? settings.subtoolSeo?.[subtoolKey] || DEFAULT_TOOL_SETTINGS[toolKey]?.subtoolSeo?.[subtoolKey]

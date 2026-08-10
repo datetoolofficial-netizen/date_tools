@@ -179,11 +179,11 @@ function PublicShellSkeleton() {
     );
 }
 
-export default function SiteShell({ children }) {
+export default function SiteShell({ children, initialConfig = null }) {
     const pathname = usePathname() || '/';
     const [lang, setLang] = useState('ar');
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [configData, setConfigData] = useState(null);
+    const [configData, setConfigData] = useState(() => initialConfig || null);
     const [currentLocation, setCurrentLocation] = useState(null);
     const [locationStatus, setLocationStatus] = useState('idle');
     const [locationError, setLocationError] = useState('');
