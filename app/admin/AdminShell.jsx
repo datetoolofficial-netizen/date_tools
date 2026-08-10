@@ -76,8 +76,8 @@ const NAV_ITEMS = [
     {
         id: 'support',
         href: '/admin/support',
-        label: 'الدعم',
-        icon: 'fa-headset',
+        label: 'التذاكر',
+        icon: 'fa-ticket',
         permissionKeys: ['support', 'tickets'],
     },
 ];

@@ -166,8 +166,8 @@ function AdminNav({ active = 'ad-settings' }) {
             </li>
             <li>
                 <Link href="/admin/support">
-                    <i className="fa-solid fa-headset"></i>
-                    <span className="nav-text">الدعم</span>
+                    <i className="fa-solid fa-ticket"></i>
+                    <span className="nav-text">التذاكر</span>
                 </Link>
             </li>
         </ul>

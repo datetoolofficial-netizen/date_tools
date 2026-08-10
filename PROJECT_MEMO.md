@@ -51,7 +51,7 @@ https://www.date-tool.com
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
 الإصدار الحالي للتطبيق هو 0.3.21.
-نسخة منصة الإدارة الحالية هي 0.1.25.
+نسخة منصة الإدارة الحالية هي 0.1.27.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -10469,3 +10469,38 @@ git diff --check
 - نجح `npm run build` وأضيفت صفحة `/admin/support` ومسار `/api/admin/support` إلى مخرجات Next.js؛ رسائل `EACCES` تخص منع اتصال Firebase الخارجي داخل بيئة الفحص ولم توقف البناء.
 - أعادت صفحة الإدارة محليًا استجابة `200`، وأعاد مسار API دون رمز مدير استجابة `401` كما يجب.
 - المتبقي اختبار دورة فعلية بعد وصول النسخة للإنتاج: فتح تذكرة حقيقية، تغيير حالتها، تنزيل مرفق، ثم حذف تذكرة تجريبية والتأكد من إزالة كائن R2.
+
+### توحيد مسمى التذاكر في السايد بار 0.3.21 / admin 0.1.27
+
+ما تم إنجازه:
+
+- تغيير اسم رابط `/admin/support` في السايد بار من "الدعم" إلى "التذاكر" ليطابق محتوى الصفحة الفعلي.
+- استبدال أيقونة السماعة بأيقونة التذكرة في القائمة الثابتة وجميع القوائم الداخلية القديمة.
+- إبقاء المسار والصلاحيات وواجهة جدول التذاكر دون تغيير، وعدم تعديل نسخة الموقع العام.
+
+الملفات المتأثرة:
+
+- `app/admin/AdminShell.jsx`
+- `app/admin/page.jsx`
+- `app/admin/ad-settings/page.jsx`
+- `app/admin/ads/page.jsx`
+- `app/admin/identity/page.jsx`
+- `app/admin/integrations/page.jsx`
+- `app/admin/pagespeed/page.jsx`
+- `app/admin/tools/page.jsx`
+- `app/admin/tool-management/ToolManagementShell.jsx`
+- `app/version.js`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+rg -n "الدعم|/admin/support|fa-headset" app/admin
+npm run lint
+git diff --check
+```
+
+الحالة:
+
+- رابط "التذاكر" يفتح جدول التذاكر عبر `/admin/support`، ولا توجد تسمية "الدعم" متبقية لهذا الرابط داخل قوالب الإدارة.
