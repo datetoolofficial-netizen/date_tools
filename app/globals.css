@@ -1343,7 +1343,7 @@
             line-height: 1.4;
         }
 
-        .contact-page-form button {
+        .contact-page-form form > button[type="submit"] {
             min-height: 56px;
             border: 0;
             border-radius: 16px;
@@ -1359,12 +1359,12 @@
             transition: 0.22s ease;
         }
 
-        .contact-page-form button:hover {
+        .contact-page-form form > button[type="submit"]:hover {
             background: var(--primary-hover);
             transform: translateY(-1px);
         }
 
-        .contact-page-form button:disabled {
+        .contact-page-form form > button[type="submit"]:disabled {
             cursor: wait;
             opacity: 0.75;
             transform: none;
@@ -3475,7 +3475,7 @@ body.dark-mode .calendar-mode-btn[data-mode="hijri"].active {
         font-size: 12.5px;
     }
 
-    .contact-page-form button {
+    .contact-page-form form > button[type="submit"] {
         min-height: 46px;
         border-radius: 14px;
         font-size: 13px;

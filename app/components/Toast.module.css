@@ -44,24 +44,26 @@
     font-weight: 800;
     line-height: 1.65;
     overflow-wrap: anywhere;
+    white-space: pre-line;
 }
 
 .closeButton {
     width: 34px;
     height: 34px;
     border: 0;
-    border-radius: 10px;
-    background: transparent;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.08);
     color: currentColor;
     cursor: pointer;
-    opacity: 0.72;
-    transition: background 0.18s ease, opacity 0.18s ease;
+    opacity: 1;
+    font-size: 14px;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
 .closeButton:hover,
 .closeButton:focus-visible {
     background: rgba(15, 23, 42, 0.08);
-    opacity: 1;
+    transform: scale(1.06);
     outline: none;
 }
 
@@ -115,6 +117,20 @@
 :global(body.dark-mode) .closeButton:hover,
 :global(body.dark-mode) .closeButton:focus-visible {
     background: rgba(255, 255, 255, 0.08);
+}
+
+:global(body.dark-mode) .closeButton {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.error .closeButton {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+}
+
+:global(body.dark-mode) .error .closeButton {
+    background: rgba(248, 113, 113, 0.12);
+    color: #fca5a5;
 }
 
 :global(body.dark-mode) .success .iconWrap {

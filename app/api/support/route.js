@@ -13,6 +13,18 @@ const ALLOWED_ATTACHMENT_TYPES = new Map([
     ['image/webp', 'webp'],
     ['image/gif', 'gif'],
 ]);
+const PUBLIC_ERROR_NUMBERS = {
+    invalid_support_payload: 'SUP-4001',
+    invalid_json: 'SUP-4002',
+    body_too_large: 'SUP-4003',
+    attachment_too_large: 'SUP-4004',
+    unsupported_attachment_type: 'SUP-4005',
+    support_not_configured: 'SUP-5001',
+    media_storage_not_configured: 'SUP-5002',
+    support_auth_failed: 'SUP-5003',
+    support_create_failed: 'SUP-5004',
+    support_failed: 'SUP-5000',
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +36,14 @@ function jsonResponse(body, status = 200) {
         status,
         headers: { 'Cache-Control': 'no-store' },
     });
+}
+
+function errorResponse(error, status) {
+    return jsonResponse({
+        ok: false,
+        error,
+        errorNumber: PUBLIC_ERROR_NUMBERS[error] || PUBLIC_ERROR_NUMBERS.support_failed,
+    }, status);
 }
 
 async function getCloudflareEnv() {
@@ -326,12 +346,12 @@ export async function POST(request) {
         };
 
         if (!cleaned.senderName || !EMAIL_PATTERN.test(cleaned.senderEmail) || !cleaned.subject || cleaned.message.length < 10) {
-            return jsonResponse({ ok: false, error: 'invalid_support_payload' }, 400);
+            return errorResponse('invalid_support_payload', 400);
         }
 
         const serviceAccount = await getServiceAccount();
         if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) {
-            return jsonResponse({ ok: false, error: 'support_not_configured' }, 503);
+            return errorResponse('support_not_configured', 503);
         }
 
         const ticketNumber = `date-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -340,9 +360,24 @@ export async function POST(request) {
         return jsonResponse({ ok: true, ticketNumber });
     } catch (error) {
         console.error('support endpoint error:', error instanceof Error ? error.message : 'unknown');
-        const badRequestErrors = new Set(['attachment_too_large', 'unsupported_attachment_type']);
         const errorMessage = error instanceof Error ? error.message : '';
-        const errorCode = error instanceof SyntaxError ? 'invalid_json' : badRequestErrors.has(errorMessage) ? errorMessage : 'support_create_failed';
-        return jsonResponse({ ok: false, error: errorCode }, errorCode === 'support_create_failed' ? 500 : 400);
+        let errorCode = 'support_create_failed';
+        let status = 500;
+
+        if (error instanceof SyntaxError) {
+            errorCode = 'invalid_json';
+            status = 400;
+        } else if (['body_too_large', 'attachment_too_large', 'unsupported_attachment_type'].includes(errorMessage)) {
+            errorCode = errorMessage;
+            status = errorMessage === 'body_too_large' ? 413 : 400;
+        } else if (errorMessage === 'media_storage_not_configured') {
+            errorCode = errorMessage;
+            status = 503;
+        } else if (errorMessage.startsWith('token_failed_')) {
+            errorCode = 'support_auth_failed';
+            status = 503;
+        }
+
+        return errorResponse(errorCode, status);
     }
 }

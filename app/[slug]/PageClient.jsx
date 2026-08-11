@@ -236,7 +236,7 @@ function StaticPageLoading({ isContactPage = false }) {
     );
 }
 
-function ContactForm() {
+function ContactForm({ contactEmail = '' }) {
     const [form, setForm] = useState(initialContactForm);
     const [attachmentFile, setAttachmentFile] = useState(null);
     const [notice, setNotice] = useState({ text: '', type: 'info' });
@@ -271,6 +271,7 @@ function ContactForm() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        const formElement = event.currentTarget;
 
         if (form.message.trim().length < 10) {
             setNotice({ text: 'اكتب رسالة أوضح، 10 أحرف على الأقل.', type: 'error' });
@@ -290,14 +291,28 @@ function ContactForm() {
             });
             const result = await response.json().catch(() => ({}));
 
-            if (!response.ok || !result.ok) throw new Error(result.error || 'support_failed');
+            if (!response.ok || !result.ok) throw new Error(result.errorNumber || 'SUP-5000');
 
-            setNotice({ text: `تم إرسال رسالتك بنجاح. رقم التذكرة: ${result.ticketNumber}`, type: 'success' });
+            setNotice({
+                text: `تم إرسال رسالتك بنجاح. ومن منطلق اهتمامنا بعملائنا، سيتم الرد خلال 27 ساعة.\nرقم التذكرة الخاص بك هو: ${result.ticketNumber}`,
+                type: 'success',
+            });
             setForm(initialContactForm);
             setAttachmentFile(null);
-            event.currentTarget.reset();
-        } catch {
-            setNotice({ text: 'تعذر إرسال الرسالة الآن. حاول مرة أخرى لاحقًا.', type: 'error' });
+            formElement.reset();
+        } catch (error) {
+            const errorNumber = String(error?.message || 'SUP-5000').startsWith('SUP-')
+                ? String(error.message)
+                : 'SUP-5000';
+            const directEmail = String(contactEmail || '').trim();
+            const emailHelp = directEmail
+                ? `\nيمكنك التواصل معنا عبر البريد المباشر: ${directEmail}`
+                : '';
+
+            setNotice({
+                text: `تعذر إرسال الرسالة بسبب الخطأ رقم: ${errorNumber}.${emailHelp}`,
+                type: 'error',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -474,7 +489,7 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
                 </p>
             ) : null}
 
-            {isContactPage ? <ContactForm /> : null}
+            {isContactPage ? <ContactForm contactEmail={config?.contactEmail || ''} /> : null}
         </PageFrame>
     );
 }
