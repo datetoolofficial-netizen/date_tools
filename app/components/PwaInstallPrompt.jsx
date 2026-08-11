@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 const DISMISSED_KEY = 'date_tools_pwa_install_dismissed';
+const INSTALL_PROMPT_DELAY_MS = 12_000;
 const DEFAULT_PROMPT_TEXT = 'ثبّت الأداة على جهازك لاستخدام أسرع';
 const DEFAULT_BUTTON_TEXT = 'ثبّت الأداة';
 
@@ -26,13 +27,19 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
         const wasDismissed = localStorage.getItem(DISMISSED_KEY) === 'true';
         if (wasDismissed) return undefined;
 
+        let showTimerId;
+
         const handleBeforeInstallPrompt = (event) => {
             event.preventDefault();
             setInstallPrompt(event);
-            setIsVisible(true);
+            window.clearTimeout(showTimerId);
+            showTimerId = window.setTimeout(() => {
+                setIsVisible(true);
+            }, INSTALL_PROMPT_DELAY_MS);
         };
 
         const handleInstalled = () => {
+            window.clearTimeout(showTimerId);
             setInstallPrompt(null);
             setIsVisible(false);
             localStorage.setItem(DISMISSED_KEY, 'true');
@@ -42,6 +49,7 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
         window.addEventListener('appinstalled', handleInstalled);
 
         return () => {
+            window.clearTimeout(showTimerId);
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
             window.removeEventListener('appinstalled', handleInstalled);
         };
