@@ -26,7 +26,10 @@ const SHARE_PREVIEW_VALUES_BY_TEMPLATE = {
     timezoneDiffResult: { fromCity: 'الرياض', toCity: 'لندن', difference: 'ساعتين', fromTime: '13:30', toTime: '11:30' },
     currentWeatherResult: { city: 'الرياض', temperature: '32°', condition: 'سماء صافية', feelsLike: '34°', humidity: '22%', wind: '14 كم/س', rainChance: '0%', uv: '6' },
     outdoorAdviceResult: { city: 'الرياض', advice: 'الأجواء مناسبة للخروج مع تجنب شمس الظهيرة.' },
-    forecastResult: { city: 'الرياض', forecast: 'اليوم: 32° / 24° - صافي\nغدًا: 31° / 23° - غائم جزئيًا' },
+    forecastResult: {
+        city: 'الرياض',
+        forecast: 'الأربعاء، 12 أغسطس: 32° / 24° - صافي - 0% مطر\nالخميس، 13 أغسطس: 31° / 23° - غائم جزئيًا - 10% مطر\nالجمعة، 14 أغسطس: 30° / 22° - غائم - 20% مطر\nالسبت، 15 أغسطس: 33° / 24° - صافي - 0% مطر\nالأحد، 16 أغسطس: 34° / 25° - غالبًا صافية - 0% مطر',
+    },
 };
 
 function cloneToolSettings(value) {

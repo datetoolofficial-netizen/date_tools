@@ -95,6 +95,31 @@ function weatherText(code) {
     return weatherLabels[code] || 'حالة جوية متغيرة';
 }
 
+function formatForecastDate(day) {
+    return new Intl.DateTimeFormat('ar-SA', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+    }).format(new Date(`${day}T12:00:00`));
+}
+
+function getUpcomingForecastDays(daily) {
+    if (!Array.isArray(daily?.time)) return [];
+
+    return daily.time.slice(1, 6).map((day, index) => {
+        const sourceIndex = index + 1;
+
+        return {
+            day,
+            dateLabel: formatForecastDate(day),
+            maxTemperature: Math.round(daily.temperature_2m_max?.[sourceIndex] || 0),
+            minTemperature: Math.round(daily.temperature_2m_min?.[sourceIndex] || 0),
+            condition: weatherText(daily.weather_code?.[sourceIndex]),
+            rainChance: daily.precipitation_probability_max?.[sourceIndex] ?? 0,
+        };
+    });
+}
+
 function getOutdoorAdvice(current, daily) {
     if (!current) return 'ابحث عن مدينة لعرض النصيحة.';
     if (daily?.uv_index_max?.[0] >= 8) return 'مؤشر UV مرتفع، الأفضل تجنب التعرض الطويل للشمس وقت الظهيرة.';
@@ -110,7 +135,7 @@ async function fetchForecast(latitude, longitude) {
         timezone: 'auto',
         current: 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m',
         daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset',
-        forecast_days: '5',
+        forecast_days: '6',
     });
 
     const forecastResponse = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
@@ -233,9 +258,10 @@ export default function WeatherPage({ children, hideHero = false, initialSection
     const shouldReserveWeatherResults = isLoading && !current && !error;
     const cityLabel = weather?.place?.name || query;
     const adviceText = getOutdoorAdvice(current, daily);
-    const forecastText = daily?.time?.map((day, index) => (
-        `${new Intl.DateTimeFormat('ar-SA', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(day))}: ${Math.round(daily.temperature_2m_max[index])}° / ${Math.round(daily.temperature_2m_min[index])}° - ${weatherText(daily.weather_code[index])}`
-    )).join('\n') || '';
+    const upcomingForecastDays = getUpcomingForecastDays(daily);
+    const forecastText = upcomingForecastDays.map((forecastDay) => (
+        `${forecastDay.dateLabel}: ${forecastDay.maxTemperature}° / ${forecastDay.minTemperature}° - ${forecastDay.condition} - ${forecastDay.rainChance}% مطر`
+    )).join('\n');
 
     const shareWeatherResult = async (templateKey, variables) => {
         if (!isShareTemplateEnabled(weatherSettings, templateKey)) return;
@@ -360,19 +386,19 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
             <PublicAdSlot configData={configData} slotName="weatherBottom" label="إعلان أسفل الطقس" />
 
-            {daily?.time ? (
+            {upcomingForecastDays.length ? (
                 <article className="tool-widget" id="weather-forecast">
                     <div className="tool-widget-title">
                         <i className="fa-solid fa-calendar-week"></i>
                         <h3>{weatherSettings.subtools?.forecast}</h3>
                     </div>
                     <div className="forecast-list">
-                        {daily.time.map((day, index) => (
-                            <div key={day} className="forecast-row">
-                                <span>{new Intl.DateTimeFormat('ar-SA', { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(day))}</span>
-                                <strong>{Math.round(daily.temperature_2m_max[index])}° / {Math.round(daily.temperature_2m_min[index])}°</strong>
-                                <small>{weatherText(daily.weather_code[index])}</small>
-                                <em>{daily.precipitation_probability_max[index] ?? 0}% مطر</em>
+                        {upcomingForecastDays.map((forecastDay) => (
+                            <div key={forecastDay.day} className="forecast-row">
+                                <span>{forecastDay.dateLabel}</span>
+                                <strong>{forecastDay.maxTemperature}° / {forecastDay.minTemperature}°</strong>
+                                <small>{forecastDay.condition}</small>
+                                <em>{forecastDay.rainChance}% مطر</em>
                             </div>
                         ))}
                     </div>

@@ -260,7 +260,7 @@ export const DEFAULT_TOOL_SETTINGS = {
             forecast: 'توقعات 5 أيام',
         },
         shareTemplates: {
-            currentWeatherResult: 'الطقس في {city}: {temperature} - {condition}، الإحساس {feelsLike}\n\n{url}',
+            currentWeatherResult: 'الطقس في {city}:\nدرجة الحرارة: {temperature}\nالحالة: {condition}\nالإحساس: {feelsLike}\nالرطوبة: {humidity}\nالرياح: {wind}\nتوقع المطر: {rainChance}\nمؤشر UV: {uv}\n\n{url}',
             outdoorAdviceResult: 'نصيحة الخروج اليوم في {city}: {advice}\n\n{url}',
             forecastResult: 'توقعات الطقس في {city}:\n{forecast}\n\n{url}',
         },
@@ -282,6 +282,9 @@ const LEGACY_SHARE_TEMPLATES = {
             '{toolTitle}\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\n{url}',
             'استخدمت {toolTitle} لحساب المدة بين تاريخين.\n\n{inputLabel}: {input}\nالنتيجة: {result}\n\nجرّب الأداة من هنا:\n{url}',
         ],
+    },
+    weather: {
+        currentWeatherResult: 'الطقس في {city}: {temperature} - {condition}، الإحساس {feelsLike}\n\n{url}',
     },
 };
 
