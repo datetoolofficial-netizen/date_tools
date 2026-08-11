@@ -37,15 +37,20 @@ export default function Toast({
             </span>
             <span className={styles.content}>
                 {title ? <strong className={styles.title}>{title}</strong> : null}
-                <span className={styles.message}>{message}</span>
+                <span className={styles.message}>
+                    {message}
+                    {linkHref && linkLabel ? (
+                        <>
+                            {' '}
+                            <a className={styles.supportLink} href={linkHref}>{linkLabel}</a>
+                        </>
+                    ) : null}
+                </span>
                 {referenceValue ? (
                     <span className={styles.reference}>
                         <small>{referenceLabel}</small>
                         <b dir="ltr">{referenceValue}</b>
                     </span>
-                ) : null}
-                {linkHref && linkLabel ? (
-                    <a className={styles.supportLink} href={linkHref}>{linkLabel}</a>
                 ) : null}
             </span>
             {onClose && (
