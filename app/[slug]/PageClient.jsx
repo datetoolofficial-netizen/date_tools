@@ -254,14 +254,24 @@ function ContactForm({ contactEmail = '' }) {
         if (!file.type.startsWith('image/')) {
             event.target.value = '';
             setAttachmentFile(null);
-            setNotice({ text: 'يرجى اختيار صورة فقط بصيغة PNG أو JPG أو WEBP أو GIF.', type: 'error' });
+            setNotice({
+                title: 'تعذر اختيار المرفق',
+                text: 'يرجى اختيار صورة فقط بصيغة PNG أو JPG أو WEBP أو GIF.',
+                type: 'error',
+                modal: true,
+            });
             return;
         }
 
         if (file.size > 3 * 1024 * 1024) {
             event.target.value = '';
             setAttachmentFile(null);
-            setNotice({ text: 'حجم الصورة كبير. الحد الأقصى المسموح هو 3MB.', type: 'error' });
+            setNotice({
+                title: 'حجم الصورة غير مناسب',
+                text: 'حجم الصورة كبير. الحد الأقصى المسموح هو 3MB.',
+                type: 'error',
+                modal: true,
+            });
             return;
         }
 
@@ -274,7 +284,12 @@ function ContactForm({ contactEmail = '' }) {
         const formElement = event.currentTarget;
 
         if (form.message.trim().length < 10) {
-            setNotice({ text: 'اكتب رسالة أوضح، 10 أحرف على الأقل.', type: 'error' });
+            setNotice({
+                title: 'الرسالة قصيرة',
+                text: 'اكتب رسالة أوضح حتى نتمكن من مساعدتك، بحد أدنى 10 أحرف.',
+                type: 'error',
+                modal: true,
+            });
             return;
         }
 
@@ -294,8 +309,12 @@ function ContactForm({ contactEmail = '' }) {
             if (!response.ok || !result.ok) throw new Error(result.errorNumber || 'SUP-5000');
 
             setNotice({
-                text: `تم إرسال رسالتك بنجاح. ومن منطلق اهتمامنا بعملائنا، سيتم الرد خلال 27 ساعة.\nرقم التذكرة الخاص بك هو: ${result.ticketNumber}`,
+                title: 'تم إرسال رسالتك بنجاح',
+                text: 'شكرًا لتواصلك معنا. ومن منطلق اهتمامنا بعملائنا، سيتم الرد على رسالتك خلال 27 ساعة.',
                 type: 'success',
+                modal: true,
+                referenceLabel: 'رقم التذكرة',
+                referenceValue: result.ticketNumber,
             });
             setForm(initialContactForm);
             setAttachmentFile(null);
@@ -305,13 +324,17 @@ function ContactForm({ contactEmail = '' }) {
                 ? String(error.message)
                 : 'SUP-5000';
             const directEmail = String(contactEmail || '').trim();
-            const emailHelp = directEmail
-                ? `\nيمكنك التواصل معنا عبر البريد المباشر: ${directEmail}`
-                : '';
-
             setNotice({
-                text: `تعذر إرسال الرسالة بسبب الخطأ رقم: ${errorNumber}.${emailHelp}`,
+                title: 'تعذر إرسال الرسالة',
+                text: directEmail
+                    ? 'لم نتمكن من إرسال طلبك الآن. يمكنك المحاولة مرة أخرى أو التواصل معنا عبر البريد المباشر.'
+                    : 'لم نتمكن من إرسال طلبك الآن. يرجى المحاولة مرة أخرى بعد قليل.',
                 type: 'error',
+                modal: true,
+                referenceLabel: 'رقم الخطأ',
+                referenceValue: errorNumber,
+                linkHref: directEmail ? `mailto:${directEmail}` : '',
+                linkLabel: directEmail || '',
             });
         } finally {
             setIsLoading(false);
@@ -320,7 +343,18 @@ function ContactForm({ contactEmail = '' }) {
 
     return (
         <section className="contact-page-form">
-            <Toast visible={Boolean(notice.text)} message={notice.text} type={notice.type} onClose={() => setNotice({ text: '', type: 'info' })} />
+            <Toast
+                visible={Boolean(notice.text)}
+                message={notice.text}
+                type={notice.type}
+                modal={Boolean(notice.modal)}
+                title={notice.title || ''}
+                referenceLabel={notice.referenceLabel || ''}
+                referenceValue={notice.referenceValue || ''}
+                linkHref={notice.linkHref || ''}
+                linkLabel={notice.linkLabel || ''}
+                onClose={() => setNotice({ text: '', type: 'info' })}
+            />
 
             <form onSubmit={handleSubmit}>
                 <input
