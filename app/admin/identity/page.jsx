@@ -443,24 +443,18 @@ export default function AdminIdentityPage() {
             label: 'اختصار التاريخ',
             field: 'pwaShortcutDateIconUrl',
             category: 'pwa-shortcut-date',
-            fallbackIcon: 'fa-calendar-days',
-            fallbackSrc: '/pwa-shortcut-date-192.png',
         },
         {
             key: 'clock',
             label: 'اختصار الساعة',
             field: 'pwaShortcutClockIconUrl',
             category: 'pwa-shortcut-clock',
-            fallbackIcon: 'fa-clock',
-            fallbackSrc: '/pwa-shortcut-clock-192.png',
         },
         {
             key: 'weather',
             label: 'اختصار الطقس',
             field: 'pwaShortcutWeatherIconUrl',
             category: 'pwa-shortcut-weather',
-            fallbackIcon: 'fa-cloud-sun',
-            fallbackSrc: '/pwa-shortcut-weather-192.png',
         },
     ];
 
@@ -702,21 +696,9 @@ export default function AdminIdentityPage() {
                                 <div className="legacy-favicon-preview">
                                     {identity.faviconUrl ? (
                                         // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={identity.faviconUrl} alt="معاينة favicon" />
+                                        <img src={identity.faviconUrl} alt="معاينة أيقونة المتصفح" />
                                     ) : (
                                         <i className="fa-regular fa-image"></i>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="legacy-preview-row">
-                                <span>أيقونة التطبيق</span>
-                                <div className="legacy-favicon-preview">
-                                    {identity.appIconUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={identity.appIconUrl} alt="معاينة أيقونة التطبيق" />
-                                    ) : (
-                                        <i className="fa-solid fa-mobile-screen-button"></i>
                                     )}
                                 </div>
                             </div>
@@ -946,7 +928,7 @@ export default function AdminIdentityPage() {
 
                             <div className="pwa-shortcut-admin-list">
                                 {pwaShortcutItems.map((item) => {
-                                    const iconValue = identity[item.field] || item.fallbackSrc;
+                                    const iconValue = identity[item.field] || '';
 
                                     return (
                                         <div className="pwa-shortcut-admin-row" key={item.key}>
@@ -955,12 +937,12 @@ export default function AdminIdentityPage() {
                                                     // eslint-disable-next-line @next/next/no-img-element
                                                     <img src={iconValue} alt={item.label} />
                                                 ) : (
-                                                    <i className={`fa-solid ${item.fallbackIcon}`}></i>
+                                                    <i className="fa-regular fa-image"></i>
                                                 )}
                                             </div>
                                             <div>
                                                 <strong>{item.label}</strong>
-                                                <small dir="ltr">{identity[item.field] || item.fallbackSrc}</small>
+                                                <small dir="ltr">{identity[item.field] || 'لم ترفع أيقونة بعد'}</small>
                                             </div>
                                             <label className={`pwa-shortcut-upload ${uploadingTarget === item.field ? 'is-uploading' : ''}`}>
                                                 <i className="fa-solid fa-cloud-arrow-up"></i>
@@ -980,7 +962,6 @@ export default function AdminIdentityPage() {
 
                         <aside className="identity-pwa-preview-card">
                             <div className="identity-pwa-phone">
-                                <span className="identity-pwa-phone-label">معاينة التثبيت</span>
                                 <div className="identity-pwa-app-icon">
                                     {pwaPreviewIcon ? (
                                         // eslint-disable-next-line @next/next/no-img-element
@@ -989,6 +970,7 @@ export default function AdminIdentityPage() {
                                         <i className="fa-solid fa-mobile-screen-button"></i>
                                     )}
                                 </div>
+                                <span className="identity-pwa-phone-label">معاينة التثبيت</span>
                                 <strong>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</strong>
                                 <p>{identity.toolSlogan || 'كل الأدوات بين يديك'}</p>
                                 <button type="button">
@@ -1000,7 +982,7 @@ export default function AdminIdentityPage() {
                             <div className="identity-pwa-shortcuts-preview">
                                 <strong>اختصارات الضغط المطوّل</strong>
                                 {pwaShortcutItems.map((item) => {
-                                    const iconValue = identity[item.field] || item.fallbackSrc;
+                                    const iconValue = identity[item.field] || '';
 
                                     return (
                                         <div className="identity-pwa-shortcut" key={item.key}>
@@ -1009,7 +991,7 @@ export default function AdminIdentityPage() {
                                                     // eslint-disable-next-line @next/next/no-img-element
                                                     <img src={iconValue} alt={item.label} />
                                                 ) : (
-                                                    <i className={`fa-solid ${item.fallbackIcon}`}></i>
+                                                    <i className="fa-regular fa-image"></i>
                                                 )}
                                             </span>
                                             <small>{item.label.replace('اختصار ', '')}</small>

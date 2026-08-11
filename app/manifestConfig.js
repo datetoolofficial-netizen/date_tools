@@ -5,21 +5,6 @@ const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-
 const fallbackName = 'أدوات التاريخ الشاملة';
 const fallbackShortName = 'أدوات التاريخ';
 const fallbackDescription = 'أداة شاملة لحساب العمر وتحويل التواريخ وأدوات الساعة والطقس.';
-const shortcutIconPaths = {
-    date: {
-        icon192: '/pwa-shortcut-date-192.png',
-        icon512: '/pwa-shortcut-date-512.png',
-    },
-    clock: {
-        icon192: '/pwa-shortcut-clock-192.png',
-        icon512: '/pwa-shortcut-clock-512.png',
-    },
-    weather: {
-        icon192: '/pwa-shortcut-weather-192.png',
-        icon512: '/pwa-shortcut-weather-512.png',
-    },
-};
-
 export const revalidate = 300;
 
 function getStringField(fields = {}, key) {
@@ -103,30 +88,16 @@ async function getInstallIdentity() {
     }
 }
 
-function getShortcutIcons(tool, customIconUrl = '') {
-    if (customIconUrl) {
-        return [
+function withShortcutIcon(shortcut, customIconUrl = '') {
+    if (!customIconUrl) return shortcut;
+
+    return {
+        ...shortcut,
+        icons: [
             buildAppIcon(customIconUrl, '192x192', 'any'),
             buildAppIcon(customIconUrl, '512x512', 'any'),
-        ];
-    }
-
-    const paths = shortcutIconPaths[tool] || shortcutIconPaths.date;
-
-    return [
-        {
-            src: paths.icon192,
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-        },
-        {
-            src: paths.icon512,
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
-        },
-    ];
+        ],
+    };
 }
 
 export async function buildManifest() {
@@ -159,24 +130,21 @@ export async function buildManifest() {
         categories: ['utilities', 'productivity'],
         icons: appIcons,
         shortcuts: [
-            {
+            withShortcutIcon({
                 name,
                 short_name: 'التاريخ',
                 url: '/',
-                icons: getShortcutIcons('date', identity.pwaShortcutDateIconUrl),
-            },
-            {
+            }, identity.pwaShortcutDateIconUrl),
+            withShortcutIcon({
                 name: 'أدوات الساعة',
                 short_name: 'الساعة',
                 url: '/clock',
-                icons: getShortcutIcons('clock', identity.pwaShortcutClockIconUrl),
-            },
-            {
+            }, identity.pwaShortcutClockIconUrl),
+            withShortcutIcon({
                 name: 'أدوات الطقس',
                 short_name: 'الطقس',
                 url: '/weather',
-                icons: getShortcutIcons('weather', identity.pwaShortcutWeatherIconUrl),
-            },
+            }, identity.pwaShortcutWeatherIconUrl),
         ],
     };
 }

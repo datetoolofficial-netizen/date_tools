@@ -1900,6 +1900,14 @@ body.dark-mode .legacy-nav-links a.active {
     --tool-bg: rgba(139, 92, 246, 0.14);
 }
 
+#identity-basic-settings,
+#link-preview,
+#pwa-install-settings {
+    --identity-preview-gradient:
+        linear-gradient(135deg, color-mix(in srgb, var(--tool-color) 28%, transparent), transparent 68%),
+        color-mix(in srgb, var(--bg-container) 88%, var(--tool-bg));
+}
+
 .identity-pwa-grid {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
@@ -1927,20 +1935,23 @@ body.dark-mode .legacy-nav-links a.active {
 .identity-pwa-shortcuts-preview {
     border: 1px solid color-mix(in srgb, var(--tool-color, #8b5cf6) 20%, var(--border-color));
     border-radius: 18px;
-    background:
-        radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--tool-color, #8b5cf6) 18%, transparent), transparent 34%),
-        var(--bg-container);
+    background: var(--identity-preview-gradient);
     padding: 18px;
 }
 
 .identity-pwa-phone {
+    min-height: 330px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 9px;
     text-align: center;
 }
 
 .identity-pwa-phone-label {
     display: inline-flex;
-    margin-bottom: 12px;
-    color: var(--text-muted);
+    margin: 0;
+    color: var(--tool-color, #8b5cf6);
     font-size: 11px;
     font-weight: 900;
 }
@@ -1948,7 +1959,7 @@ body.dark-mode .legacy-nav-links a.active {
 .identity-pwa-app-icon {
     width: 86px;
     height: 86px;
-    margin: 0 auto 12px;
+    margin: 0 auto 2px;
     border-radius: 24px;
     display: inline-flex;
     align-items: center;
@@ -1977,7 +1988,7 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .identity-pwa-phone p {
-    margin: 6px 0 14px;
+    margin: 0 0 8px;
     color: var(--text-sub);
     font-size: 12px;
     font-weight: 800;
@@ -1985,7 +1996,8 @@ body.dark-mode .legacy-nav-links a.active {
 
 .identity-pwa-phone button {
     min-height: 44px;
-    padding: 0 18px;
+    min-width: 142px;
+    padding: 0 20px;
     border: 0;
     border-radius: 14px;
     background: linear-gradient(135deg, #60a5fa, #6366f1);
@@ -2019,6 +2031,12 @@ body.dark-mode .legacy-nav-links a.active {
     border: 1px solid color-mix(in srgb, var(--tool-color, #8b5cf6) 22%, var(--border-color));
     background: color-mix(in srgb, var(--tool-color, #8b5cf6) 10%, var(--bg-body));
     color: var(--tool-color, #8b5cf6);
+}
+
+.pwa-shortcut-admin-preview > i,
+.identity-pwa-shortcut span > i {
+    color: var(--text-muted);
+    font-size: 18px;
 }
 
 .pwa-shortcut-admin-preview {
@@ -2928,7 +2946,7 @@ body.dark-mode .legacy-nav-links a.active {
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--tool-color) 24%, var(--border-color));
     border-radius: 18px;
-    background: var(--bg-container);
+    background: var(--identity-preview-gradient);
     box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
 }
 
@@ -2936,9 +2954,7 @@ body.dark-mode .legacy-nav-links a.active {
     min-height: 180px;
     display: grid;
     place-items: center;
-    background:
-        linear-gradient(135deg, color-mix(in srgb, var(--tool-color) 26%, transparent), transparent 65%),
-        var(--tool-bg);
+    background: transparent;
     color: var(--tool-color);
 }
 
@@ -2958,6 +2974,7 @@ body.dark-mode .legacy-nav-links a.active {
     display: grid;
     gap: 7px;
     padding: 16px;
+    background: transparent;
 }
 
 .link-preview-body span,
@@ -3346,6 +3363,10 @@ body.dark-mode .legacy-nav-links a.active {
     padding: 18px;
 }
 
+.legacy-identity-preview-card {
+    background: var(--identity-preview-gradient);
+}
+
 .identity-card-note {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -3415,10 +3436,20 @@ body.dark-mode .legacy-nav-links a.active {
 
 .legacy-preview-top {
     display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 14px;
-    padding-bottom: 18px;
+    padding: 18px;
     border-bottom: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--identity-preview-gradient);
+    text-align: center;
+}
+
+.legacy-preview-top > div:last-child {
+    display: grid;
+    justify-items: center;
 }
 
 .legacy-logo-preview,
