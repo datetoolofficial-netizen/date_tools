@@ -11,6 +11,7 @@ import {
 import { sanitizeHtml } from "./sanitizeHtml";
 import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings, serializeToolSettings } from "./toolSettings";
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPreview";
+import { pickPublicSiteConfig } from "./publicSiteConfig";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -29,6 +30,7 @@ export const db = getFirestore(app);
 let authInstance = null;
 let storageInstance = null;
 let appCheckPromise = null;
+const adminProfileCache = new Map();
 
 export async function ensureFirebaseAppCheck() {
     if (typeof window === "undefined") return null;
@@ -324,6 +326,15 @@ export async function getSiteConfig() {
     }
 }
 
+export async function syncPublicSiteConfig() {
+    const configRef = doc(db, "settings", "main");
+    const publicConfigRef = doc(db, "settings", "public");
+    const snapshot = await getDoc(configRef);
+    if (!snapshot.exists()) return;
+
+    await setDoc(publicConfigRef, pickPublicSiteConfig(snapshot.data(), true));
+}
+
 export async function saveSiteConfig(config) {
     const configRef = doc(db, "settings", "main");
     const customPages = Object.fromEntries(
@@ -376,6 +387,7 @@ export async function saveSiteConfig(config) {
 
     await setDoc(configRef, cleanConfig, { merge: true });
     await setDoc(configRef, { toolSettings: cleanConfig.toolSettings }, { mergeFields: ['toolSettings'] });
+    await syncPublicSiteConfig();
 
     return cleanConfig;
 }
@@ -448,6 +460,7 @@ export async function saveSiteConfigSection(sectionPatch) {
         await setDoc(configRef, { toolSettings: savedToolSettings }, { mergeFields: ['toolSettings'] });
     }
     await setDoc(configRef, cleanPatch, { merge: true });
+    await syncPublicSiteConfig();
 
     return {
         ...cleanPatch,
@@ -464,6 +477,9 @@ export async function getAdminProfile(uid) {
     try {
         if (!uid) return null;
 
+        const cached = adminProfileCache.get(uid);
+        if (cached && cached.expiresAt > Date.now()) return cached.value;
+
         const adminRef = doc(db, "admins", uid);
         const snap = await getDoc(adminRef);
 
@@ -471,10 +487,12 @@ export async function getAdminProfile(uid) {
             return null;
         }
 
-        return {
+        const profile = {
             id: snap.id,
             ...snap.data()
         };
+        adminProfileCache.set(uid, { value: profile, expiresAt: Date.now() + 60_000 });
+        return profile;
     } catch (error) {
         console.error("Error fetching admin profile.");
         return null;

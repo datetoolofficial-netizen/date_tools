@@ -1,10 +1,9 @@
 import { SITE_URL, publicToolSeo } from './seoConfig';
 import { normalizeToolSettings } from './toolSettings';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
+import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
 
 export const revalidate = 3600;
-
-const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 
 const reservedSlugs = new Set([
     'admin',
@@ -34,27 +33,6 @@ const toolContentLastModified = {
     clock: '2026-08-10',
     weather: '2026-08-10',
 };
-
-function decodeFirestoreValue(value) {
-    if (!value || typeof value !== 'object') return undefined;
-    if ('stringValue' in value) return value.stringValue;
-    if ('booleanValue' in value) return value.booleanValue;
-    if ('integerValue' in value) return Number(value.integerValue);
-    if ('doubleValue' in value) return Number(value.doubleValue);
-    if ('timestampValue' in value) return value.timestampValue;
-    if ('arrayValue' in value) {
-        return (value.arrayValue.values || []).map(decodeFirestoreValue);
-    }
-    if ('mapValue' in value) {
-        return decodeFirestoreFields(value.mapValue.fields || {});
-    }
-    return undefined;
-}
-function decodeFirestoreFields(fields = {}) {
-    return Object.fromEntries(
-        Object.entries(fields).map(([key, value]) => [key, decodeFirestoreValue(value)])
-    );
-}
 
 function normalizePublicPath(page, fallbackSlug) {
     const raw = String(page?.slug || page?.path || fallbackSlug || '').trim();
@@ -118,19 +96,7 @@ function collectDynamicPages(settings = {}) {
 }
 
 async function getSettings() {
-    try {
-        const response = await fetch(firestoreSettingsUrl, {
-            headers: { Accept: 'application/json' },
-            next: { revalidate },
-        });
-
-        if (!response.ok) return {};
-
-        const payload = await response.json();
-        return decodeFirestoreFields(payload.fields || {});
-    } catch {
-        return {};
-    }
+    return getPublicSiteConfigFromFirestore({ revalidate });
 }
 
 function normalizeLastModified(value) {

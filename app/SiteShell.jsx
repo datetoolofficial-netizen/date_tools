@@ -120,6 +120,8 @@ async function fetchPublicSiteConfig() {
 }
 
 async function sendStatisticEvent(payload) {
+    if (getPrivacyConsent()?.analytics !== true) return;
+
     try {
         await fetch('/api/statistics', {
             method: 'POST',
@@ -193,6 +195,7 @@ export default function SiteShell({ children, initialConfig = null }) {
     const [privacyDraft, setPrivacyDraft] = useState(DEFAULT_PRIVACY_CONSENT);
     const firebaseApiRef = useRef(defaultFirebaseApi);
     const autoLocationRequestRef = useRef(false);
+    const visitTrackedRef = useRef(false);
     const loadedConfigRef = useRef(false);
     const locationRequestRef = useRef(null);
 
@@ -220,8 +223,6 @@ export default function SiteShell({ children, initialConfig = null }) {
         async function loadSiteConfig() {
             try {
                 firebaseApiRef.current = publicRuntimeApi;
-                firebaseApiRef.current.initAndTrackVisit();
-
                 const data = await fetchPublicSiteConfig();
                 const nextConfig = {
                     ...(data || {}),
@@ -258,6 +259,13 @@ export default function SiteShell({ children, initialConfig = null }) {
             isMounted = false;
         };
     }, [shouldUseShell]);
+
+    useEffect(() => {
+        if (!shouldUseShell || privacyConsent?.analytics !== true || visitTrackedRef.current) return;
+
+        visitTrackedRef.current = true;
+        firebaseApiRef.current.initAndTrackVisit();
+    }, [privacyConsent?.analytics, shouldUseShell]);
 
     useEffect(() => {
         document.documentElement.lang = lang;
@@ -383,11 +391,12 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [currentLocation]);
 
     useEffect(() => {
-        if (!shouldUseShell || isSiteLoading || autoLocationRequestRef.current) return;
+        const needsAutomaticLocation = pathname === '/clock' || pathname === '/weather';
+        if (!shouldUseShell || !needsAutomaticLocation || isSiteLoading || autoLocationRequestRef.current) return;
 
         autoLocationRequestRef.current = true;
         requestCurrentLocation();
-    }, [isSiteLoading, requestCurrentLocation, shouldUseShell]);
+    }, [isSiteLoading, pathname, requestCurrentLocation, shouldUseShell]);
 
     useEffect(() => {
         if (!shouldUseShell || locationStatus === 'idle' || locationStatus === 'loading') return;

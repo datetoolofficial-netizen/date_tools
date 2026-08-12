@@ -6,7 +6,6 @@ import ToolContentSettings from '../ToolContentSettings';
 export default function AdminClockToolPage() {
     return (
         <ToolManagementShell
-            active="tool-management"
             icon="fa-clock"
             loadingTitle="جاري فتح إدارة أداة الساعة..."
             title="إدارة أداة الساعة"

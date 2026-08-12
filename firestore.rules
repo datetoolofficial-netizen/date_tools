@@ -12,13 +12,111 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
+    function adminData() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isAssistantAdmin() {
+      return isActiveAdmin()
+        && adminData().get("role", adminData().get("adminRole", "")) in ["assistant", "helper", "مساعد"];
+    }
+
+    function isFullAdmin() {
+      return isActiveAdmin() && !isAssistantAdmin();
+    }
+
+    function hasAdminPermission(permission, aliases) {
+      return isFullAdmin()
+        || (
+          isAssistantAdmin()
+          && (
+            (
+              adminData().get("permissions", []) is list
+              && adminData().get("permissions", []).hasAny(aliases)
+            )
+            || (
+              adminData().get("adminPermissions", []) is list
+              && adminData().get("adminPermissions", []).hasAny(aliases)
+            )
+            || (
+              adminData().get("allowedPages", []) is list
+              && adminData().get("allowedPages", []).hasAny(aliases)
+            )
+            || (
+              adminData().get("allowedAdminPages", []) is list
+              && adminData().get("allowedAdminPages", []).hasAny(aliases)
+            )
+            || (
+              adminData().get("permissions", {}) is map
+              && adminData().get("permissions", {}).get(permission, false) == true
+            )
+            || (
+              adminData().get("adminPermissions", {}) is map
+              && adminData().get("adminPermissions", {}).get(permission, false) == true
+            )
+            || (
+              adminData().get("allowedPages", {}) is map
+              && adminData().get("allowedPages", {}).get(permission, false) == true
+            )
+            || (
+              adminData().get("allowedAdminPages", {}) is map
+              && adminData().get("allowedAdminPages", {}).get(permission, false) == true
+            )
+          )
+        );
+    }
+
+    function commonSettingsFields() {
+      return ["hasError", "adCampaigns", "adImages", "pages", "toolSlogan"];
+    }
+
+    function canUpdateMainSettings() {
+      let changed = request.resource.data.diff(resource.data).affectedKeys();
+      return isFullAdmin()
+        || (
+          hasAdminPermission("identity", ["identity", "brand", "branding"])
+          && changed.hasOnly(commonSettingsFields().concat([
+            "toolDisplayName", "toolSlogan", "contactEmail", "hasLogo", "logoUrl",
+            "faviconUrl", "appIconUrl", "pwaShortcutDateIconUrl", "pwaShortcutClockIconUrl",
+            "pwaShortcutWeatherIconUrl", "copyrightName", "copyrightText", "mainSEO",
+            "linkPreview", "pwaInstallPrompt"
+          ]))
+        )
+        || (
+          hasAdminPermission("integrations", ["integrations", "external-integrations", "externalIntegrations"])
+          && changed.hasOnly(commonSettingsFields().concat(["externalIntegrations"]))
+        )
+        || (
+          hasAdminPermission("ad-settings", ["ad-settings", "adSettings", "ads-settings", "google-ads"])
+          && changed.hasOnly(commonSettingsFields().concat(["googleAdSlots", "externalIntegrations"]))
+        )
+        || (
+          hasAdminPermission("tools", ["tools", "settings", "site-settings", "pages"])
+          && changed.hasOnly(commonSettingsFields().concat([
+            "internalPages", "customPages", "socialLinks", "externalLinks", "privacySettingsButton"
+          ]))
+        )
+        || (
+          hasAdminPermission("tool-management", ["tool-management", "toolManagement", "tools-management", "toolsContent"])
+          && changed.hasOnly(commonSettingsFields().concat(["toolSettings", "events"]))
+        );
+    }
+
     match /settings/{documentId} {
-      allow read: if documentId == "main" || isActiveAdmin();
-      allow create, update, delete: if documentId == "main" && isActiveAdmin();
+      allow read: if documentId == "public"
+        || (
+          documentId == "main"
+          && !exists(/databases/$(database)/documents/settings/public)
+        )
+        || isActiveAdmin();
+      allow create, delete: if documentId in ["main", "public"] && isFullAdmin();
+      allow update: if documentId in ["main", "public"] && canUpdateMainSettings();
     }
 
     match /statistics/{documentId} {
-      allow read, create, update, delete: if documentId == "main" && isActiveAdmin();
+      allow read: if documentId == "main"
+        && hasAdminPermission("home", ["home", "dashboard", "admin"]);
+      allow create, update, delete: if false;
     }
 
     match /admins/{userId} {
@@ -28,32 +126,61 @@ service cloud.firestore {
     }
 
     match /advertisers/{userId} {
-      allow get, update: if isSignedIn() && request.auth.uid == userId;
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn()
+        && request.auth.uid == userId
+        && (
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(["storeName", "contactName", "phone", "updatedAt"])
+            && request.resource.data.storeName is string
+            && request.resource.data.storeName.size() <= 120
+            && request.resource.data.contactName is string
+            && request.resource.data.contactName.size() <= 120
+            && request.resource.data.phone is string
+            && request.resource.data.phone.size() <= 40
+          )
+          || (
+            request.auth.token.email_verified == true
+            && resource.data.status == "pending_email"
+            && request.resource.data.status == "active"
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
+          )
+        );
       allow create: if isSignedIn()
         && request.auth.uid == userId
         && request.resource.data.email is string
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.email.size() <= 160
         && request.resource.data.storeName is string
-        && request.resource.data.status == "active";
-      allow list, delete: if isActiveAdmin();
+        && request.resource.data.storeName.size() <= 120
+        && request.resource.data.contactName is string
+        && request.resource.data.contactName.size() <= 120
+        && request.resource.data.status == "pending_email";
+      allow list, delete: if hasAdminPermission("client", ["client", "advertisers", "clients", "ads", "campaigns"]);
     }
 
     match /campaigns/{campaignId} {
-      allow read: if isActiveAdmin()
+      allow read: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
         || (isSignedIn() && resource.data.advertiserId == request.auth.uid);
 
-      allow create: if isActiveAdmin()
+      allow create: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
         || (
           isSignedIn()
+          && get(/databases/$(database)/documents/advertisers/$(request.auth.uid)).data.status == "active"
           && request.resource.data.advertiserId == request.auth.uid
           && request.resource.data.status == "قيد المراجعة"
           && request.resource.data.campaignName is string
+          && request.resource.data.campaignName.size() <= 120
           && request.resource.data.targetUrl is string
+          && request.resource.data.targetUrl.matches('https://.*')
+          && request.resource.data.targetUrl.size() <= 1000
           && request.resource.data.imageUrl is string
+          && request.resource.data.imageUrl.matches('/api/media/ads/.*')
           && request.resource.data.startTime is string
           && request.resource.data.endTime is string
         );
 
-      allow update: if isActiveAdmin()
+      allow update: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
         || (
           isSignedIn()
           && resource.data.advertiserId == request.auth.uid
@@ -62,11 +189,11 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
         );
 
-      allow delete: if isActiveAdmin();
+      allow delete: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"]);
     }
 
     match /support_tickets/{ticketId} {
-      allow read, update, delete: if isActiveAdmin();
+      allow read, update, delete: if hasAdminPermission("support", ["support", "tickets"]);
       allow create: if false;
     }
 

@@ -1,6 +1,7 @@
 import ToolSeoContent from '../components/ToolSeoContent';
 import ToolPageHero from '../components/ToolPageHero';
 import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
+import { serializeJsonLd } from '../safeJsonLd';
 import WeatherPageClient from './WeatherPageClient';
 
 export async function generateMetadata() {
@@ -15,7 +16,7 @@ export default async function WeatherPage() {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-cloud-sun-rain" className="weather-hero" />
             <WeatherPageClient hideHero>

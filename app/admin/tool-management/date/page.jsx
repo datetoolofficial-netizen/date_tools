@@ -238,7 +238,6 @@ function DateToolEvents({ firebaseApi, showMessage }) {
 export default function AdminDateToolPage() {
     return (
         <ToolManagementShell
-            active="tool-management"
             icon="fa-calendar-days"
             loadingTitle="جاري فتح إدارة أداة التاريخ..."
             title="إدارة أداة التاريخ"

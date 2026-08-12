@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../components/Toast';
+import TurnstileField from '../components/TurnstileField';
 import { sanitizeHtml } from '../sanitizeHtml';
 
 const DEFAULT_PAGE_CONTENT = {
@@ -241,6 +242,8 @@ function ContactForm({ contactEmail = '' }) {
     const [attachmentFile, setAttachmentFile] = useState(null);
     const [notice, setNotice] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
     const updateAttachment = (event) => {
@@ -299,6 +302,7 @@ function ContactForm({ contactEmail = '' }) {
             const payload = new FormData();
             Object.entries(form).forEach(([key, value]) => payload.append(key, value));
             if (attachmentFile) payload.append('attachment', attachmentFile);
+            if (turnstileToken) payload.append('turnstileToken', turnstileToken);
 
             const response = await fetch('/api/support', {
                 method: 'POST',
@@ -318,6 +322,8 @@ function ContactForm({ contactEmail = '' }) {
             });
             setForm(initialContactForm);
             setAttachmentFile(null);
+            setTurnstileToken('');
+            setTurnstileResetKey((current) => current + 1);
             formElement.reset();
         } catch (error) {
             const errorNumber = String(error?.message || 'SUP-5000').startsWith('SUP-')
@@ -395,6 +401,12 @@ function ContactForm({ contactEmail = '' }) {
                         <strong>{attachmentFile ? attachmentFile.name : 'اختر صورة من جهازك'}</strong>
                     </div>
                 </label>
+
+                <TurnstileField
+                    action="support-form"
+                    onTokenChange={setTurnstileToken}
+                    resetKey={turnstileResetKey}
+                />
 
                 <button type="submit" disabled={isLoading}>
                     <i className={`fa-solid ${isLoading ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}></i>

@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Toast from '../../components/Toast';
+import TurnstileField from '../../components/TurnstileField';
+import { verifyTurnstileChallenge } from '../../turnstileClient';
 import { CLIENT_PORTAL_VERSION } from '../ClientVersion';
 import '../ClientPortal.css';
 
@@ -19,6 +21,8 @@ export default function ClientRegisterPage() {
     const [form, setForm] = useState(initialForm);
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const updateField = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
@@ -41,7 +45,9 @@ export default function ClientRegisterPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
-            const [{ db, getFirebaseAuth }, { createUserWithEmailAndPassword, updateProfile }, { doc, setDoc, serverTimestamp }] = await Promise.all([
+            await verifyTurnstileChallenge(turnstileToken, 'advertiser-register');
+
+            const [{ db, getFirebaseAuth }, { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut }, { doc, setDoc, serverTimestamp }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
@@ -57,17 +63,25 @@ export default function ClientRegisterPage() {
                 contactName: form.contactName.trim(),
                 email: cleanEmail,
                 phone: form.phone.trim(),
-                status: 'active',
+                status: 'pending_email',
                 portalVersion: CLIENT_PORTAL_VERSION,
                 acceptedTermsAt: new Date().toISOString(),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
 
-            setMessage({ text: 'تم إنشاء الحساب بنجاح. سيتم تحويلك إلى لوحة المعلن.', type: 'success' });
-            window.setTimeout(() => window.location.replace('/client/dashboard'), 900);
+            await sendEmailVerification(credential.user, {
+                url: `${window.location.origin}/client`,
+            });
+            await signOut(auth);
+
+            setMessage({ text: 'تم إنشاء الحساب. أرسلنا رابط تأكيد إلى بريدك الإلكتروني؛ أكده ثم سجل الدخول.', type: 'success' });
+            window.setTimeout(() => window.location.replace('/client'), 1800);
         } catch (error) {
-            const friendly = error.code === 'auth/email-already-in-use'
+            setTurnstileResetKey((value) => value + 1);
+            const friendly = error.code === 'security/turnstile-failed'
+                ? 'تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.'
+                : error.code === 'auth/email-already-in-use'
                 ? 'هذا البريد مستخدم مسبقًا.'
                 : 'تعذر إنشاء الحساب الآن. تأكد من البيانات وحاول مجددًا.';
             setMessage({ text: friendly, type: 'error' });
@@ -121,9 +135,15 @@ export default function ClientRegisterPage() {
                         </span>
                     </label>
 
-                    <div className="client-turnstile-note">
+                    <div className="client-turnstile-note" hidden>
                         <strong>ملاحظة أمنية:</strong> تفعيل Turnstile الحقيقي يحتاج إنشاء Widget وسر تحقق في Cloudflare، ثم ربط الإرسال عبر الخادم.
                     </div>
+
+                    <TurnstileField
+                        action="advertiser-register"
+                        onTokenChange={setTurnstileToken}
+                        resetKey={turnstileResetKey}
+                    />
 
                     <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%', marginTop: 14 }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-user-plus"></i>}

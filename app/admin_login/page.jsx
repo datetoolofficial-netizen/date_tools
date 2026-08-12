@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Toast from '../components/Toast';
+import TurnstileField from '../components/TurnstileField';
+import { verifyTurnstileChallenge } from '../turnstileClient';
+import { evaluateAdminAccess } from '../securityPolicies';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
@@ -10,6 +13,8 @@ export default function AdminLogin() {
     const [password, setPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -17,6 +22,8 @@ export default function AdminLogin() {
         setIsLoading(true);
 
         try {
+            await verifyTurnstileChallenge(turnstileToken, 'admin-login');
+
             const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
                 import('../firebase'),
                 import('firebase/auth'),
@@ -32,15 +39,15 @@ export default function AdminLogin() {
             const adminDocRef = doc(db, "admins", user.uid);
             const adminDocSnap = await getDoc(adminDocRef);
 
-            if (!adminDocSnap.exists()) {
+            const adminAccess = evaluateAdminAccess(adminDocSnap.exists() ? adminDocSnap.data() : null);
+
+            if (adminAccess === 'missing') {
                 await signOut(auth);
                 setErrorMsg("عذراً، هذا الحساب لا يمتلك صلاحيات الدخول للوحة الإدارة.");
                 return;
             }
 
-            const adminData = adminDocSnap.data();
-
-            if (adminData.active !== true) {
+            if (adminAccess === 'inactive') {
                 await signOut(auth);
                 setErrorMsg("تم تعطيل هذا الحساب الإداري.");
                 return;
@@ -49,6 +56,7 @@ export default function AdminLogin() {
             // 3. الدخول إلى لوحة الإدارة
         window.location.replace('/admin');
         } catch (error) {
+            setTurnstileResetKey((value) => value + 1);
             if (
                 error.code === 'auth/invalid-credential' ||
                 error.code === 'auth/user-not-found' ||
@@ -57,6 +65,8 @@ export default function AdminLogin() {
                 setErrorMsg("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
             } else if (error.code === 'auth/too-many-requests') {
                 setErrorMsg("تم حظر الدخول مؤقتاً بسبب محاولات فاشلة كثيرة. يرجى المحاولة لاحقاً.");
+            } else if (error.code === 'security/turnstile-failed') {
+                setErrorMsg('تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.');
             } else {
                 setErrorMsg("حدث خطأ في الاتصال: " + error.message);
             }
@@ -114,6 +124,12 @@ export default function AdminLogin() {
                             />
                         </div>
                     </div>
+
+                    <TurnstileField
+                        action="admin-login"
+                        onTokenChange={setTurnstileToken}
+                        resetKey={turnstileResetKey}
+                    />
 
                     <button type="submit" className="btn-login" disabled={isLoading}>
                         {isLoading ? (

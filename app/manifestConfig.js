@@ -1,15 +1,11 @@
 import { APP_VERSION } from './version';
+import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
 
 const siteUrl = 'https://date-tool.com';
-const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 const fallbackName = 'أدوات التاريخ الشاملة';
 const fallbackShortName = 'أدوات التاريخ';
 const fallbackDescription = 'أداة شاملة لحساب العمر وتحويل التواريخ وأدوات الساعة والطقس.';
 export const revalidate = 300;
-
-function getStringField(fields = {}, key) {
-    return fields?.[key]?.stringValue || '';
-}
 
 function cleanText(value, fallback = '') {
     return String(value || '').replace(/\s+/g, ' ').trim() || fallback;
@@ -61,31 +57,18 @@ function buildAppIcon(src, sizes, purpose) {
 }
 
 async function getInstallIdentity() {
-    try {
-        const response = await fetch(firestoreSettingsUrl, {
-            headers: { Accept: 'application/json' },
-            next: { revalidate: 300 },
-        });
-
-        if (!response.ok) return {};
-
-        const payload = await response.json();
-        const fields = payload.fields || {};
-
-        return {
-            name: cleanText(getStringField(fields, 'toolDisplayName'), fallbackName),
-            shortName: cleanText(getStringField(fields, 'toolDisplayName'), fallbackShortName).slice(0, 24),
-            description: cleanText(getStringField(fields, 'toolSlogan'), fallbackDescription),
-            logoUrl: normalizeIconUrl(getStringField(fields, 'logoUrl')),
-            faviconUrl: normalizeIconUrl(getStringField(fields, 'faviconUrl')),
-            appIconUrl: normalizeIconUrl(getStringField(fields, 'appIconUrl')),
-            pwaShortcutDateIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutDateIconUrl')),
-            pwaShortcutClockIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutClockIconUrl')),
-            pwaShortcutWeatherIconUrl: normalizeIconUrl(getStringField(fields, 'pwaShortcutWeatherIconUrl')),
-        };
-    } catch {
-        return {};
-    }
+    const config = await getPublicSiteConfigFromFirestore({ revalidate: 300 });
+    return {
+        name: cleanText(config.toolDisplayName, fallbackName),
+        shortName: cleanText(config.toolDisplayName, fallbackShortName).slice(0, 24),
+        description: cleanText(config.toolSlogan, fallbackDescription),
+        logoUrl: normalizeIconUrl(config.logoUrl),
+        faviconUrl: normalizeIconUrl(config.faviconUrl),
+        appIconUrl: normalizeIconUrl(config.appIconUrl),
+        pwaShortcutDateIconUrl: normalizeIconUrl(config.pwaShortcutDateIconUrl),
+        pwaShortcutClockIconUrl: normalizeIconUrl(config.pwaShortcutClockIconUrl),
+        pwaShortcutWeatherIconUrl: normalizeIconUrl(config.pwaShortcutWeatherIconUrl),
+    };
 }
 
 function withShortcutIcon(shortcut, customIconUrl = '') {

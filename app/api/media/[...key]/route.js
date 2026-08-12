@@ -8,6 +8,7 @@ const PUBLIC_CATEGORIES = new Set([
     'pwa-shortcut-date',
     'pwa-shortcut-clock',
     'pwa-shortcut-weather',
+    'link-preview',
 ]);
 const SAFE_KEY_PATTERN = /^[a-z0-9][a-z0-9/_\-.]{1,240}$/i;
 

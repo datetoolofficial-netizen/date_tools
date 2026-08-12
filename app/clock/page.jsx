@@ -1,6 +1,7 @@
 import ToolSeoContent from '../components/ToolSeoContent';
 import ToolPageHero from '../components/ToolPageHero';
 import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
+import { serializeJsonLd } from '../safeJsonLd';
 import ClockPageClient from './ClockPageClient';
 
 export async function generateMetadata() {
@@ -15,7 +16,7 @@ export default async function ClockPage() {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-clock" className="clock-hero" />
             <ClockPageClient hideHero>

@@ -1,6 +1,8 @@
 import { resolveLinkPreview } from '../linkPreview';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
 import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
+import { serializeJsonLd } from '../safeJsonLd';
+import { sanitizeHtmlServer } from '../sanitizeHtmlServer';
 import { getToolSectionRouteBySlug } from '../../toolSectionRoutes';
 import HomePageClient from '../HomePageClient';
 import ClockPageClient from '../clock/ClockPageClient';
@@ -9,39 +11,17 @@ import ToolPageHero from '../components/ToolPageHero';
 import ToolSeoContent from '../components/ToolSeoContent';
 import PageClient from './PageClient';
 import { notFound } from 'next/navigation';
+import { getPublicSiteConfigFromFirestore } from '../firestorePublicConfig';
 
 export const dynamic = 'force-dynamic';
 
 const siteUrl = 'https://date-tool.com';
-const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 
 function normalizeSlug(value = '') {
     return String(value)
         .trim()
         .replace(/^\/+/, '')
         .replace(/\/+$/, '');
-}
-
-function decodeFirestoreValue(value) {
-    if (!value || typeof value !== 'object') return undefined;
-    if ('stringValue' in value) return value.stringValue || '';
-    if ('booleanValue' in value) return Boolean(value.booleanValue);
-    if ('integerValue' in value) return Number(value.integerValue || 0);
-    if ('doubleValue' in value) return Number(value.doubleValue || 0);
-    if ('arrayValue' in value) {
-        return (value.arrayValue.values || []).map(decodeFirestoreValue);
-    }
-    if ('mapValue' in value) {
-        return decodeFirestoreFields(value.mapValue.fields || {});
-    }
-    return undefined;
-}
-
-function decodeFirestoreFields(fields = {}) {
-    return Object.entries(fields).reduce((result, [key, value]) => {
-        result[key] = decodeFirestoreValue(value);
-        return result;
-    }, {});
 }
 
 function findPageInList(pages, slug) {
@@ -135,19 +115,7 @@ function absoluteUrl(value = '') {
 }
 
 async function getMetadataConfig() {
-    try {
-        const response = await fetch(firestoreSettingsUrl, {
-            headers: { Accept: 'application/json' },
-            next: { revalidate: 300 },
-        });
-
-        if (!response.ok) return {};
-
-        const payload = await response.json();
-        return decodeFirestoreFields(payload.fields || {});
-    } catch {
-        return {};
-    }
+    return getPublicSiteConfigFromFirestore({ revalidate: 300 });
 }
 
 export async function generateMetadata({ params }) {
@@ -208,7 +176,7 @@ export default async function Page({ params }) {
             <>
                 <script
                     type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                    dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
                 />
                 <ToolPageHero
                     title={page.title}
@@ -245,7 +213,13 @@ export default async function Page({ params }) {
     const page = findPageBySlug(config, slug);
     const initialPage = page?.isActive === false || page?.enabled === false
         ? null
-        : page;
+        : {
+            ...page,
+            content: sanitizeHtmlServer(page?.content || ''),
+            html: sanitizeHtmlServer(page?.html || ''),
+            body: sanitizeHtmlServer(page?.body || ''),
+            text: sanitizeHtmlServer(page?.text || ''),
+        };
 
     return (
         <PageClient

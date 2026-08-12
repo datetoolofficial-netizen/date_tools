@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Toast from '../../components/Toast';
 import ClientShell from '../ClientShell';
+import { validateCampaignSubmission } from '../../securityPolicies';
 import '../ClientPortal.css';
 
 const AD_LOCATION_OPTIONS = [
@@ -113,8 +114,14 @@ export default function CreateCampaignPage() {
             const body = new FormData();
             body.append('file', file);
             body.append('category', 'ads');
+            const idToken = await currentUser?.getIdToken();
+            if (!idToken) throw new Error('missing_auth_token');
 
-            const response = await fetch('/api/media/upload', { method: 'POST', body });
+            const response = await fetch('/api/media/upload', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${idToken}` },
+                body,
+            });
             const result = await response.json().catch(() => ({}));
 
             if (!response.ok || !result.ok) throw new Error(result.error || 'upload_failed');
@@ -138,8 +145,14 @@ export default function CreateCampaignPage() {
             return;
         }
 
-        if (durationText === 'error') {
+        const campaignError = validateCampaignSubmission(form);
+        if (campaignError === 'invalid_campaign_period') {
             setMessage({ text: 'وقت نهاية الإعلان يجب أن يكون بعد وقت البداية.', type: 'error' });
+            return;
+        }
+
+        if (campaignError) {
+            setMessage({ text: 'تأكد من اسم الحملة، الرابط الآمن، وصورة الإعلان.', type: 'error' });
             return;
         }
 

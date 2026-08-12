@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Toast from '../components/Toast';
+import TurnstileField from '../components/TurnstileField';
+import { verifyTurnstileChallenge } from '../turnstileClient';
+import { evaluateAdvertiserAccess } from '../securityPolicies';
 import { CLIENT_PORTAL_VERSION } from './ClientVersion';
 import './ClientPortal.css';
 
@@ -11,6 +14,8 @@ export default function ClientLoginPage() {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -18,7 +23,9 @@ export default function ClientLoginPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
-            const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc }] = await Promise.all([
+            await verifyTurnstileChallenge(turnstileToken, 'advertiser-login');
+
+            const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc, updateDoc, serverTimestamp }] = await Promise.all([
                 import('../firebase'),
                 import('firebase/auth'),
                 import('firebase/firestore'),
@@ -26,17 +33,38 @@ export default function ClientLoginPage() {
             const auth = await getFirebaseAuth();
 
             const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-            const profileSnap = await getDoc(doc(db, 'advertisers', credential.user.uid));
 
-            if (!profileSnap.exists()) {
+            const profileSnap = credential.user.emailVerified
+                ? await getDoc(doc(db, 'advertisers', credential.user.uid))
+                : null;
+            const profile = profileSnap?.exists() ? profileSnap.data() : null;
+            const advertiserAccess = evaluateAdvertiserAccess({
+                emailVerified: credential.user.emailVerified,
+                profile,
+            });
+
+            if (advertiserAccess === 'unverified') {
+                await signOut(auth);
+                setMessage({ text: 'يرجى تأكيد البريد الإلكتروني أولًا، ثم تسجيل الدخول.', type: 'error' });
+                setIsLoading(false);
+                return;
+            }
+
+            if (advertiserAccess === 'missing') {
                 await signOut(auth);
                 setMessage({ text: 'تم تسجيل الدخول، لكن لا يوجد ملف معلن لهذا الحساب. أنشئ حساب معلن أولًا.', type: 'error' });
                 setIsLoading(false);
                 return;
             }
 
-            const profile = profileSnap.data();
-            if (profile.status && profile.status !== 'active') {
+            if (advertiserAccess === 'activate') {
+                await updateDoc(doc(db, 'advertisers', credential.user.uid), {
+                    status: 'active',
+                    updatedAt: serverTimestamp(),
+                });
+            }
+
+            if (advertiserAccess === 'inactive') {
                 await signOut(auth);
                 setMessage({ text: 'هذا الحساب غير نشط حاليًا. تواصل مع الدعم الفني.', type: 'error' });
                 setIsLoading(false);
@@ -45,7 +73,10 @@ export default function ClientLoginPage() {
 
             window.location.replace('/client/dashboard');
         } catch (error) {
-            const friendly = error.code === 'auth/invalid-credential'
+            setTurnstileResetKey((value) => value + 1);
+            const friendly = error.code === 'security/turnstile-failed'
+                ? 'تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.'
+                : error.code === 'auth/invalid-credential'
                 ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
                 : 'تعذر تسجيل الدخول الآن. حاول مرة أخرى.';
             setMessage({ text: friendly, type: 'error' });
@@ -75,9 +106,15 @@ export default function ClientLoginPage() {
                         <input type="password" required dir="ltr" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
                     </div>
 
-                    <div className="client-turnstile-note">
+                    <div className="client-turnstile-note" hidden>
                         <strong>حماية التسجيل والدخول:</strong> تم تجهيز مكان الحماية، والتفعيل الكامل يحتاج Turnstile Site Key وWorker تحقق من Cloudflare حتى لا تكون الحماية شكلية فقط.
                     </div>
+
+                    <TurnstileField
+                        action="advertiser-login"
+                        onTokenChange={setTurnstileToken}
+                        resetKey={turnstileResetKey}
+                    />
 
                     <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%', marginTop: 14 }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-arrow-right-to-bracket"></i>}

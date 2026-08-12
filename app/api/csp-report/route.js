@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 const SAFE_TEXT_LIMIT = 240;
+const MAX_REPORT_BYTES = 16 * 1024;
 
 function stripSensitiveUrl(value) {
     if (!value || typeof value !== 'string') return '';
@@ -21,7 +22,15 @@ function safeText(value) {
 
 export async function POST(request) {
     try {
+        const contentLength = Number(request.headers.get('content-length') || 0);
+        if (contentLength > MAX_REPORT_BYTES) {
+            return new Response(null, { status: 413 });
+        }
+
         const text = await request.text();
+        if (new TextEncoder().encode(text).byteLength > MAX_REPORT_BYTES) {
+            return new Response(null, { status: 413 });
+        }
         const payload = text ? JSON.parse(text) : {};
         const report = payload?.['csp-report'] || payload || {};
 

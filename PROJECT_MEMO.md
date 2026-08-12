@@ -50,8 +50,9 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.28.
-نسخة منصة الإدارة الحالية هي 0.1.30.
+الإصدار الحالي للتطبيق هو 0.3.30.
+نسخة منصة الإدارة الحالية هي 0.1.32.
+نسخة بوابة المعلنين الحالية هي 1.0.2.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -177,6 +178,7 @@ https://www.date-tool.com
 111. نقل إدارة تثبيت التطبيق وهوية PWA إلى صفحة الهوية، مع دعم أيقونة التطبيق واختصارات التاريخ والساعة والطقس من R2 وفصل نسخة الإدارة.
 112. تصحيح مصدر عنوان ووصف Link Preview عند تفعيل استخدام الهوية الأساسية ليأخذ من اسم الأداة والسلوغن الحاليين بدل SEO القديم.
 113. تنظيف آمن لتكرار CSS في أزرار الواجهة وجداول الإدارة، وتوسيع sitemap ليشمل صفحات الأدوات العامة.
+114. فصل إعدادات العرض العامة عن إعدادات الإدارة، وتوحيد غلاف إدارة الأدوات، ونشر قواعد Firestore، وإضافة اختبارات أمنية وتدفقية آلية.
 114. إضافة إشعار تحديث تلقائي للتطبيق المثبت عند تغير نسخة الموقع مع خطوات تحديث واضحة.
 115. تقوية المحتوى النصي وبيانات SEO/Schema لصفحات التاريخ والساعة والطقس استعدادًا لمراجعة AdSense.
 116. مراجعة وتحسين الهيدرز الأمنية وتهيئة Cloudflare العامة مع إبقاء CSP لمرحلة report-only مستقلة.
@@ -10821,3 +10823,153 @@ git diff --check
 الحالة:
 
 - معاينات الهوية والرابط والتثبيت تستخدم سطحًا بصريًا موحدًا، وتظهر اختصارات الضغط المطوّل من روابط R2 المحفوظة دون استبدالها بصور ثابتة من المشروع.
+
+### جولة التقوية الأمنية الشاملة 0.3.29 / admin 0.1.31 / client 1.0.1
+
+ما تم إنجازه:
+
+- تحديث الاعتماديات الآمنة ورفع Next.js إلى `15.5.23` وWrangler إلى `4.121.0`، مع تثبيت إصدارات آمنة لـ `postcss` و`sharp` وإضافة `sanitize-html` وTurnstile.
+- خفض نتيجة `npm audit` من 11 ثغرة مكتشفة في خط الأساس إلى `0 vulnerabilities` دون استخدام `npm audit fix --force`.
+- إضافة تسلسل JSON-LD آمن يمنع إنهاء وسم script أو حقن HTML داخل البيانات المنظمة في الرئيسية والساعة والطقس وصفحات slug.
+- تنظيف HTML القادم من Firestore على الخادم قبل إدراجه في صفحات slug، وتنظيف HTML النتائج المعروضة داخل مكونات الصفحة الرئيسية.
+- إضافة Cloudflare Turnstile اختياريًا لنموذج التواصل ودخول الإدارة وتسجيل/دخول/استعادة حساب المعلن، مع تحقق خادمي من الرمز واسم المضيف واسم الإجراء وحد أقصى للطلب.
+- منع الاعتماد على امتداد أو MIME الصورة فقط، والتحقق من التوقيع الثنائي لصور PNG وJPEG وGIF وWEBP وICO قبل تخزينها في R2.
+- تقييد رفع الوسائط بحسب نوع الحساب وصلاحية المساعد، وقصر المعلن على فئة صور الإعلانات، مع تسجيل رافع الملف داخل metadata.
+- تقوية نموذج التذاكر بحدود فعلية للنص والمرفق، وأرقام تذاكر غير قابلة للتخمين بسهولة، والتحقق من Turnstile، وحذف مرفق R2 تلقائيًا إذا فشل إنشاء مستند Firestore.
+- تقييد مسارات PageSpeed وIndexNow والتذاكر والوسائط حسب صلاحيات المساعد، وقصر تنظيف Firebase على المدير الكامل.
+- تقوية قواعد Firestore لتقييد حقول إعدادات الموقع بحسب القسم، ومنع كتابة الإحصائيات من العميل، والتحقق من ملكية المعلن للحملات وحالة الحساب وروابط الصور.
+- إضافة تأكيد البريد الإلكتروني للمعلنين الجدد قبل تفعيل الحساب مع إبقاء الحسابات النشطة القديمة متوافقة.
+- عدم إرسال إحصائيات الزيارة قبل موافقة المستخدم على التحليلات، وقصر طلب الموقع التلقائي على صفحتي الساعة والطقس.
+- وضع حدود لحجم تقارير CSP وطلبات Turnstile، وإضافة نطاق Cloudflare Challenges إلى CSP بصيغة Report-Only.
+- فصل أرقام نسخ الموقع والإدارة وبوابة المعلنين ورفعها فقط لأن المجالات الثلاثة تأثرت فعليًا.
+- لم تتغير ملفات CSS أو ألوان أو أحجام أو تخطيط الواجهة في هذه الجولة، وبقي حجم JavaScript المشترك `103 kB`.
+
+الملفات المتأثرة:
+
+- `app/safeJsonLd.js`
+- `app/sanitizeHtmlServer.js`
+- `app/turnstileServer.js`
+- `app/turnstileClient.js`
+- `app/components/TurnstileField.jsx`
+- `app/layout.jsx`
+- `app/page.jsx`
+- `app/clock/page.jsx`
+- `app/weather/page.jsx`
+- `app/[slug]/page.jsx`
+- `app/[slug]/PageClient.jsx`
+- `app/components/home/HomeSections.jsx`
+- `app/SiteShell.jsx`
+- `app/admin_login/page.jsx`
+- `app/client/page.jsx`
+- `app/client/register/page.jsx`
+- `app/client/reset-password/page.jsx`
+- `app/client/create-campaign/page.jsx`
+- `app/api/_lib/adminPermissions.js`
+- `app/api/security/turnstile/route.js`
+- `app/api/support/route.js`
+- `app/api/admin/support/route.js`
+- `app/api/admin/indexnow/route.js`
+- `app/api/admin/cleanup/route.js`
+- `app/api/media/upload/route.js`
+- `app/api/media/[...key]/route.js`
+- `app/api/pagespeed/route.js`
+- `app/api/statistics/route.js`
+- `app/api/csp-report/route.js`
+- `firestore.rules`
+- `middleware.js`
+- `.dev.vars.example`
+- `app/version.js`
+- `app/client/ClientVersion.js`
+- `package.json`
+- `package-lock.json`
+
+الأوامر المستخدمة:
+
+```powershell
+npm run lint
+npm audit
+npm run build
+npx opennextjs-cloudflare build
+git diff --check
+```
+
+الحالة:
+
+- نجح ESLint وبناء Next.js 15.5.23 وبناء OpenNext for Cloudflare، وتم إنشاء `.open-next/worker.js`.
+- نتيجة تدقيق اعتماديات الإنتاج والتطوير: `found 0 vulnerabilities`.
+- بقيت CSP بصيغة Report-Only عمدًا حتى تتم مراقبة التقارير قبل فرضها، منعًا لكسر AdSense أو Firebase أو Turnstile.
+- المتبقي الخارجي: إنشاء Widget Turnstile وإضافة أسراره، نشر قواعد Firestore، تفعيل App Check تدريجيًا من Firebase Console، وضبط Rate Limiting من Cloudflare WAF.
+- يبقى مستند `settings/main` عامًا للقراءة بسبب اعتماد HTML الخادمي وmanifest وSEO عليه؛ الأفضل لاحقًا فصل إسقاط عام محدود في `settings/public` عن إعدادات الإدارة الخاصة ضمن ترحيل مستقل.
+- لم يتم النشر أو إنشاء commit في هذه الجولة.
+
+### فصل الإعدادات واختبارات الأمان 0.3.30 / admin 0.1.32 / client 1.0.2
+
+ما تم إنجازه:
+
+- إنشاء وثيقة عامة محدودة `settings/public` للمعلومات التي يحتاجها الموقع وSEO وmanifest وصفحات المحتوى، مع إبقاء `settings/main` للإدارة فقط بعد اكتمال الترحيل.
+- إضافة مزامنة تلقائية للإسقاط العام بعد حفظ الإعدادات، ومزامنة صامتة عند دخول مدير كامل لضمان إنشاء الوثيقة العامة دون كشف إعدادات خاصة.
+- تحويل قراءات `layout` وSEO وsitemap وmanifest و`ads.txt` وصفحات slug و`/api/site-config` إلى المساعد الخادمي العام الموحد.
+- تصفية إعدادات مواضع Google Ads داخل الإسقاط العام إلى الحقول اللازمة للعرض فقط، مع استبعاد `htmlSnippet` وأي قيم داخلية أو خاصة من `settings/public`.
+- إزالة التحقق والسايدبار والنافبار والفوتر المكررة من `ToolManagementShell` واعتماد `AdminShell` الثابت كمسؤول وحيد عن صلاحيات إدارة الأدوات وتنقلها.
+- نشر `firestore.rules` مرتين على مشروع `date-tool-official`: الأولى للتحقق، والثانية بعد إزالة تحذيرات القواعد؛ انتهى النشر دون تحذيرات.
+- تقييد مفتاح Firebase Web في Google Cloud باستخدام HTTP referrers للدومينات `date-tool.com` و`www` وWorker وFirebase Hosting والتطوير المحلي.
+- استخراج سياسات تسجيل دخول الإدارة والمعلنين، التذاكر، الحملات، والتحقق من وسائط R2 إلى دوال قابلة للاختبار وإعادة الاستخدام.
+- إضافة Vitest وسكربتات `npm test` و`npm run test:watch`، مع 13 اختبارًا ناجحًا تغطي الصلاحيات، الدخول، التذاكر، الحملات، R2، والإعدادات العامة.
+- إبقاء Turnstile في وضع اختياري آمن لأن Wrangler غير مسجل الدخول ولا توجد أسرار Widget في بيئة Cloudflare بعد.
+- إبقاء Firebase App Check مهيأ عبر reCAPTCHA Enterprise مع تحديث تلقائي للرمز، دون فرضه على الخدمات قبل مراقبة المقاييس.
+- لم تتغير ملفات CSS أو الألوان أو المقاسات أو تخطيط الموقع في هذه الجولة.
+
+الملفات المتأثرة:
+
+- `app/firestorePublicConfig.js`
+- `app/publicSiteConfig.js`
+- `app/firebase.js`
+- `app/layout.jsx`
+- `app/toolSeoServer.js`
+- `app/manifestConfig.js`
+- `app/sitemap.js`
+- `app/[slug]/page.jsx`
+- `app/ads.txt/route.js`
+- `app/api/site-config/route.js`
+- `app/admin/AdminShell.jsx`
+- `app/admin/tool-management/ToolManagementShell.jsx`
+- `app/securityPolicies.js`
+- `app/api/_lib/mediaValidation.js`
+- `app/admin_login/page.jsx`
+- `app/client/page.jsx`
+- `app/client/create-campaign/page.jsx`
+- `app/api/support/route.js`
+- `app/api/media/upload/route.js`
+- `tests/adminPermissions.test.js`
+- `tests/securityPolicies.test.js`
+- `tests/mediaValidation.test.js`
+- `tests/publicSiteConfig.test.js`
+- `firestore.rules`
+- `package.json`
+- `package-lock.json`
+- `app/version.js`
+- `app/client/ClientVersion.js`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm install --save-dev vitest
+npm test
+npm run lint
+npm run build
+npx opennextjs-cloudflare build
+npx firebase-tools deploy --only firestore:rules --project date-tool-official
+git diff --check
+```
+
+الحالة:
+
+- قواعد Firestore الجديدة منشورة وتمنع القراءة العامة لوثيقة الإدارة بعد ظهور `settings/public`.
+- تقييد مفتاح Firebase محفوظ ويمنع استعماله من مواقع غير مدرجة، مع إبقاء قيود APIs الحالية لتجنب كسر Firebase Auth أو Firestore أو App Check.
+- Turnstile يحتاج خارجيًا إنشاء Widget باسم واضح وإضافة `TURNSTILE_SITE_KEY` و`TURNSTILE_SECRET_KEY` و`TURNSTILE_ALLOWED_HOSTNAMES` إلى Worker؛ الكود الخادمي للتحقق موجود وجاهز.
+- App Check يحتاج فتح Firebase Console ومراقبة المقاييس أولًا، ثم فرض Cloud Firestore تدريجيًا، وبعد ثبات الطلبات يمكن تقييم فرض Authentication الذي ما زال Preview.
+- بعد وصول النسخة الجديدة للإنتاج ودخول مدير كامل مرة واحدة، تُنشأ `settings/public` تلقائيًا وينتهي مسار الترحيل الانتقالي.
+- التحقق المباشر من Firestore قبل النشر أعاد `404` لوثيقة `settings/public`؛ لذلك بقي الرجوع الانتقالي إلى `settings/main` حتى يصل الكود الجديد ويدخل مدير كامل، ثم يجب التحقق من إنشاء الوثيقة وإزالة الرجوع الانتقالي في جولة الإغلاق التالية.
+- التحقق النهائي نجح: 13 اختبار Vitest، وESLint، و`npm audit` بنتيجة `0 vulnerabilities`، وبناء Next.js، وبناء OpenNext وإنشاء `.open-next/worker.js`، و`git diff --check`.

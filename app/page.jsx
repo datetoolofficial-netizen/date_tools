@@ -2,6 +2,7 @@ import HomePageClient from './HomePageClient';
 import ToolSeoContent from './components/ToolSeoContent';
 import ToolPageHero from './components/ToolPageHero';
 import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from './toolSeoServer';
+import { serializeJsonLd } from './safeJsonLd';
 
 export async function generateMetadata() {
     return buildManagedToolMetadata('date');
@@ -15,7 +16,7 @@ export default async function Home() {
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(dateJsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(dateJsonLd) }}
             />
             <ToolPageHero
                 title={page.title}

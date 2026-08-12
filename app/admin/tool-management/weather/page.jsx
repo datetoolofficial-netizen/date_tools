@@ -6,7 +6,6 @@ import ToolContentSettings from '../ToolContentSettings';
 export default function AdminWeatherToolPage() {
     return (
         <ToolManagementShell
-            active="tool-management"
             icon="fa-cloud-sun"
             loadingTitle="جاري فتح إدارة أداة الطقس..."
             title="إدارة أداة الطقس"

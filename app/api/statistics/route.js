@@ -219,7 +219,9 @@ async function getAllowedOrigins(request) {
 
 async function isAllowedOrigin(request) {
     const origin = request.headers.get('origin');
-    if (!origin) return true;
+    if (!origin) {
+        return request.headers.get('sec-fetch-site') === 'same-origin';
+    }
 
     return (await getAllowedOrigins(request)).has(origin);
 }

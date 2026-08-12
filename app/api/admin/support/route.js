@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { hasAdminPermission } from '../../_lib/adminPermissions';
 
 const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
 const FIREBASE_PROJECT_ID = 'date-tool-official';
@@ -33,15 +34,15 @@ async function lookupFirebaseUser(idToken) {
     return data?.users?.[0] || null;
 }
 
-async function isActiveAdmin(idToken, uid) {
+async function getAdminProfile(idToken, uid) {
     const response = await fetch(`${FIRESTORE_BASE}/admins/${encodeURIComponent(uid)}`, {
         headers: { Authorization: `Bearer ${idToken}` },
         cache: 'no-store',
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) return null;
     const profile = await response.json();
-    return profile?.fields?.active?.booleanValue === true;
+    return profile?.fields || null;
 }
 
 async function requireActiveAdmin(request) {
@@ -49,7 +50,9 @@ async function requireActiveAdmin(request) {
     if (!idToken) return null;
 
     const user = await lookupFirebaseUser(idToken);
-    if (!user?.localId || !(await isActiveAdmin(idToken, user.localId))) return null;
+    if (!user?.localId) return null;
+    const profile = await getAdminProfile(idToken, user.localId);
+    if (!hasAdminPermission(profile, ['support', 'tickets'])) return null;
 
     return {
         idToken,

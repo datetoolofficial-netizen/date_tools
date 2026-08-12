@@ -3,12 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import Toast from '../../components/Toast';
+import TurnstileField from '../../components/TurnstileField';
+import { verifyTurnstileChallenge } from '../../turnstileClient';
 import '../ClientPortal.css';
 
 export default function ResetPasswordPage() {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
     const handleReset = async (event) => {
         event.preventDefault();
@@ -16,6 +20,8 @@ export default function ResetPasswordPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
+            await verifyTurnstileChallenge(turnstileToken, 'advertiser-reset');
+
             const [{ getFirebaseAuth }, { sendPasswordResetEmail }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/auth'),
@@ -24,8 +30,14 @@ export default function ResetPasswordPage() {
 
             await sendPasswordResetEmail(auth, email.trim());
             setMessage({ text: 'تم إرسال رابط استعادة كلمة المرور إلى بريدك إن كان الحساب موجودًا.', type: 'success' });
-        } catch {
-            setMessage({ text: 'تعذر إرسال رابط الاستعادة. تأكد من البريد وحاول مجددًا.', type: 'error' });
+        } catch (error) {
+            setTurnstileResetKey((value) => value + 1);
+            setMessage({
+                text: error.code === 'security/turnstile-failed'
+                    ? 'تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.'
+                    : 'تعذر إرسال رابط الاستعادة. تأكد من البريد وحاول مجددًا.',
+                type: 'error',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -48,9 +60,15 @@ export default function ResetPasswordPage() {
                         <input type="email" required dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} />
                     </div>
 
-                    <div className="client-turnstile-note">
+                    <div className="client-turnstile-note" hidden>
                         ستتم إضافة تحقق Turnstile هنا عند توفير بيانات Cloudflare الخاصة به.
                     </div>
+
+                    <TurnstileField
+                        action="advertiser-reset"
+                        onTokenChange={setTurnstileToken}
+                        resetKey={turnstileResetKey}
+                    />
 
                     <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%', marginTop: 14 }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-regular fa-paper-plane"></i>}

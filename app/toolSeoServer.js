@@ -1,39 +1,9 @@
 import { DEFAULT_TOOL_SETTINGS, getToolSettings } from './toolSettings';
 import { SITE_NAME, SITE_URL, absoluteSiteUrl } from './seoConfig';
-
-const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
-
-function decodeFirestoreValue(value) {
-    if (!value || typeof value !== 'object') return undefined;
-    if ('stringValue' in value) return value.stringValue;
-    if ('booleanValue' in value) return value.booleanValue;
-    if ('integerValue' in value) return Number(value.integerValue);
-    if ('doubleValue' in value) return Number(value.doubleValue);
-    if ('timestampValue' in value) return value.timestampValue;
-    if ('arrayValue' in value) return (value.arrayValue.values || []).map(decodeFirestoreValue);
-    if ('mapValue' in value) return decodeFirestoreFields(value.mapValue.fields || {});
-    return undefined;
-}
-
-function decodeFirestoreFields(fields = {}) {
-    return Object.fromEntries(
-        Object.entries(fields).map(([key, value]) => [key, decodeFirestoreValue(value)])
-    );
-}
+import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
 
 export async function getManagedSiteConfig() {
-    try {
-        const response = await fetch(firestoreSettingsUrl, {
-            headers: { Accept: 'application/json' },
-            next: { revalidate: 300 },
-        });
-
-        if (!response.ok) return {};
-        const payload = await response.json();
-        return decodeFirestoreFields(payload.fields || {});
-    } catch {
-        return {};
-    }
+    return getPublicSiteConfigFromFirestore({ revalidate: 300 });
 }
 
 function splitKeywords(value = '') {

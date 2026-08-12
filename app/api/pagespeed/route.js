@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { hasAdminPermission } from '../_lib/adminPermissions';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
@@ -187,7 +188,7 @@ async function requireActiveAdmin(request, serviceAccount) {
     if (!user?.localId) return false;
 
     const adminProfile = await getAdminProfile(serviceAccount, user.localId);
-    return adminProfile?.active?.booleanValue === true;
+    return hasAdminPermission(adminProfile, ['pagespeed', 'page-speed', 'performance']);
 }
 
 function normalizeStrategy(value) {

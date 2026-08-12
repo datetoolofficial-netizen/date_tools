@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
 import { getEventDayText, i18n } from '../../i18n';
+import { sanitizeHtml } from '../../sanitizeHtml';
 
 const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
 const ADSENSE_SLOT_PATTERN = /^\d{4,20}$/;
@@ -78,10 +79,11 @@ export function EventsSection({ lang, upcomingEvents, onShare, canShare = true }
 
 export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
     const labels = i18n[lang] || i18n.ar;
+    const safeHtmlContent = sanitizeHtml(htmlContent);
 
     return (
         <div className="result-container">
-            <div className="result" style={{ display: 'block' }} dangerouslySetInnerHTML={{ __html: htmlContent }}></div>
+            <div className="result" style={{ display: 'block' }} dangerouslySetInnerHTML={{ __html: safeHtmlContent }}></div>
             {enteredDateInfo && (
                 <div className="story-card">
                     <div className="story-content">

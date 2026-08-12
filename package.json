@@ -1,12 +1,14 @@
 {
   "name": "date_tools",
-  "version": "0.3.28",
+  "version": "0.3.30",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
@@ -16,9 +18,10 @@
     "@marsidev/react-turnstile": "^1.5.3",
     "@opennextjs/cloudflare": "^1.19.11",
     "firebase": "^12.14.0",
-    "next": "^15.5.19",
+    "next": "^15.5.23",
     "react": "19.2.7",
-    "react-dom": "19.2.7"
+    "react-dom": "19.2.7",
+    "sanitize-html": "^2.17.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.1",
@@ -26,9 +29,14 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.0",
-    "eslint-config-next": "^15.5.19",
+    "eslint-config-next": "^15.5.21",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
-    "wrangler": "^4.101.0"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.121.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.0"
   }
 }

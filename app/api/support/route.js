@@ -1,12 +1,14 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { verifyTurnstileToken } from '../../turnstileServer';
+import { isValidSupportSubmission, normalizeSupportSubmission } from '../../securityPolicies';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const MAX_BODY_BYTES = 4096;
 const MAX_ATTACHMENT_BYTES = 3 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_ATTACHMENT_BYTES + 32 * 1024;
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALLOWED_ATTACHMENT_TYPES = new Map([
     ['image/png', 'png'],
     ['image/jpeg', 'jpg'],
@@ -19,6 +21,8 @@ const PUBLIC_ERROR_NUMBERS = {
     body_too_large: 'SUP-4003',
     attachment_too_large: 'SUP-4004',
     unsupported_attachment_type: 'SUP-4005',
+    invalid_attachment_content: 'SUP-4006',
+    turnstile_failed: 'SUP-4007',
     support_not_configured: 'SUP-5001',
     media_storage_not_configured: 'SUP-5002',
     support_auth_failed: 'SUP-5003',
@@ -225,6 +229,25 @@ function getAttachmentInfo(file) {
     };
 }
 
+function hasExpectedImageSignature(bytes, contentType) {
+    if (!(bytes instanceof Uint8Array) || bytes.length < 12) return false;
+
+    if (contentType === 'image/png') {
+        return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+            .every((value, index) => bytes[index] === value);
+    }
+
+    if (contentType === 'image/jpeg') {
+        return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    }
+
+    const header = new TextDecoder('ascii').decode(bytes.slice(0, 12));
+    if (contentType === 'image/gif') return header.startsWith('GIF87a') || header.startsWith('GIF89a');
+    if (contentType === 'image/webp') return header.startsWith('RIFF') && header.slice(8, 12) === 'WEBP';
+
+    return false;
+}
+
 async function uploadSupportAttachment(file, ticketNumber) {
     if (!file || file.size <= 0) return null;
 
@@ -235,6 +258,11 @@ async function uploadSupportAttachment(file, ticketNumber) {
     const attachmentInfo = getAttachmentInfo(file);
     if (!attachmentInfo) {
         throw new Error('unsupported_attachment_type');
+    }
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!hasExpectedImageSignature(bytes, attachmentInfo.contentType)) {
+        throw new Error('invalid_attachment_content');
     }
 
     const env = await getCloudflareEnv();
@@ -249,7 +277,7 @@ async function uploadSupportAttachment(file, ticketNumber) {
     const safeName = getSafeFileName(file.name);
     const key = `support/${year}/${month}/${ticketNumber}-${crypto.randomUUID()}-${safeName}.${attachmentInfo.extension}`;
 
-    await bucket.put(key, await file.arrayBuffer(), {
+    await bucket.put(key, bytes, {
         httpMetadata: {
             contentType: attachmentInfo.contentType,
             cacheControl: 'private, max-age=0, no-store',
@@ -273,17 +301,26 @@ async function readSupportPayload(request) {
     const contentType = request.headers.get('content-type') || '';
 
     if (contentType.includes('multipart/form-data')) {
+        const contentLength = Number(request.headers.get('content-length') || 0);
+        if (contentLength > MAX_MULTIPART_BYTES) throw new Error('body_too_large');
+
         const formData = await request.formData();
         const attachment = formData.get('attachment');
+        const payload = {
+            senderName: formData.get('senderName'),
+            senderEmail: formData.get('senderEmail'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+            website: formData.get('website'),
+            turnstileToken: formData.get('turnstileToken'),
+        };
+        const textBytes = new TextEncoder().encode(Object.values(payload).join('')).byteLength;
+        const attachmentBytes = attachment instanceof File ? attachment.size : 0;
+
+        if (textBytes + attachmentBytes > MAX_MULTIPART_BYTES) throw new Error('body_too_large');
 
         return {
-            payload: {
-                senderName: formData.get('senderName'),
-                senderEmail: formData.get('senderEmail'),
-                subject: formData.get('subject'),
-                message: formData.get('message'),
-                website: formData.get('website'),
-            },
+            payload,
             attachment: attachment instanceof File && attachment.size > 0 ? attachment : null,
         };
     }
@@ -331,6 +368,8 @@ async function createSupportTicket(serviceAccount, payload, ticketNumber, attach
 }
 
 export async function POST(request) {
+    let uploadedAttachment = null;
+
     try {
         const { payload, attachment } = await readSupportPayload(request);
 
@@ -338,27 +377,39 @@ export async function POST(request) {
             return jsonResponse({ ok: true, ticketNumber: 'queued' });
         }
 
-        const cleaned = {
-            senderName: cleanText(payload.senderName, 80),
-            senderEmail: cleanText(payload.senderEmail, 120).toLowerCase(),
-            subject: cleanText(payload.subject, 120),
-            message: cleanText(payload.message, 1200),
-        };
+        const cleaned = normalizeSupportSubmission(payload);
 
-        if (!cleaned.senderName || !EMAIL_PATTERN.test(cleaned.senderEmail) || !cleaned.subject || cleaned.message.length < 10) {
+        if (!isValidSupportSubmission(cleaned)) {
             return errorResponse('invalid_support_payload', 400);
         }
+
+        const turnstile = await verifyTurnstileToken({
+            request,
+            token: cleanText(payload.turnstileToken, 2048),
+            action: 'support-form',
+        });
+        if (!turnstile.success) return errorResponse('turnstile_failed', 403);
 
         const serviceAccount = await getServiceAccount();
         if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) {
             return errorResponse('support_not_configured', 503);
         }
 
-        const ticketNumber = `date-${Math.floor(1000 + Math.random() * 9000)}`;
-        const uploadedAttachment = await uploadSupportAttachment(attachment, ticketNumber);
+        const randomPart = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
+        const ticketNumber = `DT-${Date.now().toString(36).toUpperCase()}-${randomPart}`;
+        uploadedAttachment = await uploadSupportAttachment(attachment, ticketNumber);
         await createSupportTicket(serviceAccount, cleaned, ticketNumber, uploadedAttachment);
         return jsonResponse({ ok: true, ticketNumber });
     } catch (error) {
+        if (uploadedAttachment?.key) {
+            try {
+                const env = await getCloudflareEnv();
+                await env?.MEDIA_BUCKET?.delete(uploadedAttachment.key);
+            } catch {
+                console.error('Unable to roll back orphaned support attachment.');
+            }
+        }
+
         console.error('support endpoint error:', error instanceof Error ? error.message : 'unknown');
         const errorMessage = error instanceof Error ? error.message : '';
         let errorCode = 'support_create_failed';
@@ -367,7 +418,7 @@ export async function POST(request) {
         if (error instanceof SyntaxError) {
             errorCode = 'invalid_json';
             status = 400;
-        } else if (['body_too_large', 'attachment_too_large', 'unsupported_attachment_type'].includes(errorMessage)) {
+        } else if (['body_too_large', 'attachment_too_large', 'unsupported_attachment_type', 'invalid_attachment_content'].includes(errorMessage)) {
             errorCode = errorMessage;
             status = errorMessage === 'body_too_large' ? 413 : 400;
         } else if (errorMessage === 'media_storage_not_configured') {

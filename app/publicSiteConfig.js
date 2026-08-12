@@ -32,7 +32,25 @@ function cleanPublicExternalIntegrations(value = {}) {
         bingSiteVerification: String(value.bingSiteVerification || '').trim(),
         microsoftClarityProjectId: String(value.microsoftClarityProjectId || '').trim(),
         metaPixelId: String(value.metaPixelId || '').trim(),
+        adsTxtSnippet: String(value.adsTxtSnippet || '').trim(),
     };
+}
+
+function cleanGoogleAdSlots(slots = {}) {
+    if (!slots || typeof slots !== 'object' || Array.isArray(slots)) return {};
+
+    return Object.fromEntries(Object.entries(slots).map(([slotId, value = {}]) => [
+        slotId,
+        {
+            client: String(value.client || '').trim(),
+            slot: String(value.slot || '').trim(),
+            format: String(value.format || 'auto').trim(),
+            fullWidthResponsive: value.fullWidthResponsive !== false,
+            enabledWhenNoAdvertiser: value.enabledWhenNoAdvertiser === true,
+            showHouseAd: value.showHouseAd === true,
+            houseAdText: String(value.houseAdText || '').trim(),
+        },
+    ]));
 }
 
 function cleanInternalPages(pages, includeContent) {
@@ -57,6 +75,7 @@ export function pickPublicSiteConfig(config = {}, includeContent = false) {
     }, {});
 
     publicConfig.externalIntegrations = cleanPublicExternalIntegrations(config.externalIntegrations || {});
+    publicConfig.googleAdSlots = cleanGoogleAdSlots(publicConfig.googleAdSlots);
     publicConfig.internalPages = cleanInternalPages(publicConfig.internalPages, includeContent);
     publicConfig.externalLinks = Array.isArray(publicConfig.externalLinks) ? publicConfig.externalLinks : [];
     publicConfig.socialLinks = Array.isArray(publicConfig.socialLinks) ? publicConfig.socialLinks : [];

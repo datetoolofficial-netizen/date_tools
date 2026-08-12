@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { hasAdminPermission } from '../../_lib/adminPermissions';
 
 const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
 const FIREBASE_PROJECT_ID = 'date-tool-official';
@@ -19,16 +20,16 @@ async function lookupFirebaseUser(idToken) {
     return data?.users?.[0] || null;
 }
 
-async function isActiveAdmin(idToken, uid) {
+async function getAdminProfile(idToken, uid) {
     const documentName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/admins/${uid}`;
     const response = await fetch(`https://firestore.googleapis.com/v1/${documentName}`, {
         headers: { Authorization: `Bearer ${idToken}` },
         cache: 'no-store',
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) return null;
     const profile = await response.json();
-    return profile?.fields?.active?.booleanValue === true;
+    return profile?.fields || null;
 }
 
 async function requireActiveAdmin(request) {
@@ -38,7 +39,8 @@ async function requireActiveAdmin(request) {
 
     const user = await lookupFirebaseUser(idToken);
     if (!user?.localId) return false;
-    return isActiveAdmin(idToken, user.localId);
+    const profile = await getAdminProfile(idToken, user.localId);
+    return hasAdminPermission(profile, ['tools', 'settings', 'site-settings', 'pages']);
 }
 
 function normalizeUrl(value) {

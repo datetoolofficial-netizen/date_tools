@@ -4,13 +4,13 @@ import FontAwesomeLoader from './components/FontAwesomeLoader';
 import { resolveLinkPreview } from './linkPreview';
 import { pickPublicSiteConfig } from './publicSiteConfig';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME, buildSiteJsonLd } from './seoConfig';
+import { serializeJsonLd } from './safeJsonLd';
 import SiteShell from './SiteShell';
 import { getManagedSiteConfig } from './toolSeoServer';
 import { APP_VERSION } from './version';
 import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
-const firestoreSettingsUrl = 'https://firestore.googleapis.com/v1/projects/date-tool-official/databases/(default)/documents/settings/main';
 const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
 const themeBootstrapScript = `(() => {
     try {
@@ -26,19 +26,6 @@ const cairo = Cairo({
     display: 'swap',
 });
 
-function getStringField(fields = {}, key) {
-    return fields?.[key]?.stringValue || '';
-}
-
-function getBooleanField(fields = {}, key, fallback = true) {
-    const value = fields?.[key]?.booleanValue;
-    return typeof value === 'boolean' ? value : fallback;
-}
-
-function getMapField(fields = {}, key) {
-    return fields?.[key]?.mapValue?.fields || {};
-}
-
 function absoluteUrl(value = '') {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -53,47 +40,7 @@ function absoluteUrl(value = '') {
 }
 
 async function getMetadataConfig() {
-    try {
-        const response = await fetch(firestoreSettingsUrl, {
-            headers: { Accept: 'application/json' },
-            next: { revalidate: 300 },
-        });
-
-        if (!response.ok) return {};
-
-        const payload = await response.json();
-        const fields = payload.fields || {};
-        const mainSEO = getMapField(fields, 'mainSEO');
-        const linkPreview = getMapField(fields, 'linkPreview');
-        const externalIntegrations = getMapField(fields, 'externalIntegrations');
-
-        return {
-            toolDisplayName: getStringField(fields, 'toolDisplayName'),
-            toolSlogan: getStringField(fields, 'toolSlogan'),
-            logoUrl: getStringField(fields, 'logoUrl'),
-            faviconUrl: getStringField(fields, 'faviconUrl'),
-            appIconUrl: getStringField(fields, 'appIconUrl'),
-            mainSEO: {
-                title: getStringField(mainSEO, 'title'),
-                description: getStringField(mainSEO, 'description'),
-            },
-            linkPreview: {
-                useSiteTitle: getBooleanField(linkPreview, 'useSiteTitle'),
-                useSiteSlogan: getBooleanField(linkPreview, 'useSiteSlogan'),
-                useLogoImage: getBooleanField(linkPreview, 'useLogoImage'),
-                title: getStringField(linkPreview, 'title'),
-                description: getStringField(linkPreview, 'description'),
-                siteName: getStringField(linkPreview, 'siteName'),
-                imageUrl: getStringField(linkPreview, 'imageUrl'),
-            },
-            externalIntegrations: {
-                googleSiteVerification: getStringField(externalIntegrations, 'googleSiteVerification'),
-                bingSiteVerification: getStringField(externalIntegrations, 'bingSiteVerification'),
-            },
-        };
-    } catch {
-        return {};
-    }
+    return getManagedSiteConfig();
 }
 
 export async function generateMetadata() {
@@ -165,7 +112,7 @@ export default async function RootLayout({ children }) {
                 <link rel="preload" href={fontAwesomeHref} as="style" crossOrigin="anonymous" />
                 <script
                     type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+                    dangerouslySetInnerHTML={{ __html: serializeJsonLd(siteJsonLd) }}
                 />
             </head>
             <body className={cairo.className}>

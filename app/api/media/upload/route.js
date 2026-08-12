@@ -1,37 +1,16 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import {
+    getAllowedImageInfo,
+    getSafeMediaCategory,
+    hasExpectedImageSignature,
+    MAX_IMAGE_BYTES,
+} from '../../_lib/mediaValidation';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
-const ALLOWED_CATEGORIES = new Set([
-    'logo',
-    'favicon',
-    'ads',
-    'link-preview',
-    'app-icon',
-    'pwa-shortcut-date',
-    'pwa-shortcut-clock',
-    'pwa-shortcut-weather',
-]);
-const ALLOWED_TYPES = new Map([
-    ['image/png', 'png'],
-    ['image/jpeg', 'jpg'],
-    ['image/webp', 'webp'],
-    ['image/gif', 'gif'],
-    ['image/x-icon', 'ico'],
-    ['image/vnd.microsoft.icon', 'ico'],
-]);
-const FALLBACK_EXTENSION_TYPES = new Map([
-    ['png', 'image/png'],
-    ['jpg', 'image/jpeg'],
-    ['jpeg', 'image/jpeg'],
-    ['webp', 'image/webp'],
-    ['gif', 'image/gif'],
-    ['ico', 'image/x-icon'],
-]);
 
 export const dynamic = 'force-dynamic';
 
@@ -195,10 +174,10 @@ async function lookupFirebaseUser(idToken) {
     return data?.users?.[0] || null;
 }
 
-async function getAdminProfile(serviceAccount, uid) {
+async function getProfile(serviceAccount, collectionName, uid) {
     const token = await getAccessToken(serviceAccount);
     const projectId = serviceAccount.projectId || DEFAULT_PROJECT_ID;
-    const documentName = `projects/${projectId}/databases/(default)/documents/admins/${uid}`;
+    const documentName = `projects/${projectId}/databases/(default)/documents/${collectionName}/${uid}`;
     const response = await fetch(`https://firestore.googleapis.com/v1/${documentName}`, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -211,25 +190,65 @@ async function getAdminProfile(serviceAccount, uid) {
     return data?.fields || null;
 }
 
-async function requireActiveAdmin(request) {
+async function requireUploader(request) {
     const authorization = request.headers.get('authorization') || '';
     const [, idToken] = authorization.match(/^Bearer\s+(.+)$/i) || [];
 
-    if (!idToken) return false;
+    if (!idToken) return null;
 
     const user = await lookupFirebaseUser(idToken);
-    if (!user?.localId) return false;
+    if (!user?.localId) return null;
 
     const serviceAccount = await getServiceAccount();
-    if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) return false;
+    if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) return null;
 
-    const adminProfile = await getAdminProfile(serviceAccount, user.localId);
-    return adminProfile?.active?.booleanValue === true;
+    const adminProfile = await getProfile(serviceAccount, 'admins', user.localId);
+    if (adminProfile?.active?.booleanValue === true) {
+        return { type: 'admin', uid: user.localId, profile: adminProfile };
+    }
+
+    const advertiserProfile = await getProfile(serviceAccount, 'advertisers', user.localId);
+    if (advertiserProfile?.status?.stringValue === 'active') return { type: 'advertiser', uid: user.localId };
+
+    return null;
 }
 
-function getSafeCategory(value) {
-    const category = String(value || '').trim().toLowerCase();
-    return ALLOWED_CATEGORIES.has(category) ? category : '';
+function readProfileTokens(field) {
+    if (!field) return [];
+    if (field.stringValue) return [field.stringValue];
+    if (field.arrayValue?.values) return field.arrayValue.values.flatMap(readProfileTokens);
+    if (field.mapValue?.fields) {
+        return Object.entries(field.mapValue.fields)
+            .filter(([, value]) => value?.booleanValue === true)
+            .map(([key]) => key);
+    }
+    return [];
+}
+
+function canAdminUploadCategory(profile, category) {
+    const role = String(profile?.role?.stringValue || profile?.adminRole?.stringValue || '').toLowerCase();
+    if (!['assistant', 'helper', 'مساعد'].includes(role)) return true;
+
+    const permissions = new Set([
+        ...readProfileTokens(profile?.permissions),
+        ...readProfileTokens(profile?.adminPermissions),
+        ...readProfileTokens(profile?.allowedPages),
+        ...readProfileTokens(profile?.allowedAdminPages),
+    ].map((value) => String(value).trim().toLowerCase()));
+    const identityCategories = new Set([
+        'logo', 'favicon', 'link-preview', 'app-icon',
+        'pwa-shortcut-date', 'pwa-shortcut-clock', 'pwa-shortcut-weather',
+    ]);
+
+    if (identityCategories.has(category)) {
+        return ['identity', 'brand', 'branding'].some((permission) => permissions.has(permission));
+    }
+
+    if (category === 'ads') {
+        return ['ads', 'campaigns', 'ad-campaigns', 'ad-settings', 'ads-settings'].some((permission) => permissions.has(permission));
+    }
+
+    return false;
 }
 
 function getSafeFileName(name) {
@@ -241,45 +260,19 @@ function getSafeFileName(name) {
         .slice(0, 40) || 'image';
 }
 
-function getFileExtension(name) {
-    return String(name || '')
-        .toLowerCase()
-        .split('.')
-        .pop()
-        ?.replace(/[^a-z0-9]/g, '') || '';
-}
-
-function getAllowedImageInfo(file) {
-    const extensionFromType = ALLOWED_TYPES.get(file.type);
-    if (extensionFromType) {
-        return {
-            extension: extensionFromType,
-            contentType: file.type,
-        };
-    }
-
-    if (file.type && file.type !== 'application/octet-stream') {
-        return null;
-    }
-
-    const extension = getFileExtension(file.name);
-    const contentType = FALLBACK_EXTENSION_TYPES.get(extension);
-
-    if (!contentType) return null;
-
-    return {
-        extension: extension === 'jpeg' ? 'jpg' : extension,
-        contentType,
-    };
-}
-
 function getMediaBucket(env) {
     return env?.MEDIA_BUCKET || null;
 }
 
 export async function POST(request) {
-    if (!(await requireActiveAdmin(request))) {
+    const uploader = await requireUploader(request);
+    if (!uploader) {
         return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
+    }
+
+    const contentLength = Number(request.headers.get('content-length') || 0);
+    if (contentLength > MAX_IMAGE_BYTES + 32 * 1024) {
+        return jsonResponse({ ok: false, error: 'request_too_large' }, 413);
     }
 
     const env = await getCloudflareEnv();
@@ -291,10 +284,17 @@ export async function POST(request) {
 
     const formData = await request.formData();
     const file = formData.get('file');
-    const category = getSafeCategory(formData.get('category'));
+    const category = getSafeMediaCategory(formData.get('category'));
 
     if (!category) {
         return jsonResponse({ ok: false, error: 'invalid_category' }, 400);
+    }
+
+    if (uploader.type === 'advertiser' && category !== 'ads') {
+        return jsonResponse({ ok: false, error: 'forbidden_category' }, 403);
+    }
+    if (uploader.type === 'admin' && !canAdminUploadCategory(uploader.profile, category)) {
+        return jsonResponse({ ok: false, error: 'forbidden_category' }, 403);
     }
 
     if (!(file instanceof File)) {
@@ -315,7 +315,10 @@ export async function POST(request) {
     const month = String(now.getUTCMonth() + 1).padStart(2, '0');
     const safeName = getSafeFileName(file.name);
     const key = `${category}/${year}/${month}/${crypto.randomUUID()}-${safeName}.${imageInfo.extension}`;
-    const bytes = await file.arrayBuffer();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!hasExpectedImageSignature(bytes, imageInfo.contentType)) {
+        return jsonResponse({ ok: false, error: 'invalid_image_content' }, 400);
+    }
 
     await bucket.put(key, bytes, {
         httpMetadata: {
@@ -325,6 +328,8 @@ export async function POST(request) {
         customMetadata: {
             originalName: file.name.slice(0, 120),
             category,
+            uploadedBy: uploader.uid,
+            uploaderType: uploader.type,
         },
     });
 

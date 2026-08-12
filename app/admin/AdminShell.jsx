@@ -203,7 +203,7 @@ export default function AdminShell({ children }) {
 
         async function loadAdminShell() {
             try {
-                const [{ getFirebaseAuth, getAdminProfile }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ getFirebaseAuth, getAdminProfile, syncPublicSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
                     import('../firebase'),
                     import('firebase/auth'),
                 ]);
@@ -244,6 +244,11 @@ export default function AdminShell({ children }) {
                         setAdminProfile(profile);
                         setAdminName(profile.name || profile.email || 'أيها المدير');
                         setAdminRole(profile.role === 'super_admin' ? 'المدير العام' : profile.role === 'assistant' ? 'مساعد' : 'مدير');
+                        if (hasFullAdminAccess(profile)) {
+                            syncPublicSiteConfig().catch(() => {
+                                console.error('Unable to synchronize the public site settings.');
+                            });
+                        }
                     } catch (error) {
                         console.error('Error loading admin shell:', error);
                         if (isMounted) setLoadError('حدث خطأ في التحقق من صلاحيات لوحة الإدارة.');
