@@ -37,13 +37,25 @@ export async function ensureFirebaseAppCheck() {
     if (appCheckPromise) return appCheckPromise;
 
     appCheckPromise = import("firebase/app-check")
-        .then(({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => initializeAppCheck(app, {
-            provider: new ReCaptchaEnterpriseProvider(
-                "6Ldch4ssAAAAAM0HeNiBNFlQBqXM9dUL4SNm1mxM"
-            ),
-            isTokenAutoRefreshEnabled: true
-        }))
-        .catch(() => null);
+        .then(({ getAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
+            try {
+                return initializeAppCheck(app, {
+                    provider: new ReCaptchaEnterpriseProvider(
+                        "6Ldch4ssAAAAAM0HeNiBNFlQBqXM9dUL4SNm1mxM"
+                    ),
+                    isTokenAutoRefreshEnabled: true
+                });
+            } catch (error) {
+                if (error?.code === "appCheck/already-initialized") {
+                    return getAppCheck(app);
+                }
+                throw error;
+            }
+        })
+        .catch((error) => {
+            console.error("Firebase App Check initialization failed.", error);
+            return null;
+        });
 
     return appCheckPromise;
 }
@@ -60,6 +72,8 @@ export async function getFirebaseAuth() {
 }
 
 export async function getFirebaseStorage() {
+    await ensureFirebaseAppCheck();
+
     if (!storageInstance) {
         const { getStorage } = await import("firebase/storage");
         storageInstance = getStorage(app);
@@ -272,6 +286,7 @@ export const defaultSiteConfig = {
 
 export async function getSiteConfig() {
     try {
+        await ensureFirebaseAppCheck();
         const configRef = doc(db, "settings", "main");
         const snap = await getDoc(configRef);
 
@@ -327,6 +342,7 @@ export async function getSiteConfig() {
 }
 
 export async function syncPublicSiteConfig() {
+    await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const publicConfigRef = doc(db, "settings", "public");
     const snapshot = await getDoc(configRef);
@@ -336,6 +352,7 @@ export async function syncPublicSiteConfig() {
 }
 
 export async function saveSiteConfig(config) {
+    await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const customPages = Object.fromEntries(
         Object.entries(config.customPages || {}).map(([slug, page]) => [
@@ -393,6 +410,7 @@ export async function saveSiteConfig(config) {
 }
 
 export async function saveSiteConfigSection(sectionPatch) {
+    await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const cleanPatch = {
         ...sectionPatch,
@@ -476,6 +494,7 @@ export async function saveSiteConfigSection(sectionPatch) {
 export async function getAdminProfile(uid) {
     try {
         if (!uid) return null;
+        await ensureFirebaseAppCheck();
 
         const cached = adminProfileCache.get(uid);
         if (cached && cached.expiresAt > Date.now()) return cached.value;
@@ -541,6 +560,7 @@ async function sendStatisticEvent(payload) {
 
 export async function getAdminStats() {
     try {
+        await ensureFirebaseAppCheck();
         const statsRef = doc(db, "statistics", "main");
         const snap = await getDoc(statsRef);
 

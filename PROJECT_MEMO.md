@@ -10973,3 +10973,38 @@ git diff --check
 - بعد وصول النسخة الجديدة للإنتاج ودخول مدير كامل مرة واحدة، تُنشأ `settings/public` تلقائيًا وينتهي مسار الترحيل الانتقالي.
 - التحقق المباشر من Firestore قبل النشر أعاد `404` لوثيقة `settings/public`؛ لذلك بقي الرجوع الانتقالي إلى `settings/main` حتى يصل الكود الجديد ويدخل مدير كامل، ثم يجب التحقق من إنشاء الوثيقة وإزالة الرجوع الانتقالي في جولة الإغلاق التالية.
 - التحقق النهائي نجح: 13 اختبار Vitest، وESLint، و`npm audit` بنتيجة `0 vulnerabilities`، وبناء Next.js، وبناء OpenNext وإنشاء `.open-next/worker.js`، و`git diff --check`.
+
+### تفعيل Turnstile وتهيئة App Check 0.3.30 / admin 0.1.33 / client 1.0.3
+
+ما تم إنجازه:
+
+- إنشاء Cloudflare Turnstile Managed Widget باسم `date-tools-forms` للنطاقين `date-tool.com` و`www.date-tool.com` مع السماح بالتطوير المحلي.
+- إضافة أسرار `TURNSTILE_SITE_KEY` و`TURNSTILE_SECRET_KEY` و`TURNSTILE_ALLOWED_HOSTNAMES` إلى Worker `datetools` دون حفظ القيم السرية في المستودع.
+- نشر Worker والتحقق حيًا من أن `/api/security/turnstile` يعرض تفعيل الخدمة، وأن الطلب الخالي من الرمز يُرفض، وأن مكوّن Turnstile في صفحة الدخول يصدر رمزًا صالحًا.
+- التحقق من تسجيل تطبيق الويب في Firebase App Check باستخدام reCAPTCHA Enterprise.
+- تعديل طبقة Firebase Client بحيث تنتظر عمليات Authentication وFirestore وStorage تهيئة App Check قبل إرسال الطلبات، مع تسجيل خطأ التهيئة في وحدة التحكم بدل ابتلاعه بصمت.
+- إبقاء Enforcement متوقفًا لأن صفحة APIs في Firebase تعرض حاليًا 0% طلبات موثقة و100% غير موثقة لكل من Firestore وAuthentication.
+- عدم تغيير نسخة الموقع العام أو CSS أو التصميم؛ تحديث نسختي الإدارة وبوابة العميل فقط.
+
+الملفات المتأثرة:
+
+- `app/firebase.js`
+- `app/version.js`
+- `app/client/ClientVersion.js`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test
+npm run lint
+npm run deploy
+```
+
+الحالة:
+
+- Turnstile فعّال ومتحقق منه في الإنتاج، وأسراره موجودة في Cloudflare فقط.
+- App Check مهيأ في الكود ولوحة Firebase، لكنه يبقى في وضع Monitoring إلى أن تبدأ المقاييس بإظهار طلبات موثقة بعد انتشار هذه النسخة واستخدام الإدارة والبوابة.
+- لا يجب تفعيل Enforcement الآن؛ القراءة الخادمية العامة من Firestore REST تحتاج معالجة مستقلة أو استثناءً موثوقًا قبل فرض Firestore App Check.
+- الخطوة التالية بعد مرور فترة مراقبة مناسبة هي مراجعة نسبة الطلبات الموثقة في Firebase App Check، ثم اختبار فرض Firestore تدريجيًا قبل التفكير في Authentication.
