@@ -1,5 +1,11 @@
 # سجل إصدارات date_tools
 
+## 0.3.30 / admin 0.1.34 / client 1.0.4 - 2026-08-17
+
+- ربط Firebase App Check بمفتاح reCAPTCHA Enterprise الصحيح من نوع Website Invisible بعد إضافة نطاقي `date-tool.com` و`www.date-tool.com` ونطاقات التطوير إلى المفتاح.
+- إبقاء App Check في وضع Monitoring دون Enforcement إلى أن تظهر طلبات موثقة في Firebase وتختفي أخطاء `appCheck/recaptcha-error`.
+- إبقاء مفتاح reCAPTCHA القديم مؤقتًا إلى أن يثبت عدم استخدامه بعد انتشار النسخة الجديدة، مع عدم تغيير تصميم الموقع أو نسخة الموقع العام.
+
 ## 0.3.30 / admin 0.1.33 / client 1.0.3 - 2026-08-13
 
 - تفعيل Cloudflare Turnstile في الإنتاج لنماذج التواصل ودخول الإدارة وتسجيل العميل واستعادة كلمة المرور بعد إنشاء Widget وإضافة أسرار Worker.

@@ -51,8 +51,8 @@ https://www.date-tool.com
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
 الإصدار الحالي للتطبيق هو 0.3.30.
-نسخة منصة الإدارة الحالية هي 0.1.33.
-نسخة بوابة المعلنين الحالية هي 1.0.3.
+نسخة منصة الإدارة الحالية هي 0.1.34.
+نسخة بوابة المعلنين الحالية هي 1.0.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -11117,3 +11117,38 @@ git status --short
 - الأولوية الحالية خارج الكود هي تصحيح إعداد مفتاح reCAPTCHA Enterprise حتى تبدأ مقاييس App Check بعرض طلبات Verified.
 - لا يُنشأ `settings/public` ولا يُغلق `settings/main` بالقوة قبل نجاح App Check واختبار جلسة مدير كامل.
 - بعد إغلاق هاتين النقطتين تبدأ قواعد Rate Limiting في وضع Log، بينما تستمر مراقبة CSP بالتوازي لمدة 7 إلى 14 يومًا.
+
+### تصحيح مفتاح Firebase App Check 0.3.30 / admin 0.1.34 / client 1.0.4
+
+ما تم إنجازه:
+
+- تأكيد أن مفتاح reCAPTCHA Enterprise الصحيح من نوع Website Invisible وأن التحقق من النطاقات مفعّل له.
+- إضافة `date-tool.com` و`www.date-tool.com` و`localhost` و`127.0.0.1` إلى النطاقات المسموحة للمفتاح الصحيح من Google Cloud.
+- تحديث `ReCaptchaEnterpriseProvider` داخل `app/firebase.js` لاستخدام معرف المفتاح الصحيح المسجل في Firebase App Check بدل مفتاح Checkbox القديم.
+- إبقاء Firebase App Check في وضع Monitoring وعدم تفعيل Enforcement قبل ظهور طلبات Verified واختفاء خطأ `appCheck/recaptcha-error`.
+- إبقاء مفتاح Checkbox القديم مؤقتًا دون حذفه إلى أن يثبت بعد انتشار النسخة الجديدة أنه بلا نشاط وغير مستخدم في أي تكامل آخر.
+- ترقية نسخة الإدارة إلى `0.1.34` وبوابة العميل إلى `1.0.4` مع إبقاء نسخة الموقع العام `0.3.30` دون تغيير، وعدم تعديل CSS أو التصميم.
+
+الملفات المتأثرة:
+
+- `app/firebase.js`
+- `app/version.js`
+- `app/client/ClientVersion.js`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test
+npm run lint
+npm run build
+git diff --check
+```
+
+الحالة:
+
+- نجحت `13` حالة اختبار في `4` ملفات، ونجح ESLint وبناء Next.js للإنتاج وتوليد `31` صفحة.
+- لا يُحذف مفتاح Checkbox القديم قبل مراقبة نشاط المفتاحين بعد وصول النسخة الجديدة للإنتاج.
+- المطلوب بعد النشر: فتح الإدارة وبوابة العميل لإصدار طلبات Firestore وAuthentication، ثم مراجعة Firebase App Check بعد 15 دقيقة إلى 24 ساعة للتأكد من ظهور نسبة Verified.
+- إذا ظهر نشاط Verified واختفى خطأ App Check، يمكن حذف المفتاح القديم بعد التأكد من عدم وجود Activity له، ثم متابعة إنشاء `settings/public` وإغلاق القراءة العامة عن `settings/main`.

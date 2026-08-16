@@ -41,7 +41,7 @@ export async function ensureFirebaseAppCheck() {
             try {
                 return initializeAppCheck(app, {
                     provider: new ReCaptchaEnterpriseProvider(
-                        "6Ldch4ssAAAAAM0HeNiBNFlQBqXM9dUL4SNm1mxM"
+                        "6LcGrIwsAAAAAP5f-fzzMMmHVZzqtpC2OhslCe_3"
                     ),
                     isTokenAutoRefreshEnabled: true
                 });
