@@ -11060,3 +11060,60 @@ curl.exe --max-time 20 ...
 - Turnstile وR2 وPageSpeed وFirebase Service Account وSEO الحي وملفات الفهرسة تعمل أو موجودة كما هو متوقع.
 - لا يجب فرض Firebase App Check أو حذف fallback حتى تُحل مشكلتا reCAPTCHA Enterprise وإنشاء `settings/public` بالترتيب.
 - بقي خارجيًا تأكيد WAF Rate Limiting، مراقبة CSP Report-Only قبل فرضه، إكمال Bing Webmaster Tools، ومتابعة Search Console وAdSense وPageSpeed بعد استقرار النسخة.
+
+### ترتيب إغلاق App Check والحماية 0.3.30 / admin 0.1.33 / client 1.0.3
+
+ما تم إنجازه:
+
+- إعادة التحقق الحي من فصل إعدادات Firestore؛ ما زال `settings/public` يعيد `404` وما زال `settings/main` يعيد `200` للقراءة العامة.
+- تأكيد أن كود الموقع يستخدم `ReCaptchaEnterpriseProvider` وأن مفتاح الموقع فيه يطابق المفتاح المسجل سابقًا في Firebase App Check.
+- تأكيد أن رؤوس الحماية الحية سليمة وأن CSP ما زال بصيغة `Content-Security-Policy-Report-Only` ويرسل التقارير إلى `/api/csp-report`.
+- تثبيت ترتيب المعالجة: إصلاح reCAPTCHA Enterprise وظهور طلبات Verified، ثم إنشاء `settings/public` وإغلاق `settings/main`، ثم Rate Limiting، ثم مراقبة CSP قبل فرضها.
+- تفسير رسالة Search Console الجديدة كإشارة إيجابية على بدء ظهور صفحات الموقع وجمع بيانات مرات الظهور وطلبات البحث، دون حاجة إلى إعادة الفهرسة بسبب رسالة الإثبات وحدها.
+- عدم تغيير ملفات التطبيق أو أرقام النسخ أو التصميم، وعدم تفعيل Enforcement قبل اكتمال التحقق.
+
+الأخطاء المكتشفة:
+
+1. **App Check ما زال يحتاج تحققًا خارجيًا من إعداد مفتاح reCAPTCHA Enterprise**
+   - الأعراض: آخر قراءة للمقاييس كانت `0% Verified` و`100% Unverified` مع ظهور `appCheck/recaptcha-error` في المتصفح.
+   - السبب المرجح: نوع مفتاح reCAPTCHA أو وضع Score-based أو النطاقات المسموحة أو تفعيل API يحتاج تأكيدًا من Google Cloud.
+   - الحل: فتح مفتاح الموقع في Google Cloud والتأكد أنه Website وScore-based بلا Checkbox، وإضافة `date-tool.com` و`www.date-tool.com`، والتأكد من تفعيل reCAPTCHA Enterprise API ومطابقة المفتاح المسجل في Firebase، ثم إعادة الاختبار ومراقبة المقاييس من 15 دقيقة إلى 24 ساعة.
+   - الحالة: مفتوح؛ لا يُفعّل Firestore Enforcement قبله.
+
+2. **فصل إعدادات Firestore غير مكتمل حيًا**
+   - الأعراض: `settings/public = 404` و`settings/main = 200` في الفحص الحي بتاريخ 2026-08-16.
+   - السبب: مزامنة الإسقاط العام لم تنجح بعد، ويرجح تأثرها بفشل App Check في المتصفح.
+   - الحل: بعد إصلاح App Check، الدخول بحساب مدير كامل وتشغيل حفظ إعداد واحد أو إعادة تحميل الإدارة لتشغيل المزامنة، ثم التحقق من `public = 200` و`main = 403` قبل إزالة fallback الانتقالي.
+   - الحالة: مفتوح؛ لا يُحذف fallback الآن حتى لا تختفي إعدادات الموقع العام.
+
+3. **Rate Limiting لم يُضبط بعد في Cloudflare WAF**
+   - الأعراض: لا يوجد تأكيد على قواعد تحد من الإساءة المتكررة لمسارات النماذج والرفع وPageSpeed.
+   - السبب: إعداد WAF خارجي ولم يُعتمد حد فعلي بعد.
+   - الحل: إنشاء القواعد أولًا بوضع Log، مراقبة المعدل الطبيعي، ثم تحويلها تدريجيًا إلى Managed Challenge أو Block للمسارات الحساسة فقط.
+   - الحالة: مفتوح؛ يأتي بعد استقرار App Check وفصل الإعدادات.
+
+4. **CSP ما زال في مرحلة المراقبة**
+   - الأعراض: الرأس الحي هو `Content-Security-Policy-Report-Only` وليس CSP إلزاميًا.
+   - السبب: هذا مقصود لمنع كسر Firebase وTurnstile وAnalytics وAdSense أثناء جمع الانتهاكات المشروعة.
+   - الحل: مراقبة سجلات `csp_report_only` لمدة 7 إلى 14 يومًا بعد استقرار التكاملات، واختبار الصفحات العامة والإدارة والرفع والنماذج والإعلانات، ثم فرض السياسة فقط بعد تنظيف المصادر المشروعة.
+   - الحالة: صحيح وآمن حاليًا؛ لا يُحوّل إلى إلزامي الآن.
+
+الملفات المتأثرة:
+
+- `PROJECT_MEMO.md` فقط.
+
+الأوامر المستخدمة:
+
+```powershell
+curl.exe --max-time 20 https://firestore.googleapis.com/...
+curl.exe -I --max-time 20 https://date-tool.com/
+rg -n "Content-Security-Policy|csp-report|Report-Only" middleware.js app
+git status --short
+```
+
+الحالة:
+
+- لم تُجر أي تغييرات تشغيلية ولم يتغير أي رقم نسخة.
+- الأولوية الحالية خارج الكود هي تصحيح إعداد مفتاح reCAPTCHA Enterprise حتى تبدأ مقاييس App Check بعرض طلبات Verified.
+- لا يُنشأ `settings/public` ولا يُغلق `settings/main` بالقوة قبل نجاح App Check واختبار جلسة مدير كامل.
+- بعد إغلاق هاتين النقطتين تبدأ قواعد Rate Limiting في وضع Log، بينما تستمر مراقبة CSP بالتوازي لمدة 7 إلى 14 يومًا.
