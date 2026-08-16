@@ -51,8 +51,8 @@ https://www.date-tool.com
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
 الإصدار الحالي للتطبيق هو 0.3.30.
-نسخة منصة الإدارة الحالية هي 0.1.32.
-نسخة بوابة المعلنين الحالية هي 1.0.2.
+نسخة منصة الإدارة الحالية هي 0.1.33.
+نسخة بوابة المعلنين الحالية هي 1.0.3.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -11008,3 +11008,55 @@ npm run deploy
 - App Check مهيأ في الكود ولوحة Firebase، لكنه يبقى في وضع Monitoring إلى أن تبدأ المقاييس بإظهار طلبات موثقة بعد انتشار هذه النسخة واستخدام الإدارة والبوابة.
 - لا يجب تفعيل Enforcement الآن؛ القراءة الخادمية العامة من Firestore REST تحتاج معالجة مستقلة أو استثناءً موثوقًا قبل فرض Firestore App Check.
 - الخطوة التالية بعد مرور فترة مراقبة مناسبة هي مراجعة نسبة الطلبات الموثقة في Firebase App Check، ثم اختبار فرض Firestore تدريجيًا قبل التفكير في Authentication.
+
+### جولة التحقق من الربط والأمان 0.3.30 / admin 0.1.33 / client 1.0.3
+
+ما تم إنجازه:
+
+- تشغيل الاختبارات الآلية كاملة: `13` اختبارًا ناجحًا في `4` ملفات.
+- نجاح ESLint وبناء Next.js للإنتاج وإنشاء جميع الصفحات دون خطأ، مع بقاء JavaScript المشترك `103 kB`.
+- إعادة تشغيل `npm audit` من سجل npm وكانت النتيجة `0 vulnerabilities`.
+- فحص الصفحات العامة والإدارية الأساسية على الإنتاج؛ أعادت جميعها `200`، بما فيها sitemap وrobots وads.txt وmanifest.
+- فحص مسارات الأدوات الداخلية التسعة؛ جميعها تعيد `200` وتحتوي في HTML الأولي على `H1` وCanonical خاص بالمسار.
+- تأكيد أن sitemap الحية تحتوي `17` رابطًا، وأن صفحات الإدارة وبوابة المعلنين ودخول الإدارة تحمل `noindex`.
+- تأكيد ترويسات الأمان الحية: HSTS وX-Content-Type-Options وX-Frame-Options وReferrer-Policy وPermissions-Policy، مع بقاء CSP بصيغة Report-Only.
+- تأكيد أن Turnstile مفعّل على الإنتاج وأن Worker يعرض Site Key العام فقط، وأن أسرار Firebase وPageSpeed وTurnstile الستة موجودة في Cloudflare Worker كأسرار دون كشف قيمها.
+- تأكيد ربط R2 باسم `datetools-media` وObservability وصور Cloudflare داخل إعداد Worker.
+
+الأخطاء المكتشفة:
+
+1. **App Check لا يصدر رمز تحقق صالحًا على الإنتاج**
+   - الأعراض: صفحة Firebase App Check تعرض `0%` طلبات موثقة و`100%` غير موثقة لـ Firestore وAuthentication، ووحدة تحكم المتصفح تعرض `appCheck/recaptcha-error` عند تحميل الإدارة.
+   - السبب المرجح: إعداد مفتاح reCAPTCHA Enterprise يحتاج مراجعة في Google Cloud من ناحية نوع المفتاح Website/Score، النطاقات المسموحة، تفعيل API، ومطابقة Site Key المسجل في Firebase مع المفتاح الموجود في `app/firebase.js`.
+   - الحل: مراجعة مفتاح reCAPTCHA Enterprise وإصلاح إعداداته، ثم التأكد من اختفاء الخطأ وبدء ظهور طلبات Verified قبل أي Enforcement.
+   - الحالة: مفتوح؛ **يمنع تفعيل Enforcement حاليًا** حتى لا تتوقف الطلبات الشرعية.
+
+2. **الإسقاط العام `settings/public` لم يُنشأ على الإنتاج**
+   - الأعراض: Firestore REST يعيد `404` لـ `settings/public` و`200` لـ `settings/main`.
+   - السبب: المزامنة التي يفترض أن ينفذها مدير كامل لم تنجح أو لم تُنفذ بعد، ويرجح أن فشل App Check في الواجهة ساهم في عدم إتمامها.
+   - الحل: بعد إصلاح App Check، تشغيل مزامنة الإسقاط العام من جلسة مدير كامل والتحقق من أن `settings/public` يعيد `200` وأن `settings/main` يعيد `403`، ثم إزالة fallback الانتقالي من `app/firestorePublicConfig.js`.
+   - الحالة: مفتوح؛ الفصل الأمني موجود في الكود والقواعد لكنه غير مكتمل حيًا.
+
+الملفات المتأثرة:
+
+- `PROJECT_MEMO.md` فقط.
+
+الأوامر المستخدمة:
+
+```powershell
+npm test
+npm run lint
+npm audit
+npm run build
+git diff --check
+git status --short
+npx wrangler secret list --name datetools
+curl.exe --max-time 20 ...
+```
+
+الحالة:
+
+- لا توجد تغييرات تشغيلية أو بصرية ولم تتغير أرقام النسخ.
+- Turnstile وR2 وPageSpeed وFirebase Service Account وSEO الحي وملفات الفهرسة تعمل أو موجودة كما هو متوقع.
+- لا يجب فرض Firebase App Check أو حذف fallback حتى تُحل مشكلتا reCAPTCHA Enterprise وإنشاء `settings/public` بالترتيب.
+- بقي خارجيًا تأكيد WAF Rate Limiting، مراقبة CSP Report-Only قبل فرضه، إكمال Bing Webmaster Tools، ومتابعة Search Console وAdSense وPageSpeed بعد استقرار النسخة.
