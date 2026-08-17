@@ -11181,3 +11181,32 @@ curl.exe -sS --max-time 30 https://date-tool.com/_next/static/chunks/905.659cefa
 - نُشرت نسخة Worker بالمعرف `10622088-2f2d-4f7f-9495-78a357da9e94`.
 - مفتاح App Check الصحيح أصبح مستخدمًا في أصل JavaScript الحي، والمفتاح القديم غير موجود في الأصل الجديد.
 - يجب مراقبة Firebase App Check من 15 دقيقة إلى 24 ساعة قبل الحكم على نسبة Verified، وعدم تفعيل Enforcement أو حذف المفتاح القديم حتى يظهر نشاط موثّق ويثبت عدم استخدام المفتاح القديم.
+
+### تفعيل Cloudflare Rate Limiting للمسارات العامة الحساسة 0.3.30 / admin 0.1.34 / client 1.0.4
+
+ما تم إنجازه:
+
+- فحص مسارات API العامة وتحديد `/api/support` و`/api/security/turnstile` كأكثر المسارات حاجة إلى حماية من الإغراق الآلي.
+- التحقق من لوحة Cloudflare أن خطة النطاق المجانية تتيح قاعدة Rate Limiting واحدة وأن الإجراء المتاح فيها هو `Block` فقط؛ وضع `Log` غير متاح لهذه الخطة.
+- إنشاء قاعدة نشطة باسم `Protect public forms from bursts` على النطاق `date-tool.com`.
+- ضبط المطابقة على المسارين فقط باستخدام التعبير `(http.request.uri.path wildcard r"/api/support") or (http.request.uri.path wildcard r"/api/security/turnstile")`.
+- ضبط الحد على أكثر من `20` طلبًا خلال `10` ثوانٍ من عنوان IP نفسه، مع حظر مؤقت لمدة `10` ثوانٍ.
+- التحقق بعد النشر أن القاعدة بحالة `Active` وأن لوحة Cloudflare تعرض `1/1` قاعدة، ومعرفها `e1a81a9281844e7981a6ff4524d7c29f`.
+
+الملفات المتأثرة:
+
+- `PROJECT_MEMO.md` فقط.
+
+الأوامر المستخدمة:
+
+```powershell
+git status --short
+git diff --check
+```
+
+الحالة:
+
+- القاعدة تعمل على مستوى Cloudflare قبل وصول الطلب إلى Worker، ولا يوجد تغيير في كود الموقع أو التصميم أو أرقام النسخ.
+- الحد أعلى بكثير من الاستخدام الطبيعي للنموذج وتسجيل الدخول، ويستهدف الاندفاعات الآلية الواضحة فقط.
+- يجب مراقبة عداد `Events` وسجلات Security Events خلال أول `48` إلى `72` ساعة؛ إذا ظهرت طلبات شرعية محظورة يرفع الحد، وإذا استمر الإغراق دون بلوغ الحد يمكن خفضه تدريجيًا.
+- بقيت مراقبة Firebase App Check وCSP Report-Only وفصل `settings/public` عن `settings/main` كما هي دون تغيير.
