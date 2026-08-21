@@ -99,12 +99,15 @@ export async function buildManifest() {
         : [];
 
     return {
+        id: '/',
         name,
         short_name: shortName,
         description,
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        display_override: ['standalone', 'minimal-ui'],
+        prefer_related_applications: false,
         orientation: 'portrait',
         dir: 'rtl',
         lang: 'ar',

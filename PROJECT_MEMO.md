@@ -50,7 +50,7 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.30.
+الإصدار الحالي للتطبيق هو 0.3.31.
 نسخة منصة الإدارة الحالية هي 0.1.34.
 نسخة بوابة المعلنين الحالية هي 1.0.4.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
@@ -11248,3 +11248,104 @@ git status --short
 - نجحت `13` حالة اختبار آلية في `4` ملفات.
 - لا يحتاج هذا الاختبار إلى نشر Cloudflare لأنه لم يغير أي ملف تشغيلي.
 - تبقى مراقبة Firebase App Check بعد انتشار المفتاح الصحيح، ومراقبة Rate Limiting وCSP، ثم إكمال فصل `settings/public` عن `settings/main` وفق الترتيب المسجل أعلاه.
+
+### فحص ظهور الموقع كاتصال آمن 0.3.30 / admin 0.1.34 / client 1.0.4
+
+ما تم إنجازه:
+
+- فحص الاستجابة الحية للرئيسية و`/clock` عبر HTTPS وتأكيد إرجاع `200 OK` من Cloudflare دون تحويل إلى HTTP أو تحذير شهادة.
+- تأكيد وجود `Strict-Transport-Security` لمدة سنة مع `includeSubDomains` و`preload`، إضافة إلى `X-Content-Type-Options: nosniff` و`X-Frame-Options: DENY` و`Referrer-Policy` و`Permissions-Policy`.
+- تأكيد أن الموقع وصفحات الأدوات تعمل تحت النطاق نفسه، ولذلك تنطبق شهادة HTTPS وحماية Cloudflare على الرئيسية و`/clock` و`/weather` وروابط الأدوات الداخلية.
+- توثيق طريقة التحقق الدائم من Google Search Console عبر تقارير `Security issues` و`Manual actions` و`HTTPS`، ومن Google Safe Browsing Site Status.
+- عدم إجراء أي تغيير تشغيلي أو بصري أو تغيير في أرقام النسخ.
+
+الملاحظات:
+
+1. **CSP ما زال في وضع Report-Only**
+   - الأعراض: الرأس الحي هو `Content-Security-Policy-Report-Only`.
+   - السبب: السياسة قيد المراقبة لتجنب كسر Firebase وTurnstile وAnalytics وAdSense قبل فرضها.
+   - الحل: الاستمرار في مراقبة تقارير CSP ثم فرض السياسة بعد تنظيف المصادر المسموحة.
+   - الحالة: مقصود وآمن للمرحلة الحالية، لكنه آخر خطوة متبقية من تشديد سياسة المحتوى.
+
+الملفات المتأثرة:
+
+- `PROJECT_MEMO.md` فقط.
+
+الأوامر المستخدمة:
+
+```powershell
+curl.exe -sS -I --max-time 20 https://date-tool.com/
+curl.exe -sS -I --max-time 20 https://date-tool.com/clock
+git diff --check
+git status --short
+```
+
+الحالة:
+
+- الاتصال بالموقع وصفحات الأدوات مشفر ويظهر للمتصفح عبر HTTPS دون تحذير شهادة.
+- Google لا يعرض عادة شارة «آمن» داخل نتيجة البحث؛ علامة السلامة هي عدم ظهور تحذير Safe Browsing أو صفحة حمراء عند الفتح.
+- المصدر المرجعي الدائم لحالة Google هو تقرير `Security issues` في Search Console وأداة Safe Browsing Site Status.
+
+### توافق التواريخ والثيم وإشعارات الإجراءات 0.3.31 / admin 0.1.34 / client 1.0.4
+
+ما تم إنجازه:
+
+- استبدال تحويل التقويم المعتمد على `Intl` في المتصفح بتحويل أم القرى ثابت عبر `@internationalized/date`، حتى تعطي أجهزة iOS والمتصفحات القديمة النتيجة نفسها.
+- فرض تقويم `gregory` ومحلي صريح عند عرض نتيجة التحويل من الهجري إلى الميلادي لمنع ظهور التاريخ الهجري مرة ثانية على الأجهزة التي تفرض تقويم المنطقة تلقائيًا.
+- إضافة تحقق من صحة تواريخ الإدخال واختبارات معروفة للتحويل والعودة العكسية ورفض الأيام غير الموجودة أو السنوات خارج نطاق أم القرى المدعوم.
+- إضافة رقم الشهر بجانب كل اسم في القوائم الميلادية والهجرية، مثل `رمضان 9` و`أكتوبر 10`.
+- اعتماد ثلاثة أوضاع للمظهر في الموقع العام: فاتح، داكن، واتباع النظام، مع حفظ الاختيار وتطبيق `color-scheme` قبل الرسم الأول ومنع صفحة slug من إعادة تفسير الثيم بصورة منفصلة.
+- توحيد تطبيق الثيم في الإدارة عند الانتقال من الموقع، وإضافة لون تحكم ثابت لحقول الإدخال الأصلية دون تغيير لوحة الألوان الحالية.
+- إضافة خلفيات احتياطية للأزرار المصغرة قبل استخدام `color-mix()` حتى تبقى واضحة في المتصفحات الأقدم التي لا تدعم هذه الدالة.
+- جعل إغلاق رسالة الخصوصية يحولها إلى زر كوكيز مصغر إلى أن يختار المستخدم، وجعل إغلاق رسالة التثبيت يحولها إلى زر تثبيت مصغر إلى أن يتخذ المستخدم قرار التثبيت.
+- إبقاء تأخير رسالة التثبيت الكاملة `12` ثانية، وإضافة `id` و`display_override` و`prefer_related_applications` إلى Web App Manifest مع كسر كاش الأيقونات بواسطة نسخة `0.3.31`.
+- نجاح معاينة OpenNext/Cloudflare محليًا، وإرجاع الرئيسية و`/age-calculator` و`/manifest.webmanifest` بحالة `200` مع ظهور أيقونات التطبيق والاختصارات المرفوعة إلى R2.
+
+الملاحظات:
+
+1. **تحذير Play Protect عن إصدار أندرويد قديم**
+   - الأعراض: قد يعرض Android تحذيرًا بأن التطبيق المثبت أُنشئ لإصدار قديم من Android.
+   - السبب: نسخة Android المستهدفة تخص WebAPK الذي ينشئه المتصفح أو حزمة Android/TWA، ولا يوفّر Web App Manifest حقلًا لتعيين `targetSdkVersion`.
+   - الحل: تحديث المتصفح وAndroid System WebView، حذف النسخة المثبتة القديمة ثم إعادة التثبيت. إذا استمر التحذير بعد تثبيت جديد، فالحل الذي يعطي تحكمًا مباشرًا في `targetSdkVersion` هو إصدار تطبيق Android/TWA مستقل ومحدّث.
+   - الحالة: تم تحسين Manifest والهوية والكاش من جانب الموقع؛ التحكم في `targetSdkVersion` خارج صلاحيات تطبيق الويب نفسه.
+
+الملفات المتأثرة:
+
+- `app/components/home/homeDateUtils.js`
+- `app/HomePageClient.jsx`
+- `app/SiteShell.jsx`
+- `app/Header.jsx`
+- `app/[slug]/PageClient.jsx`
+- `app/admin/AdminShell.jsx`
+- `app/components/PwaInstallPrompt.jsx`
+- `app/globals.css`
+- `app/i18n.js`
+- `app/layout.jsx`
+- `app/manifestConfig.js`
+- `app/version.js`
+- `tests/homeDateUtils.test.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm install @internationalized/date
+npm test
+npm run lint
+npm run build
+npm run preview
+curl.exe -sS -I --max-time 20 http://127.0.0.1:8787/
+curl.exe -sS -I --max-time 20 http://127.0.0.1:8787/age-calculator
+curl.exe -sS --max-time 20 http://127.0.0.1:8787/manifest.webmanifest
+git diff --check
+```
+
+الحالة:
+
+- نجحت `17` حالة اختبار في `5` ملفات، ونجح ESLint وبناء Next.js وتوليد `31` صفحة.
+- نجح بناء OpenNext وتشغيل Wrangler Preview محليًا، وأعيدت المسارات المختبرة بحالة `200`.
+- لم يتغير تصميم الموقع أو لوحة ألوانه، ولم تتغير نسختا الإدارة والعميل.
+- يلزم بعد النشر اختبار التحويل والثيم والتثبيت على جهاز iPhone المتأثر وجهاز Android كان مثبتًا عليه الإصدار السابق، مع إزالة النسخة القديمة وإعادة تثبيتها عند فحص تحذير Play Protect.

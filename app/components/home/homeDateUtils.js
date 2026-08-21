@@ -1,41 +1,54 @@
+import {
+    CalendarDate,
+    GregorianCalendar,
+    IslamicUmalquraCalendar,
+    toCalendar,
+} from '@internationalized/date';
+
+const gregorianCalendar = new GregorianCalendar();
+const hijriCalendar = new IslamicUmalquraCalendar();
+
+function assertValidDate(dateObj) {
+    if (!(dateObj instanceof Date) || Number.isNaN(dateObj.getTime())) {
+        throw new RangeError('Invalid Gregorian date');
+    }
+}
+
+function assertInteger(value, label) {
+    if (!Number.isInteger(value)) {
+        throw new RangeError(`Invalid ${label}`);
+    }
+}
+
 export const getHijriParts = (dateObj) => {
-    const parts = new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric'
-    }).formatToParts(dateObj);
-    let y = 0, m = 0, d = 0;
-
-    parts.forEach((part) => {
-        if (part.type === 'year') y = parseInt(part.value);
-        if (part.type === 'month') m = parseInt(part.value);
-        if (part.type === 'day') d = parseInt(part.value);
-    });
-
-    return { y, m, d };
+    assertValidDate(dateObj);
+    const gregorianDate = new CalendarDate(
+        gregorianCalendar,
+        dateObj.getFullYear(),
+        dateObj.getMonth() + 1,
+        dateObj.getDate(),
+    );
+    const hijriDate = toCalendar(gregorianDate, hijriCalendar);
+    return { y: hijriDate.year, m: hijriDate.month, d: hijriDate.day };
 };
 
 export const hijriToGregorian = (hY, hM, hD) => {
-    const target = hY * 10000 + hM * 100 + hD;
-    let minDays = Math.floor(new Date(1900, 0, 1).getTime() / 86400000);
-    let maxDays = Math.floor(new Date(2100, 11, 31).getTime() / 86400000);
-    let resultDays = minDays;
+    assertInteger(hY, 'Hijri year');
+    assertInteger(hM, 'Hijri month');
+    assertInteger(hD, 'Hijri day');
 
-    for (let i = 0; i < 20; i += 1) {
-        const midDays = Math.floor((minDays + maxDays) / 2);
-        const midDate = new Date(midDays * 86400000);
-        const parts = getHijriParts(midDate);
-        const midVal = parts.y * 10000 + parts.m * 100 + parts.d;
-
-        if (midVal === target) {
-            resultDays = midDays;
-            break;
-        } else if (midVal < target) {
-            minDays = midDays + 1;
-        } else {
-            maxDays = midDays - 1;
-        }
+    if (hY < 1300 || hY > 1600 || hM < 1 || hM > 12 || hD < 1) {
+        throw new RangeError('Hijri date is outside the supported Umm al-Qura range');
     }
 
-    return new Date(resultDays * 86400000);
+    const firstDay = new CalendarDate(hijriCalendar, hY, hM, 1);
+    if (hD > hijriCalendar.getDaysInMonth(firstDay)) {
+        throw new RangeError('Invalid Hijri day for the selected month');
+    }
+
+    const hijriDate = new CalendarDate(hijriCalendar, hY, hM, hD);
+    const gregorianDate = toCalendar(hijriDate, gregorianCalendar);
+
+    // Noon avoids crossing the civil day around DST changes on affected devices.
+    return new Date(gregorianDate.year, gregorianDate.month - 1, gregorianDate.day, 12, 0, 0, 0);
 };

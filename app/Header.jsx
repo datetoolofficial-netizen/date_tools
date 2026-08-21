@@ -13,7 +13,7 @@ function normalizeLinkLocation(value) {
         .replace(/\s+/g, '-');
 }
 
-export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
+export default function Header({ lang, themeMode, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
     const pathname = usePathname() || '/';
     const [hasNavOverflow, setHasNavOverflow] = useState(false);
@@ -50,6 +50,12 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     }
 
     const labels = i18n[lang] || i18n.ar;
+    const themeLabel = themeMode === 'system'
+        ? labels.systemMode
+        : (isDarkMode ? labels.darkMode : labels.lightMode);
+    const themeIcon = themeMode === 'system'
+        ? 'fa-solid fa-display'
+        : (isDarkMode ? 'fa-solid fa-moon' : 'fa-solid fa-sun');
     const toolName = config?.toolDisplayName || labels.toolNameFallback;
     const toolSlogan = config?.toolSlogan || '';
     const primaryToolLinks = [
@@ -120,10 +126,10 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                     <button
                         onClick={toggleTheme}
                         className="control-btn"
-                        title={isDarkMode ? labels.lightMode : labels.darkMode}
-                        aria-label={isDarkMode ? labels.lightMode : labels.darkMode}
+                        title={themeLabel}
+                        aria-label={themeLabel}
                     >
-                        <i className={isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
+                        <i className={themeIcon}></i>
                     </button>
                 </div>
             </div>

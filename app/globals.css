@@ -1,6 +1,6 @@
         :root {
             --bg-body: #f8fafc;
-            --bg-card: #ffF;
+            --bg-card: #ffffff;
             --text-main: #1e293b;
             --text-sub: #475569;
             --border-color: #e2e8f0;
@@ -50,6 +50,12 @@
             --soft-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
         }
 
+        html[data-site-theme='light'],
+        html[data-site-theme='light'] body {
+            background-color: #f8fafc;
+            color-scheme: light;
+        }
+
         /* ================= الوضع المظلم ================= */
         body.dark-mode,
         html[data-site-theme='dark'] body {
@@ -82,6 +88,12 @@
             margin: 0;
             padding: var(--page-padding);
             transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        input,
+        select,
+        textarea {
+            accent-color: var(--primary);
         }
 
         .sr-only {
@@ -1390,6 +1402,28 @@
             pointer-events: auto;
         }
 
+        .site-compact-action {
+            min-height: 46px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            background: var(--bg-card);
+            background: color-mix(in srgb, var(--bg-card) 88%, var(--primary) 12%);
+            color: var(--primary);
+            box-shadow: 0 16px 34px rgba(2, 6, 23, 0.22);
+            font: inherit;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .site-compact-action:hover {
+            background: color-mix(in srgb, var(--bg-card) 78%, var(--primary) 22%);
+        }
+
         .pwa-install-prompt {
             position: fixed;
             left: 16px;
@@ -1474,7 +1508,7 @@
             box-shadow: 0 24px 70px rgba(3, 7, 18, 0.28);
         }
 
-        body:not(.dark-mode) .site-action-stack .pwa-install-prompt {
+        html[data-site-theme='light'] .site-action-stack .pwa-install-prompt {
             background: #ffffff;
         }
 
@@ -2212,8 +2246,25 @@
             isolation: isolate;
         }
 
+        .privacy-consent-collapse {
+            position: absolute;
+            inset-inline-start: 10px;
+            inset-block-start: 10px;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--input-bg);
+            background: color-mix(in srgb, var(--input-bg) 82%, var(--primary) 18%);
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
         .site-action-stack .privacy-consent-panel {
-            position: static;
+            position: relative;
             inset: auto;
             width: min(760px, 100%);
             max-width: min(760px, calc(100vw - 36px));
@@ -2221,7 +2272,7 @@
             margin: 0;
         }
 
-        body:not(.dark-mode) .privacy-consent-panel {
+        html[data-site-theme='light'] .privacy-consent-panel {
             background: #ffffff;
         }
 
@@ -2292,7 +2343,7 @@
             color: var(--text-main);
         }
 
-        body:not(.dark-mode) .privacy-secondary {
+        html[data-site-theme='light'] .privacy-secondary {
             background: #eef4ff;
             color: #1e3a8a;
         }
@@ -2317,7 +2368,7 @@
             cursor: pointer;
         }
 
-        body:not(.dark-mode) .privacy-settings-button {
+        html[data-site-theme='light'] .privacy-settings-button {
             background: #ffffff;
             color: #1d4ed8;
             border-color: rgba(37, 99, 235, 0.18);

@@ -329,6 +329,12 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         const { d, m, y } = hAgeInput;
         if (!d || !m || !y) return showNotification("errSelect");
         const bDay = parseInt(d), bMonth = parseInt(m), bYear = parseInt(y);
+        let gregEquivalent;
+        try {
+            gregEquivalent = hijriToGregorian(bYear, bMonth, bDay);
+        } catch {
+            return showNotification("errSelect");
+        }
         const tp = getHijriParts(new Date()); 
         const tDay = tp.d, tMonth = tp.m, tYear = tp.y;
         
@@ -341,7 +347,6 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         const durationStr = formatDuration(years, months, days);
         setResAgeHijri(`${i18n[lang].resAgeH} <br><span style="color:inherit;">${durationStr}</span>`);
         
-        const gregEquivalent = hijriToGregorian(bYear, bMonth, bDay);
         generateDateStory(gregEquivalent, i18n[lang].storyAgeHijri, durationStr, 'ageResult', {
             toolTitle: dateToolSettings.subtools?.ageCalc,
             inputLabel: i18n[lang].lblBirth,
@@ -354,10 +359,16 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         clearResults();
         const { d, m, y } = gConvInput;
         if (!d || !m || !y) return showNotification("errSelect");
-        const gDate = new Date(`${y}-${m}-${String(d).padStart(2, '0')}`);
-        const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
-        const locale = lang === 'ar' ? 'ar-SA-u-ca-islamic-umalqura' : 'en-US-u-ca-islamic-umalqura';
-        const hDate = new Intl.DateTimeFormat(locale, options).format(gDate);
+        const gDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0, 0);
+        if (
+            Number.isNaN(gDate.getTime())
+            || gDate.getFullYear() !== parseInt(y)
+            || gDate.getMonth() !== parseInt(m) - 1
+            || gDate.getDate() !== parseInt(d)
+        ) return showNotification("errSelect");
+
+        const hParts = getHijriParts(gDate);
+        const hDate = `${hParts.d} ${monthNames[lang].hijri[hParts.m - 1]} ${hParts.y}${i18n[lang].hijriSuffix}`;
         
         setResHijriConv(`${i18n[lang].resG2H} <br><span style="color:inherit;">${hDate}</span>`);
         generateDateStory(gDate, i18n[lang].storyGregToHijri, hDate, 'dateConversionResult', {
@@ -372,9 +383,14 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         clearResults();
         const { d, m, y } = hConvInput;
         if (!d || !m || !y) return showNotification("errSelect");
-        let gDateObj = hijriToGregorian(parseInt(y), parseInt(m), parseInt(d));
-        const options = { year: 'numeric', month: 'long', day: 'numeric' }; 
-        const locale = lang === 'ar' ? 'ar-SA' : 'en-US';
+        let gDateObj;
+        try {
+            gDateObj = hijriToGregorian(parseInt(y), parseInt(m), parseInt(d));
+        } catch {
+            return showNotification("errSelect");
+        }
+        const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' };
+        const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US-u-ca-gregory';
         const gDateFormatted = new Intl.DateTimeFormat(locale, options).format(gDateObj);
         const suffix = i18n[lang].gregorianSuffix;
         const finalRes = `${gDateFormatted}${suffix}`;
@@ -428,6 +444,13 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         
         let y1 = parseInt(y1Val), m1 = parseInt(m1Val), d1 = parseInt(d1Val); 
         let y2 = parseInt(yh2Val), m2 = parseInt(mh2Val), d2 = parseInt(dh2Val);
+
+        try {
+            hijriToGregorian(y1, m1, d1);
+            hijriToGregorian(y2, m2, d2);
+        } catch {
+            return showNotification("errSelect");
+        }
         
         if (y1 > y2 || (y1 === y2 && m1 > m2) || (y1 === y2 && m1 === m2 && d1 > d2)) { 
             let ty = y1, tm = m1, td = d1; 
@@ -477,11 +500,11 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
 
     const homeOptions = {
         gregMonths: monthNames[lang].greg.map((label, index) => ({
-            label,
+            label: `${label} ${index + 1}`,
             value: String(index + 1).padStart(2, '0'),
         })),
         hijriMonths: monthNames[lang].hijri.map((label, index) => ({
-            label,
+            label: `${label} ${index + 1}`,
             value: index + 1,
         })),
         gregAgeYears: makeYears(currentGregorianYear, 1900),

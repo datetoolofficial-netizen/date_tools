@@ -428,12 +428,6 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
         setLang(savedLang);
         document.documentElement.lang = savedLang;
         document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-
-        const savedTheme = localStorage.getItem('site_theme');
-        const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-        if (isDark) document.body.classList.add('dark-mode');
-        else document.body.classList.remove('dark-mode');
     }, []);
 
     useEffect(() => {

@@ -13,6 +13,8 @@ const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_see
 const LOCATION_ERROR_NOTICE_SEEN_KEY = 'date_tools_location_error_notice_seen';
 const SITE_CONFIG_CACHE_KEY = 'date_tools_site_shell_config';
 const SITE_CONFIG_CACHE_TTL = 1000 * 60 * 5;
+const THEME_MODES = ['light', 'dark', 'system'];
+const PRIVACY_PANEL_COLLAPSED_KEY = 'date_tools_privacy_panel_collapsed';
 
 function readCachedSiteConfig() {
     if (typeof window === 'undefined') return null;
@@ -184,6 +186,7 @@ function PublicShellSkeleton() {
 export default function SiteShell({ children, initialConfig = null }) {
     const pathname = usePathname() || '/';
     const [lang, setLang] = useState('ar');
+    const [themeMode, setThemeMode] = useState('system');
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [configData, setConfigData] = useState(() => initialConfig || null);
     const [currentLocation, setCurrentLocation] = useState(null);
@@ -191,6 +194,8 @@ export default function SiteShell({ children, initialConfig = null }) {
     const [locationError, setLocationError] = useState('');
     const [locationNotice, setLocationNotice] = useState(null);
     const [privacyConsent, setPrivacyConsent] = useState(null);
+    const [isPrivacyReady, setIsPrivacyReady] = useState(false);
+    const [isPrivacyPanelCollapsed, setIsPrivacyPanelCollapsed] = useState(false);
     const [showPrivacySettings, setShowPrivacySettings] = useState(false);
     const [privacyDraft, setPrivacyDraft] = useState(DEFAULT_PRIVACY_CONSENT);
     const firebaseApiRef = useRef(defaultFirebaseApi);
@@ -205,12 +210,38 @@ export default function SiteShell({ children, initialConfig = null }) {
     useEffect(() => {
         const savedLang = localStorage.getItem('site_lang') || 'ar';
         setLang(savedLang);
-        setPrivacyConsent(getPrivacyConsent());
+        const savedConsent = getPrivacyConsent();
+        setPrivacyConsent(savedConsent);
+        setIsPrivacyPanelCollapsed(
+            !savedConsent && localStorage.getItem(PRIVACY_PANEL_COLLAPSED_KEY) === 'true',
+        );
+        setIsPrivacyReady(true);
 
-        const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const savedTheme = localStorage.getItem('site_theme');
-        setIsDarkMode(savedTheme ? savedTheme === 'dark' : osThemeQuery.matches);
+        setThemeMode(THEME_MODES.includes(savedTheme) ? savedTheme : 'system');
     }, []);
+
+    useEffect(() => {
+        const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const applyTheme = () => {
+            const resolvedTheme = themeMode === 'system'
+                ? (osThemeQuery.matches ? 'dark' : 'light')
+                : themeMode;
+            const dark = resolvedTheme === 'dark';
+
+            setIsDarkMode(dark);
+            document.documentElement.dataset.siteTheme = resolvedTheme;
+            document.documentElement.style.colorScheme = resolvedTheme;
+            document.body.classList.toggle('dark-mode', dark);
+            document.body.classList.toggle('light-mode', !dark);
+        };
+
+        applyTheme();
+        if (themeMode !== 'system') return undefined;
+
+        osThemeQuery.addEventListener?.('change', applyTheme);
+        return () => osThemeQuery.removeEventListener?.('change', applyTheme);
+    }, [themeMode]);
 
     useEffect(() => {
         if (!shouldUseShell || loadedConfigRef.current) return;
@@ -270,8 +301,7 @@ export default function SiteShell({ children, initialConfig = null }) {
     useEffect(() => {
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-        document.body.classList.toggle('dark-mode', isDarkMode);
-    }, [lang, isDarkMode]);
+    }, [lang]);
 
     useEffect(() => {
         const faviconUrl = configData?.faviconUrl || configData?.appIconUrl || configData?.logoUrl || '';
@@ -305,9 +335,10 @@ export default function SiteShell({ children, initialConfig = null }) {
     };
 
     const toggleTheme = () => {
-        const newTheme = !isDarkMode;
-        setIsDarkMode(newTheme);
-        localStorage.setItem('site_theme', newTheme ? 'dark' : 'light');
+        const currentIndex = THEME_MODES.indexOf(themeMode);
+        const newTheme = THEME_MODES[(currentIndex + 1) % THEME_MODES.length];
+        setThemeMode(newTheme);
+        localStorage.setItem('site_theme', newTheme);
     };
 
     const updatePrivacyConsent = useCallback((nextConsent) => {
@@ -315,6 +346,18 @@ export default function SiteShell({ children, initialConfig = null }) {
         setPrivacyConsent(saved);
         setPrivacyDraft(saved);
         setShowPrivacySettings(false);
+        setIsPrivacyPanelCollapsed(false);
+        localStorage.removeItem(PRIVACY_PANEL_COLLAPSED_KEY);
+    }, []);
+
+    const collapsePrivacyPanel = useCallback(() => {
+        localStorage.setItem(PRIVACY_PANEL_COLLAPSED_KEY, 'true');
+        setIsPrivacyPanelCollapsed(true);
+    }, []);
+
+    const expandPrivacyPanel = useCallback(() => {
+        localStorage.removeItem(PRIVACY_PANEL_COLLAPSED_KEY);
+        setIsPrivacyPanelCollapsed(false);
     }, []);
 
     const openPrivacySettings = useCallback(() => {
@@ -453,6 +496,7 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     const contextValue = {
         lang,
+        themeMode,
         isDarkMode,
         configData,
         isSiteLoading,
@@ -484,6 +528,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                 ) : (
                     <Header
                         lang={lang}
+                        themeMode={themeMode}
                         isDarkMode={isDarkMode}
                         toggleLang={toggleLang}
                         toggleTheme={toggleTheme}
@@ -510,8 +555,17 @@ export default function SiteShell({ children, initialConfig = null }) {
             {!isSiteLoading && <Footer lang={lang} config={configData} />}
             {!isSiteLoading && (
                 <div className="site-action-stack">
-                    {privacyConsent === null && (
+                    {isPrivacyReady && privacyConsent === null && isPrivacyPanelCollapsed && (
+                        <button type="button" className="site-compact-action privacy-compact-action" onClick={expandPrivacyPanel}>
+                            <i className="fa-solid fa-shield-halved"></i>
+                            <span>الكوكيز</span>
+                        </button>
+                    )}
+                    {isPrivacyReady && privacyConsent === null && !isPrivacyPanelCollapsed && (
                         <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
+                            <button type="button" className="privacy-consent-collapse" onClick={collapsePrivacyPanel} aria-label="تصغير إعدادات الخصوصية">
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
                             <div className="privacy-consent-icon">
                                 <i className="fa-solid fa-shield-halved"></i>
                             </div>

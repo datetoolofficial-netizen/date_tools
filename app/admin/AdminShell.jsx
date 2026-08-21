@@ -342,9 +342,12 @@ export default function AdminShell({ children }) {
     const toggleDarkMode = () => {
         setIsDarkMode((current) => {
             const nextDarkMode = !current;
-            document.documentElement.dataset.siteTheme = nextDarkMode ? 'dark' : 'light';
+            const nextTheme = nextDarkMode ? 'dark' : 'light';
+            document.documentElement.dataset.siteTheme = nextTheme;
+            document.documentElement.style.colorScheme = nextTheme;
             document.body.classList.toggle('dark-mode', nextDarkMode);
-            window.localStorage.setItem('site_theme', nextDarkMode ? 'dark' : 'light');
+            document.body.classList.toggle('light-mode', !nextDarkMode);
+            window.localStorage.setItem('site_theme', nextTheme);
             return nextDarkMode;
         });
     };

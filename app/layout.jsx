@@ -14,10 +14,12 @@ const siteUrl = 'https://date-tool.com';
 const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
 const themeBootstrapScript = `(() => {
     try {
-        if (!window.location.pathname.startsWith('/admin')) return;
         const savedTheme = localStorage.getItem('site_theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.siteTheme = (savedTheme ? savedTheme === 'dark' : prefersDark) ? 'dark' : 'light';
+        const mode = ['light', 'dark', 'system'].includes(savedTheme) ? savedTheme : 'system';
+        const resolvedTheme = mode === 'system' ? (prefersDark ? 'dark' : 'light') : mode;
+        document.documentElement.dataset.siteTheme = resolvedTheme;
+        document.documentElement.style.colorScheme = resolvedTheme;
     } catch {}
 })();`;
 const cairo = Cairo({
