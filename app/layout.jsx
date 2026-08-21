@@ -14,15 +14,20 @@ const siteUrl = 'https://date-tool.com';
 const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
 const themeBootstrapScript = `(() => {
     try {
-        const savedTheme = localStorage.getItem('site_theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const resolvedTheme = savedTheme === 'light' || savedTheme === 'dark'
-            ? savedTheme
-            : (prefersDark ? 'dark' : 'light');
+        const resolvedTheme = prefersDark ? 'dark' : 'light';
         document.documentElement.dataset.siteTheme = resolvedTheme;
         document.documentElement.style.colorScheme = resolvedTheme;
     } catch {}
 })();`;
+
+export const viewport = {
+    colorScheme: 'light dark',
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+        { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+    ],
+};
 const cairo = Cairo({
     subsets: ['arabic', 'latin'],
     weight: ['400', '600', '700', '800'],

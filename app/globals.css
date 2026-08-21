@@ -2838,6 +2838,25 @@
     font-size: 15px;
     width: 100%;
 }
+.today-date-parts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    width: min(100%, 620px);
+    text-align: center;
+}
+.today-date-parts > span:not(.today-date-divider) {
+    min-width: 0;
+    line-height: 1.55;
+    text-wrap: balance;
+}
+.today-date-divider {
+    width: 1px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.48);
+    border-radius: 999px;
+}
 
 .clock-now-banner .today-content {
     display: grid;
@@ -2993,6 +3012,233 @@
 }
 .evt-name { font-weight: bold; color: var(--text-main); font-size: 13px; margin-bottom: 3px; }
 .evt-days { font-size: 11px; color: var(--text-sub); font-weight: 600;}
+
+.events-share-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 4200;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgba(2, 6, 23, 0.58);
+    backdrop-filter: blur(5px);
+}
+
+.events-share-dialog {
+    width: min(100%, 420px);
+    max-height: min(620px, calc(100dvh - 36px));
+    overflow: auto;
+    padding: 18px;
+    border-radius: 16px;
+    background: var(--bg-card);
+    color: var(--text-main);
+    box-shadow: 0 24px 70px rgba(2, 6, 23, 0.3);
+}
+
+.events-share-dialog-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.events-share-dialog-head h3,
+.events-share-dialog-head p {
+    margin: 0;
+}
+
+.events-share-dialog-head h3 {
+    font-size: 19px;
+    line-height: 1.4;
+}
+
+.events-share-dialog-head p {
+    margin-top: 3px;
+    color: var(--text-sub);
+    font-size: 12px;
+}
+
+.events-share-close {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-sub);
+    cursor: pointer;
+}
+
+.events-share-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--primary) 11%, transparent);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.events-share-options {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 16px;
+}
+
+.events-share-option {
+    display: grid;
+    grid-template-columns: auto 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 54px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--input-bg);
+    cursor: pointer;
+}
+
+.events-share-option.is-selected {
+    background: color-mix(in srgb, var(--primary) 13%, var(--input-bg));
+}
+
+.events-share-option input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.events-share-option-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.events-share-option-copy {
+    display: grid;
+    min-width: 0;
+}
+
+.events-share-option-copy strong {
+    overflow: hidden;
+    color: var(--text-main);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.events-share-option-copy small {
+    color: var(--text-sub);
+    font-size: 11px;
+}
+
+.events-share-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+    gap: 10px;
+}
+
+.events-share-actions button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.events-share-cancel {
+    background: var(--input-bg);
+    color: var(--text-main);
+}
+
+.events-share-confirm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: var(--tool-action-bg);
+    color: var(--tool-action-color);
+}
+
+.events-share-confirm:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.35);
+    opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+    .today-info-banner {
+        padding: 10px;
+    }
+
+    .today-content {
+        gap: 7px;
+        font-size: 13px;
+    }
+
+    .today-date-parts {
+        gap: 7px;
+    }
+
+    .today-date-divider {
+        height: 34px;
+    }
+
+    .events-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .event-card {
+        min-width: 0;
+        gap: 7px;
+        padding: 10px 7px;
+        border-right-width: 4px;
+    }
+
+    .evt-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+
+    .evt-details {
+        min-width: 0;
+    }
+
+    .evt-name {
+        overflow: hidden;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .evt-days {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+
+    .events-share-backdrop {
+        padding: 14px;
+    }
+
+    .events-share-dialog {
+        padding: 15px;
+        border-radius: 14px;
+    }
+}
 
 /* كرت النتيجة مع قصة التاريخ وزر المشاركة */
 .result-container { margin-top: 15px; }

@@ -18,6 +18,7 @@ import {
     AgeCalculatorSection,
     DateConversionSection,
     DurationSection,
+    EventsShareDialog,
     EventsSection,
     SeoSections,
     TodayBanner,
@@ -109,6 +110,8 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
 
     const [todayInfo, setTodayInfo] = useState('');
     const [upcomingEvents, setUpcomingEvents] = useState([]);
+    const [isEventsShareOpen, setIsEventsShareOpen] = useState(false);
+    const [selectedEventIndexes, setSelectedEventIndexes] = useState([]);
     const [enteredDateInfo, setEnteredDateInfo] = useState(null);
 
     const trackedAdImpressionsRef = useRef(new Set());
@@ -213,13 +216,44 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
         if (configData) generateTodayAndEvents();
     }, [configData, generateTodayAndEvents]);
 
-    const handleShareEvents = async () => {
+    useEffect(() => {
+        if (!isEventsShareOpen) return undefined;
+
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setIsEventsShareOpen(false);
+        };
+        window.addEventListener('keydown', closeOnEscape);
+        return () => window.removeEventListener('keydown', closeOnEscape);
+    }, [isEventsShareOpen]);
+
+    const openEventsShareDialog = () => {
+        setSelectedEventIndexes(upcomingEvents.map((_, index) => index));
+        setIsEventsShareOpen(true);
+    };
+
+    const toggleSelectedEvent = (index) => {
+        setSelectedEventIndexes((current) => (
+            current.includes(index)
+                ? current.filter((item) => item !== index)
+                : [...current, index].sort((a, b) => a - b)
+        ));
+    };
+
+    const toggleAllEvents = () => {
+        setSelectedEventIndexes((current) => (
+            current.length === upcomingEvents.length
+                ? []
+                : upcomingEvents.map((_, index) => index)
+        ));
+    };
+
+    const handleShareEvents = async (eventsToShare = upcomingEvents) => {
         if (!isShareTemplateEnabled(dateToolSettings, 'eventsResult')) return;
-        if (upcomingEvents.length === 0) return;
+        if (eventsToShare.length === 0) return;
         
         const labels = i18n[lang] || i18n.ar;
-        const eventsText = upcomingEvents.map((event) => `${event.name}: ${getEventDayText(lang, event.days)}`).join('\n');
-        const defaultShareBody = buildEventsShareText(lang, upcomingEvents, getSafeCurrentUrl());
+        const eventsText = eventsToShare.map((event) => `${event.name}: ${getEventDayText(lang, event.days)}`).join('\n');
+        const defaultShareBody = buildEventsShareText(lang, eventsToShare, getSafeCurrentUrl());
         const shareBody = renderShareTemplate(dateToolSettings, 'eventsResult', {
             title: labels.shareEventsTitle,
             events: eventsText,
@@ -232,6 +266,13 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
             navigator.clipboard.writeText(shareBody);
             showNotification('eventsCopied', 'info');
         }
+    };
+
+    const confirmEventsShare = () => {
+        const selectedEvents = upcomingEvents.filter((_, index) => selectedEventIndexes.includes(index));
+        if (selectedEvents.length === 0) return;
+        setIsEventsShareOpen(false);
+        handleShareEvents(selectedEvents);
     };
 
     const formatInputDate = (values, suffix = '') => {
@@ -578,6 +619,16 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                 onClose={() => setAlertConfig({ show: false, msg: '', type: '' })}
             />
 
+            <EventsShareDialog
+                isOpen={isEventsShareOpen}
+                events={upcomingEvents}
+                selectedIndexes={selectedEventIndexes}
+                onToggle={toggleSelectedEvent}
+                onToggleAll={toggleAllEvents}
+                onClose={() => setIsEventsShareOpen(false)}
+                onConfirm={confirmEventsShare}
+            />
+
             {isPageLoading ? (
                 <HomePageSkeleton />
             ) : (
@@ -595,7 +646,7 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                         {!focusTool && <EventsSection
                             lang={lang}
                             upcomingEvents={upcomingEvents}
-                            onShare={handleShareEvents}
+                            onShare={openEventsShareDialog}
                             canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
                         />}
 

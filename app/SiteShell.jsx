@@ -216,12 +216,19 @@ export default function SiteShell({ children, initialConfig = null }) {
         );
         setIsPrivacyReady(true);
 
-        const savedTheme = localStorage.getItem('site_theme');
-        const initialTheme = savedTheme === 'light' || savedTheme === 'dark'
-            ? savedTheme
-            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        setThemeMode(initialTheme);
-        if (savedTheme === 'system') localStorage.removeItem('site_theme');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const syncWithSystemTheme = (event) => {
+            setThemeMode(event.matches ? 'dark' : 'light');
+        };
+
+        syncWithSystemTheme(systemTheme);
+        if (typeof systemTheme.addEventListener === 'function') {
+            systemTheme.addEventListener('change', syncWithSystemTheme);
+            return () => systemTheme.removeEventListener('change', syncWithSystemTheme);
+        }
+
+        systemTheme.addListener?.(syncWithSystemTheme);
+        return () => systemTheme.removeListener?.(syncWithSystemTheme);
     }, []);
 
     useEffect(() => {
@@ -233,6 +240,15 @@ export default function SiteShell({ children, initialConfig = null }) {
         document.documentElement.style.colorScheme = themeMode;
         document.body.classList.toggle('dark-mode', dark);
         document.body.classList.toggle('light-mode', !dark);
+
+        let themeColor = document.querySelector('meta[name="theme-color"][data-runtime-theme]');
+        if (!themeColor) {
+            themeColor = document.createElement('meta');
+            themeColor.name = 'theme-color';
+            themeColor.dataset.runtimeTheme = 'true';
+            document.head.appendChild(themeColor);
+        }
+        themeColor.content = dark ? '#0f172a' : '#f8fafc';
     }, [themeMode]);
 
     useEffect(() => {
@@ -332,7 +348,6 @@ export default function SiteShell({ children, initialConfig = null }) {
             || 'dark';
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         setThemeMode(newTheme);
-        localStorage.setItem('site_theme', newTheme);
     };
 
     const updatePrivacyConsent = useCallback((nextConsent) => {

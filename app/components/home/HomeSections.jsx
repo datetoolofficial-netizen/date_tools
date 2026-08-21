@@ -33,13 +33,101 @@ function getGoogleAdSlot(configData, slotName) {
 
 export function TodayBanner({ lang, todayInfo }) {
     if (lang !== 'ar') return null;
+    const [gregorianDate = todayInfo, hijriDate = ''] = String(todayInfo || '')
+        .split('|')
+        .map((part) => part.trim());
 
     return (
         <div className="today-info-banner">
             <div className="today-content">
                 <i className="fa-regular fa-calendar-check"></i>
-                <span>{todayInfo}</span>
+                <div className="today-date-parts">
+                    <span>{gregorianDate}</span>
+                    {hijriDate && <span className="today-date-divider" aria-hidden="true"></span>}
+                    {hijriDate && <span>{hijriDate}</span>}
+                </div>
             </div>
+        </div>
+    );
+}
+
+export function EventsShareDialog({
+    isOpen,
+    events,
+    selectedIndexes,
+    onToggle,
+    onToggleAll,
+    onClose,
+    onConfirm,
+}) {
+    if (!isOpen) return null;
+
+    const allSelected = events.length > 0 && selectedIndexes.length === events.length;
+
+    return (
+        <div
+            className="events-share-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+                if (event.target === event.currentTarget) onClose();
+            }}
+        >
+            <section
+                className="events-share-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="events-share-title"
+            >
+                <div className="events-share-dialog-head">
+                    <div>
+                        <h3 id="events-share-title">اختر المواعيد</h3>
+                        <p>حدد المواعيد التي تريد مشاركتها.</p>
+                    </div>
+                    <button type="button" className="events-share-close" onClick={onClose} aria-label="إغلاق">
+                        <i className="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <button type="button" className="events-share-select-all" onClick={onToggleAll}>
+                    <i className={`fa-${allSelected ? 'solid' : 'regular'} fa-square-check`}></i>
+                    {allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                </button>
+
+                <div className="events-share-options">
+                    {events.map((event, index) => {
+                        const checked = selectedIndexes.includes(index);
+                        return (
+                            <label className={`events-share-option${checked ? ' is-selected' : ''}`} key={`${event.name}-${event.days}-${index}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => onToggle(index)}
+                                />
+                                <span className="events-share-option-icon" style={{ color: event.color }}>
+                                    <i className={`fa-solid ${event.icon}`}></i>
+                                </span>
+                                <span className="events-share-option-copy">
+                                    <strong>{event.name}</strong>
+                                    <small>{getEventDayText('ar', event.days)}</small>
+                                </span>
+                            </label>
+                        );
+                    })}
+                </div>
+
+                <div className="events-share-actions">
+                    <button type="button" className="events-share-cancel" onClick={onClose}>إلغاء</button>
+                    <button
+                        type="button"
+                        className="events-share-confirm"
+                        onClick={onConfirm}
+                        disabled={selectedIndexes.length === 0}
+                    >
+                        <i className="fa-solid fa-share-nodes"></i>
+                        مشاركة المحدد
+                    </button>
+                </div>
+            </section>
         </div>
     );
 }
