@@ -11461,6 +11461,12 @@ npm run lint
 npm run build
 npm run dev
 git diff --check
+git commit -m "fix admin uploads and public preference controls"
+git push origin master
+npm run deploy
+curl.exe -sS -I --max-time 30 https://date-tool.com/privacy
+curl.exe -sS -I --max-time 30 https://date-tool.com/admin/identity
+curl.exe -sS -X POST --max-time 30 https://date-tool.com/api/media/upload
 ```
 
 الحالة:
@@ -11468,5 +11474,7 @@ git diff --check
 - نجحت `20` حالة اختبار في `6` ملفات، ونجح ESLint وبناء Next.js وتوليد `31` صفحة.
 - نجح اختبار التحويل المبلغ عنه وتأكد أن الناتج ميلادي وليس هجريًا.
 - تعذر ربط أداة المعاينة المرئية بالخادم المحلي بسبب إعداد ثقة داخلي في إضافة المتصفح، وليس بسبب خطأ في التطبيق؛ البناء والاختبارات البرمجية مكتملة.
-- لم يتم نشر Cloudflare أو إنشاء كومت أو دفعه في هذه المهمة حتى الآن.
-- بعد النشر يلزم تسجيل الخروج والدخول مرة واحدة إذا كانت الجلسة القديمة محفوظة، ثم تجربة رفع صورة مشاركة من `/admin/identity` واختبار أزرار الخصوصية والتثبيت على هاتف فعلي.
+- أُنشئ الكومت `22f57fd` ودُفع إلى `origin/master`، ثم نُشر Worker `datetools` مباشرة إلى Cloudflare بالمعرف `6aaf0a31-f05f-4d4c-a182-b6cd16ccec20`.
+- نجح فحص الإنتاج: أعادت `/privacy` و`/admin/identity` حالة `200`، واحتوى أصل JavaScript الحي نسختي `0.3.32` و`admin 0.1.35`، ورفض مسار رفع الصور الطلب غير المسجل برسالة `unauthorized` كما يجب.
+- تعطل أول تشغيل للنشر لأن عملية Next.js محلية قديمة كانت تقفل مجلد `.open-next`؛ تم التحقق من العمليات التابعة للمشروع وإيقافها وتنظيف مجلد البناء المؤقت فقط، ثم نجح البناء والنشر.
+- يلزم الآن تسجيل الخروج والدخول مرة واحدة إذا كانت الجلسة القديمة محفوظة، ثم تجربة رفع صورة مشاركة من `/admin/identity` واختبار أزرار الخصوصية والتثبيت على هاتف فعلي.
