@@ -1,24 +1,12 @@
 import { NextResponse } from 'next/server';
 import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 
-const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
 const FIREBASE_PROJECT_ID = 'date-tool-official';
 const SITE_HOST = 'date-tool.com';
 const SITE_ORIGIN = `https://${SITE_HOST}`;
 const INDEXNOW_KEY = 'd7a98f24b63e4c91a5f27038c4e16b92';
 const INDEXNOW_KEY_LOCATION = `${SITE_ORIGIN}/${INDEXNOW_KEY}.txt`;
-
-async function lookupFirebaseUser(idToken) {
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-    });
-
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data?.users?.[0] || null;
-}
 
 async function getAdminProfile(idToken, uid) {
     const documentName = `projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/admins/${uid}`;
@@ -37,7 +25,7 @@ async function requireActiveAdmin(request) {
     const [, idToken] = authorization.match(/^Bearer\s+(.+)$/i) || [];
     if (!idToken) return false;
 
-    const user = await lookupFirebaseUser(idToken);
+    const user = await verifyFirebaseIdToken(idToken, FIREBASE_PROJECT_ID);
     if (!user?.localId) return false;
     const profile = await getAdminProfile(idToken, user.localId);
     return hasAdminPermission(profile, ['tools', 'settings', 'site-settings', 'pages']);

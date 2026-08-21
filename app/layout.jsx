@@ -16,8 +16,9 @@ const themeBootstrapScript = `(() => {
     try {
         const savedTheme = localStorage.getItem('site_theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const mode = ['light', 'dark', 'system'].includes(savedTheme) ? savedTheme : 'system';
-        const resolvedTheme = mode === 'system' ? (prefersDark ? 'dark' : 'light') : mode;
+        const resolvedTheme = savedTheme === 'light' || savedTheme === 'dark'
+            ? savedTheme
+            : (prefersDark ? 'dark' : 'light');
         document.documentElement.dataset.siteTheme = resolvedTheme;
         document.documentElement.style.colorScheme = resolvedTheme;
     } catch {}

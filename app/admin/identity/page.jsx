@@ -301,7 +301,8 @@ export default function AdminIdentityPage() {
     const getUploadMessage = (errorCode, label) => {
         const messages = {
             not_authenticated: 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى ثم أعد المحاولة.',
-            unauthorized: 'لا تملك صلاحية رفع الصور. تأكد من أن حسابك الإداري مفعّل.',
+            unauthorized: 'تعذر التحقق من جلسة الإدارة. سجّل الخروج ثم الدخول، وإذا استمرت المشكلة راجع بيانات الحساب الإداري.',
+            forbidden_category: 'الحساب مفعّل، لكنه لا يملك صلاحية إدارة الهوية ورفع صورها.',
             media_storage_not_configured: 'تخزين الصور غير مفعل أو غير مربوط باسم MEDIA_BUCKET.',
             invalid_category: 'نوع مساحة الرفع غير معروف.',
             missing_file: 'لم يتم اختيار ملف للرفع.',

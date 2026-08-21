@@ -1,8 +1,8 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { hasAdminPermission } from '../_lib/adminPermissions';
+import { verifyFirebaseIdToken } from '../_lib/firebaseIdToken';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
-const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
@@ -148,20 +148,6 @@ async function getAccessToken(serviceAccount) {
     return cachedToken;
 }
 
-async function lookupFirebaseUser(idToken) {
-    const apiKey = (await getEnvValue('FIREBASE_WEB_API_KEY')) || FIREBASE_WEB_API_KEY;
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    return data?.users?.[0] || null;
-}
-
 async function getAdminProfile(serviceAccount, uid) {
     const token = await getAccessToken(serviceAccount);
     const projectId = serviceAccount.projectId || DEFAULT_PROJECT_ID;
@@ -184,7 +170,7 @@ async function requireActiveAdmin(request, serviceAccount) {
 
     if (!idToken) return false;
 
-    const user = await lookupFirebaseUser(idToken);
+    const user = await verifyFirebaseIdToken(idToken, DEFAULT_PROJECT_ID);
     if (!user?.localId) return false;
 
     const adminProfile = await getAdminProfile(serviceAccount, user.localId);

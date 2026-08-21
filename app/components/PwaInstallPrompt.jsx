@@ -71,11 +71,15 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
 
     const installApp = async () => {
         installPrompt.prompt();
-        await installPrompt.userChoice.catch(() => null);
+        const choice = await installPrompt.userChoice.catch(() => null);
         setInstallPrompt(null);
         setView('hidden');
-        localStorage.setItem(COMPLETED_KEY, 'true');
-        localStorage.removeItem(COLLAPSED_KEY);
+        if (choice?.outcome === 'accepted') {
+            localStorage.setItem(COMPLETED_KEY, 'true');
+            localStorage.removeItem(COLLAPSED_KEY);
+        } else {
+            localStorage.setItem(COLLAPSED_KEY, 'true');
+        }
     };
 
     const dismiss = () => {
@@ -85,7 +89,7 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
 
     if (view === 'compact') {
         return (
-            <button type="button" className="site-compact-action pwa-compact-action" onClick={() => setView('full')}>
+            <button type="button" className="privacy-settings-button pwa-settings-button" onClick={() => setView('full')}>
                 <i className="fa-solid fa-mobile-screen-button"></i>
                 <span>{buttonText}</span>
             </button>
@@ -93,7 +97,7 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
     }
 
     return (
-        <div className="pwa-install-prompt" role="status">
+        <div className="pwa-install-prompt" role="dialog" aria-label="تثبيت الأداة">
             <span className="pwa-install-icon" aria-hidden="true">
                 {iconUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element

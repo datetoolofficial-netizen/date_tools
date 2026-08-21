@@ -1402,6 +1402,16 @@
             pointer-events: auto;
         }
 
+        .site-action-stack .privacy-settings-button {
+            position: static;
+            inset: auto;
+            align-self: flex-start;
+        }
+
+        .site-action-stack .pwa-settings-button {
+            margin-block-end: -4px;
+        }
+
         .site-compact-action {
             min-height: 46px;
             padding: 0 16px;
@@ -2462,6 +2472,10 @@
                 bottom: 12px;
                 padding: 8px 11px;
                 font-size: 11px;
+            }
+
+            .site-action-stack .privacy-settings-button {
+                inset: auto;
             }
         }
 

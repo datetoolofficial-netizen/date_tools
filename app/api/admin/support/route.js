@@ -1,7 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 
-const FIREBASE_WEB_API_KEY = 'AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8';
 const FIREBASE_PROJECT_ID = 'date-tool-official';
 const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 const MAX_LISTED_TICKETS = 500;
@@ -22,18 +22,6 @@ function getBearerToken(request) {
     return authorization.match(/^Bearer\s+(.+)$/i)?.[1] || '';
 }
 
-async function lookupFirebaseUser(idToken) {
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-    });
-
-    if (!response.ok) return null;
-    const data = await response.json();
-    return data?.users?.[0] || null;
-}
-
 async function getAdminProfile(idToken, uid) {
     const response = await fetch(`${FIRESTORE_BASE}/admins/${encodeURIComponent(uid)}`, {
         headers: { Authorization: `Bearer ${idToken}` },
@@ -49,7 +37,7 @@ async function requireActiveAdmin(request) {
     const idToken = getBearerToken(request);
     if (!idToken) return null;
 
-    const user = await lookupFirebaseUser(idToken);
+    const user = await verifyFirebaseIdToken(idToken, FIREBASE_PROJECT_ID);
     if (!user?.localId) return null;
     const profile = await getAdminProfile(idToken, user.localId);
     if (!hasAdminPermission(profile, ['support', 'tickets'])) return null;

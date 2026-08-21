@@ -13,7 +13,7 @@ function normalizeLinkLocation(value) {
         .replace(/\s+/g, '-');
 }
 
-export default function Header({ lang, themeMode, isDarkMode, toggleLang, toggleTheme, config }) {
+export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, config }) {
     const navRef = useRef(null);
     const pathname = usePathname() || '/';
     const [hasNavOverflow, setHasNavOverflow] = useState(false);
@@ -50,12 +50,8 @@ export default function Header({ lang, themeMode, isDarkMode, toggleLang, toggle
     }
 
     const labels = i18n[lang] || i18n.ar;
-    const themeLabel = themeMode === 'system'
-        ? labels.systemMode
-        : (isDarkMode ? labels.darkMode : labels.lightMode);
-    const themeIcon = themeMode === 'system'
-        ? 'fa-solid fa-display'
-        : (isDarkMode ? 'fa-solid fa-moon' : 'fa-solid fa-sun');
+    const themeLabel = isDarkMode ? labels.lightMode : labels.darkMode;
+    const themeIcon = isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     const toolName = config?.toolDisplayName || labels.toolNameFallback;
     const toolSlogan = config?.toolSlogan || '';
     const primaryToolLinks = [

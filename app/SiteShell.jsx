@@ -13,7 +13,6 @@ const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_see
 const LOCATION_ERROR_NOTICE_SEEN_KEY = 'date_tools_location_error_notice_seen';
 const SITE_CONFIG_CACHE_KEY = 'date_tools_site_shell_config';
 const SITE_CONFIG_CACHE_TTL = 1000 * 60 * 5;
-const THEME_MODES = ['light', 'dark', 'system'];
 const PRIVACY_PANEL_COLLAPSED_KEY = 'date_tools_privacy_panel_collapsed';
 
 function readCachedSiteConfig() {
@@ -186,7 +185,7 @@ function PublicShellSkeleton() {
 export default function SiteShell({ children, initialConfig = null }) {
     const pathname = usePathname() || '/';
     const [lang, setLang] = useState('ar');
-    const [themeMode, setThemeMode] = useState('system');
+    const [themeMode, setThemeMode] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [configData, setConfigData] = useState(() => initialConfig || null);
     const [currentLocation, setCurrentLocation] = useState(null);
@@ -218,29 +217,22 @@ export default function SiteShell({ children, initialConfig = null }) {
         setIsPrivacyReady(true);
 
         const savedTheme = localStorage.getItem('site_theme');
-        setThemeMode(THEME_MODES.includes(savedTheme) ? savedTheme : 'system');
+        const initialTheme = savedTheme === 'light' || savedTheme === 'dark'
+            ? savedTheme
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        setThemeMode(initialTheme);
+        if (savedTheme === 'system') localStorage.removeItem('site_theme');
     }, []);
 
     useEffect(() => {
-        const osThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const applyTheme = () => {
-            const resolvedTheme = themeMode === 'system'
-                ? (osThemeQuery.matches ? 'dark' : 'light')
-                : themeMode;
-            const dark = resolvedTheme === 'dark';
+        if (!themeMode) return;
 
-            setIsDarkMode(dark);
-            document.documentElement.dataset.siteTheme = resolvedTheme;
-            document.documentElement.style.colorScheme = resolvedTheme;
-            document.body.classList.toggle('dark-mode', dark);
-            document.body.classList.toggle('light-mode', !dark);
-        };
-
-        applyTheme();
-        if (themeMode !== 'system') return undefined;
-
-        osThemeQuery.addEventListener?.('change', applyTheme);
-        return () => osThemeQuery.removeEventListener?.('change', applyTheme);
+        const dark = themeMode === 'dark';
+        setIsDarkMode(dark);
+        document.documentElement.dataset.siteTheme = themeMode;
+        document.documentElement.style.colorScheme = themeMode;
+        document.body.classList.toggle('dark-mode', dark);
+        document.body.classList.toggle('light-mode', !dark);
     }, [themeMode]);
 
     useEffect(() => {
@@ -335,8 +327,10 @@ export default function SiteShell({ children, initialConfig = null }) {
     };
 
     const toggleTheme = () => {
-        const currentIndex = THEME_MODES.indexOf(themeMode);
-        const newTheme = THEME_MODES[(currentIndex + 1) % THEME_MODES.length];
+        const currentTheme = themeMode
+            || document.documentElement.dataset.siteTheme
+            || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         setThemeMode(newTheme);
         localStorage.setItem('site_theme', newTheme);
     };
@@ -508,9 +502,13 @@ export default function SiteShell({ children, initialConfig = null }) {
         privacyConsent,
         updatePrivacyConsent,
     };
-    const showPrivacySettingsButton = !isSiteLoading
-        && privacyConsent !== null
+    const showPendingPrivacyButton = isPrivacyReady
+        && privacyConsent === null
+        && isPrivacyPanelCollapsed;
+    const showConfiguredPrivacyButton = privacyConsent !== null
         && shouldShowPrivacySettingsButton(configData, pathname);
+    const showPrivacySettingsButton = !isSiteLoading
+        && (showPendingPrivacyButton || showConfiguredPrivacyButton);
 
     if (!shouldUseShell) {
         return (
@@ -528,7 +526,6 @@ export default function SiteShell({ children, initialConfig = null }) {
                 ) : (
                     <Header
                         lang={lang}
-                        themeMode={themeMode}
                         isDarkMode={isDarkMode}
                         toggleLang={toggleLang}
                         toggleTheme={toggleTheme}
@@ -555,12 +552,10 @@ export default function SiteShell({ children, initialConfig = null }) {
             {!isSiteLoading && <Footer lang={lang} config={configData} />}
             {!isSiteLoading && (
                 <div className="site-action-stack">
-                    {isPrivacyReady && privacyConsent === null && isPrivacyPanelCollapsed && (
-                        <button type="button" className="site-compact-action privacy-compact-action" onClick={expandPrivacyPanel}>
-                            <i className="fa-solid fa-shield-halved"></i>
-                            <span>الكوكيز</span>
-                        </button>
-                    )}
+                    <PwaInstallPrompt
+                        settings={configData?.pwaInstallPrompt}
+                        iconUrl={configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || ''}
+                    />
                     {isPrivacyReady && privacyConsent === null && !isPrivacyPanelCollapsed && (
                         <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
                             <button type="button" className="privacy-consent-collapse" onClick={collapsePrivacyPanel} aria-label="تصغير إعدادات الخصوصية">
@@ -620,17 +615,17 @@ export default function SiteShell({ children, initialConfig = null }) {
                             </div>
                         </div>
                     )}
-                    <PwaInstallPrompt
-                        settings={configData?.pwaInstallPrompt}
-                        iconUrl={configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || ''}
-                    />
+                    {showPrivacySettingsButton && (
+                        <button
+                            type="button"
+                            className="privacy-settings-button"
+                            onClick={showPendingPrivacyButton ? expandPrivacyPanel : openPrivacySettings}
+                        >
+                            <i className="fa-solid fa-shield-halved"></i>
+                            إعدادات الخصوصية
+                        </button>
+                    )}
                 </div>
-            )}
-            {showPrivacySettingsButton && (
-                <button type="button" className="privacy-settings-button" onClick={openPrivacySettings}>
-                    <i className="fa-solid fa-shield-halved"></i>
-                    إعدادات الخصوصية
-                </button>
             )}
         </SiteContext.Provider>
     );
