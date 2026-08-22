@@ -9,6 +9,7 @@ import {
 describe('R2 media validation', () => {
     it('limits uploads to known buckets and size', () => {
         expect(getSafeMediaCategory('ads')).toBe('ads');
+        expect(getSafeMediaCategory('seo-share')).toBe('seo-share');
         expect(getSafeMediaCategory('../support')).toBe('');
         expect(MAX_IMAGE_BYTES).toBe(5 * 1024 * 1024);
     });

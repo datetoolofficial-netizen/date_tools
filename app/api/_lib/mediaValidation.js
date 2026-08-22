@@ -5,6 +5,7 @@ export const ALLOWED_MEDIA_CATEGORIES = new Set([
     'favicon',
     'ads',
     'link-preview',
+    'seo-share',
     'app-icon',
     'pwa-shortcut-date',
     'pwa-shortcut-clock',

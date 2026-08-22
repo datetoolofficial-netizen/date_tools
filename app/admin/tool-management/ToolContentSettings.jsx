@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { DEFAULT_TOOL_SETTINGS, SHARE_TEMPLATE_DEFINITIONS, normalizeToolSettings } from '../../toolSettings';
 import { TOOL_SECTION_ROUTES } from '../../../toolSectionRoutes';
 
+const MAX_SEO_SHARE_IMAGE_BYTES = 5 * 1024 * 1024;
+const SEO_SHARE_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
 const COMMON_SHARE_PREVIEW_VALUES = {
     title: 'مواعيدي القادمة',
     events: 'الراتب: متبقي 5 أيام\nحساب المواطن: متبقي 12 يوم',
@@ -69,6 +72,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     const [settings, setSettings] = useState(() => cloneToolSettings(defaults));
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [uploadingSeoImage, setUploadingSeoImage] = useState('');
     const [shareModal, setShareModal] = useState(null);
     const [faqModal, setFaqModal] = useState(null);
 
@@ -129,6 +133,51 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 },
             },
         }));
+    };
+
+    const handleSeoImageUpload = async (subtoolKey, event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+
+        if (!SEO_SHARE_IMAGE_TYPES.has(file.type)) {
+            showMessage('error', 'استخدم صورة PNG أو JPG أو WEBP.');
+            return;
+        }
+        if (file.size <= 0 || file.size > MAX_SEO_SHARE_IMAGE_BYTES) {
+            showMessage('error', 'حجم صورة المشاركة يجب ألا يتجاوز 5MB.');
+            return;
+        }
+
+        const currentUser = firebaseApi?.auth?.currentUser;
+        if (!currentUser) {
+            showMessage('error', 'انتهت جلسة الإدارة. سجّل الدخول ثم أعد المحاولة.');
+            return;
+        }
+
+        try {
+            setUploadingSeoImage(subtoolKey);
+            showMessage('info', 'جاري رفع صورة مشاركة أداة المدة إلى R2...');
+            const token = await currentUser.getIdToken();
+            const formData = new FormData();
+            formData.append('category', 'seo-share');
+            formData.append('file', file);
+            const response = await fetch('/api/media/upload', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.error || 'upload_failed');
+
+            updateSubtoolSeo(subtoolKey, 'shareImageUrl', result.url);
+            showMessage('success', 'تم رفع الصورة. اضغط حفظ لتثبيتها في بيانات المشاركة.');
+        } catch (error) {
+            console.error('SEO share image upload error:', error);
+            showMessage('error', 'تعذر رفع صورة المشاركة. تحقق من صلاحية الحساب ونوع الصورة.');
+        } finally {
+            setUploadingSeoImage('');
+        }
     };
 
     const updateShareTemplate = (key, value) => {
@@ -247,6 +296,9 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
                             previewLabel={settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
                             publicPath={TOOL_SECTION_ROUTES[toolKey]?.[subtoolKey]?.publicPath}
+                            enableShareImage={toolKey === 'date' && subtoolKey === 'durationCalc'}
+                            isImageUploading={uploadingSeoImage === subtoolKey}
+                            onImageUpload={(event) => handleSeoImageUpload(subtoolKey, event)}
                         />
                     </div>
                 ))}
@@ -476,7 +528,15 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     );
 }
 
-function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
+function SeoFields({
+    seo = {},
+    onChange,
+    previewLabel = '',
+    publicPath = '',
+    enableShareImage = false,
+    isImageUploading = false,
+    onImageUpload,
+}) {
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
     const canonical = seo.canonical || publicPath || '/';
@@ -510,9 +570,50 @@ function SeoFields({ seo = {}, onChange, previewLabel = '', publicPath = '' }) {
                     <span>الرابط الأساسي Canonical</span>
                     <input dir="ltr" value={canonical} onChange={(event) => onChange('canonical', event.target.value)} placeholder={publicPath || '/clock'} />
                 </label>
+                {enableShareImage && (
+                    <div className="legacy-field full-width tool-seo-share-image-field">
+                        <span>صورة ظهور الرابط عند المشاركة</span>
+                        <label className={`legacy-media-picker ${isImageUploading ? 'is-uploading' : ''}`}>
+                            <span className="legacy-media-picker-preview">
+                                {seo.shareImageUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={seo.shareImageUrl} alt="صورة مشاركة أداة حساب المدة" />
+                                ) : (
+                                    <i className="fa-regular fa-image"></i>
+                                )}
+                            </span>
+                            <span className="legacy-media-picker-text">
+                                <strong>{isImageUploading ? 'جاري رفع الصورة...' : seo.shareImageUrl ? 'استبدال صورة المشاركة' : 'إرفاق صورة مشاركة'}</strong>
+                                <small dir="ltr">{seo.shareImageUrl || 'يفضل مقاس 1200 × 630'}</small>
+                            </span>
+                            <span className="legacy-media-picker-action">
+                                <i className="fa-solid fa-cloud-arrow-up"></i>
+                            </span>
+                            <input
+                                type="file"
+                                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                                disabled={isImageUploading}
+                                onChange={onImageUpload}
+                            />
+                        </label>
+                        {seo.shareImageUrl && (
+                            <button type="button" className="tool-seo-image-remove" onClick={() => onChange('shareImageUrl', '')}>
+                                <i className="fa-solid fa-xmark"></i>
+                                إزالة الصورة
+                            </button>
+                        )}
+                        <small>تخص رابط أداة حساب المدة فقط، ولا تغيّر صورة بقية صفحات الموقع.</small>
+                    </div>
+                )}
             </div>
 
             <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
+                {enableShareImage && seo.shareImageUrl && (
+                    <div className="tool-search-preview-image">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={seo.shareImageUrl} alt={seo.h1 || previewLabel || 'معاينة صورة المشاركة'} />
+                    </div>
+                )}
                 <div className="tool-search-preview-url">
                     <small>{getSearchPreviewUrl(canonical)}</small>
                     {publicPath && (

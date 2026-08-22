@@ -20,8 +20,9 @@ export default function ToolManagementShell({
         let isMounted = true;
 
         import('../../firebase')
-            .then(({ getSiteConfig, saveSiteConfigSection }) => {
-                if (isMounted) setFirebaseApi({ getSiteConfig, saveSiteConfigSection });
+            .then(async ({ getFirebaseAuth, getSiteConfig, saveSiteConfigSection }) => {
+                const auth = await getFirebaseAuth();
+                if (isMounted) setFirebaseApi({ auth, getSiteConfig, saveSiteConfigSection });
             })
             .catch(() => {
                 if (isMounted) setLoadError('تعذر تحميل إعدادات إدارة الأدوات.');

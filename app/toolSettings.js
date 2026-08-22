@@ -139,6 +139,7 @@ export const DEFAULT_TOOL_SETTINGS = {
                 primaryKeyword: 'حساب المدة بين تاريخين',
                 supportingKeywords: 'الفرق بين تاريخين, حاسبة الأيام, حساب المدة بالهجري والميلادي',
                 canonical: '/date-difference',
+                shareImageUrl: '',
                 lastModified: DEFAULT_SEO_LAST_MODIFIED,
             },
         },
@@ -327,6 +328,7 @@ function normalizeSeoRecord(value = {}, defaults = {}) {
             ? value.supportingKeywords.join(', ')
             : String(value?.supportingKeywords || defaults.supportingKeywords || '').trim(),
         canonical,
+        shareImageUrl: String(value?.shareImageUrl || defaults.shareImageUrl || '').trim().slice(0, 500),
         lastModified: String(value?.lastModified || defaults.lastModified || DEFAULT_SEO_LAST_MODIFIED).trim(),
     };
 }

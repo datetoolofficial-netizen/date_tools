@@ -230,6 +230,11 @@ function canAdminUploadCategory(profile, category) {
         return ['identity', 'brand', 'branding'].some((permission) => permissions.has(permission));
     }
 
+    if (category === 'seo-share') {
+        return ['tool-management', 'toolmanagement', 'tools-management', 'toolscontent']
+            .some((permission) => permissions.has(permission));
+    }
+
     if (category === 'ads') {
         return ['ads', 'campaigns', 'ad-campaigns', 'ad-settings', 'ads-settings'].some((permission) => permissions.has(permission));
     }
