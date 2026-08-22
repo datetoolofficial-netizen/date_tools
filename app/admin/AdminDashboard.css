@@ -5056,6 +5056,18 @@ body.dark-mode .legacy-nav-links a.active {
     margin: 0;
 }
 
+.tool-seo-fields > .full-width {
+    grid-column: 1 / -1;
+}
+
+.tool-seo-preview-stack {
+    position: sticky;
+    top: 18px;
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+}
+
 .tool-search-preview-url {
     display: inline-flex;
     align-items: center;
@@ -5086,8 +5098,6 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-search-preview {
-    position: sticky;
-    top: 18px;
     display: grid;
     gap: 8px;
     min-width: 0;
@@ -5097,12 +5107,84 @@ body.dark-mode .legacy-nav-links a.active {
     text-align: start;
 }
 
+.tool-search-preview-heading,
+.tool-share-image-preview-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+}
+
+.tool-search-preview-heading {
+    padding-bottom: 10px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid color-mix(in srgb, var(--text-sub) 18%, transparent);
+    font-weight: 800;
+}
+
+.tool-search-preview-heading i,
+.tool-share-image-preview-heading > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: var(--admin-control-radius);
+    background: color-mix(in srgb, var(--primary-color) 18%, var(--bg-container));
+    color: var(--primary-color);
+}
+
+.tool-share-image-preview {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+    padding: 16px;
+    border-radius: var(--admin-section-head-radius);
+    background: color-mix(in srgb, var(--bg-container) 78%, var(--primary-color));
+}
+
+.tool-share-image-preview-heading div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tool-share-image-preview-heading strong {
+    color: var(--text-main);
+}
+
+.tool-share-image-preview-heading small {
+    color: var(--text-sub);
+    font-size: 11px;
+}
+
 .tool-search-preview-image {
     width: 100%;
     aspect-ratio: 1200 / 630;
     overflow: hidden;
     border-radius: var(--admin-control-radius);
     background: var(--bg-body);
+}
+
+.tool-search-preview-image.is-empty {
+    display: grid;
+    place-items: center;
+    min-height: 130px;
+    background: color-mix(in srgb, var(--bg-body) 88%, var(--primary-color));
+}
+
+.tool-search-preview-image.is-empty span {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-sub);
+    font-size: 12px;
+}
+
+.tool-search-preview-image.is-empty i {
+    color: var(--primary-color);
+    font-size: 22px;
 }
 
 .tool-search-preview-image img {
@@ -5115,6 +5197,43 @@ body.dark-mode .legacy-nav-links a.active {
 .tool-seo-share-image-field {
     display: grid;
     gap: 10px;
+}
+
+.tool-seo-share-image-field .legacy-media-picker {
+    grid-template-columns: 92px minmax(0, 1fr) 48px;
+    min-height: 116px;
+    padding: 14px;
+    gap: 14px;
+}
+
+.tool-seo-share-image-field .legacy-media-picker-preview {
+    width: 92px;
+    height: 68px;
+    border-radius: var(--admin-control-radius);
+    overflow: hidden;
+}
+
+.tool-seo-share-image-field .legacy-media-picker-preview img {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    object-fit: cover;
+}
+
+.tool-seo-share-image-field .legacy-media-picker-text {
+    min-width: 0;
+}
+
+.tool-seo-share-image-field .legacy-media-picker-text strong {
+    font-size: 15px;
+}
+
+.tool-seo-share-image-field .legacy-media-picker-text small {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tool-seo-image-remove {
@@ -5220,7 +5339,7 @@ body.dark-mode .legacy-nav-links a.active {
         grid-template-columns: 1fr;
     }
 
-    .tool-search-preview {
+    .tool-seo-preview-stack {
         position: static;
     }
 }
@@ -5241,6 +5360,18 @@ body.dark-mode .legacy-nav-links a.active {
     .admin-managed-add-actions > * {
         padding-inline: 8px;
         font-size: 12px;
+    }
+
+    .tool-seo-share-image-field .legacy-media-picker {
+        grid-template-columns: 64px minmax(0, 1fr) 42px;
+        min-height: 96px;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .tool-seo-share-image-field .legacy-media-picker-preview {
+        width: 64px;
+        height: 52px;
     }
 }
 

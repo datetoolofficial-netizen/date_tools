@@ -607,25 +607,48 @@ function SeoFields({
                 )}
             </div>
 
-            <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
-                {enableShareImage && seo.shareImageUrl && (
-                    <div className="tool-search-preview-image">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={seo.shareImageUrl} alt={seo.h1 || previewLabel || 'معاينة صورة المشاركة'} />
+            <div className="tool-seo-preview-stack">
+                <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
+                    <div className="tool-search-preview-heading">
+                        <i className="fa-brands fa-google"></i>
+                        <span>معاينة نتيجة البحث</span>
                     </div>
+                    <div className="tool-search-preview-url">
+                        <small>{getSearchPreviewUrl(canonical)}</small>
+                        {publicPath && (
+                            <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة">
+                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                            </Link>
+                        )}
+                    </div>
+                    <strong>{searchTitle || 'عنوان نتيجة البحث'}</strong>
+                    <p>{description || 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.'}</p>
+                    <span>H1: {seo.h1 || previewLabel}</span>
+                </aside>
+
+                {enableShareImage && (
+                    <aside className="tool-share-image-preview" aria-label="معاينة صورة المشاركة">
+                        <div className="tool-share-image-preview-heading">
+                            <i className="fa-regular fa-image"></i>
+                            <div>
+                                <strong>معاينة صورة المشاركة</strong>
+                                <small>النسبة المفضلة 1200 × 630</small>
+                            </div>
+                        </div>
+                        <div className={`tool-search-preview-image ${seo.shareImageUrl ? 'has-image' : 'is-empty'}`}>
+                            {seo.shareImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={seo.shareImageUrl} alt={seo.h1 || previewLabel || 'معاينة صورة المشاركة'} />
+                            ) : (
+                                <span>
+                                    <i className="fa-solid fa-image"></i>
+                                    ستظهر الصورة هنا بعد رفعها
+                                </span>
+                            )}
+                        </div>
+                    </aside>
                 )}
-                <div className="tool-search-preview-url">
-                    <small>{getSearchPreviewUrl(canonical)}</small>
-                    {publicPath && (
-                        <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة">
-                            <i className="fa-solid fa-arrow-up-right-from-square"></i>
-                        </Link>
-                    )}
-                </div>
-                <strong>{searchTitle || 'عنوان نتيجة البحث'}</strong>
-                <p>{description || 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.'}</p>
-                <span>H1: {seo.h1 || previewLabel}</span>
-            </aside>
+            </div>
         </div>
     );
 }
