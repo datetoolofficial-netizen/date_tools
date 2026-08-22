@@ -187,7 +187,6 @@ export default async function Page({ params }) {
                 {toolRoute.toolKey === 'date' && (
                     <HomePageClient
                         hideHero
-                        focusTool={toolRoute.subtoolKey}
                         initialSectionId={toolRoute.sectionId}
                     >
                         <ToolSeoContent tool="date" subtool={toolRoute.subtoolKey} />

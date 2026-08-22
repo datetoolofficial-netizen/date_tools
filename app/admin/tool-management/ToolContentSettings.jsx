@@ -157,7 +157,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
         try {
             setUploadingSeoImage(subtoolKey);
-            showMessage('info', 'جاري رفع صورة مشاركة أداة المدة إلى R2...');
+            showMessage('info', 'جاري رفع صورة مشاركة الأداة إلى R2...');
             const token = await currentUser.getIdToken();
             const formData = new FormData();
             formData.append('category', 'seo-share');
@@ -296,7 +296,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
                             previewLabel={settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
                             publicPath={TOOL_SECTION_ROUTES[toolKey]?.[subtoolKey]?.publicPath}
-                            enableShareImage={toolKey === 'date' && subtoolKey === 'durationCalc'}
+                            enableShareImage
                             isImageUploading={uploadingSeoImage === subtoolKey}
                             onImageUpload={(event) => handleSeoImageUpload(subtoolKey, event)}
                         />

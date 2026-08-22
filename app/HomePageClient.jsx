@@ -85,7 +85,7 @@ function HomePageSkeleton() {
     );
 }
 
-export default function HomePageClient({ children, focusTool = '', hideHero = false, initialSectionId = '' }) {
+export default function HomePageClient({ children, hideHero = false, initialSectionId = '' }) {
     const { lang, configData, isSiteLoading, firebaseApiRef } = useSiteContext();
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
     const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
@@ -641,16 +641,16 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                             </div>
                         </div>}
 
-                        {!focusTool && <TodayBanner lang={lang} todayInfo={todayInfo} />}
+                        <TodayBanner lang={lang} todayInfo={todayInfo} />
                         <PublicAdSlot configData={configData} slotName="dateTop" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
-                        {!focusTool && <EventsSection
+                        <EventsSection
                             lang={lang}
                             upcomingEvents={upcomingEvents}
                             onShare={openEventsShareDialog}
                             canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
-                        />}
+                        />
 
-                        {(!focusTool || focusTool === 'ageCalc') && <AgeCalculatorSection
+                        <AgeCalculatorSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.ageCalc}
                             lang={lang}
@@ -663,11 +663,11 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />}
+                        />
 
                         <PublicAdSlot configData={configData} slotName="dateMiddle" label={i18n[lang].featuredAd || 'إعلان مميز'} />
 
-                        {(!focusTool || focusTool === 'dateConverter') && <DateConversionSection
+                        <DateConversionSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.dateConverter}
                             lang={lang}
@@ -680,9 +680,9 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />}
+                        />
 
-                        {(!focusTool || focusTool === 'durationCalc') && <DurationSection
+                        <DurationSection
                             labels={i18n[lang]}
                             title={dateToolSettings.subtools?.durationCalc}
                             lang={lang}
@@ -695,7 +695,7 @@ export default function HomePageClient({ children, focusTool = '', hideHero = fa
                             enteredDateInfo={enteredDateInfo}
                             onShareResult={handleShareResult}
                             actions={homeActions}
-                        />}
+                        />
 
                         <PublicAdSlot configData={configData} slotName="dateBottom" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
                         {children}
