@@ -11722,6 +11722,7 @@ git diff --check
 - `app/[slug]/page.jsx`
 - `app/HomePageClient.jsx`
 - `app/admin/tool-management/ToolContentSettings.jsx`
+- `tests/toolSettings.test.js`
 - `app/version.js`
 - `package.json`
 - `package-lock.json`
@@ -11736,6 +11737,7 @@ npm test
 npm run lint
 npm run build
 git diff --check
+npm run deploy
 ```
 
 الحالة:
@@ -11743,4 +11745,8 @@ git diff --check
 - نجحت اختبارات Vitest وعددها 22 اختبارًا في 8 ملفات.
 - نجح ESLint دون أخطاء أو تحذيرات.
 - نجح بناء Next.js وتوليد 31 صفحة؛ ظهرت رسائل `fetch EACCES` بسبب حظر الشبكة المحلية وأكملت آليات fallback البناء دون فشل.
-- ينتظر هذا القسم إنشاء الكومت والنشر والتحقق الحي من التمرير وصور المشاركة العامة.
+- تم إنشاء الكومت `ade5729` ودفعه إلى `origin/master`.
+- تم نشر Worker `datetools` بنجاح، ومعرف النسخة المنشورة هو `e381b88b-ea8a-469b-a499-9dc673709152`.
+- أعادت مسارات `/age-calculator` و`/time-converter` و`/weather-search` و`/date-difference` الحالة `200` مع Canonical مستقل لكل مسار.
+- أكد فحص المتصفح الحي أن `/date-difference` و`/timezone-difference` و`/weather-forecast` تبقى بلا `#`، تمرر تلقائيًا إلى الأداة المطلوبة، وتعرض جميع أقسام صفحة الأداة الأم دون أخطاء في سجل المتصفح.
+- استمر `og:image` الخاص بـ`/date-difference` في الإشارة إلى صورة `seo-share` المرفوعة على R2؛ وتصبح صور الأدوات الثماني الأخرى فعالة فور رفع صورة مستقلة وحفظ إعداد SEO لكل أداة من منصة الإدارة.
