@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { sanitizeHtml } from '../../sanitizeHtml';
@@ -366,11 +366,11 @@ export default function AdminToolsPage() {
         if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
     }, []);
 
-    const showMessage = (type, text) => {
+    const showMessage = useCallback((type, text) => {
         if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
         setMessage({ type, text });
         messageTimerRef.current = window.setTimeout(() => setMessage(null), 4500);
-    };
+    }, []);
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {

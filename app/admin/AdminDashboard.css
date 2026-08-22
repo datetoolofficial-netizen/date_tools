@@ -5199,25 +5199,26 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 10px;
 }
 
+.tool-seo-share-image-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 10px;
+}
+
 .tool-seo-share-image-field .legacy-media-picker {
-    grid-template-columns: 92px minmax(0, 1fr) 48px;
-    min-height: 116px;
-    padding: 14px;
-    gap: 14px;
+    grid-template-columns: 58px minmax(0, 1fr);
+    min-height: 82px;
+    padding: 11px 12px;
+    gap: 12px;
 }
 
 .tool-seo-share-image-field .legacy-media-picker-preview {
-    width: 92px;
-    height: 68px;
+    width: 58px;
+    height: 54px;
     border-radius: var(--admin-control-radius);
-    overflow: hidden;
-}
-
-.tool-seo-share-image-field .legacy-media-picker-preview img {
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    object-fit: cover;
+    background: color-mix(in srgb, var(--primary-color) 18%, var(--bg-container));
+    color: var(--primary-color);
 }
 
 .tool-seo-share-image-field .legacy-media-picker-text {
@@ -5237,11 +5238,13 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .tool-seo-image-remove {
-    justify-self: start;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 9px 13px;
+    min-width: 64px;
+    padding: 9px 12px;
     border: 0;
     border-radius: var(--admin-control-radius);
     background: color-mix(in srgb, var(--danger-text) 14%, var(--bg-container));
@@ -5363,15 +5366,24 @@ body.dark-mode .legacy-nav-links a.active {
     }
 
     .tool-seo-share-image-field .legacy-media-picker {
-        grid-template-columns: 64px minmax(0, 1fr) 42px;
-        min-height: 96px;
-        padding: 12px;
+        grid-template-columns: 48px minmax(0, 1fr);
+        min-height: 76px;
+        padding: 10px;
         gap: 10px;
     }
 
     .tool-seo-share-image-field .legacy-media-picker-preview {
-        width: 64px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .tool-seo-image-remove {
+        min-width: 52px;
+        padding-inline: 8px;
+    }
+
+    .tool-seo-image-remove span {
+        display: none;
     }
 }
 

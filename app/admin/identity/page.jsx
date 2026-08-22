@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings, resolveLinkPreview } from '../../linkPreview';
@@ -236,11 +236,11 @@ export default function AdminIdentityPage() {
         if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
     }, []);
 
-    const showMessage = (type, text) => {
+    const showMessage = useCallback((type, text) => {
         if (messageTimerRef.current) clearTimeout(messageTimerRef.current);
         setMessage({ type, text });
         messageTimerRef.current = window.setTimeout(() => setMessage(null), 4500);
-    };
+    }, []);
 
     const setField = (field, value) => {
         setIdentity((current) => ({ ...current, [field]: value }));

@@ -239,6 +239,11 @@ export default function AdminAdsPage() {
     const [isUploadingMedia, setIsUploadingMedia] = useState(false);
     const firebaseApiRef = useRef(null);
 
+    const showMessage = useCallback((type, text) => {
+        setMessage({ type, text });
+        window.setTimeout(() => setMessage(null), 4500);
+    }, []);
+
     const filteredCampaigns = useMemo(() => {
         return campaigns.filter((campaign) => {
             const search = filters.search.trim().toLowerCase();
@@ -311,7 +316,7 @@ export default function AdminAdsPage() {
         } finally {
             setIsLoadingCampaigns(false);
         }
-    }, []);
+    }, [showMessage]);
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -374,11 +379,6 @@ export default function AdminAdsPage() {
             unsubscribe();
         };
     }, [fetchCampaigns]);
-
-    const showMessage = (type, text) => {
-        setMessage({ type, text });
-        window.setTimeout(() => setMessage(null), 4500);
-    };
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {

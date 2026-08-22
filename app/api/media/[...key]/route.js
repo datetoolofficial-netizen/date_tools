@@ -1,15 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-
-const PUBLIC_CATEGORIES = new Set([
-    'logo',
-    'favicon',
-    'ads',
-    'app-icon',
-    'pwa-shortcut-date',
-    'pwa-shortcut-clock',
-    'pwa-shortcut-weather',
-    'link-preview',
-]);
+import { getSafeMediaCategory } from '../../_lib/mediaValidation';
 const SAFE_KEY_PATTERN = /^[a-z0-9][a-z0-9/_\-.]{1,240}$/i;
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +13,7 @@ function getKey(params) {
     }
 
     const category = key.split('/')[0];
-    if (!PUBLIC_CATEGORIES.has(category)) return '';
+    if (!getSafeMediaCategory(category)) return '';
 
     return key;
 }

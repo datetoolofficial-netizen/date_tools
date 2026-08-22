@@ -573,35 +573,29 @@ function SeoFields({
                 {enableShareImage && (
                     <div className="legacy-field full-width tool-seo-share-image-field">
                         <span>صورة ظهور الرابط عند المشاركة</span>
-                        <label className={`legacy-media-picker ${isImageUploading ? 'is-uploading' : ''}`}>
-                            <span className="legacy-media-picker-preview">
-                                {seo.shareImageUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={seo.shareImageUrl} alt="صورة مشاركة أداة حساب المدة" />
-                                ) : (
-                                    <i className="fa-regular fa-image"></i>
-                                )}
-                            </span>
-                            <span className="legacy-media-picker-text">
-                                <strong>{isImageUploading ? 'جاري رفع الصورة...' : seo.shareImageUrl ? 'استبدال صورة المشاركة' : 'إرفاق صورة مشاركة'}</strong>
-                                <small dir="ltr">{seo.shareImageUrl || 'يفضل مقاس 1200 × 630'}</small>
-                            </span>
-                            <span className="legacy-media-picker-action">
-                                <i className="fa-solid fa-cloud-arrow-up"></i>
-                            </span>
-                            <input
-                                type="file"
-                                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                                disabled={isImageUploading}
-                                onChange={onImageUpload}
-                            />
-                        </label>
-                        {seo.shareImageUrl && (
-                            <button type="button" className="tool-seo-image-remove" onClick={() => onChange('shareImageUrl', '')}>
-                                <i className="fa-solid fa-xmark"></i>
-                                إزالة الصورة
-                            </button>
-                        )}
+                        <div className="tool-seo-share-image-actions">
+                            <label className={`legacy-media-picker ${isImageUploading ? 'is-uploading' : ''}`}>
+                                <span className="legacy-media-picker-preview">
+                                    <i className="fa-solid fa-cloud-arrow-up"></i>
+                                </span>
+                                <span className="legacy-media-picker-text">
+                                    <strong>{isImageUploading ? 'جاري رفع الصورة...' : seo.shareImageUrl ? 'استبدال صورة المشاركة' : 'إرفاق صورة مشاركة'}</strong>
+                                    <small dir="ltr">{seo.shareImageUrl || 'يفضل مقاس 1200 × 630'}</small>
+                                </span>
+                                <input
+                                    type="file"
+                                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                                    disabled={isImageUploading}
+                                    onChange={onImageUpload}
+                                />
+                            </label>
+                            {seo.shareImageUrl && (
+                                <button type="button" className="tool-seo-image-remove" onClick={() => onChange('shareImageUrl', '')} aria-label="إزالة صورة المشاركة">
+                                    <i className="fa-solid fa-trash-can"></i>
+                                    <span>إزالة</span>
+                                </button>
+                            )}
+                        </div>
                         <small>تخص رابط أداة حساب المدة فقط، ولا تغيّر صورة بقية صفحات الموقع.</small>
                     </div>
                 )}
