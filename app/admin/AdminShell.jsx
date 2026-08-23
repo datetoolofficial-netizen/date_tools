@@ -17,11 +17,11 @@ const NAV_ITEMS = [
         permissionKeys: ['home', 'dashboard', 'admin'],
     },
     {
-        id: 'identity',
-        href: '/admin/identity',
-        label: 'إدارة الهوية',
-        icon: 'fa-palette',
-        permissionKeys: ['identity', 'brand', 'branding'],
+        id: 'tools',
+        href: '/admin/tools',
+        label: 'إعدادات الأداة',
+        icon: 'fa-screwdriver-wrench',
+        permissionKeys: ['tools', 'settings', 'site-settings', 'pages'],
     },
     {
         id: 'integrations',
@@ -57,13 +57,6 @@ const NAV_ITEMS = [
         label: 'إدارة الأدوات',
         icon: 'fa-toolbox',
         permissionKeys: ['tool-management', 'toolManagement', 'tools-management', 'toolsContent'],
-    },
-    {
-        id: 'tools',
-        href: '/admin/tools',
-        label: 'إعدادات الأداة',
-        icon: 'fa-screwdriver-wrench',
-        permissionKeys: ['tools', 'settings', 'site-settings', 'pages'],
     },
     {
         id: 'client',

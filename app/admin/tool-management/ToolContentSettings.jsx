@@ -102,16 +102,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         };
     }, [defaults, firebaseApi, showMessage, toolKey]);
 
-    const updateSubtool = (key, value) => {
-        setSettings((current) => ({
-            ...current,
-            subtools: {
-                ...(current.subtools || {}),
-                [key]: value,
-            },
-        }));
-    };
-
     const updateSeo = (field, value) => {
         setSettings((current) => ({
             ...current,
@@ -135,7 +125,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         }));
     };
 
-    const handleSeoImageUpload = async (subtoolKey, event) => {
+    const handleSeoImageUpload = async (seoKey, event) => {
         const file = event.target.files?.[0];
         event.target.value = '';
         if (!file) return;
@@ -156,7 +146,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         }
 
         try {
-            setUploadingSeoImage(subtoolKey);
+            setUploadingSeoImage(seoKey);
             showMessage('info', 'جاري رفع صورة مشاركة الأداة إلى R2...');
             const token = await currentUser.getIdToken();
             const formData = new FormData();
@@ -170,7 +160,11 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
             const result = await response.json().catch(() => ({}));
             if (!response.ok || !result.ok) throw new Error(result.error || 'upload_failed');
 
-            updateSubtoolSeo(subtoolKey, 'shareImageUrl', result.url);
+            if (seoKey === 'main') {
+                updateSeo('shareImageUrl', result.url);
+            } else {
+                updateSubtoolSeo(seoKey, 'shareImageUrl', result.url);
+            }
             showMessage('success', 'تم رفع الصورة. اضغط حفظ لتثبيتها في بيانات المشاركة.');
         } catch (error) {
             console.error('SEO share image upload error:', error);
@@ -286,6 +280,10 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     seo={settings.seo}
                     onChange={updateSeo}
                     previewLabel={settings.seo?.h1 || defaults.seo?.h1}
+                    publicPath={settings.seo?.canonical || defaults.seo?.canonical}
+                    enableShareImage
+                    isImageUploading={uploadingSeoImage === 'main'}
+                    onImageUpload={(event) => handleSeoImageUpload('main', event)}
                 />
 
                 {Object.entries(defaults.subtoolSeo || {}).map(([subtoolKey]) => (
@@ -300,22 +298,6 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             isImageUploading={uploadingSeoImage === subtoolKey}
                             onImageUpload={(event) => handleSeoImageUpload(subtoolKey, event)}
                         />
-                    </div>
-                ))}
-            </div>
-
-            <div className="tools-list tool-subtools-list">
-                <div className="tools-table-head">
-                    <span>اسم مختصر</span>
-                    <span>الاسم المعروض</span>
-                </div>
-                {Object.entries(defaults.subtools || {}).map(([key, fallback]) => (
-                    <div className="tools-item-card compact" key={key}>
-                        <strong>{fallback}</strong>
-                        <div className="legacy-field">
-                            <label>الاسم المعروض</label>
-                            <input value={settings.subtools?.[key] || ''} onChange={(event) => updateSubtool(key, event.target.value)} />
-                        </div>
                     </div>
                 ))}
             </div>
@@ -596,7 +578,7 @@ function SeoFields({
                                 </button>
                             )}
                         </div>
-                        <small>تخص رابط أداة حساب المدة فقط، ولا تغيّر صورة بقية صفحات الموقع.</small>
+                        <small>تخص هذا الرابط فقط، ولا تغيّر صور بقية صفحات أو أدوات الموقع.</small>
                     </div>
                 )}
             </div>

@@ -2638,7 +2638,6 @@ body.dark-mode .legacy-nav-links a.active {
     grid-column: 1 / -1;
 }
 
-.tool-subtools-list,
 .tool-share-templates-list,
 .tool-faq-list {
     margin-top: 16px;
@@ -2647,15 +2646,6 @@ body.dark-mode .legacy-nav-links a.active {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     background: var(--bg-container);
-}
-
-.tool-subtools-list .tools-table-head,
-.tool-subtools-list .tools-item-card {
-    min-width: 560px;
-    display: grid;
-    grid-template-columns: minmax(150px, 0.65fr) minmax(260px, 1.35fr);
-    gap: 12px;
-    align-items: center;
 }
 
 .tool-share-templates-list .tools-table-head,
@@ -2667,15 +2657,10 @@ body.dark-mode .legacy-nav-links a.active {
     align-items: center;
 }
 
-.tool-subtools-list .tools-table-head {
-    background: var(--admin-table-head-bg);
-}
-
 .tool-share-templates-list .tools-table-head {
     background: var(--admin-table-head-bg);
 }
 
-.tool-subtools-list .tools-item-card,
 .tool-share-templates-list .tools-item-card,
 .tool-faq-list .tool-faq-row {
     border: 0;
@@ -2685,14 +2670,9 @@ body.dark-mode .legacy-nav-links a.active {
     padding: var(--legacy-table-row-pad);
 }
 
-.tool-subtools-list .tools-item-card:last-child,
 .tool-share-templates-list .tools-item-card:last-child,
 .tool-faq-list .tool-faq-row:last-child {
     border-bottom: 0;
-}
-
-.tool-subtools-list .legacy-field label {
-    display: none;
 }
 
 .tool-share-key {
@@ -5244,6 +5224,9 @@ body.dark-mode .legacy-nav-links a.active {
     justify-content: center;
     gap: 8px;
     min-width: 64px;
+    min-height: 82px;
+    height: 100%;
+    align-self: stretch;
     padding: 9px 12px;
     border: 0;
     border-radius: var(--admin-control-radius);
@@ -5379,6 +5362,7 @@ body.dark-mode .legacy-nav-links a.active {
 
     .tool-seo-image-remove {
         min-width: 52px;
+        min-height: 76px;
         padding-inline: 8px;
     }
 

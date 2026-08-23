@@ -80,9 +80,9 @@ function AdminNav({ active = 'pagespeed' }) {
                 </Link>
             </li>
             <li>
-                <Link href="/admin/identity" className={active === 'identity' ? 'active' : ''}>
-                    <i className="fa-solid fa-palette"></i>
-                    <span className="nav-text">إدارة الهوية</span>
+                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
+                    <i className="fa-solid fa-screwdriver-wrench"></i>
+                    <span className="nav-text">إعدادات الأداة</span>
                 </Link>
             </li>
             <li>
@@ -113,12 +113,6 @@ function AdminNav({ active = 'pagespeed' }) {
                 <Link href="/admin/tool-management" className={active === 'tool-management' ? 'active' : ''}>
                     <i className="fa-solid fa-toolbox"></i>
                     <span className="nav-text">إدارة الأدوات</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
-                    <i className="fa-solid fa-screwdriver-wrench"></i>
-                    <span className="nav-text">إعدادات الأداة</span>
                 </Link>
             </li>
             <li>

@@ -1,0 +1,408 @@
+'use client';
+
+export const IDENTITY_FIELDS = [
+    'toolDisplayName',
+    'toolSlogan',
+    'contactEmail',
+    'hasLogo',
+    'logoUrl',
+    'faviconUrl',
+    'appIconUrl',
+    'pwaShortcutDateIconUrl',
+    'pwaShortcutClockIconUrl',
+    'pwaShortcutWeatherIconUrl',
+    'copyrightName',
+    'copyrightText',
+];
+
+export const EMPTY_IDENTITY = {
+    toolDisplayName: '',
+    toolSlogan: '',
+    contactEmail: '',
+    hasLogo: false,
+    logoUrl: '',
+    faviconUrl: '',
+    appIconUrl: '',
+    pwaShortcutDateIconUrl: '',
+    pwaShortcutClockIconUrl: '',
+    pwaShortcutWeatherIconUrl: '',
+    copyrightName: '',
+    copyrightText: '',
+    mainSEO: {},
+    pwaInstallPrompt: {
+        enabled: true,
+        text: 'ثبّت الأداة على جهازك لاستخدام أسرع',
+        buttonText: 'ثبّت الأداة',
+    },
+};
+
+export function normalizePwaInstallPrompt(value = {}) {
+    return {
+        enabled: value?.enabled !== false,
+        text: String(value?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع'),
+        buttonText: String(value?.buttonText || 'ثبّت الأداة'),
+    };
+}
+
+export function pickIdentity(config = {}) {
+    const identityPatch = IDENTITY_FIELDS.reduce((patch, field) => {
+        patch[field] = field === 'hasLogo' ? Boolean(config[field]) : (config[field] || '');
+        return patch;
+    }, {});
+
+    return {
+        ...identityPatch,
+        mainSEO: config.mainSEO || {},
+        pwaInstallPrompt: normalizePwaInstallPrompt(config.pwaInstallPrompt || {}),
+    };
+}
+
+export default function IdentitySettingsSections({
+    identity,
+    uploadingTarget,
+    onFieldChange,
+    onPwaInstallPromptChange,
+    onMediaUpload,
+}) {
+    const copyrightPreview = `© ${new Date().getFullYear()} ${identity.copyrightText || 'جميع الحقوق محفوظة'}${identity.copyrightName ? ` لـ ${identity.copyrightName}` : ''}`;
+    const pwaPreviewIcon = identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '';
+    const pwaShortcutItems = [
+        { key: 'date', label: 'اختصار التاريخ', field: 'pwaShortcutDateIconUrl', category: 'pwa-shortcut-date' },
+        { key: 'clock', label: 'اختصار الساعة', field: 'pwaShortcutClockIconUrl', category: 'pwa-shortcut-clock' },
+        { key: 'weather', label: 'اختصار الطقس', field: 'pwaShortcutWeatherIconUrl', category: 'pwa-shortcut-weather' },
+    ];
+
+    return (
+        <>
+            <section className="legacy-google-card tools-section-card identity-basic-settings-card" id="identity-basic-settings">
+                <div className="tools-section-head">
+                    <div className="tools-section-title">
+                        <span className="tools-section-icon color-identity"><i className="fa-solid fa-fingerprint"></i></span>
+                        <div>
+                            <h2>التعديل الأساسي للأداة</h2>
+                            <p>عدّل اسم الأداة، السلوغن، البريد، اللوقو، الأيقونات، وحقوق الموقع من مكان واحد.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="legacy-identity-layout">
+                    <div className="legacy-identity-card">
+                        <div className="identity-card-note">
+                            <span className="identity-card-note-icon"><i className="fa-solid fa-fingerprint"></i></span>
+                            <div>
+                                <h3>بيانات العلامة</h3>
+                                <p>هذا القسم يحفظ حقول الهوية فقط، ولا يغيّر إعدادات الإعلانات أو الصفحات.</p>
+                            </div>
+                        </div>
+
+                        <div className="legacy-form-grid">
+                            <div className="legacy-field">
+                                <label>عنوان الأداة</label>
+                                <input
+                                    type="text"
+                                    value={identity.toolDisplayName}
+                                    onChange={(event) => onFieldChange('toolDisplayName', event.target.value)}
+                                    placeholder="مثال: أدوات التاريخ الشاملة"
+                                />
+                            </div>
+
+                            <div className="legacy-field">
+                                <label>الوصف القصير</label>
+                                <input
+                                    type="text"
+                                    value={identity.toolSlogan}
+                                    onChange={(event) => onFieldChange('toolSlogan', event.target.value)}
+                                    placeholder="مثال: احسب عمرك وحول التواريخ بدقة"
+                                />
+                            </div>
+
+                            <div className="legacy-field">
+                                <label>إيميل التواصل</label>
+                                <input
+                                    type="email"
+                                    dir="ltr"
+                                    value={identity.contactEmail}
+                                    onChange={(event) => onFieldChange('contactEmail', event.target.value)}
+                                    placeholder="contact@example.com"
+                                />
+                                <span className="legacy-field-hint">يستخدم أيضًا كقيمة لمتغير صفحات قاعدة البيانات: {'{{contactEmail}}'}</span>
+                            </div>
+
+                            <div className="legacy-field">
+                                <label>إظهار اللوقو</label>
+                                <label className="legacy-switch-row">
+                                    <input
+                                        type="checkbox"
+                                        checked={identity.hasLogo}
+                                        onChange={(event) => onFieldChange('hasLogo', event.target.checked)}
+                                    />
+                                    <span>إظهار أو إخفاء اللوقو فقط بدون إخفاء اسم الأداة</span>
+                                </label>
+                            </div>
+
+                            <IdentityMediaField
+                                label="رابط اللوقو"
+                                field="logoUrl"
+                                category="logo"
+                                uploadLabel="اللوقو"
+                                value={identity.logoUrl}
+                                uploadingTarget={uploadingTarget}
+                                onMediaUpload={onMediaUpload}
+                                hint="يفضل لوقو PNG أو WEBP بخلفية شفافة."
+                            />
+
+                            <IdentityMediaField
+                                label="رابط أيقونة المتصفح favicon"
+                                field="faviconUrl"
+                                category="favicon"
+                                uploadLabel="أيقونة المتصفح"
+                                value={identity.faviconUrl}
+                                uploadingTarget={uploadingTarget}
+                                onMediaUpload={onMediaUpload}
+                                hint="يدعم ICO أو PNG، والحفظ النهائي يتم بزر حفظ إعدادات الأداة."
+                                small
+                            />
+
+                            <div className="legacy-field">
+                                <label>صاحب الحقوق</label>
+                                <input
+                                    type="text"
+                                    value={identity.copyrightName}
+                                    onChange={(event) => onFieldChange('copyrightName', event.target.value)}
+                                    placeholder="مثال: أدوات التاريخ"
+                                />
+                            </div>
+
+                            <div className="legacy-field">
+                                <label>نص الحقوق</label>
+                                <input
+                                    type="text"
+                                    value={identity.copyrightText}
+                                    onChange={(event) => onFieldChange('copyrightText', event.target.value)}
+                                    placeholder="مثال: جميع الحقوق محفوظة"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside className="legacy-identity-preview-card">
+                        <div className="legacy-preview-top">
+                            <div className="legacy-logo-preview">
+                                {identity.hasLogo && identity.logoUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={identity.logoUrl} alt="معاينة اللوقو" />
+                                ) : (
+                                    <i className="fa-solid fa-calendar-days"></i>
+                                )}
+                            </div>
+                            <div>
+                                <span className="legacy-preview-label">معاينة الهوية</span>
+                                <h3>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</h3>
+                                <p>{identity.toolSlogan || 'احسب عمرك وحول التواريخ بدقة'}</p>
+                            </div>
+                        </div>
+
+                        <div className="legacy-preview-row">
+                            <span>إيميل التواصل</span>
+                            <strong dir="ltr">{identity.contactEmail || 'غير محدد'}</strong>
+                        </div>
+
+                        <div className="legacy-preview-row">
+                            <span>أيقونة المتصفح</span>
+                            <div className="legacy-favicon-preview">
+                                {identity.faviconUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={identity.faviconUrl} alt="معاينة أيقونة المتصفح" />
+                                ) : (
+                                    <i className="fa-regular fa-image"></i>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="legacy-rights-preview">
+                            <i className="fa-regular fa-copyright"></i>
+                            <span>{copyrightPreview}</span>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <section className="legacy-google-card tools-section-card identity-pwa-settings-card" id="pwa-install-settings">
+                <div className="tools-section-head">
+                    <div className="tools-section-title">
+                        <span className="tools-section-icon color-pwa"><i className="fa-solid fa-mobile-screen-button"></i></span>
+                        <div>
+                            <h2>هوية التطبيق والتثبيت</h2>
+                            <p>كل ما يخص تثبيت الموقع كتطبيق: الأيقونة، اسم التطبيق، اختصارات الضغط المطوّل، وزر التثبيت.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="identity-pwa-grid">
+                    <div className="identity-pwa-controls">
+                        <IdentityMediaField
+                            label="أيقونة التطبيق المثبّت"
+                            field="appIconUrl"
+                            category="app-icon"
+                            uploadLabel="أيقونة التطبيق"
+                            value={identity.appIconUrl}
+                            fallbackValue={identity.logoUrl || identity.faviconUrl}
+                            uploadingTarget={uploadingTarget}
+                            onMediaUpload={onMediaUpload}
+                            hint="تظهر في نافذة التثبيت وأيقونة التطبيق على الجوال والكمبيوتر. الأفضل صورة مربعة 512×512."
+                            small
+                        />
+
+                        <label className={`ad-settings-switch house compact-switch ${identity.pwaInstallPrompt?.enabled !== false ? 'active' : ''}`}>
+                            <input
+                                type="checkbox"
+                                checked={identity.pwaInstallPrompt?.enabled !== false}
+                                onChange={(event) => onPwaInstallPromptChange('enabled', event.target.checked)}
+                            />
+                            <span className="ad-settings-switch-icon"><i className="fa-solid fa-download"></i></span>
+                            <span className="ad-settings-switch-copy">
+                                <strong>إظهار زر تثبيت الأداة</strong>
+                                <small>يعرض تنبيه التثبيت عندما يدعم المتصفح تثبيت الموقع كتطبيق.</small>
+                            </span>
+                        </label>
+
+                        <div className="legacy-form-grid two-columns no-top-margin">
+                            <div className="legacy-field">
+                                <label>نص رسالة التثبيت</label>
+                                <input
+                                    value={identity.pwaInstallPrompt?.text || ''}
+                                    onChange={(event) => onPwaInstallPromptChange('text', event.target.value)}
+                                    placeholder="مثال: ثبّت الأداة على جهازك لاستخدام أسرع"
+                                />
+                            </div>
+                            <div className="legacy-field">
+                                <label>نص زر التثبيت</label>
+                                <input
+                                    value={identity.pwaInstallPrompt?.buttonText || ''}
+                                    onChange={(event) => onPwaInstallPromptChange('buttonText', event.target.value)}
+                                    placeholder="مثال: ثبّت الأداة"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pwa-shortcut-admin-list">
+                            {pwaShortcutItems.map((item) => {
+                                const iconValue = identity[item.field] || '';
+                                return (
+                                    <div className="pwa-shortcut-admin-row" key={item.key}>
+                                        <div className="pwa-shortcut-admin-preview">
+                                            {iconValue ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={iconValue} alt={item.label} />
+                                            ) : (
+                                                <i className="fa-regular fa-image"></i>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <strong>{item.label}</strong>
+                                            <small dir="ltr">{iconValue || 'لم ترفع أيقونة بعد'}</small>
+                                        </div>
+                                        <label className={`pwa-shortcut-upload ${uploadingTarget === item.field ? 'is-uploading' : ''}`}>
+                                            <i className="fa-solid fa-cloud-arrow-up"></i>
+                                            <span>{uploadingTarget === item.field ? 'رفع...' : 'استبدال'}</span>
+                                            <input
+                                                type="file"
+                                                accept=".png,.jpg,.jpeg,.webp,.ico,image/png,image/jpeg,image/webp,image/x-icon,image/vnd.microsoft.icon"
+                                                disabled={uploadingTarget === item.field}
+                                                onChange={(event) => onMediaUpload(event, item.category, item.field, item.label)}
+                                            />
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <aside className="identity-pwa-preview-card">
+                        <div className="identity-pwa-phone">
+                            <div className="identity-pwa-app-icon">
+                                {pwaPreviewIcon ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={pwaPreviewIcon} alt="أيقونة التطبيق" />
+                                ) : (
+                                    <i className="fa-solid fa-mobile-screen-button"></i>
+                                )}
+                            </div>
+                            <span className="identity-pwa-phone-label">معاينة التثبيت</span>
+                            <strong>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</strong>
+                            <p>{identity.toolSlogan || 'كل الأدوات بين يديك'}</p>
+                            <button type="button">
+                                <i className="fa-solid fa-mobile-screen-button"></i>
+                                {identity.pwaInstallPrompt?.buttonText || 'ثبّت الأداة'}
+                            </button>
+                        </div>
+
+                        <div className="identity-pwa-shortcuts-preview">
+                            <strong>اختصارات الضغط المطوّل</strong>
+                            {pwaShortcutItems.map((item) => {
+                                const iconValue = identity[item.field] || '';
+                                return (
+                                    <div className="identity-pwa-shortcut" key={item.key}>
+                                        <span>
+                                            {iconValue ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={iconValue} alt={item.label} />
+                                            ) : (
+                                                <i className="fa-regular fa-image"></i>
+                                            )}
+                                        </span>
+                                        <small>{item.label.replace('اختصار ', '')}</small>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </aside>
+                </div>
+            </section>
+        </>
+    );
+}
+
+function IdentityMediaField({
+    label,
+    field,
+    category,
+    uploadLabel,
+    value,
+    fallbackValue = '',
+    uploadingTarget,
+    onMediaUpload,
+    hint,
+    small = false,
+}) {
+    const previewValue = value || fallbackValue;
+    const isUploading = uploadingTarget === field;
+
+    return (
+        <div className="legacy-field">
+            <label>{label}</label>
+            <label className={`legacy-media-picker ${isUploading ? 'is-uploading' : ''}`}>
+                <span className={`legacy-media-picker-preview ${small ? 'small' : ''}`}>
+                    {previewValue ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={previewValue} alt={`معاينة ${uploadLabel}`} />
+                    ) : (
+                        <i className="fa-regular fa-image"></i>
+                    )}
+                </span>
+                <span className="legacy-media-picker-text">
+                    <strong>{isUploading ? `جاري رفع ${uploadLabel}...` : `اختر أو استبدل ${uploadLabel}`}</strong>
+                    <small dir="ltr">{value || fallbackValue || `/api/media/${category}/...`}</small>
+                </span>
+                <span className="legacy-media-picker-action"><i className="fa-solid fa-cloud-arrow-up"></i></span>
+                <input
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"
+                    disabled={isUploading}
+                    onChange={(event) => onMediaUpload(event, category, field, uploadLabel)}
+                />
+            </label>
+            {hint && <span className="legacy-field-hint">{hint}</span>}
+        </div>
+    );
+}

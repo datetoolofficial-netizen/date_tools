@@ -111,6 +111,7 @@ export const DEFAULT_TOOL_SETTINGS = {
             primaryKeyword: 'حاسبة العمر وتحويل التاريخ',
             supportingKeywords: 'حساب العمر, تحويل التاريخ الهجري والميلادي, حساب المدة بين تاريخين',
             canonical: '/',
+            shareImageUrl: '',
             lastModified: DEFAULT_SEO_LAST_MODIFIED,
         },
         subtoolSeo: {
@@ -170,6 +171,7 @@ export const DEFAULT_TOOL_SETTINGS = {
             primaryKeyword: 'تحويل الساعة',
             supportingKeywords: 'فرق التوقيت بين المدن, الساعة الآن, تحويل 24 إلى 12',
             canonical: '/clock',
+            shareImageUrl: '',
             lastModified: '2026-08-07',
         },
         subtoolSeo: {
@@ -214,6 +216,7 @@ export const DEFAULT_TOOL_SETTINGS = {
             primaryKeyword: 'حالة الطقس اليوم',
             supportingKeywords: 'توقعات الطقس, نسبة المطر, درجة الحرارة, مؤشر UV',
             canonical: '/weather',
+            shareImageUrl: '',
             lastModified: '2026-08-07',
         },
         subtoolSeo: {

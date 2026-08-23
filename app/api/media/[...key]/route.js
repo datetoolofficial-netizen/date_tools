@@ -28,7 +28,7 @@ async function getMediaBucket() {
 }
 
 export async function GET(_request, { params }) {
-    const key = getKey(params);
+    const key = getKey(await params);
 
     if (!key) {
         return Response.json({ ok: false, error: 'invalid_media_key' }, { status: 400 });

@@ -4,7 +4,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { sanitizeHtml } from '../../sanitizeHtml';
+import IdentitySettingsSections, {
+    EMPTY_IDENTITY,
+    normalizePwaInstallPrompt,
+    pickIdentity,
+} from './IdentitySettingsSections';
 import '../AdminDashboard.css';
+
+const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_MEDIA_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'ico']);
+const SUPPORTED_MEDIA_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/webp',
+    'image/gif',
+    'image/x-icon',
+    'image/vnd.microsoft.icon',
+    'application/octet-stream',
+    '',
+]);
 
 const SOCIAL_PRESETS = [
     { label: 'X / Twitter', icon: 'fa-x-twitter', color: '#111827' },
@@ -179,9 +197,9 @@ function AdminNav({ active = 'tools' }) {
                 </Link>
             </li>
             <li>
-                <Link href="/admin/identity" className={active === 'identity' ? 'active' : ''}>
-                    <i className="fa-solid fa-palette"></i>
-                    <span className="nav-text">إدارة الهوية</span>
+                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
+                    <i className="fa-solid fa-screwdriver-wrench"></i>
+                    <span className="nav-text">إعدادات الأداة</span>
                 </Link>
             </li>
             <li>
@@ -212,12 +230,6 @@ function AdminNav({ active = 'tools' }) {
                 <Link href="/admin/tool-management" className={active === 'tool-management' ? 'active' : ''}>
                     <i className="fa-solid fa-toolbox"></i>
                     <span className="nav-text">إدارة الأدوات</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
-                    <i className="fa-solid fa-screwdriver-wrench"></i>
-                    <span className="nav-text">إعدادات الأداة</span>
                 </Link>
             </li>
             <li>
@@ -290,6 +302,8 @@ export default function AdminToolsPage() {
     const [message, setMessage] = useState(null);
     const [saving, setSaving] = useState(false);
     const [toolsConfig, setToolsConfig] = useState(pickToolsConfig());
+    const [identity, setIdentity] = useState(EMPTY_IDENTITY);
+    const [uploadingTarget, setUploadingTarget] = useState('');
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
     const [editingRow, setEditingRow] = useState(null);
@@ -335,9 +349,11 @@ export default function AdminToolsPage() {
 
                         setAdminName(adminProfile.name || adminProfile.email || 'أيها المدير');
                         setAdminRole(adminProfile.role === 'super_admin' ? 'المدير العام' : 'مدير');
-                        const loadedConfig = pickToolsConfig(await getSiteConfig());
+                        const siteConfig = await getSiteConfig();
+                        const loadedConfig = pickToolsConfig(siteConfig);
                         persistedToolsConfigRef.current = loadedConfig;
                         setToolsConfig(loadedConfig);
+                        setIdentity({ ...EMPTY_IDENTITY, ...pickIdentity(siteConfig) });
                     } catch (error) {
                         console.error('Error loading tools page:', error);
                         if (isMounted) setLoadError('حدث خطأ في قراءة إعدادات الأداة.');
@@ -371,6 +387,90 @@ export default function AdminToolsPage() {
         setMessage({ type, text });
         messageTimerRef.current = window.setTimeout(() => setMessage(null), 4500);
     }, []);
+
+    const setIdentityField = (field, value) => {
+        setIdentity((current) => ({ ...current, [field]: value }));
+    };
+
+    const setPwaInstallPromptField = (field, value) => {
+        setIdentity((current) => ({
+            ...current,
+            pwaInstallPrompt: normalizePwaInstallPrompt({
+                ...(current.pwaInstallPrompt || {}),
+                [field]: value,
+            }),
+        }));
+    };
+
+    const validateMediaFileBeforeUpload = (file) => {
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+        if (file.size <= 0 || file.size > MAX_MEDIA_FILE_BYTES) return 'invalid_file_size';
+        if (!SUPPORTED_MEDIA_EXTENSIONS.has(extension)) return 'unsupported_image_type';
+        if (file.type && !SUPPORTED_MEDIA_TYPES.has(file.type)) return 'unsupported_image_type';
+        return '';
+    };
+
+    const getUploadMessage = (errorCode, label) => {
+        const messages = {
+            not_authenticated: 'انتهت جلسة الدخول. سجّل الدخول مرة أخرى ثم أعد المحاولة.',
+            unauthorized: 'تعذر التحقق من جلسة الإدارة. سجّل الخروج ثم الدخول، وإذا استمرت المشكلة راجع بيانات الحساب الإداري.',
+            forbidden_category: 'الحساب مفعّل، لكنه لا يملك صلاحية إدارة الهوية ورفع صورها.',
+            media_storage_not_configured: 'تخزين الصور غير مفعل أو غير مربوط باسم MEDIA_BUCKET.',
+            invalid_category: 'نوع مساحة الرفع غير معروف.',
+            missing_file: 'لم يتم اختيار ملف للرفع.',
+            invalid_file_size: 'حجم الصورة غير مقبول. الحد الأقصى 5MB.',
+            unsupported_image_type: 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF أو ICO.',
+            upload_failed: 'تعذر رفع الصورة بسبب خطأ غير متوقع.',
+        };
+        return messages[errorCode] || `تعذر رفع ${label}.`;
+    };
+
+    const handleIdentityMediaUpload = async (event, category, field, label) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+
+        const validationError = validateMediaFileBeforeUpload(file);
+        if (validationError) {
+            showMessage('error', getUploadMessage(validationError, label));
+            return;
+        }
+
+        const currentUser = firebaseApiRef.current?.auth?.currentUser;
+        if (!currentUser) {
+            showMessage('error', getUploadMessage('not_authenticated', label));
+            return;
+        }
+
+        setUploadingTarget(field);
+        showMessage('info', `جاري رفع ${label} إلى R2...`);
+
+        try {
+            const token = await currentUser.getIdToken();
+            const formData = new FormData();
+            formData.append('category', category);
+            formData.append('file', file);
+            const response = await fetch('/api/media/upload', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.ok) throw new Error(result.error || 'upload_failed');
+
+            setIdentity((current) => ({
+                ...current,
+                [field]: result.url,
+                ...(field === 'logoUrl' ? { hasLogo: true } : {}),
+            }));
+            showMessage('success', `تم رفع ${label}. اضغط حفظ إعدادات الأداة لتثبيت الرابط.`);
+        } catch (error) {
+            console.error('Identity media upload error:', error);
+            showMessage('error', getUploadMessage(error.message, label));
+        } finally {
+            setUploadingTarget('');
+        }
+    };
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {
@@ -435,12 +535,16 @@ export default function AdminToolsPage() {
         showMessage('info', 'جاري حفظ إعدادات الأداة...');
 
         try {
-            const savedPatch = await firebaseApi.saveSiteConfigSection(configToSave);
+            const savedPatch = await firebaseApi.saveSiteConfigSection({
+                ...configToSave,
+                ...pickIdentity(identity),
+            });
             const savedConfig = pickToolsConfig(savedPatch);
             persistedToolsConfigRef.current = savedConfig;
             setToolsConfig(savedConfig);
+            setIdentity((current) => ({ ...current, ...pickIdentity(savedPatch) }));
             await notifyIndexNow(changedPageSlugs);
-            showMessage('success', 'تم حفظ إعدادات الأداة بنجاح.');
+            showMessage('success', 'تم حفظ إعدادات الأداة والهوية بنجاح.');
         } catch (error) {
             console.error('Error saving tools:', error);
             showMessage('error', 'تعذر حفظ إعدادات الأداة. تحقق من صلاحيات المدير.');
@@ -849,7 +953,7 @@ export default function AdminToolsPage() {
                             <i className="fa-solid fa-wand-magic-sparkles"></i>
                             إعدادات الأداة
                         </h1>
-                        <p>صفحة خفيفة لإدارة الروابط والصفحات والسوشيال ميديا والأحداث فقط.</p>
+                        <p>إدارة هوية الموقع والتثبيت والروابط والصفحات والسوشيال ميديا من مكان واحد.</p>
                     </div>
                 </section>
 
@@ -859,6 +963,14 @@ export default function AdminToolsPage() {
                 </button>
 
                 <div className="tools-quick-grid">
+                    <a href="#identity-basic-settings" className="tools-quick-card color-identity">
+                        <i className="fa-solid fa-fingerprint"></i>
+                        <span>الهوية</span>
+                    </a>
+                    <a href="#pwa-install-settings" className="tools-quick-card color-pwa">
+                        <i className="fa-solid fa-mobile-screen-button"></i>
+                        <span>التثبيت</span>
+                    </a>
                     <a href="#pages" className="tools-quick-card color-pages">
                         <i className="fa-solid fa-file-lines"></i>
                         <span>الصفحات</span>
@@ -876,6 +988,14 @@ export default function AdminToolsPage() {
                         <span>تنظيف Firebase</span>
                     </button>
                 </div>
+
+                <IdentitySettingsSections
+                    identity={identity}
+                    uploadingTarget={uploadingTarget}
+                    onFieldChange={setIdentityField}
+                    onPwaInstallPromptChange={setPwaInstallPromptField}
+                    onMediaUpload={handleIdentityMediaUpload}
+                />
 
                 <section className="legacy-google-card tools-section-card tools-privacy-settings-card" id="privacy-settings-button">
                     <div className="tools-section-head">
