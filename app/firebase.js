@@ -31,18 +31,18 @@ let authInstance = null;
 let storageInstance = null;
 let appCheckPromise = null;
 const adminProfileCache = new Map();
+const appCheckSiteKey = String(process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY || '').trim();
 
 export async function ensureFirebaseAppCheck() {
     if (typeof window === "undefined") return null;
+    if (!appCheckSiteKey) return null;
     if (appCheckPromise) return appCheckPromise;
 
     appCheckPromise = import("firebase/app-check")
         .then(({ getAppCheck, initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
             try {
                 return initializeAppCheck(app, {
-                    provider: new ReCaptchaEnterpriseProvider(
-                        "6LcGrIwsAAAAAP5f-fzzMMmHVZzqtpC2OhslCe_3"
-                    ),
+                    provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
                     isTokenAutoRefreshEnabled: true
                 });
             } catch (error) {
@@ -412,23 +412,20 @@ export async function saveSiteConfig(config) {
 export async function saveSiteConfigSection(sectionPatch) {
     await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
-    const cleanPatch = {
-        ...sectionPatch,
-        hasError: false,
-        adCampaigns: deleteField(),
-        adImages: deleteField(),
-        pages: deleteField(),
-        ['toolSlogan ']: deleteField()
-    };
+    const cleanPatch = { ...sectionPatch };
+
+    // Legacy fields are removed by the full-admin cleanup endpoint. Section
+    // saves must only touch the fields that belong to the current section.
+    delete cleanPatch.hasError;
+    delete cleanPatch.adCampaigns;
+    delete cleanPatch.adImages;
+    delete cleanPatch.pages;
+    delete cleanPatch['toolSlogan '];
 
     if ('events' in cleanPatch && !Array.isArray(cleanPatch.events)) cleanPatch.events = [];
     if ('externalLinks' in cleanPatch && !Array.isArray(cleanPatch.externalLinks)) cleanPatch.externalLinks = [];
     if ('internalPages' in cleanPatch && !Array.isArray(cleanPatch.internalPages)) cleanPatch.internalPages = [];
     if ('socialLinks' in cleanPatch && !Array.isArray(cleanPatch.socialLinks)) cleanPatch.socialLinks = [];
-    if ('adImages' in cleanPatch) {
-        cleanPatch.adImages = deleteField();
-    }
-
     if ('googleAdSlots' in cleanPatch) {
         cleanPatch.googleAdSlots = {
             ...defaultGoogleAdSlots,

@@ -11,7 +11,10 @@ describe('login policies', () => {
     it('requires an active administrator profile', () => {
         expect(evaluateAdminAccess(null)).toBe('missing');
         expect(evaluateAdminAccess({ active: false })).toBe('inactive');
-        expect(evaluateAdminAccess({ active: true })).toBe('allowed');
+        expect(evaluateAdminAccess({ active: true, role: 'manager' })).toBe('allowed');
+        expect(evaluateAdminAccess({ active: true, role: 'assistant' })).toBe('allowed');
+        expect(evaluateAdminAccess({ active: true })).toBe('unauthorized');
+        expect(evaluateAdminAccess({ active: true, role: 'unknown' })).toBe('unauthorized');
     });
 
     it('handles advertiser verification and activation states', () => {
@@ -19,6 +22,7 @@ describe('login policies', () => {
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: null })).toBe('missing');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'pending_email' } })).toBe('activate');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'active' } })).toBe('allowed');
+        expect(evaluateAdvertiserAccess({ emailVerified: true, profile: {} })).toBe('inactive');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'suspended' } })).toBe('inactive');
     });
 });

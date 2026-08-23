@@ -154,10 +154,12 @@ function getStringField(fields, key) {
     return String(fields?.[key]?.stringValue || '').trim();
 }
 
-function getNumberField(fields, key) {
-    const raw = fields?.[key]?.integerValue || fields?.[key]?.doubleValue || fields?.[key]?.stringValue || 0;
-    const value = Number(raw);
-    return Number.isFinite(value) ? value : 0;
+function isSafeHttpsUrl(value) {
+    try {
+        return new URL(value).protocol === 'https:';
+    } catch {
+        return false;
+    }
 }
 
 function isCampaignActive(campaign) {
@@ -167,7 +169,10 @@ function isCampaignActive(campaign) {
 
     if (!ACTIVE_STATUSES.has(campaign.status)) return false;
     if (!ALLOWED_SLOTS.has(campaign.adLocation)) return false;
-    if (!campaign.imageUrl || !campaign.targetUrl) return false;
+    if (!campaign.imageUrl.startsWith('/api/media/ads/')) return false;
+    if (!isSafeHttpsUrl(campaign.targetUrl)) return false;
+    if (campaign.startTime && !Number.isFinite(start)) return false;
+    if (campaign.endTime && !Number.isFinite(end)) return false;
     if (Number.isFinite(start) && now < start) return false;
     if (Number.isFinite(end) && now > end) return false;
 
@@ -189,8 +194,6 @@ function documentToCampaign(document) {
         startTime: getStringField(fields, 'startTime'),
         endTime: getStringField(fields, 'endTime'),
         status: getStringField(fields, 'status'),
-        views: getNumberField(fields, 'views'),
-        clicks: getNumberField(fields, 'clicks'),
     };
 }
 

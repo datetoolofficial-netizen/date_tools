@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { isAssistantAdminRole, isFullAdminRole, isKnownAdminRole } from '../adminRoles';
 import { ADMIN_VERSION } from '../version';
 import './AdminDashboard.css';
 
@@ -128,21 +129,20 @@ function getPermissionSet(profile = {}) {
 }
 
 function hasFullAdminAccess(profile = {}) {
-    const role = normalizeToken(profile.role || profile.adminRole || '');
-    return ['super_admin', 'super-admin', 'owner', 'admin', 'manager'].includes(role);
+    return isFullAdminRole(profile.role || profile.adminRole);
 }
 
 function isAssistantProfile(profile = {}) {
-    const role = normalizeToken(profile.role || profile.adminRole || '');
-    return ['assistant', 'helper', 'مساعد'].includes(role);
+    return isAssistantAdminRole(profile.role || profile.adminRole);
 }
 
 function canOpenNavItem(item, profile, permissionSet) {
     if (!profile) return false;
     if (hasFullAdminAccess(profile)) return true;
+    if (!isAssistantProfile(profile)) return false;
 
     if (permissionSet.size === 0) {
-        return item.id === 'home' || !isAssistantProfile(profile);
+        return item.id === 'home';
     }
 
     return item.permissionKeys.some((key) => permissionSet.has(normalizeToken(key)));
@@ -226,7 +226,11 @@ export default function AdminShell({ children }) {
                     try {
                         const profile = await getAdminProfile(user.uid);
 
-                        if (!profile || profile.active !== true) {
+                        if (
+                            !profile
+                            || profile.active !== true
+                            || !isKnownAdminRole(profile.role || profile.adminRole)
+                        ) {
                             await signOut(auth);
                             window.location.replace('/admin_login');
                             return;

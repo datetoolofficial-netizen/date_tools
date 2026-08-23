@@ -57,7 +57,13 @@ export async function verifyTurnstileToken({ request, token, action = '' }) {
     const siteKey = await getEnvValue('TURNSTILE_SITE_KEY', 'NEXT_PUBLIC_TURNSTILE_SITE_KEY');
 
     if (!secretKey || !siteKey) {
-        return { success: true, configured: false };
+        const requestHostname = new URL(request.url).hostname.toLowerCase();
+        const isLocalRequest = requestHostname === 'localhost' || requestHostname === '127.0.0.1';
+        return {
+            success: isLocalRequest,
+            configured: false,
+            error: isLocalRequest ? '' : 'not_configured',
+        };
     }
 
     if (!token || typeof token !== 'string' || token.length > 2048) {

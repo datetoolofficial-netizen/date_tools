@@ -1,2 +1,2 @@
-export const CLIENT_PORTAL_VERSION = '1.0.4';
-export const CLIENT_PORTAL_VERSION_DATE = '2026-08-17';
+export const CLIENT_PORTAL_VERSION = '1.0.5';
+export const CLIENT_PORTAL_VERSION_DATE = '2026-08-23';

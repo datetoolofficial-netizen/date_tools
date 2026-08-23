@@ -16,6 +16,11 @@ describe('admin permissions', () => {
         expect(hasAdminPermission(profile, ['support'])).toBe(true);
     });
 
+    it('denies active profiles with missing or unknown roles', () => {
+        expect(hasAdminPermission({ active: bool(true) }, ['support'])).toBe(false);
+        expect(hasAdminPermission({ active: bool(true), role: text('editor') }, ['support'])).toBe(false);
+    });
+
     it('limits assistants to their explicit permissions', () => {
         const profile = {
             active: bool(true),
@@ -25,5 +30,10 @@ describe('admin permissions', () => {
         expect(hasAdminPermission(profile, ['support', 'tickets'])).toBe(true);
         expect(hasAdminPermission(profile, ['ads'])).toBe(false);
         expect(hasAdminPermission(profile, ['support'], { fullOnly: true })).toBe(false);
+    });
+
+    it('denies assistants without an explicit permission', () => {
+        const profile = { active: bool(true), role: text('assistant') };
+        expect(hasAdminPermission(profile, ['support'])).toBe(false);
     });
 });

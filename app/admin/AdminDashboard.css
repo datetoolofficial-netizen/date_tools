@@ -5225,8 +5225,8 @@ body.dark-mode .legacy-nav-links a.active {
     gap: 8px;
     min-width: 64px;
     min-height: 82px;
-    height: 100%;
     align-self: stretch;
+    margin-top: 10px;
     padding: 9px 12px;
     border: 0;
     border-radius: var(--admin-control-radius);

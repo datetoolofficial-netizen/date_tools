@@ -112,14 +112,14 @@ export default function ClientDashboardPage() {
 
     const updateCampaignStatus = async (campaignId, status) => {
         try {
-            const [{ db }, { doc, updateDoc }] = await Promise.all([
+            const [{ db }, { doc, serverTimestamp, updateDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/firestore'),
             ]);
 
             await updateDoc(doc(db, 'campaigns', campaignId), {
                 status,
-                updatedAt: new Date().toISOString(),
+                updatedAt: serverTimestamp(),
             });
 
             setCampaigns((current) => current.map((item) => item.id === campaignId ? { ...item, status } : item));

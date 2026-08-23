@@ -1,4 +1,4 @@
-const ASSISTANT_ROLES = new Set(['assistant', 'helper', 'مساعد']);
+import { isAssistantAdminRole, isFullAdminRole } from '../../adminRoles';
 
 function readTokens(field) {
     if (!field) return [];
@@ -22,8 +22,8 @@ export function hasAdminPermission(fields, permissionKeys = [], { fullOnly = fal
     const role = String(fields?.role?.stringValue || fields?.adminRole?.stringValue || '')
         .trim()
         .toLowerCase();
-    const isAssistant = ASSISTANT_ROLES.has(role);
-    if (!isAssistant) return true;
+    if (isFullAdminRole(role)) return true;
+    if (!isAssistantAdminRole(role)) return false;
     if (fullOnly) return false;
 
     const allowed = new Set([

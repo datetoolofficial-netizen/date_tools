@@ -5,3 +5,6 @@ STATISTICS_ALLOWED_ORIGINS=https://date-tool.com,https://www.date-tool.com,https
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 TURNSTILE_ALLOWED_HOSTNAMES=date-tool.com,www.date-tool.com
+# Public score-based reCAPTCHA Enterprise site key used by Firebase App Check.
+# Leave empty until Firebase App Check is registered with a score-based key.
+NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY=

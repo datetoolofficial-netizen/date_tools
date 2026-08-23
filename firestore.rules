@@ -9,7 +9,10 @@ service cloud.firestore {
     function isActiveAdmin() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data
+          .get("role", get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("adminRole", ""))
+          in ["super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"];
     }
 
     function adminData() {
@@ -22,7 +25,15 @@ service cloud.firestore {
     }
 
     function isFullAdmin() {
-      return isActiveAdmin() && !isAssistantAdmin();
+      return isActiveAdmin()
+        && adminData().get("role", adminData().get("adminRole", ""))
+          in ["super_admin", "super-admin", "owner", "admin", "manager"];
+    }
+
+    function isActiveAdvertiser() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/advertisers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/advertisers/$(request.auth.uid)).data.status == "active";
     }
 
     function hasAdminPermission(permission, aliases) {
@@ -66,49 +77,40 @@ service cloud.firestore {
         );
     }
 
-    function commonSettingsFields() {
-      return ["hasError", "adCampaigns", "adImages", "pages", "toolSlogan"];
-    }
-
     function canUpdateMainSettings() {
       let changed = request.resource.data.diff(resource.data).affectedKeys();
       return isFullAdmin()
         || (
           hasAdminPermission("identity", ["identity", "brand", "branding"])
-          && changed.hasOnly(commonSettingsFields().concat([
+          && changed.hasOnly([
             "toolDisplayName", "toolSlogan", "contactEmail", "hasLogo", "logoUrl",
             "faviconUrl", "appIconUrl", "pwaShortcutDateIconUrl", "pwaShortcutClockIconUrl",
             "pwaShortcutWeatherIconUrl", "copyrightName", "copyrightText", "mainSEO",
             "linkPreview", "pwaInstallPrompt"
-          ]))
+          ])
         )
         || (
           hasAdminPermission("integrations", ["integrations", "external-integrations", "externalIntegrations"])
-          && changed.hasOnly(commonSettingsFields().concat(["externalIntegrations"]))
+          && changed.hasOnly(["externalIntegrations"])
         )
         || (
           hasAdminPermission("ad-settings", ["ad-settings", "adSettings", "ads-settings", "google-ads"])
-          && changed.hasOnly(commonSettingsFields().concat(["googleAdSlots", "externalIntegrations"]))
+          && changed.hasOnly(["googleAdSlots", "externalIntegrations"])
         )
         || (
           hasAdminPermission("tools", ["tools", "settings", "site-settings", "pages"])
-          && changed.hasOnly(commonSettingsFields().concat([
+          && changed.hasOnly([
             "internalPages", "customPages", "socialLinks", "externalLinks", "privacySettingsButton"
-          ]))
+          ])
         )
         || (
           hasAdminPermission("tool-management", ["tool-management", "toolManagement", "tools-management", "toolsContent"])
-          && changed.hasOnly(commonSettingsFields().concat(["toolSettings", "events"]))
+          && changed.hasOnly(["toolSettings", "events"])
         );
     }
 
     match /settings/{documentId} {
-      allow read: if documentId == "public"
-        || (
-          documentId == "main"
-          && !exists(/databases/$(database)/documents/settings/public)
-        )
-        || isActiveAdmin();
+      allow read: if documentId == "public" || isActiveAdmin();
       allow create, delete: if documentId in ["main", "public"] && isFullAdmin();
       allow update: if documentId in ["main", "public"] && canUpdateMainSettings();
     }
@@ -133,59 +135,107 @@ service cloud.firestore {
           (
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(["storeName", "contactName", "phone", "updatedAt"])
             && request.resource.data.storeName is string
+            && request.resource.data.storeName.size() > 0
             && request.resource.data.storeName.size() <= 120
             && request.resource.data.contactName is string
+            && request.resource.data.contactName.size() > 0
             && request.resource.data.contactName.size() <= 120
             && request.resource.data.phone is string
             && request.resource.data.phone.size() <= 40
+            && request.resource.data.updatedAt is timestamp
           )
           || (
             request.auth.token.email_verified == true
             && resource.data.status == "pending_email"
             && request.resource.data.status == "active"
+            && request.resource.data.updatedAt is timestamp
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
           )
         );
       allow create: if isSignedIn()
         && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          "storeName", "contactName", "email", "phone", "status", "portalVersion",
+          "acceptedTermsAt", "createdAt", "updatedAt"
+        ])
         && request.resource.data.email is string
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.email.size() <= 160
         && request.resource.data.storeName is string
+        && request.resource.data.storeName.size() > 0
         && request.resource.data.storeName.size() <= 120
         && request.resource.data.contactName is string
+        && request.resource.data.contactName.size() > 0
         && request.resource.data.contactName.size() <= 120
-        && request.resource.data.status == "pending_email";
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.status == "pending_email"
+        && request.resource.data.portalVersion is string
+        && request.resource.data.portalVersion.size() <= 40
+        && request.resource.data.acceptedTermsAt is string
+        && request.resource.data.acceptedTermsAt.size() <= 64
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
       allow list, delete: if hasAdminPermission("client", ["client", "advertisers", "clients", "ads", "campaigns"]);
     }
 
     match /campaigns/{campaignId} {
       allow read: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
-        || (isSignedIn() && resource.data.advertiserId == request.auth.uid);
+        || (isActiveAdvertiser() && resource.data.advertiserId == request.auth.uid);
 
       allow create: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
         || (
-          isSignedIn()
-          && get(/databases/$(database)/documents/advertisers/$(request.auth.uid)).data.status == "active"
+          isActiveAdvertiser()
           && request.resource.data.advertiserId == request.auth.uid
+          && request.resource.data.keys().hasOnly([
+            "campaignNumber", "advertiserId", "advertiserEmail", "storeName", "campaignName",
+            "targetTool", "adLocation", "source", "targetUrl", "imageUrl", "mediaType",
+            "startTime", "endTime", "notes", "status", "views", "clicks", "portalVersion",
+            "createdAt", "updatedAt"
+          ])
           && request.resource.data.status == "قيد المراجعة"
+          && request.resource.data.campaignNumber is string
+          && request.resource.data.campaignNumber.size() <= 40
+          && request.resource.data.advertiserEmail is string
+          && request.resource.data.advertiserEmail == request.auth.token.email
+          && request.resource.data.advertiserEmail.size() <= 160
+          && request.resource.data.storeName is string
+          && request.resource.data.storeName.size() <= 120
           && request.resource.data.campaignName is string
+          && request.resource.data.campaignName.size() > 0
           && request.resource.data.campaignName.size() <= 120
+          && request.resource.data.targetTool in ["date_tool", "clock_tool", "weather_tool"]
+          && request.resource.data.adLocation in [
+            "dateTop", "dateMiddle", "dateBottom", "clockTop", "clockMiddle", "clockBottom",
+            "weatherTop", "weatherMiddle", "weatherBottom"
+          ]
+          && request.resource.data.source == "advertisers"
           && request.resource.data.targetUrl is string
           && request.resource.data.targetUrl.matches('https://.*')
           && request.resource.data.targetUrl.size() <= 1000
           && request.resource.data.imageUrl is string
           && request.resource.data.imageUrl.matches('/api/media/ads/.*')
+          && request.resource.data.mediaType == "image"
           && request.resource.data.startTime is string
+          && request.resource.data.startTime.size() <= 40
           && request.resource.data.endTime is string
+          && request.resource.data.endTime.size() <= 40
+          && request.resource.data.notes is string
+          && request.resource.data.notes.size() <= 1200
+          && request.resource.data.views == 0
+          && request.resource.data.clicks == 0
+          && request.resource.data.portalVersion == "client"
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp
         );
 
       allow update: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
         || (
-          isSignedIn()
+          isActiveAdvertiser()
           && resource.data.advertiserId == request.auth.uid
           && request.resource.data.advertiserId == request.auth.uid
           && request.resource.data.status in ["قيد المراجعة", "متوقف مؤقتاً"]
+          && request.resource.data.updatedAt is timestamp
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
         );
 

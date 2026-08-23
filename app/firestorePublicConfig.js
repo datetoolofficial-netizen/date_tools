@@ -39,12 +39,7 @@ async function fetchSettingsDocument(documentId, revalidate) {
 
 export async function getPublicSiteConfigFromFirestore({ revalidate = 300 } = {}) {
     try {
-        const publicConfig = await fetchSettingsDocument('public', revalidate);
-        if (publicConfig) return publicConfig;
-
-        // Temporary migration fallback. Firestore stops exposing main as soon as
-        // settings/public exists, so existing deployments remain available.
-        return (await fetchSettingsDocument('main', revalidate)) || {};
+        return (await fetchSettingsDocument('public', revalidate)) || {};
     } catch {
         return {};
     }

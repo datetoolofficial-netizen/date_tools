@@ -53,6 +53,12 @@ export default function AdminLogin() {
                 return;
             }
 
+            if (adminAccess === 'unauthorized') {
+                await signOut(auth);
+                setErrorMsg("الدور الإداري لهذا الحساب غير معتمد.");
+                return;
+            }
+
             // 3. الدخول إلى لوحة الإدارة
         window.location.replace('/admin');
         } catch (error) {

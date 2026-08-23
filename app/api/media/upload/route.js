@@ -6,6 +6,7 @@ import {
     MAX_IMAGE_BYTES,
 } from '../../_lib/mediaValidation';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
+import { isAssistantAdminRole, isFullAdminRole } from '../../../adminRoles';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const TOKEN_TTL_SECONDS = 55 * 60;
@@ -213,7 +214,8 @@ function readProfileTokens(field) {
 
 function canAdminUploadCategory(profile, category) {
     const role = String(profile?.role?.stringValue || profile?.adminRole?.stringValue || '').toLowerCase();
-    if (!['assistant', 'helper', 'مساعد'].includes(role)) return true;
+    if (isFullAdminRole(role)) return true;
+    if (!isAssistantAdminRole(role)) return false;
 
     const permissions = new Set([
         ...readProfileTokens(profile?.permissions),

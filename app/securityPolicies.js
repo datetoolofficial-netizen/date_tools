@@ -1,3 +1,5 @@
+import { isKnownAdminRole } from './adminRoles';
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function cleanPlainText(value, maxLength) {
@@ -10,14 +12,15 @@ export function cleanPlainText(value, maxLength) {
 
 export function evaluateAdminAccess(profile) {
     if (!profile) return 'missing';
-    return profile.active === true ? 'allowed' : 'inactive';
+    if (profile.active !== true) return 'inactive';
+    return isKnownAdminRole(profile.role || profile.adminRole) ? 'allowed' : 'unauthorized';
 }
 
 export function evaluateAdvertiserAccess({ emailVerified, profile }) {
     if (!emailVerified) return 'unverified';
     if (!profile) return 'missing';
     if (profile.status === 'pending_email') return 'activate';
-    return profile.status === 'active' || !profile.status ? 'allowed' : 'inactive';
+    return profile.status === 'active' ? 'allowed' : 'inactive';
 }
 
 export function normalizeSupportSubmission(payload = {}) {
