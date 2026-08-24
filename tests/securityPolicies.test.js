@@ -13,8 +13,11 @@ describe('login policies', () => {
         expect(evaluateAdminAccess({ active: false })).toBe('inactive');
         expect(evaluateAdminAccess({ active: true, role: 'manager' })).toBe('allowed');
         expect(evaluateAdminAccess({ active: true, role: 'assistant' })).toBe('allowed');
+        expect(evaluateAdminAccess({ active: true, role: 'legacy', adminRole: 'super_admin' })).toBe('allowed');
+        expect(evaluateAdminAccess({ active: true, role: '', adminRole: 'SUPER_ADMIN' })).toBe('allowed');
         expect(evaluateAdminAccess({ active: true })).toBe('unauthorized');
         expect(evaluateAdminAccess({ active: true, role: 'unknown' })).toBe('unauthorized');
+        expect(evaluateAdminAccess({ active: true, role: 'unknown', adminRole: 'editor' })).toBe('unauthorized');
     });
 
     it('handles advertiser verification and activation states', () => {

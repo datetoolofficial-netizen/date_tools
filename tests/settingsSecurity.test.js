@@ -31,6 +31,8 @@ describe('settings security boundaries', () => {
         const rules = readProjectFile('firestore.rules');
 
         expect(rules).toContain('"super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"');
+        expect(rules).toContain('return isKnownAdminRoleValue(primaryRole)');
+        expect(rules).toContain(': adminData().get("adminRole", "")');
         expect(rules).not.toContain('!isAssistantAdmin()');
         expect(rules).not.toContain('commonSettingsFields');
         expect(rules).toContain('changed.hasOnly(["toolSettings", "events"])');

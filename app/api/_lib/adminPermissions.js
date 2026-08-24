@@ -1,4 +1,4 @@
-import { isAssistantAdminRole, isFullAdminRole } from '../../adminRoles';
+import { isAssistantAdminRole, isFullAdminRole, resolveKnownAdminRole } from '../../adminRoles';
 
 function readTokens(field) {
     if (!field) return [];
@@ -19,9 +19,10 @@ export function isActiveAdminProfile(fields) {
 export function hasAdminPermission(fields, permissionKeys = [], { fullOnly = false } = {}) {
     if (!isActiveAdminProfile(fields)) return false;
 
-    const role = String(fields?.role?.stringValue || fields?.adminRole?.stringValue || '')
-        .trim()
-        .toLowerCase();
+    const role = resolveKnownAdminRole(
+        fields?.role?.stringValue,
+        fields?.adminRole?.stringValue,
+    );
     if (isFullAdminRole(role)) return true;
     if (!isAssistantAdminRole(role)) return false;
     if (fullOnly) return false;

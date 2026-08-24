@@ -27,3 +27,12 @@ export function isAssistantAdminRole(value) {
 export function isKnownAdminRole(value) {
     return isFullAdminRole(value) || isAssistantAdminRole(value);
 }
+
+export function resolveKnownAdminRole(...values) {
+    for (const value of values) {
+        const role = normalizeAdminRole(value);
+        if (isKnownAdminRole(role)) return role;
+    }
+
+    return '';
+}

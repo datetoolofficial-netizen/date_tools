@@ -1,4 +1,4 @@
-import { isKnownAdminRole } from './adminRoles';
+import { resolveKnownAdminRole } from './adminRoles';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,7 +13,7 @@ export function cleanPlainText(value, maxLength) {
 export function evaluateAdminAccess(profile) {
     if (!profile) return 'missing';
     if (profile.active !== true) return 'inactive';
-    return isKnownAdminRole(profile.role || profile.adminRole) ? 'allowed' : 'unauthorized';
+    return resolveKnownAdminRole(profile.role, profile.adminRole) ? 'allowed' : 'unauthorized';
 }
 
 export function evaluateAdvertiserAccess({ emailVerified, profile }) {

@@ -6,28 +6,44 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isKnownAdminRoleValue(role) {
+      return role in ["super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"];
+    }
+
+    function isAssistantRoleValue(role) {
+      return role in ["assistant", "helper", "مساعد"];
+    }
+
+    function isFullAdminRoleValue(role) {
+      return role in ["super_admin", "super-admin", "owner", "admin", "manager"];
+    }
+
     function isActiveAdmin() {
       return isSignedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data
-          .get("role", get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.get("adminRole", ""))
-          in ["super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"];
+        && isKnownAdminRoleValue(adminRole());
     }
 
     function adminData() {
       return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
     }
 
+    function adminRole() {
+      let primaryRole = adminData().get("role", "");
+      return isKnownAdminRoleValue(primaryRole)
+        ? primaryRole
+        : adminData().get("adminRole", "");
+    }
+
     function isAssistantAdmin() {
       return isActiveAdmin()
-        && adminData().get("role", adminData().get("adminRole", "")) in ["assistant", "helper", "مساعد"];
+        && isAssistantRoleValue(adminRole());
     }
 
     function isFullAdmin() {
       return isActiveAdmin()
-        && adminData().get("role", adminData().get("adminRole", ""))
-          in ["super_admin", "super-admin", "owner", "admin", "manager"];
+        && isFullAdminRoleValue(adminRole());
     }
 
     function isActiveAdvertiser() {

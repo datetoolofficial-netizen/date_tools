@@ -16,6 +16,15 @@ describe('admin permissions', () => {
         expect(hasAdminPermission(profile, ['support'])).toBe(true);
     });
 
+    it('uses a supported adminRole when a legacy role field also exists', () => {
+        const profile = {
+            active: bool(true),
+            role: text('legacy'),
+            adminRole: text('super_admin'),
+        };
+        expect(hasAdminPermission(profile, ['support'])).toBe(true);
+    });
+
     it('denies active profiles with missing or unknown roles', () => {
         expect(hasAdminPermission({ active: bool(true) }, ['support'])).toBe(false);
         expect(hasAdminPermission({ active: bool(true), role: text('editor') }, ['support'])).toBe(false);

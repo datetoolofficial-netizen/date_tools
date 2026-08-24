@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { isAssistantAdminRole, isFullAdminRole, isKnownAdminRole } from '../adminRoles';
+import { isAssistantAdminRole, isFullAdminRole, resolveKnownAdminRole } from '../adminRoles';
 import { ADMIN_VERSION } from '../version';
 import './AdminDashboard.css';
 
@@ -129,11 +129,11 @@ function getPermissionSet(profile = {}) {
 }
 
 function hasFullAdminAccess(profile = {}) {
-    return isFullAdminRole(profile.role || profile.adminRole);
+    return isFullAdminRole(resolveKnownAdminRole(profile.role, profile.adminRole));
 }
 
 function isAssistantProfile(profile = {}) {
-    return isAssistantAdminRole(profile.role || profile.adminRole);
+    return isAssistantAdminRole(resolveKnownAdminRole(profile.role, profile.adminRole));
 }
 
 function canOpenNavItem(item, profile, permissionSet) {
@@ -229,7 +229,7 @@ export default function AdminShell({ children }) {
                         if (
                             !profile
                             || profile.active !== true
-                            || !isKnownAdminRole(profile.role || profile.adminRole)
+                            || !resolveKnownAdminRole(profile.role, profile.adminRole)
                         ) {
                             await signOut(auth);
                             window.location.replace('/admin_login');
@@ -240,7 +240,14 @@ export default function AdminShell({ children }) {
 
                         setAdminProfile(profile);
                         setAdminName(profile.name || profile.email || 'أيها المدير');
-                        setAdminRole(profile.role === 'super_admin' ? 'المدير العام' : profile.role === 'assistant' ? 'مساعد' : 'مدير');
+                        const resolvedRole = resolveKnownAdminRole(profile.role, profile.adminRole);
+                        setAdminRole(
+                            isAssistantAdminRole(resolvedRole)
+                                ? 'مساعد'
+                                : ['super_admin', 'super-admin', 'owner'].includes(resolvedRole)
+                                    ? 'المدير العام'
+                                    : 'مدير'
+                        );
                         if (hasFullAdminAccess(profile)) {
                             syncPublicSiteConfig().catch(() => {
                                 console.error('Unable to synchronize the public site settings.');
