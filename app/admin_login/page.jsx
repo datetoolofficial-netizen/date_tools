@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
@@ -15,10 +15,21 @@ export default function AdminLogin() {
     const [isLoading, setIsLoading] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState('');
     const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+    const [turnstileStatus, setTurnstileStatus] = useState({ enabled: null, ready: false, error: '' });
+
+    const handleTurnstileStatusChange = useCallback((status) => {
+        setTurnstileStatus(status);
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setErrorMsg('');
+
+        if (!turnstileStatus.ready) {
+            setErrorMsg('يرجى الانتظار لحظات حتى يكتمل التحقق الأمني.');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -72,7 +83,15 @@ export default function AdminLogin() {
             } else if (error.code === 'auth/too-many-requests') {
                 setErrorMsg("تم حظر الدخول مؤقتاً بسبب محاولات فاشلة كثيرة. يرجى المحاولة لاحقاً.");
             } else if (error.code === 'security/turnstile-failed') {
-                setErrorMsg('تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.');
+                if (error.reason === 'expired_or_duplicate') {
+                    setErrorMsg('انتهت صلاحية التحقق الأمني وتم تجديده. حاول تسجيل الدخول مرة أخرى.');
+                } else if (error.reason === 'verification_unavailable') {
+                    setErrorMsg('خدمة التحقق الأمني غير متاحة مؤقتًا. حاول مرة أخرى بعد لحظات.');
+                } else if (error.reason === 'configuration_error') {
+                    setErrorMsg('تعذر تجهيز خدمة الحماية حاليًا. يرجى المحاولة لاحقًا.');
+                } else {
+                    setErrorMsg('لم ينجح التحقق الأمني. انتظر تجديده ثم حاول مرة أخرى.');
+                }
             } else {
                 setErrorMsg("حدث خطأ في الاتصال: " + error.message);
             }
@@ -134,14 +153,20 @@ export default function AdminLogin() {
                     <TurnstileField
                         action="admin-login"
                         onTokenChange={setTurnstileToken}
+                        onStatusChange={handleTurnstileStatusChange}
                         resetKey={turnstileResetKey}
                     />
 
-                    <button type="submit" className="btn-login" disabled={isLoading}>
+                    <button type="submit" className="btn-login" disabled={isLoading || !turnstileStatus.ready}>
                         {isLoading ? (
                             <>
                                 <i className="fa-solid fa-spinner fa-spin"></i>
                                 جاري التحقق...
+                            </>
+                        ) : !turnstileStatus.ready ? (
+                            <>
+                                <i className="fa-solid fa-shield-halved"></i>
+                                {turnstileStatus.error ? 'جاري إعادة التحقق الأمني...' : 'جاري تجهيز الحماية...'}
                             </>
                         ) : (
                             <>

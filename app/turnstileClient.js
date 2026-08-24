@@ -10,6 +10,7 @@ export async function verifyTurnstileChallenge(token, action) {
     if (!response.ok || result.ok !== true) {
         const error = new Error('turnstile_failed');
         error.code = 'security/turnstile-failed';
+        error.reason = typeof result.error === 'string' ? result.error : 'challenge_failed';
         throw error;
     }
 

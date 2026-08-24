@@ -52,6 +52,21 @@ function getAllowedHostnames(configuredHostnames = '') {
     return allowed;
 }
 
+function classifySiteverifyFailure(errorCodes) {
+    const codes = Array.isArray(errorCodes) ? errorCodes : [];
+
+    if (codes.includes('timeout-or-duplicate')) return 'expired_or_duplicate';
+    if (codes.includes('internal-error')) return 'verification_unavailable';
+    if (codes.some((code) => [
+        'missing-input-secret',
+        'invalid-input-secret',
+        'invalid-widget-id',
+        'invalid-parsed-secret',
+    ].includes(code))) return 'configuration_error';
+
+    return 'challenge_failed';
+}
+
 export async function verifyTurnstileToken({ request, token, action = '' }) {
     const secretKey = await getEnvValue('TURNSTILE_SECRET_KEY');
     const siteKey = await getEnvValue('TURNSTILE_SITE_KEY', 'NEXT_PUBLIC_TURNSTILE_SITE_KEY');
@@ -78,11 +93,16 @@ export async function verifyTurnstileToken({ request, token, action = '' }) {
     if (remoteIp) formData.set('remoteip', remoteIp);
     formData.set('idempotency_key', crypto.randomUUID());
 
-    const response = await fetch(SITEVERIFY_URL, {
-        method: 'POST',
-        body: formData,
-        signal: AbortSignal.timeout(8000),
-    });
+    let response;
+    try {
+        response = await fetch(SITEVERIFY_URL, {
+            method: 'POST',
+            body: formData,
+            signal: AbortSignal.timeout(8000),
+        });
+    } catch {
+        return { success: false, configured: true, error: 'verification_unavailable' };
+    }
 
     if (!response.ok) {
         return { success: false, configured: true, error: 'verification_unavailable' };
@@ -98,7 +118,7 @@ export async function verifyTurnstileToken({ request, token, action = '' }) {
         success: result.success === true && hostnameAllowed && actionMatches,
         configured: true,
         error: result.success !== true
-            ? 'challenge_failed'
+            ? classifySiteverifyFailure(result['error-codes'])
             : !hostnameAllowed
                 ? 'hostname_mismatch'
                 : !actionMatches
