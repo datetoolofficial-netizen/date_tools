@@ -287,6 +287,7 @@ export default function AdminShell({ children }) {
             if (!(event.target instanceof Element)) return;
             const button = event.target.closest('button');
             if (!button || !button.closest('.legacy-admin-shell')) return;
+            if (button.closest('.admin-delete-confirm')) return;
 
             const isDeleteButton = button.querySelector('.fa-trash') || button.dataset.confirmDelete === 'true';
             if (!isDeleteButton) return;
