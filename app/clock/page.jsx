@@ -18,7 +18,7 @@ export default async function ClockPage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
-            <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-clock" className="clock-hero" />
+            <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-clock" className="clock-hero" toolKey="clock" />
             <ClockPageClient hideHero>
                 <ToolSeoContent tool="clock" />
             </ClockPageClient>

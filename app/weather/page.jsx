@@ -18,7 +18,7 @@ export default async function WeatherPage() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
-            <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-cloud-sun-rain" className="weather-hero" />
+            <ToolPageHero title={page.title} description={page.description} icon="fa-solid fa-cloud-sun-rain" className="weather-hero" toolKey="weather" />
             <WeatherPageClient hideHero>
                 <ToolSeoContent tool="weather" />
             </WeatherPageClient>

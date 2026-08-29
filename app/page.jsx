@@ -23,6 +23,7 @@ export default async function Home() {
                 description={page.description}
                 icon="fa-solid fa-calendar-days"
                 className="date-tools-hero"
+                toolKey="date"
             />
             <HomePageClient hideHero>
                 <ToolSeoContent tool="date" />

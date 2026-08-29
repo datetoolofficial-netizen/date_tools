@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { pickPublicSiteConfig } from '../app/publicSiteConfig';
+import { getLocalizedSiteConfig } from '../app/localizedConfig';
+import { normalizePwaUpdatePrompt } from '../app/pwaPromptSettings';
 
 describe('public settings projection', () => {
     it('keeps public integrations and removes executable snippets', () => {
@@ -36,5 +38,98 @@ describe('public settings projection', () => {
         });
         expect(projected.googleAdSlots.dateTop).not.toHaveProperty('htmlSnippet');
         expect(projected.googleAdSlots.dateTop).not.toHaveProperty('privateToken');
+    });
+
+    it('drops private top-level fields and private nested values', () => {
+        const projected = pickPublicSiteConfig({
+            toolDisplayName: 'Tools',
+            adminEmail: 'owner@example.com',
+            adminRole: 'super_admin',
+            serviceAccount: { privateKey: 'secret' },
+            adCampaigns: [{ advertiserEmail: 'private@example.com' }],
+            externalIntegrations: {
+                googleTagId: 'G-TEST',
+                privateToken: 'secret',
+                apiSecret: 'secret',
+            },
+            internalPages: [{
+                title: 'Privacy',
+                slug: 'privacy',
+                content: '<p>Public content</p>',
+                privateNotes: 'internal only',
+            }],
+        });
+
+        expect(projected).not.toHaveProperty('adminEmail');
+        expect(projected).not.toHaveProperty('adminRole');
+        expect(projected).not.toHaveProperty('serviceAccount');
+        expect(projected.adCampaigns).toEqual([]);
+        expect(projected.externalIntegrations).not.toHaveProperty('privateToken');
+        expect(projected.externalIntegrations).not.toHaveProperty('apiSecret');
+        expect(projected.internalPages[0]).not.toHaveProperty('content');
+        expect(projected.internalPages[0]).not.toHaveProperty('privateNotes');
+    });
+
+    it('includes managed page content only when explicitly requested', () => {
+        const config = {
+            internalPages: [{
+                title: 'Privacy',
+                slug: 'privacy',
+                content: '<p>Public content</p>',
+                privateNotes: 'internal only',
+            }],
+            customPages: {
+                privacy: { title: 'Privacy', content: '<p>Public content</p>' },
+            },
+            pages: {
+                legacy: { title: 'Legacy', content: '<p>Legacy content</p>' },
+            },
+        };
+
+        const metadataProjection = pickPublicSiteConfig(config);
+        const contentProjection = pickPublicSiteConfig(config, true);
+
+        expect(metadataProjection).not.toHaveProperty('customPages');
+        expect(metadataProjection).not.toHaveProperty('pages');
+        expect(metadataProjection.internalPages[0]).not.toHaveProperty('content');
+        expect(contentProjection.internalPages[0]).toMatchObject({
+            title: 'Privacy',
+            slug: 'privacy',
+            content: '<p>Public content</p>',
+        });
+        expect(contentProjection.internalPages[0]).not.toHaveProperty('privateNotes');
+        expect(contentProjection.customPages.privacy.content).toBe('<p>Public content</p>');
+    });
+
+    it('publishes only supported identity translations and selects English safely', () => {
+        const projected = pickPublicSiteConfig({
+            toolDisplayName: 'أدوات التاريخ',
+            identityTranslations: {
+                en: {
+                    toolDisplayName: 'Date Tools',
+                    toolSlogan: 'Calculate and convert dates',
+                    privateToken: 'must-not-leak',
+                },
+            },
+        });
+
+        expect(projected.identityTranslations.en.toolDisplayName).toBe('Date Tools');
+        expect(projected.identityTranslations.en).not.toHaveProperty('privateToken');
+        expect(getLocalizedSiteConfig(projected, 'en').toolDisplayName).toBe('Date Tools');
+        expect(getLocalizedSiteConfig(projected, 'ar').toolDisplayName).toBe('أدوات التاريخ');
+    });
+
+    it('publishes only the safe PWA update announcement fields', () => {
+        const projected = pickPublicSiteConfig({
+            pwaUpdatePrompt: {
+                enabled: true,
+                version: '0.3.38<script>',
+                privateToken: 'must-not-leak',
+            },
+        });
+
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.38script' });
+        expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
+        expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(false);
     });
 });

@@ -1,5 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { normalizeIdentityTranslations } from '../../localizedConfig';
+import { normalizePwaUpdatePrompt } from '../../pwaPromptSettings';
+
 export const IDENTITY_FIELDS = [
     'toolDisplayName',
     'toolSlogan',
@@ -29,11 +33,13 @@ export const EMPTY_IDENTITY = {
     copyrightName: '',
     copyrightText: '',
     mainSEO: {},
+    identityTranslations: normalizeIdentityTranslations(),
     pwaInstallPrompt: {
         enabled: true,
         text: 'ثبّت الأداة على جهازك لاستخدام أسرع',
         buttonText: 'ثبّت الأداة',
     },
+    pwaUpdatePrompt: normalizePwaUpdatePrompt(),
 };
 
 export function normalizePwaInstallPrompt(value = {}) {
@@ -53,7 +59,9 @@ export function pickIdentity(config = {}) {
     return {
         ...identityPatch,
         mainSEO: config.mainSEO || {},
+        identityTranslations: normalizeIdentityTranslations(config.identityTranslations),
         pwaInstallPrompt: normalizePwaInstallPrompt(config.pwaInstallPrompt || {}),
+        pwaUpdatePrompt: normalizePwaUpdatePrompt(config.pwaUpdatePrompt),
     };
 }
 
@@ -64,7 +72,31 @@ export default function IdentitySettingsSections({
     onPwaInstallPromptChange,
     onMediaUpload,
 }) {
-    const copyrightPreview = `© ${new Date().getFullYear()} ${identity.copyrightText || 'جميع الحقوق محفوظة'}${identity.copyrightName ? ` لـ ${identity.copyrightName}` : ''}`;
+    const [contentLanguage, setContentLanguage] = useState('ar');
+    const englishIdentity = normalizeIdentityTranslations(identity.identityTranslations).en;
+    const isEnglish = contentLanguage === 'en';
+    const displayedIdentity = isEnglish ? { ...identity, ...englishIdentity } : identity;
+    const displayedPwaPrompt = isEnglish
+        ? { ...(identity.pwaInstallPrompt || {}), ...(englishIdentity.pwaInstallPrompt || {}) }
+        : identity.pwaInstallPrompt;
+    const updateTextField = (field, value) => {
+        if (!isEnglish) return onFieldChange(field, value);
+        return onFieldChange('identityTranslations', {
+            ...normalizeIdentityTranslations(identity.identityTranslations),
+            en: { ...englishIdentity, [field]: value },
+        });
+    };
+    const updatePwaTextField = (field, value) => {
+        if (!isEnglish) return onPwaInstallPromptChange(field, value);
+        return onFieldChange('identityTranslations', {
+            ...normalizeIdentityTranslations(identity.identityTranslations),
+            en: {
+                ...englishIdentity,
+                pwaInstallPrompt: { ...englishIdentity.pwaInstallPrompt, [field]: value },
+            },
+        });
+    };
+    const copyrightPreview = `© ${new Date().getFullYear()} ${displayedIdentity.copyrightText || (isEnglish ? 'All rights reserved' : 'جميع الحقوق محفوظة')}${displayedIdentity.copyrightName ? ` ${isEnglish ? 'for' : 'لـ'} ${displayedIdentity.copyrightName}` : ''}`;
     const pwaPreviewIcon = identity.appIconUrl || identity.logoUrl || identity.faviconUrl || '';
     const pwaShortcutItems = [
         { key: 'date', label: 'اختصار التاريخ', field: 'pwaShortcutDateIconUrl', category: 'pwa-shortcut-date' },
@@ -74,6 +106,16 @@ export default function IdentitySettingsSections({
 
     return (
         <>
+            <div className="admin-content-language-toolbar" aria-label="لغة محتوى الهوية">
+                <div>
+                    <strong>لغة بيانات الهوية</strong>
+                    <small>اختر اللغة التي تريد تعبئة نصوصها. الصور والبريد مشتركة بين اللغتين.</small>
+                </div>
+                <div className="admin-language-segmented" role="group" aria-label="اختيار لغة بيانات الهوية">
+                    <button type="button" className={contentLanguage === 'ar' ? 'active' : ''} onClick={() => setContentLanguage('ar')}>العربية</button>
+                    <button type="button" className={contentLanguage === 'en' ? 'active' : ''} onClick={() => setContentLanguage('en')}>English</button>
+                </div>
+            </div>
             <section className="legacy-google-card tools-section-card identity-basic-settings-card" id="identity-basic-settings">
                 <div className="tools-section-head">
                     <div className="tools-section-title">
@@ -100,9 +142,10 @@ export default function IdentitySettingsSections({
                                 <label>عنوان الأداة</label>
                                 <input
                                     type="text"
-                                    value={identity.toolDisplayName}
-                                    onChange={(event) => onFieldChange('toolDisplayName', event.target.value)}
-                                    placeholder="مثال: أدوات التاريخ الشاملة"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedIdentity.toolDisplayName || ''}
+                                    onChange={(event) => updateTextField('toolDisplayName', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: Comprehensive Date Tools' : 'مثال: أدوات التاريخ الشاملة'}
                                 />
                             </div>
 
@@ -110,9 +153,10 @@ export default function IdentitySettingsSections({
                                 <label>الوصف القصير</label>
                                 <input
                                     type="text"
-                                    value={identity.toolSlogan}
-                                    onChange={(event) => onFieldChange('toolSlogan', event.target.value)}
-                                    placeholder="مثال: احسب عمرك وحول التواريخ بدقة"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedIdentity.toolSlogan || ''}
+                                    onChange={(event) => updateTextField('toolSlogan', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: Calculate age and convert dates accurately' : 'مثال: احسب عمرك وحول التواريخ بدقة'}
                                 />
                             </div>
 
@@ -167,9 +211,10 @@ export default function IdentitySettingsSections({
                                 <label>صاحب الحقوق</label>
                                 <input
                                     type="text"
-                                    value={identity.copyrightName}
-                                    onChange={(event) => onFieldChange('copyrightName', event.target.value)}
-                                    placeholder="مثال: أدوات التاريخ"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedIdentity.copyrightName || ''}
+                                    onChange={(event) => updateTextField('copyrightName', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: Date Tools' : 'مثال: أدوات التاريخ'}
                                 />
                             </div>
 
@@ -177,9 +222,10 @@ export default function IdentitySettingsSections({
                                 <label>نص الحقوق</label>
                                 <input
                                     type="text"
-                                    value={identity.copyrightText}
-                                    onChange={(event) => onFieldChange('copyrightText', event.target.value)}
-                                    placeholder="مثال: جميع الحقوق محفوظة"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedIdentity.copyrightText || ''}
+                                    onChange={(event) => updateTextField('copyrightText', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: All rights reserved' : 'مثال: جميع الحقوق محفوظة'}
                                 />
                             </div>
                         </div>
@@ -197,8 +243,8 @@ export default function IdentitySettingsSections({
                             </div>
                             <div>
                                 <span className="legacy-preview-label">معاينة الهوية</span>
-                                <h3>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</h3>
-                                <p>{identity.toolSlogan || 'احسب عمرك وحول التواريخ بدقة'}</p>
+                                <h3>{displayedIdentity.toolDisplayName || (isEnglish ? 'Comprehensive Date Tools' : 'أدوات التاريخ الشاملة')}</h3>
+                                <p>{displayedIdentity.toolSlogan || (isEnglish ? 'Calculate age and convert dates accurately' : 'احسب عمرك وحول التواريخ بدقة')}</p>
                             </div>
                         </div>
 
@@ -266,21 +312,55 @@ export default function IdentitySettingsSections({
                             </span>
                         </label>
 
+                        <div className="pwa-update-admin-controls">
+                            <label className={`ad-settings-switch house compact-switch ${identity.pwaUpdatePrompt?.enabled === true ? 'active' : ''}`}>
+                                <input
+                                    type="checkbox"
+                                    checked={identity.pwaUpdatePrompt?.enabled === true}
+                                    onChange={(event) => onFieldChange('pwaUpdatePrompt', normalizePwaUpdatePrompt({
+                                        ...(identity.pwaUpdatePrompt || {}),
+                                        enabled: event.target.checked,
+                                    }))}
+                                />
+                                <span className="ad-settings-switch-icon"><i className="fa-solid fa-arrows-rotate"></i></span>
+                                <span className="ad-settings-switch-copy">
+                                    <strong>إعلان تحديث للتطبيقات المثبّتة</strong>
+                                    <small>يظهر داخل التطبيق المثبّت فقط، مرة واحدة لكل رقم إصدار، وبعد إغلاق نافذة الخصوصية.</small>
+                                </span>
+                            </label>
+                            <label className="legacy-field pwa-update-version-field">
+                                <span>رقم التحديث المعلن</span>
+                                <input
+                                    type="text"
+                                    dir="ltr"
+                                    value={identity.pwaUpdatePrompt?.version || ''}
+                                    onChange={(event) => onFieldChange('pwaUpdatePrompt', normalizePwaUpdatePrompt({
+                                        ...(identity.pwaUpdatePrompt || {}),
+                                        version: event.target.value,
+                                    }))}
+                                    placeholder="0.3.38"
+                                />
+                                <small>غيّر الرقم عند كل تحديث تريد تنبيه المستخدمين به، ثم فعّل المفتاح واحفظ.</small>
+                            </label>
+                        </div>
+
                         <div className="legacy-form-grid two-columns no-top-margin">
                             <div className="legacy-field">
                                 <label>نص رسالة التثبيت</label>
                                 <input
-                                    value={identity.pwaInstallPrompt?.text || ''}
-                                    onChange={(event) => onPwaInstallPromptChange('text', event.target.value)}
-                                    placeholder="مثال: ثبّت الأداة على جهازك لاستخدام أسرع"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedPwaPrompt?.text || ''}
+                                    onChange={(event) => updatePwaTextField('text', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: Install the app for faster access' : 'مثال: ثبّت الأداة على جهازك لاستخدام أسرع'}
                                 />
                             </div>
                             <div className="legacy-field">
                                 <label>نص زر التثبيت</label>
                                 <input
-                                    value={identity.pwaInstallPrompt?.buttonText || ''}
-                                    onChange={(event) => onPwaInstallPromptChange('buttonText', event.target.value)}
-                                    placeholder="مثال: ثبّت الأداة"
+                                    dir={isEnglish ? 'ltr' : 'rtl'}
+                                    value={displayedPwaPrompt?.buttonText || ''}
+                                    onChange={(event) => updatePwaTextField('buttonText', event.target.value)}
+                                    placeholder={isEnglish ? 'Example: Install' : 'مثال: ثبّت الأداة'}
                                 />
                             </div>
                         </div>
@@ -329,11 +409,11 @@ export default function IdentitySettingsSections({
                                 )}
                             </div>
                             <span className="identity-pwa-phone-label">معاينة التثبيت</span>
-                            <strong>{identity.toolDisplayName || 'أدوات التاريخ الشاملة'}</strong>
-                            <p>{identity.toolSlogan || 'كل الأدوات بين يديك'}</p>
+                            <strong>{displayedIdentity.toolDisplayName || (isEnglish ? 'Comprehensive Date Tools' : 'أدوات التاريخ الشاملة')}</strong>
+                            <p>{displayedIdentity.toolSlogan || (isEnglish ? 'All tools at your fingertips' : 'كل الأدوات بين يديك')}</p>
                             <button type="button">
                                 <i className="fa-solid fa-mobile-screen-button"></i>
-                                {identity.pwaInstallPrompt?.buttonText || 'ثبّت الأداة'}
+                                {displayedPwaPrompt?.buttonText || (isEnglish ? 'Install' : 'ثبّت الأداة')}
                             </button>
                         </div>
 

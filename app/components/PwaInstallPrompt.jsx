@@ -16,8 +16,9 @@ function isStandaloneDisplay() {
         || document.referrer.startsWith('android-app://');
 }
 
-export default function PwaInstallPrompt({ settings, iconUrl }) {
+export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', blocked = false }) {
     const [installPrompt, setInstallPrompt] = useState(null);
+    const [isIosInstall, setIsIosInstall] = useState(false);
     const [view, setView] = useState('hidden');
     const isEnabled = settings?.enabled !== false;
     const promptText = settings?.text?.trim() || DEFAULT_PROMPT_TEXT;
@@ -29,6 +30,9 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
         const hasDecided = localStorage.getItem(COMPLETED_KEY) === 'true';
         if (hasDecided) return undefined;
 
+        const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent || '')
+            && window.navigator.standalone !== true;
+
         const wasCollapsed = localStorage.getItem(COLLAPSED_KEY) === 'true'
             || localStorage.getItem(LEGACY_DISMISSED_KEY) === 'true';
         if (localStorage.getItem(LEGACY_DISMISSED_KEY) === 'true') {
@@ -37,6 +41,11 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
         }
 
         let showTimerId;
+
+        if (isIos) {
+            setIsIosInstall(true);
+            showTimerId = window.setTimeout(() => setView(wasCollapsed ? 'compact' : 'full'), INSTALL_PROMPT_DELAY_MS);
+        }
 
         const handleBeforeInstallPrompt = (event) => {
             event.preventDefault();
@@ -67,9 +76,14 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
         };
     }, [isEnabled]);
 
-    if (!isEnabled || view === 'hidden' || !installPrompt) return null;
+    if (blocked || !isEnabled || view === 'hidden' || (!installPrompt && !isIosInstall)) return null;
 
     const installApp = async () => {
+        if (isIosInstall) {
+            localStorage.setItem(COLLAPSED_KEY, 'true');
+            setView('compact');
+            return;
+        }
         installPrompt.prompt();
         const choice = await installPrompt.userChoice.catch(() => null);
         setInstallPrompt(null);
@@ -97,7 +111,7 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
     }
 
     return (
-        <div className="pwa-install-prompt" role="dialog" aria-label="تثبيت الأداة">
+        <div className="pwa-install-prompt" role="dialog" aria-label={lang === 'en' ? 'Install app' : 'تثبيت الأداة'}>
             <span className="pwa-install-icon" aria-hidden="true">
                 {iconUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -108,14 +122,18 @@ export default function PwaInstallPrompt({ settings, iconUrl }) {
             </span>
             <span className="pwa-install-copy">
                 <strong>{buttonText}</strong>
-                <span>{promptText}</span>
+                <span>{isIosInstall
+                    ? (lang === 'en'
+                        ? 'On iPhone: tap Share, then choose Add to Home Screen.'
+                        : 'على iPhone: اضغط زر المشاركة، ثم اختر إضافة إلى الشاشة الرئيسية.')
+                    : promptText}</span>
             </span>
             <span className="pwa-install-actions">
                 <button type="button" className="pwa-install-main" onClick={installApp}>
-                    <i className="fa-solid fa-mobile-screen-button"></i>
-                    <span>{buttonText}</span>
+                    <i className={isIosInstall ? 'fa-solid fa-share-from-square' : 'fa-solid fa-mobile-screen-button'}></i>
+                    <span>{isIosInstall ? (lang === 'en' ? 'Got it' : 'فهمت') : buttonText}</span>
                 </button>
-                <button type="button" className="pwa-install-dismiss" onClick={dismiss} aria-label="إخفاء إشعار تثبيت الأداة">
+                <button type="button" className="pwa-install-dismiss" onClick={dismiss} aria-label={lang === 'en' ? 'Hide app install notice' : 'إخفاء إشعار تثبيت الأداة'}>
                     <i className="fa-solid fa-xmark"></i>
                 </button>
             </span>

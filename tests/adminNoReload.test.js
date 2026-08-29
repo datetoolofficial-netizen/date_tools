@@ -55,4 +55,24 @@ describe('admin save and upload flows', () => {
             expect(source, file).not.toContain('/admin/identity');
         });
     });
+
+    it('keeps backup and restore as paid-plan reminders without executable operations', () => {
+        const toolsPage = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'page.jsx'), 'utf8');
+        const reminderSection = toolsPage.match(/<section className="legacy-google-card tools-section-card tools-backup-reminder"[\s\S]*?<\/section>/)?.[0] || '';
+
+        expect(reminderSection).toContain('نسخ احتياطي');
+        expect(reminderSection).toContain('استعادة');
+        expect(reminderSection).toContain('يجب الاشتراك في الخطة المدفوعة');
+        expect(reminderSection).not.toMatch(/fetch\(|saveSiteConfigSection|firebaseApiRef|router\./);
+    });
+
+    it('keeps the installed-app update notice controlled by a versioned admin setting', () => {
+        const identitySections = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'IdentitySettingsSections.jsx'), 'utf8');
+        const updatePrompt = readFileSync(join(process.cwd(), 'app', 'components', 'PwaUpdatePrompt.jsx'), 'utf8');
+
+        expect(identitySections).toContain('pwaUpdatePrompt');
+        expect(identitySections).toContain('إعلان تحديث للتطبيقات المثبّتة');
+        expect(updatePrompt).toContain('(display-mode: standalone)');
+        expect(updatePrompt).toContain('UPDATE_SEEN_KEY');
+    });
 });

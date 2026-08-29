@@ -75,6 +75,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     const [uploadingSeoImage, setUploadingSeoImage] = useState('');
     const [shareModal, setShareModal] = useState(null);
     const [faqModal, setFaqModal] = useState(null);
+    const [contentLanguage, setContentLanguage] = useState('ar');
 
     useEffect(() => {
         let isMounted = true;
@@ -103,6 +104,19 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     }, [defaults, firebaseApi, showMessage, toolKey]);
 
     const updateSeo = (field, value) => {
+        if (contentLanguage === 'en') {
+            setSettings((current) => ({
+                ...current,
+                localizations: {
+                    ...(current.localizations || {}),
+                    en: {
+                        ...(current.localizations?.en || {}),
+                        seo: { ...(current.localizations?.en?.seo || {}), [field]: value },
+                    },
+                },
+            }));
+            return;
+        }
         setSettings((current) => ({
             ...current,
             seo: {
@@ -113,6 +127,25 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
     };
 
     const updateSubtoolSeo = (subtoolKey, field, value) => {
+        if (contentLanguage === 'en') {
+            setSettings((current) => ({
+                ...current,
+                localizations: {
+                    ...(current.localizations || {}),
+                    en: {
+                        ...(current.localizations?.en || {}),
+                        subtoolSeo: {
+                            ...(current.localizations?.en?.subtoolSeo || {}),
+                            [subtoolKey]: {
+                                ...(current.localizations?.en?.subtoolSeo?.[subtoolKey] || {}),
+                                [field]: value,
+                            },
+                        },
+                    },
+                },
+            }));
+            return;
+        }
         setSettings((current) => ({
             ...current,
             subtoolSeo: {
@@ -196,29 +229,62 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
     const updateFaq = (index, field, value) => {
         setSettings((current) => {
-            const faqs = [...(current.faqs || [])];
+            const currentFaqs = contentLanguage === 'en'
+                ? current.localizations?.en?.faqs
+                : current.faqs;
+            const faqs = [...(currentFaqs || [])];
             faqs[index] = {
                 ...(faqs[index] || {}),
                 [field]: value,
             };
+            if (contentLanguage === 'en') {
+                return {
+                    ...current,
+                    localizations: {
+                        ...(current.localizations || {}),
+                        en: { ...(current.localizations?.en || {}), faqs },
+                    },
+                };
+            }
             return { ...current, faqs };
         });
     };
 
     const addFaq = () => {
-        const nextIndex = (settings.faqs || []).length;
+        const nextIndex = (contentLanguage === 'en' ? settings.localizations?.en?.faqs : settings.faqs)?.length || 0;
         setSettings((current) => ({
             ...current,
-            faqs: [...(current.faqs || []), { q: '', a: '', active: true }],
+            ...(contentLanguage === 'en' ? {
+                localizations: {
+                    ...(current.localizations || {}),
+                    en: {
+                        ...(current.localizations?.en || {}),
+                        faqs: [...(current.localizations?.en?.faqs || []), { q: '', a: '', active: true }],
+                    },
+                },
+            } : {
+                faqs: [...(current.faqs || []), { q: '', a: '', active: true }],
+            }),
         }));
         setFaqModal({ mode: 'edit', index: nextIndex });
     };
 
     const removeFaq = (index) => {
-        setSettings((current) => ({
-            ...current,
-            faqs: (current.faqs || []).filter((_, itemIndex) => itemIndex !== index),
-        }));
+        setSettings((current) => {
+            if (contentLanguage === 'en') {
+                return {
+                    ...current,
+                    localizations: {
+                        ...(current.localizations || {}),
+                        en: {
+                            ...(current.localizations?.en || {}),
+                            faqs: (current.localizations?.en?.faqs || []).filter((_, itemIndex) => itemIndex !== index),
+                        },
+                    },
+                };
+            }
+            return { ...current, faqs: (current.faqs || []).filter((_, itemIndex) => itemIndex !== index) };
+        });
     };
 
     const saveSettings = async () => {
@@ -266,8 +332,22 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         );
     }
 
+    const isEnglish = contentLanguage === 'en';
+    const editingSettings = isEnglish ? settings.localizations?.en || {} : settings;
+    const activeFaqs = editingSettings.faqs || [];
+
     return (
         <section className="legacy-google-card tools-section-card tool-content-settings">
+            <div className="admin-content-language-toolbar tool-content-language-toolbar" aria-label="لغة محتوى SEO">
+                <div>
+                    <strong>لغة بيانات SEO</strong>
+                    <small>حرّر النص العربي أو الإنجليزي. الرابط والصورة مشتركان بين اللغتين.</small>
+                </div>
+                <div className="admin-language-segmented" role="group" aria-label="اختيار لغة بيانات SEO">
+                    <button type="button" className={contentLanguage === 'ar' ? 'active' : ''} onClick={() => setContentLanguage('ar')}>العربية</button>
+                    <button type="button" className={contentLanguage === 'en' ? 'active' : ''} onClick={() => setContentLanguage('en')}>English</button>
+                </div>
+            </div>
             <div className="tool-seo-admin">
                 <div className="tools-section-head compact-head">
                     <div className="tools-section-title">
@@ -277,24 +357,28 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 </div>
 
                 <SeoFields
-                    seo={settings.seo}
+                    seo={editingSettings.seo}
                     onChange={updateSeo}
-                    previewLabel={settings.seo?.h1 || defaults.seo?.h1}
+                    previewLabel={editingSettings.seo?.h1 || defaults.seo?.h1}
                     publicPath={settings.seo?.canonical || defaults.seo?.canonical}
-                    enableShareImage
+                    enableShareImage={!isEnglish}
+                    showTechnicalFields={!isEnglish}
+                    language={contentLanguage}
                     isImageUploading={uploadingSeoImage === 'main'}
                     onImageUpload={(event) => handleSeoImageUpload('main', event)}
                 />
 
                 {Object.entries(defaults.subtoolSeo || {}).map(([subtoolKey]) => (
                     <div className="tool-subtool-seo" key={subtoolKey}>
-                        <h3>{settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}</h3>
+                        <h3>{editingSettings.subtools?.[subtoolKey] || settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}</h3>
                         <SeoFields
-                            seo={settings.subtoolSeo?.[subtoolKey]}
+                            seo={editingSettings.subtoolSeo?.[subtoolKey]}
                             onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
-                            previewLabel={settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
+                            previewLabel={editingSettings.subtools?.[subtoolKey] || settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}
                             publicPath={TOOL_SECTION_ROUTES[toolKey]?.[subtoolKey]?.publicPath}
-                            enableShareImage
+                            enableShareImage={!isEnglish}
+                            showTechnicalFields={!isEnglish}
+                            language={contentLanguage}
                             isImageUploading={uploadingSeoImage === subtoolKey}
                             onImageUpload={(event) => handleSeoImageUpload(subtoolKey, event)}
                         />
@@ -405,18 +489,18 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 </div>
 
                 <div className="tools-list tool-faq-list">
-                    {(settings.faqs || []).length > 0 && (
+                    {activeFaqs.length > 0 && (
                         <div className="tools-table-head">
                             <span>السؤال</span>
                             <span>الإجابة</span>
                             <span>الإجراءات</span>
                         </div>
                     )}
-                    {(settings.faqs || []).length === 0 && (
+                    {activeFaqs.length === 0 && (
                         <div className="tools-empty">لا توجد أسئلة شائعة بعد، لذلك لن يظهر القسم في صفحة الأداة.</div>
                     )}
 
-                    {(settings.faqs || []).map((faq, index) => (
+                    {activeFaqs.map((faq, index) => (
                         <div className="tools-item-card tool-faq-row" key={`${faq.q}-${index}`}>
                             <strong className="tool-faq-question">{faq.q || 'سؤال جديد غير مكتمل'}</strong>
                             <p className="tool-faq-answer">{faq.a || 'لم تُكتب الإجابة بعد.'}</p>
@@ -455,13 +539,13 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                 </div>
             </div>
 
-            {faqModal && settings.faqs?.[faqModal.index] && (
+            {faqModal && activeFaqs[faqModal.index] && (
                 <div className="legacy-modal-backdrop" role="dialog" aria-modal="true">
                     <div className="legacy-modal-card tool-faq-modal">
                         <div className="legacy-modal-head">
                             <div>
                                 <h3>{faqModal.mode === 'edit' ? 'تعديل السؤال' : 'معاينة السؤال والإجابة'}</h3>
-                                <p>{settings.faqs[faqModal.index].active === false ? 'السؤال متوقف حاليًا' : 'السؤال مفعّل وسيظهر بعد الحفظ'}</p>
+                                <p>{activeFaqs[faqModal.index].active === false ? 'السؤال متوقف حاليًا' : 'السؤال مفعّل وسيظهر بعد الحفظ'}</p>
                             </div>
                             <button type="button" onClick={() => setFaqModal(null)} aria-label="إغلاق">
                                 <i className="fa-solid fa-xmark"></i>
@@ -472,17 +556,17 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             <div className="legacy-form-grid tool-faq-modal-fields">
                                 <label className="legacy-field full-width">
                                     <span>السؤال</span>
-                                    <input value={settings.faqs[faqModal.index].q || ''} onChange={(event) => updateFaq(faqModal.index, 'q', event.target.value)} />
+                                    <input value={activeFaqs[faqModal.index].q || ''} onChange={(event) => updateFaq(faqModal.index, 'q', event.target.value)} />
                                 </label>
                                 <label className="legacy-field full-width">
                                     <span>الإجابة</span>
-                                    <textarea rows={7} value={settings.faqs[faqModal.index].a || ''} onChange={(event) => updateFaq(faqModal.index, 'a', event.target.value)} />
+                                    <textarea rows={7} value={activeFaqs[faqModal.index].a || ''} onChange={(event) => updateFaq(faqModal.index, 'a', event.target.value)} />
                                 </label>
                             </div>
                         ) : (
                             <div className="tool-faq-preview">
-                                <strong>{settings.faqs[faqModal.index].q || 'سؤال غير مكتمل'}</strong>
-                                <p>{settings.faqs[faqModal.index].a || 'لم تُكتب الإجابة بعد.'}</p>
+                                <strong>{activeFaqs[faqModal.index].q || 'سؤال غير مكتمل'}</strong>
+                                <p>{activeFaqs[faqModal.index].a || 'لم تُكتب الإجابة بعد.'}</p>
                             </div>
                         )}
 
@@ -518,40 +602,47 @@ function SeoFields({
     enableShareImage = false,
     isImageUploading = false,
     onImageUpload,
+    showTechnicalFields = true,
+    language = 'ar',
 }) {
+    const labels = language === 'en' ? {
+        searchTitle: 'Search result title', description: 'Search result description', h1: 'Main H1 heading', primary: 'Primary keyword', supporting: 'Supporting keywords', supportingPlaceholder: 'Separate keywords with commas', preview: 'Search result preview', open: 'Open tool link', emptyTitle: 'Search result title', emptyDescription: 'The page description will appear here as users may see it in search results.',
+    } : {
+        searchTitle: 'عنوان نتائج البحث', description: 'وصف نتائج البحث', h1: 'عنوان H1 الرئيسي', primary: 'العبارة الرئيسية', supporting: 'العبارات المساندة', supportingPlaceholder: 'افصل بينها بفاصلة', preview: 'معاينة نتيجة البحث', open: 'فتح رابط الأداة', emptyTitle: 'عنوان نتيجة البحث', emptyDescription: 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.',
+    };
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
     const canonical = seo.canonical || publicPath || '/';
 
     return (
-        <div className="tool-seo-fields-layout">
+        <div className="tool-seo-fields-layout" dir={language === 'en' ? 'ltr' : 'rtl'}>
             <div className="legacy-form-grid tool-seo-fields">
                 <label className="legacy-field full-width">
-                    <span>عنوان نتائج البحث</span>
+                    <span>{labels.searchTitle}</span>
                     <input value={seo.searchTitle || ''} onChange={(event) => onChange('searchTitle', event.target.value)} maxLength={65} />
                     <small>{String(seo.searchTitle || '').length}/65</small>
                 </label>
                 <label className="legacy-field full-width">
-                    <span>وصف نتائج البحث</span>
+                    <span>{labels.description}</span>
                     <textarea rows={3} value={seo.metaDescription || ''} onChange={(event) => onChange('metaDescription', event.target.value)} maxLength={170} />
                     <small>{String(seo.metaDescription || '').length}/170</small>
                 </label>
                 <label className="legacy-field">
-                    <span>عنوان H1 الرئيسي</span>
+                    <span>{labels.h1}</span>
                     <input value={seo.h1 || ''} onChange={(event) => onChange('h1', event.target.value)} />
                 </label>
                 <label className="legacy-field">
-                    <span>العبارة الرئيسية</span>
+                    <span>{labels.primary}</span>
                     <input value={seo.primaryKeyword || ''} onChange={(event) => onChange('primaryKeyword', event.target.value)} />
                 </label>
                 <label className="legacy-field full-width">
-                    <span>العبارات المساندة</span>
-                    <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder="افصل بينها بفاصلة" />
+                    <span>{labels.supporting}</span>
+                    <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder={labels.supportingPlaceholder} />
                 </label>
-                <label className="legacy-field full-width">
+                {showTechnicalFields && <label className="legacy-field full-width">
                     <span>الرابط الأساسي Canonical</span>
                     <input dir="ltr" value={canonical} onChange={(event) => onChange('canonical', event.target.value)} placeholder={publicPath || '/clock'} />
-                </label>
+                </label>}
                 {enableShareImage && (
                     <div className="legacy-field full-width tool-seo-share-image-field">
                         <span>صورة ظهور الرابط عند المشاركة</span>
@@ -584,21 +675,21 @@ function SeoFields({
             </div>
 
             <div className="tool-seo-preview-stack">
-                <aside className="tool-search-preview" aria-label="معاينة نتيجة البحث">
+                <aside className="tool-search-preview" aria-label={labels.preview}>
                     <div className="tool-search-preview-heading">
                         <i className="fa-brands fa-google"></i>
-                        <span>معاينة نتيجة البحث</span>
+                        <span>{labels.preview}</span>
                     </div>
                     <div className="tool-search-preview-url">
                         <small>{getSearchPreviewUrl(canonical)}</small>
                         {publicPath && (
-                            <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label="فتح رابط الأداة">
+                            <Link href={publicPath} target="_blank" rel="noopener noreferrer" aria-label={labels.open}>
                                 <i className="fa-solid fa-arrow-up-right-from-square"></i>
                             </Link>
                         )}
                     </div>
-                    <strong>{searchTitle || 'عنوان نتيجة البحث'}</strong>
-                    <p>{description || 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.'}</p>
+                    <strong>{searchTitle || labels.emptyTitle}</strong>
+                    <p>{description || labels.emptyDescription}</p>
                     <span>H1: {seo.h1 || previewLabel}</span>
                 </aside>
 

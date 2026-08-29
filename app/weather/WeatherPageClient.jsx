@@ -32,6 +32,18 @@ const weatherLabels = {
     95: 'عواصف رعدية',
 };
 
+const weatherLabelsEn = {
+    0: 'Clear sky', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Cloudy', 45: 'Fog', 48: 'Freezing fog',
+    51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Heavy drizzle', 61: 'Light rain', 63: 'Moderate rain',
+    65: 'Heavy rain', 71: 'Light snow', 73: 'Moderate snow', 75: 'Heavy snow', 80: 'Light rain showers',
+    81: 'Moderate rain showers', 82: 'Heavy rain showers', 95: 'Thunderstorms',
+};
+
+const weatherUi = {
+    ar: { currentLocation: 'موقعك الحالي', byLocation: 'حسب موقعك', fetchError: 'تعذر جلب الطقس لهذه المدينة. جرب اسمًا آخر.', locationWeatherError: 'تعذر جلب الطقس من موقعك الحالي. جرّب البحث باسم المدينة.', locationError: 'تعذر تحديد موقعك الحالي. تأكد من السماح للموقع من إعدادات المتصفح.', placeholder: 'اكتب اسم المدينة، مثال: الرياض', search: 'جاري البحث...', locationButton: 'عرض طقس موقعي الحالي', feels: 'الإحساس', humidity: 'الرطوبة', wind: 'الرياح', rain: 'توقع المطر', shareWeather: 'مشاركة معلومات الطقس', shareAdvice: 'مشاركة نصيحة اليوم', shareForecast: 'مشاركة توقعات الطقس', ad: 'مساحة إعلانية', rainShort: 'مطر', speed: 'كم/س' },
+    en: { currentLocation: 'Your current location', byLocation: 'Based on your location', fetchError: 'Weather could not be loaded for this city. Try another name.', locationWeatherError: 'Weather could not be loaded for your current location. Try searching by city.', locationError: 'Your location could not be determined. Allow location access in your browser settings.', placeholder: 'Enter a city, for example: Riyadh', search: 'Searching...', locationButton: 'Show weather for my current location', feels: 'Feels like', humidity: 'Humidity', wind: 'Wind', rain: 'Rain chance', shareWeather: 'Share weather', shareAdvice: 'Share today’s advice', shareForecast: 'Share forecast', ad: 'Ad space', rainShort: 'rain', speed: 'km/h' },
+};
+
 function WeatherCurrentPlaceholder() {
     return (
         <article className="weather-current-card weather-loading-reserve" aria-hidden="true">
@@ -91,19 +103,19 @@ function WeatherForecastPlaceholder() {
     );
 }
 
-function weatherText(code) {
-    return weatherLabels[code] || 'حالة جوية متغيرة';
+function weatherText(code, lang = 'ar') {
+    return (lang === 'en' ? weatherLabelsEn : weatherLabels)[code] || (lang === 'en' ? 'Variable weather' : 'حالة جوية متغيرة');
 }
 
-function formatForecastDate(day) {
-    return new Intl.DateTimeFormat('ar-SA', {
+function formatForecastDate(day, lang = 'ar') {
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'ar-SA', {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
     }).format(new Date(`${day}T12:00:00`));
 }
 
-function getUpcomingForecastDays(daily) {
+function getUpcomingForecastDays(daily, lang = 'ar') {
     if (!Array.isArray(daily?.time)) return [];
 
     return daily.time.slice(1, 6).map((day, index) => {
@@ -111,16 +123,23 @@ function getUpcomingForecastDays(daily) {
 
         return {
             day,
-            dateLabel: formatForecastDate(day),
+            dateLabel: formatForecastDate(day, lang),
             maxTemperature: Math.round(daily.temperature_2m_max?.[sourceIndex] || 0),
             minTemperature: Math.round(daily.temperature_2m_min?.[sourceIndex] || 0),
-            condition: weatherText(daily.weather_code?.[sourceIndex]),
+            condition: weatherText(daily.weather_code?.[sourceIndex], lang),
             rainChance: daily.precipitation_probability_max?.[sourceIndex] ?? 0,
         };
     });
 }
 
-function getOutdoorAdvice(current, daily) {
+function getOutdoorAdvice(current, daily, lang = 'ar') {
+    if (lang === 'en') {
+        if (!current) return 'Search for a city to see outdoor advice.';
+        if (daily?.uv_index_max?.[0] >= 8) return 'UV is high. Avoid prolonged midday sun exposure.';
+        if (current.precipitation > 0 || daily?.precipitation_probability_max?.[0] >= 60) return 'Rain is likely. Take an umbrella or plan an indoor activity.';
+        if (current.apparent_temperature >= 35) return 'It feels hot. Drink more water and choose a cooler time.';
+        return 'Conditions are generally suitable for going out. Check wind and temperature before leaving.';
+    }
     if (!current) return 'ابحث عن مدينة لعرض النصيحة.';
     if (daily?.uv_index_max?.[0] >= 8) return 'مؤشر UV مرتفع، الأفضل تجنب التعرض الطويل للشمس وقت الظهيرة.';
     if (current.precipitation > 0 || daily?.precipitation_probability_max?.[0] >= 60) return 'احتمال أمطار واضح، خذ مظلة أو خطط لنشاط داخلي.';
@@ -149,7 +168,9 @@ export default function WeatherPage({ children, hideHero = false, initialSection
         currentLocation,
         locationStatus,
         requestCurrentLocation,
+        lang,
     } = useSiteContext();
+    const labels = weatherUi[lang] || weatherUi.ar;
     const [query, setQuery] = useState('Riyadh');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -165,7 +186,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
         setError('');
 
         try {
-            const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=1&language=ar&format=json`;
+            const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=1&language=${lang === 'en' ? 'en' : 'ar'}&format=json`;
             const geoResponse = await fetch(geoUrl);
             const geoData = await geoResponse.json();
             const place = geoData.results?.[0];
@@ -176,7 +197,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
             setWeather({ place, forecast: forecastData });
             firebaseApiRef.current.trackToolUsage('weatherTools');
         } catch {
-            setError('تعذر جلب الطقس لهذه المدينة. جرب اسمًا آخر.');
+            setError(labels.fetchError);
         } finally {
             setIsLoading(false);
         }
@@ -191,15 +212,15 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
             const forecastData = await fetchForecast(location.latitude, location.longitude);
             const place = {
-                name: location.label || 'موقعك الحالي',
-                country: 'حسب موقعك',
+                name: location.label || labels.currentLocation,
+                country: labels.byLocation,
             };
 
             setQuery(place.name);
             setWeather({ place, forecast: forecastData });
             firebaseApiRef.current.trackToolUsage('weatherTools');
         } catch {
-            setError('تعذر جلب الطقس من موقعك الحالي. جرّب البحث باسم المدينة.');
+            setError(labels.locationWeatherError);
         } finally {
             setIsLoading(false);
         }
@@ -210,7 +231,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
         const location = await requestCurrentLocation({ force: true }) || currentLocation;
         if (!location) {
-            setError('تعذر تحديد موقعك الحالي. تأكد من السماح للموقع من إعدادات المتصفح.');
+            setError(labels.locationError);
             return;
         }
 
@@ -253,14 +274,14 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
     const current = weather?.forecast?.current;
     const daily = weather?.forecast?.daily;
-    const weatherSettings = getToolSettings(configData, 'weather');
-    const weatherFaqItems = getToolFaqs(configData, 'weather');
+    const weatherSettings = getToolSettings(configData, 'weather', lang);
+    const weatherFaqItems = getToolFaqs(configData, 'weather', lang);
     const shouldReserveWeatherResults = isLoading && !current && !error;
     const cityLabel = weather?.place?.name || query;
-    const adviceText = getOutdoorAdvice(current, daily);
-    const upcomingForecastDays = getUpcomingForecastDays(daily);
+    const adviceText = getOutdoorAdvice(current, daily, lang);
+    const upcomingForecastDays = getUpcomingForecastDays(daily, lang);
     const forecastText = upcomingForecastDays.map((forecastDay) => (
-        `${forecastDay.dateLabel}: ${forecastDay.maxTemperature}° / ${forecastDay.minTemperature}° - ${forecastDay.condition} - ${forecastDay.rainChance}% مطر`
+        `${forecastDay.dateLabel}: ${forecastDay.maxTemperature}° / ${forecastDay.minTemperature}° - ${forecastDay.condition} - ${forecastDay.rainChance}% ${labels.rainShort}`
     )).join('\n');
 
     const shareWeatherResult = async (templateKey, variables) => {
@@ -295,28 +316,28 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 </div>
             </div>}
 
-            <PublicAdSlot configData={configData} slotName="weatherTop" label="إعلان أعلى الطقس" />
+            <PublicAdSlot configData={configData} slotName="weatherTop" label={labels.ad} />
 
             <form className="weather-search" id="weather-search" onSubmit={(event) => { event.preventDefault(); loadWeather(); }}>
                 <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="اكتب اسم المدينة، مثال: الرياض"
-                    aria-label="اسم المدينة لعرض الطقس"
-                    title="اسم المدينة لعرض الطقس"
+                    placeholder={labels.placeholder}
+                    aria-label={labels.placeholder}
+                    title={labels.placeholder}
                 />
                 <div className="weather-search-actions">
                     <button type="submit" className="weather-submit-btn" disabled={isLoading}>
                         <i className={isLoading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass'}></i>
-                        {isLoading ? 'جاري البحث...' : weatherSettings.subtools?.weatherSearch}
+                        {isLoading ? labels.search : weatherSettings.subtools?.weatherSearch}
                     </button>
                     <button
                         type="button"
                         className="weather-location-btn"
                         onClick={handleUseCurrentLocation}
                         disabled={isLoading || locationStatus === 'loading'}
-                        aria-label="عرض طقس موقعي الحالي"
-                        title="عرض طقس موقعي الحالي"
+                        aria-label={labels.locationButton}
+                        title={labels.locationButton}
                     >
                         <i className={locationStatus === 'loading' ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-location-crosshairs'}></i>
                     </button>
@@ -325,7 +346,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
             {error && <p className="inline-error">{error}</p>}
 
-            <PublicAdSlot configData={configData} slotName="weatherMiddle" label="إعلان وسط الطقس" />
+            <PublicAdSlot configData={configData} slotName="weatherMiddle" label={labels.ad} />
 
             {current ? (
                 <>
@@ -334,29 +355,29 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                             <div>
                                 <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
                                 <h3>{Math.round(current.temperature_2m)}°</h3>
-                                <p>{weatherText(current.weather_code)} - الإحساس {Math.round(current.apparent_temperature)}°</p>
+                                <p>{weatherText(current.weather_code, lang)} - {labels.feels} {Math.round(current.apparent_temperature)}°</p>
                             </div>
                             <i className="fa-solid fa-temperature-half"></i>
                         </div>
 
                         <div className="weather-metrics weather-metrics-inline">
-                            <div><i className="fa-solid fa-droplet"></i><span>الرطوبة</span><strong>{current.relative_humidity_2m}%</strong></div>
-                            <div><i className="fa-solid fa-wind"></i><span>الرياح</span><strong>{Math.round(current.wind_speed_10m)} كم/س</strong></div>
-                            <div><i className="fa-solid fa-umbrella"></i><span>توقع المطر</span><strong>{daily?.precipitation_probability_max?.[0] ?? 0}%</strong></div>
+                            <div><i className="fa-solid fa-droplet"></i><span>{labels.humidity}</span><strong>{current.relative_humidity_2m}%</strong></div>
+                            <div><i className="fa-solid fa-wind"></i><span>{labels.wind}</span><strong>{Math.round(current.wind_speed_10m)} {labels.speed}</strong></div>
+                            <div><i className="fa-solid fa-umbrella"></i><span>{labels.rain}</span><strong>{daily?.precipitation_probability_max?.[0] ?? 0}%</strong></div>
                             <div><i className="fa-solid fa-sun"></i><span>UV</span><strong>{Math.round(daily?.uv_index_max?.[0] || 0)}</strong></div>
                         </div>
                         {isShareTemplateEnabled(weatherSettings, 'currentWeatherResult') && (
                             <button className="share-btn" type="button" onClick={() => shareWeatherResult('currentWeatherResult', {
                                 city: cityLabel,
                                 temperature: `${Math.round(current.temperature_2m)}°`,
-                                condition: weatherText(current.weather_code),
+                                condition: weatherText(current.weather_code, lang),
                                 feelsLike: `${Math.round(current.apparent_temperature)}°`,
                                 humidity: `${current.relative_humidity_2m}%`,
-                                wind: `${Math.round(current.wind_speed_10m)} كم/س`,
+                                wind: `${Math.round(current.wind_speed_10m)} ${labels.speed}`,
                                 rainChance: `${daily?.precipitation_probability_max?.[0] ?? 0}%`,
                                 uv: String(Math.round(daily?.uv_index_max?.[0] || 0)),
                             })}>
-                                <i className="fa-solid fa-share-nodes"></i> مشاركة معلومات الطقس
+                                <i className="fa-solid fa-share-nodes"></i> {labels.shareWeather}
                             </button>
                         )}
                     </article>
@@ -372,7 +393,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                                 city: cityLabel,
                                 advice: adviceText,
                             })}>
-                                <i className="fa-solid fa-share-nodes"></i> مشاركة نصيحة اليوم
+                                <i className="fa-solid fa-share-nodes"></i> {labels.shareAdvice}
                             </button>
                         )}
                     </article>
@@ -384,7 +405,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 </>
             ) : null}
 
-            <PublicAdSlot configData={configData} slotName="weatherBottom" label="إعلان أسفل الطقس" />
+            <PublicAdSlot configData={configData} slotName="weatherBottom" label={labels.ad} />
 
             {upcomingForecastDays.length ? (
                 <article className="tool-widget" id="weather-forecast">
@@ -398,7 +419,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                                 <span>{forecastDay.dateLabel}</span>
                                 <strong>{forecastDay.maxTemperature}° / {forecastDay.minTemperature}°</strong>
                                 <small>{forecastDay.condition}</small>
-                                <em>{forecastDay.rainChance}% مطر</em>
+                                <em>{forecastDay.rainChance}% {labels.rainShort}</em>
                             </div>
                         ))}
                     </div>
@@ -407,7 +428,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                             city: cityLabel,
                             forecast: forecastText,
                         })}>
-                            <i className="fa-solid fa-share-nodes"></i> مشاركة توقعات الطقس
+                            <i className="fa-solid fa-share-nodes"></i> {labels.shareForecast}
                         </button>
                     )}
                 </article>
@@ -415,7 +436,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 <WeatherForecastPlaceholder />
             ) : null}
             {children}
-            <ToolFaqSection items={weatherFaqItems} />
+            <ToolFaqSection items={weatherFaqItems} title={lang === 'en' ? 'Frequently Asked Questions' : 'الأسئلة الشائعة'} />
 
         </section>
     );

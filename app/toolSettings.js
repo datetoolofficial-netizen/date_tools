@@ -277,6 +277,48 @@ export const DEFAULT_TOOL_SETTINGS = {
     },
 };
 
+export const DEFAULT_TOOL_LOCALIZATIONS = {
+    date: {
+        en: {
+            seo: {
+                searchTitle: 'Age Calculator, Date Converter and Date Difference',
+                metaDescription: 'Calculate age in Gregorian or Hijri, convert dates between both calendars, and find the exact duration between two dates.',
+                h1: 'Age Calculator, Date Converter and Date Difference',
+                primaryKeyword: 'age calculator and date converter',
+                supportingKeywords: 'Hijri age calculator, Gregorian age calculator, date conversion, date difference calculator',
+            },
+            subtoolSeo: {
+                ageCalc: { searchTitle: 'Gregorian and Hijri Age Calculator', metaDescription: 'Calculate your exact age in years, months and days from a Gregorian or Hijri birth date.', h1: 'Gregorian and Hijri Age Calculator', primaryKeyword: 'age calculator', supportingKeywords: 'calculate age, Hijri age, Gregorian age' },
+                dateConverter: { searchTitle: 'Hijri to Gregorian Date Converter and Vice Versa', metaDescription: 'Convert a date from Hijri to Gregorian or Gregorian to Hijri quickly with a clear, accurate result.', h1: 'Hijri and Gregorian Date Converter', primaryKeyword: 'date converter', supportingKeywords: 'Hijri to Gregorian, Gregorian to Hijri, calendar converter' },
+                durationCalc: { searchTitle: 'Calculate the Duration Between Two Dates', metaDescription: 'Calculate the difference between two dates in years, months and days for past or future dates.', h1: 'Duration Between Two Dates', primaryKeyword: 'date difference calculator', supportingKeywords: 'days between dates, duration calculator, Hijri and Gregorian dates' },
+            },
+            subtools: { ageCalc: 'Calculate Your Age', dateConverter: 'Convert Dates', durationCalc: 'Duration Between Dates' },
+        },
+    },
+    clock: {
+        en: {
+            seo: { searchTitle: 'Time Converter and Time Difference Between Cities', metaDescription: 'Convert 24-hour time to 12-hour time, check the current time, and calculate the time difference between two cities.', h1: 'Time Converter and Time Difference', primaryKeyword: 'time converter', supportingKeywords: 'time difference, current time, 24 hour to 12 hour' },
+            subtoolSeo: {
+                timeConverter: { searchTitle: 'Convert 24-Hour Time to 12-Hour Time', metaDescription: 'Convert any time from the 24-hour clock to the 12-hour clock with a clear AM or PM result.', h1: '24-Hour to 12-Hour Time Converter', primaryKeyword: '24 hour to 12 hour converter', supportingKeywords: 'time converter, 12 hour clock, 24 hour clock' },
+                timezoneDiff: { searchTitle: 'Time Difference Between Two Cities', metaDescription: 'Find the current time in two cities and calculate the time difference between them.', h1: 'Time Difference Between Two Cities', primaryKeyword: 'time difference between cities', supportingKeywords: 'world clock, current city time, timezone difference' },
+            },
+            subtools: { timeConverter: 'Convert 24-Hour Time', timezoneDiff: 'Time Difference Between Cities' },
+        },
+    },
+    weather: {
+        en: {
+            seo: { searchTitle: 'Today’s Weather and 5-Day Forecast', metaDescription: 'Check current temperature, feels-like temperature, humidity, wind, rain chance, UV index and the coming forecast.', h1: 'Today’s Weather and Upcoming Forecast', primaryKeyword: 'today weather', supportingKeywords: 'weather forecast, rain chance, temperature, UV index' },
+            subtoolSeo: {
+                weatherSearch: { searchTitle: 'Search Weather by City', metaDescription: 'Search by city to view current weather, temperature and essential conditions.', h1: 'Weather by City', primaryKeyword: 'city weather', supportingKeywords: 'weather search, current weather, city temperature' },
+                currentWeather: { searchTitle: 'Current Weather and Feels-Like Temperature', metaDescription: 'See current and feels-like temperature, humidity, wind, rain probability and UV index.', h1: 'Current Weather', primaryKeyword: 'current weather', supportingKeywords: 'feels like temperature, humidity, wind speed, rain chance' },
+                outdoorAdvice: { searchTitle: 'Outdoor Advice Based on Today’s Weather', metaDescription: 'Get concise outdoor advice based on temperature, rain probability and UV index.', h1: 'Today’s Outdoor Advice', primaryKeyword: 'weather advice today', supportingKeywords: 'outdoor weather, UV index, rain chance' },
+                forecast: { searchTitle: '5-Day Weather Forecast', metaDescription: 'View expected temperature, sky conditions and rain probability for the next five days.', h1: 'Weather Forecast for the Coming Days', primaryKeyword: '5 day weather forecast', supportingKeywords: 'upcoming weather, rain forecast, expected temperature' },
+            },
+            subtools: { weatherSearch: 'Search Weather', currentWeather: 'Current Weather', outdoorAdvice: 'Outdoor Advice', forecast: '5-Day Forecast' },
+        },
+    },
+};
+
 const LEGACY_SHARE_TEMPLATES = {
     date: {
         eventsResult: '{title}\n\n{events}\n\n{url}',
@@ -360,6 +402,35 @@ function normalizeSubtoolSeo(toolKey, subtoolSeo = {}) {
     );
 }
 
+function normalizeLocalizedSeoRecord(value = {}, defaults = {}) {
+    return {
+        searchTitle: String(value?.searchTitle || defaults.searchTitle || '').trim(),
+        metaDescription: String(value?.metaDescription || defaults.metaDescription || '').trim(),
+        h1: String(value?.h1 || defaults.h1 || '').trim(),
+        primaryKeyword: String(value?.primaryKeyword || defaults.primaryKeyword || '').trim(),
+        supportingKeywords: String(value?.supportingKeywords || defaults.supportingKeywords || '').trim(),
+    };
+}
+
+function normalizeToolLocalizations(toolKey, value = {}) {
+    const defaults = DEFAULT_TOOL_LOCALIZATIONS[toolKey]?.en || {};
+    const english = value?.en || {};
+    return {
+        en: {
+            seo: normalizeLocalizedSeoRecord(english.seo, defaults.seo),
+            subtoolSeo: Object.fromEntries(Object.entries(defaults.subtoolSeo || {}).map(([key, fallback]) => [
+                key,
+                normalizeLocalizedSeoRecord(english.subtoolSeo?.[key], fallback),
+            ])),
+            subtools: Object.fromEntries(Object.entries(defaults.subtools || {}).map(([key, fallback]) => [
+                key,
+                String(english.subtools?.[key] || fallback).trim() || fallback,
+            ])),
+            faqs: normalizeFaqItems(english.faqs),
+        },
+    };
+}
+
 function normalizeShareTemplates(toolKey, shareTemplates = {}) {
     const defaults = DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {};
     const legacyDefaults = LEGACY_SHARE_TEMPLATES[toolKey] || {};
@@ -408,6 +479,7 @@ export function normalizeToolSettings(settings = {}) {
                     shareTemplates: normalizeShareTemplates(toolKey, value.shareTemplates),
                     shareEnabled: normalizeShareEnabled(toolKey, value.shareEnabled),
                     faqs: normalizeFaqItems(value.faqs),
+                    localizations: normalizeToolLocalizations(toolKey, value.localizations),
                 },
             ];
         })
@@ -427,18 +499,33 @@ export function serializeToolSettings(settings = {}) {
                 shareTemplates: value.shareTemplates,
                 shareEnabled: value.shareEnabled,
                 faqs: value.faqs,
+                localizations: value.localizations,
             },
         ])
     );
 }
 
-export function getToolSettings(configData, toolKey) {
+export function getToolSettings(configData, toolKey, lang = 'ar') {
     const normalized = normalizeToolSettings(configData?.toolSettings || {});
-    return normalized[toolKey] || DEFAULT_TOOL_SETTINGS[toolKey];
+    const settings = normalized[toolKey] || DEFAULT_TOOL_SETTINGS[toolKey];
+    if (lang !== 'en') return settings;
+
+    const english = settings.localizations?.en || DEFAULT_TOOL_LOCALIZATIONS[toolKey]?.en;
+    if (!english) return settings;
+    return {
+        ...settings,
+        seo: { ...settings.seo, ...english.seo },
+        subtoolSeo: Object.fromEntries(Object.entries(settings.subtoolSeo || {}).map(([key, value]) => [
+            key,
+            { ...value, ...(english.subtoolSeo?.[key] || {}) },
+        ])),
+        subtools: { ...settings.subtools, ...english.subtools },
+        faqs: english.faqs || [],
+    };
 }
 
-export function getToolFaqs(configData, toolKey) {
-    return (getToolSettings(configData, toolKey)?.faqs || []).filter((item) => item.active !== false);
+export function getToolFaqs(configData, toolKey, lang = 'ar') {
+    return (getToolSettings(configData, toolKey, lang)?.faqs || []).filter((item) => item.active !== false);
 }
 
 export function renderShareTemplate(settings, templateKey, variables = {}) {

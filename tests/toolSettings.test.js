@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeToolSettings, serializeToolSettings } from '../app/toolSettings';
+import { getToolSettings, normalizeToolSettings, serializeToolSettings } from '../app/toolSettings';
 
 describe('tool SEO settings', () => {
     it('preserves page and subtool share images across date, clock, and weather settings', () => {
@@ -46,5 +46,39 @@ describe('tool SEO settings', () => {
         expect(normalized.weather.subtoolSeo.weatherSearch.shareImageUrl).toBe(weatherImageUrl);
         expect(serialized.weather.subtoolSeo.weatherSearch.shareImageUrl).toBe(weatherImageUrl);
         expect(normalized.date.subtoolSeo.ageCalc.shareImageUrl).toBe('');
+    });
+
+    it('keeps Arabic and English SEO separate while sharing canonical and images', () => {
+        const config = {
+            toolSettings: {
+                date: {
+                    seo: {
+                        searchTitle: 'عنوان عربي',
+                        canonical: '/',
+                        shareImageUrl: '/api/media/seo-share/card.webp',
+                    },
+                    localizations: {
+                        en: {
+                            seo: { searchTitle: 'English title', h1: 'English heading' },
+                            faqs: [{ q: 'English question?', a: 'English answer.' }],
+                        },
+                    },
+                    faqs: [{ q: 'سؤال عربي؟', a: 'إجابة عربية.' }],
+                },
+            },
+        };
+
+        const arabic = getToolSettings(config, 'date', 'ar');
+        const english = getToolSettings(config, 'date', 'en');
+
+        expect(arabic.seo.searchTitle).toBe('عنوان عربي');
+        expect(english.seo.searchTitle).toBe('English title');
+        expect(english.seo.h1).toBe('English heading');
+        expect(english.seo.canonical).toBe('/');
+        expect(english.seo.shareImageUrl).toBe('/api/media/seo-share/card.webp');
+        expect(arabic.faqs[0].q).toBe('سؤال عربي؟');
+        expect(english.faqs[0].q).toBe('English question?');
+        expect(serializeToolSettings(config.toolSettings).date.localizations.en.seo.searchTitle).toBe('English title');
+        expect(serializeToolSettings(config.toolSettings).date.localizations.en.faqs[0].a).toBe('English answer.');
     });
 });

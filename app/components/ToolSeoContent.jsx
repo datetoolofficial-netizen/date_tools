@@ -1,3 +1,7 @@
+'use client';
+
+import { useSiteContext } from '../SiteContext';
+
 const toolContent = {
     date: {
         sections: [
@@ -89,6 +93,21 @@ const toolContent = {
             },
         ],
     },
+};
+
+const toolContentEn = {
+    date: { sections: [
+        { title: 'Date Tools Guide', paragraphs: ['Use this page to calculate age, convert between Gregorian and Hijri dates, and find the duration between two dates without creating an account.'] },
+        { title: 'Accuracy and Privacy', paragraphs: ['Shared links do not include birth dates or personal inputs. Hijri conversion may differ by one day from an official calendar, so verify sensitive dates with the relevant authority.'] },
+    ] },
+    clock: { sections: [
+        { title: 'Time Tools Guide', paragraphs: ['Convert 24-hour time to 12-hour time, view the current time, and compare time zones between two cities.'] },
+        { title: 'Location and Accuracy', paragraphs: ['Location access is optional and coordinates are not stored in the database. Time differences may change with daylight saving rules.'] },
+    ] },
+    weather: { sections: [
+        { title: 'Weather Guide', paragraphs: ['View temperature, feels-like temperature, humidity, wind, rain probability, UV index and a five-day forecast in one place.'] },
+        { title: 'Data Source and Limits', paragraphs: ['Weather data comes from Open-Meteo and may vary by update time and the nearest forecast point. Follow official alerts for severe weather and travel decisions.'] },
+    ] },
 };
 
 const dateSubtoolContent = {
@@ -233,9 +252,12 @@ const subtoolContentByTool = {
 };
 
 export default function ToolSeoContent({ tool, subtool = '' }) {
-    const content = subtool
-        ? subtoolContentByTool[tool]?.[subtool] || toolContent[tool]
-        : toolContent[tool];
+    const { lang } = useSiteContext();
+    const content = lang === 'en'
+        ? toolContentEn[tool]
+        : subtool
+            ? subtoolContentByTool[tool]?.[subtool] || toolContent[tool]
+            : toolContent[tool];
     if (!content) return null;
 
     return (

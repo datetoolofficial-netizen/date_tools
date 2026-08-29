@@ -12,6 +12,8 @@ import { sanitizeHtml } from "./sanitizeHtml";
 import { DEFAULT_TOOL_SETTINGS, normalizeToolSettings, serializeToolSettings } from "./toolSettings";
 import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPreview";
 import { pickPublicSiteConfig } from "./publicSiteConfig";
+import { normalizeIdentityTranslations } from "./localizedConfig";
+import { normalizePwaUpdatePrompt } from "./pwaPromptSettings";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -272,11 +274,13 @@ export const defaultSiteConfig = {
         text: "ثبّت الأداة على جهازك لاستخدام أسرع",
         buttonText: "ثبّت الأداة",
     },
+    pwaUpdatePrompt: normalizePwaUpdatePrompt(),
     customPages: {},
     mainSEO: {
         title: "أدوات التاريخ الشاملة",
         description: "أداة شاملة لحساب العمر وتحويل التواريخ بدقة"
-    }
+    },
+    identityTranslations: normalizeIdentityTranslations(),
 };
 
 /* =========================
@@ -317,6 +321,7 @@ export async function getSiteConfig() {
                 ...(data.pwaInstallPrompt || {}),
                 enabled: data.pwaInstallPrompt?.enabled !== false,
             },
+            pwaUpdatePrompt: normalizePwaUpdatePrompt(data.pwaUpdatePrompt),
 
             googleAdSlots: {
                 ...defaultGoogleAdSlots,
@@ -333,7 +338,8 @@ export async function getSiteConfig() {
             mainSEO: {
                 ...defaultSiteConfig.mainSEO,
                 ...(data.mainSEO || {})
-            }
+            },
+            identityTranslations: normalizeIdentityTranslations(data.identityTranslations),
         };
     } catch (error) {
         console.error("Error fetching site config.");
@@ -399,7 +405,9 @@ export async function saveSiteConfig(config) {
         mainSEO: {
             ...defaultSiteConfig.mainSEO,
             ...(config.mainSEO || {})
-        }
+        },
+        pwaUpdatePrompt: normalizePwaUpdatePrompt(config.pwaUpdatePrompt),
+        identityTranslations: normalizeIdentityTranslations(config.identityTranslations),
     };
 
     await setDoc(configRef, cleanConfig, { merge: true });
@@ -450,6 +458,10 @@ export async function saveSiteConfigSection(sectionPatch) {
         cleanPatch.linkPreview = normalizeLinkPreviewSettings(cleanPatch.linkPreview || {});
     }
 
+    if ('pwaUpdatePrompt' in cleanPatch) {
+        cleanPatch.pwaUpdatePrompt = normalizePwaUpdatePrompt(cleanPatch.pwaUpdatePrompt);
+    }
+
     if ('customPages' in cleanPatch) {
         cleanPatch.customPages = Object.fromEntries(
             Object.entries(cleanPatch.customPages || {}).map(([slug, page]) => [
@@ -473,6 +485,10 @@ export async function saveSiteConfigSection(sectionPatch) {
 
     if (savedToolSettings) {
         await setDoc(configRef, { toolSettings: savedToolSettings }, { mergeFields: ['toolSettings'] });
+    }
+
+    if ('identityTranslations' in cleanPatch) {
+        cleanPatch.identityTranslations = normalizeIdentityTranslations(cleanPatch.identityTranslations);
     }
     await setDoc(configRef, cleanPatch, { merge: true });
     await syncPublicSiteConfig();

@@ -607,8 +607,8 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     const isPageLoading = isSiteLoading || configData === null;
 
     useSectionHashScroll(DATE_SECTION_IDS, !isPageLoading, initialSectionId);
-    const dateToolSettings = getToolSettings(configData, 'date');
-    const dateFaqItems = getToolFaqs(configData, 'date');
+    const dateToolSettings = getToolSettings(configData, 'date', lang);
+    const dateFaqItems = getToolFaqs(configData, 'date', lang);
 
     return (
         <>

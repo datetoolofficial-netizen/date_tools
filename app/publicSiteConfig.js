@@ -20,7 +20,9 @@ const PUBLIC_CONFIG_KEYS = [
     'linkPreview',
     'privacySettingsButton',
     'pwaInstallPrompt',
+    'pwaUpdatePrompt',
     'mainSEO',
+    'identityTranslations',
 ];
 
 function cleanPublicExternalIntegrations(value = {}) {
@@ -55,8 +57,6 @@ function cleanGoogleAdSlots(slots = {}) {
 
 function cleanInternalPages(pages, includeContent) {
     if (!Array.isArray(pages)) return [];
-    if (includeContent) return pages;
-
     return pages.map((page = {}) => ({
         title: page.title || page.name || page.label || '',
         slug: page.slug || page.path || page.url || '',
@@ -65,6 +65,7 @@ function cleanInternalPages(pages, includeContent) {
         location: page.location || '',
         isActive: page.isActive !== false,
         order: Number(page.order || 0),
+        ...(includeContent ? { content: String(page.content || '') } : {}),
     }));
 }
 
@@ -81,6 +82,8 @@ export function pickPublicSiteConfig(config = {}, includeContent = false) {
     publicConfig.socialLinks = Array.isArray(publicConfig.socialLinks) ? publicConfig.socialLinks : [];
     publicConfig.events = Array.isArray(publicConfig.events) ? publicConfig.events : [];
     publicConfig.adCampaigns = [];
+    publicConfig.identityTranslations = normalizeIdentityTranslations(publicConfig.identityTranslations);
+    publicConfig.pwaUpdatePrompt = normalizePwaUpdatePrompt(publicConfig.pwaUpdatePrompt);
 
     if (includeContent) {
         publicConfig.customPages = config.customPages || {};
@@ -89,3 +92,5 @@ export function pickPublicSiteConfig(config = {}, includeContent = false) {
 
     return publicConfig;
 }
+import { normalizeIdentityTranslations } from './localizedConfig';
+import { normalizePwaUpdatePrompt } from './pwaPromptSettings';

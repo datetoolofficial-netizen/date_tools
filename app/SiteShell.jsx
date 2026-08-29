@@ -1,12 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
+import PwaUpdatePrompt from './components/PwaUpdatePrompt';
 import { defaultFirebaseApi, SiteContext } from './SiteContext';
 import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from './privacyConsent';
+import { getLocalizedSiteConfig } from './localizedConfig';
+import { i18n } from './i18n';
+import { getToolSettings } from './toolSettings';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -43,9 +47,10 @@ function writeCachedSiteConfig(data) {
     }
 }
 
-function timezoneLabel(timezone) {
-    if (!timezone) return 'موقعك الحالي';
-    return timezone.split('/').pop()?.replaceAll('_', ' ') || 'موقعك الحالي';
+function timezoneLabel(timezone, lang = 'ar') {
+    const fallback = lang === 'en' ? 'Your current location' : 'موقعك الحالي';
+    if (!timezone) return fallback;
+    return timezone.split('/').pop()?.replaceAll('_', ' ') || fallback;
 }
 
 function normalizePagePath(value) {
@@ -205,6 +210,8 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     const shouldUseShell = !excludedShellPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
     const isSiteLoading = shouldUseShell && configData === null;
+    const localizedConfigData = useMemo(() => getLocalizedSiteConfig(configData || {}, lang), [configData, lang]);
+    const labels = i18n[lang] || i18n.ar;
 
     useEffect(() => {
         const savedLang = localStorage.getItem('site_lang') || 'ar';
@@ -312,6 +319,24 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [lang]);
 
     useEffect(() => {
+        if (!shouldUseShell || !configData) return;
+        const toolKey = pathname.startsWith('/clock') ? 'clock' : pathname.startsWith('/weather') ? 'weather' : 'date';
+        const toolSeo = getToolSettings(configData, toolKey, lang)?.seo || {};
+        const title = toolSeo.searchTitle || localizedConfigData.mainSEO?.title || localizedConfigData.toolDisplayName;
+        const description = toolSeo.metaDescription || localizedConfigData.mainSEO?.description || localizedConfigData.toolSlogan;
+        if (title) document.title = title;
+        if (description) {
+            let meta = document.querySelector('meta[name="description"]');
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = 'description';
+                document.head.appendChild(meta);
+            }
+            meta.content = description;
+        }
+    }, [configData, lang, localizedConfigData, pathname, shouldUseShell]);
+
+    useEffect(() => {
         const faviconUrl = configData?.faviconUrl || configData?.appIconUrl || configData?.logoUrl || '';
         if (!faviconUrl) return;
 
@@ -383,7 +408,7 @@ export default function SiteShell({ children, initialConfig = null }) {
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             setLocationStatus('error');
-            setLocationError('متصفحك لا يدعم تحديد الموقع.');
+            setLocationError(labels.locationUnsupported);
             return null;
         }
 
@@ -392,7 +417,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                 const permission = await navigator.permissions.query({ name: 'geolocation' });
                 if (permission.state === 'denied') {
                     setLocationStatus('error');
-                    setLocationError('إذن الموقع ممنوع في المتصفح. افتح أيقونة القفل بجانب الرابط، غيّر إذن الموقع إلى سماح، ثم أعد تحميل الصفحة.');
+                    setLocationError(labels.locationDenied);
                     return null;
                 }
             } catch {
@@ -410,7 +435,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                     const label = await resolveLocationLabel(
                         position.coords.latitude,
                         position.coords.longitude,
-                        timezoneLabel(timezone),
+                        timezoneLabel(timezone, lang),
                     );
                     const location = {
                         latitude: position.coords.latitude,
@@ -425,7 +450,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                 },
                 () => {
                     setLocationStatus('error');
-                    setLocationError('لم يتم السماح باستخدام الموقع الحالي.');
+                    setLocationError(labels.locationNotAllowed);
                     resolve(null);
                 },
                 {
@@ -440,7 +465,7 @@ export default function SiteShell({ children, initialConfig = null }) {
 
         locationRequestRef.current = requestPromise;
         return requestPromise;
-    }, [currentLocation]);
+    }, [currentLocation, labels.locationDenied, labels.locationNotAllowed, labels.locationUnsupported, lang]);
 
     useEffect(() => {
         const needsAutomaticLocation = pathname === '/clock' || pathname === '/weather';
@@ -464,8 +489,8 @@ export default function SiteShell({ children, initialConfig = null }) {
             setLocationNotice({
                 type: 'success',
                 icon: 'fa-solid fa-location-dot',
-                title: 'تم السماح بالموقع',
-                message: 'تم تحديث أدوات الساعة والطقس حسب موقعك الحالي بدون حفظ إحداثياتك.',
+                title: labels.locationGrantedTitle,
+                message: labels.locationGrantedMessage,
             });
             const timer = window.setTimeout(() => setLocationNotice(null), 4500);
             return () => window.clearTimeout(timer);
@@ -482,13 +507,13 @@ export default function SiteShell({ children, initialConfig = null }) {
         setLocationNotice({
             type: 'error',
             icon: 'fa-solid fa-location-crosshairs',
-            title: 'تعذر استخدام موقعك الحالي',
-            message: locationError || 'يمكنك السماح بالموقع من إعدادات المتصفح عند الحاجة.',
+            title: labels.locationErrorTitle,
+            message: locationError || labels.locationErrorMessage,
         });
 
         const timer = window.setTimeout(() => setLocationNotice(null), 8000);
         return () => window.clearTimeout(timer);
-    }, [locationError, locationStatus, shouldUseShell]);
+    }, [labels.locationErrorMessage, labels.locationErrorTitle, labels.locationGrantedMessage, labels.locationGrantedTitle, locationError, locationStatus, shouldUseShell]);
 
     useEffect(() => {
         if (!locationNotice) return;
@@ -507,7 +532,7 @@ export default function SiteShell({ children, initialConfig = null }) {
         lang,
         themeMode,
         isDarkMode,
-        configData,
+        configData: localizedConfigData,
         isSiteLoading,
         firebaseApiRef,
         currentLocation,
@@ -521,9 +546,12 @@ export default function SiteShell({ children, initialConfig = null }) {
         && privacyConsent === null
         && isPrivacyPanelCollapsed;
     const showConfiguredPrivacyButton = privacyConsent !== null
-        && shouldShowPrivacySettingsButton(configData, pathname);
+        && shouldShowPrivacySettingsButton(localizedConfigData, pathname);
     const showPrivacySettingsButton = !isSiteLoading
         && (showPendingPrivacyButton || showConfiguredPrivacyButton);
+    const isPrivacyPanelOpen = isPrivacyReady
+        && privacyConsent === null
+        && !isPrivacyPanelCollapsed;
 
     if (!shouldUseShell) {
         return (
@@ -544,7 +572,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                         isDarkMode={isDarkMode}
                         toggleLang={toggleLang}
                         toggleTheme={toggleTheme}
-                        config={configData}
+                        config={localizedConfigData}
                     />
                 )}
 
@@ -564,31 +592,36 @@ export default function SiteShell({ children, initialConfig = null }) {
                 )}
             </div>
 
-            {!isSiteLoading && <Footer lang={lang} config={configData} />}
+            {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} />}
             {!isSiteLoading && (
                 <div className="site-action-stack">
-                    <PwaInstallPrompt
-                        settings={configData?.pwaInstallPrompt}
-                        iconUrl={configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || ''}
+                    <PwaUpdatePrompt
+                        settings={localizedConfigData?.pwaUpdatePrompt}
+                        blocked={isPrivacyPanelOpen}
+                        lang={lang}
                     />
-                    {isPrivacyReady && privacyConsent === null && !isPrivacyPanelCollapsed && (
-                        <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label="إعدادات الخصوصية والكوكيز">
-                            <button type="button" className="privacy-consent-collapse" onClick={collapsePrivacyPanel} aria-label="تصغير إعدادات الخصوصية">
+                    <PwaInstallPrompt
+                        settings={localizedConfigData?.pwaInstallPrompt}
+                        iconUrl={localizedConfigData?.appIconUrl || localizedConfigData?.logoUrl || localizedConfigData?.faviconUrl || ''}
+                        blocked={isPrivacyPanelOpen}
+                        lang={lang}
+                    />
+                    {isPrivacyPanelOpen && (
+                        <div className="privacy-consent-panel" role="dialog" aria-live="polite" aria-label={labels.privacySettingsTitle}>
+                            <button type="button" className="privacy-consent-collapse" onClick={collapsePrivacyPanel} aria-label={labels.privacyCollapse}>
                                 <i className="fa-solid fa-xmark"></i>
                             </button>
                             <div className="privacy-consent-icon">
                                 <i className="fa-solid fa-shield-halved"></i>
                             </div>
                             <div className="privacy-consent-copy">
-                                <strong>إعدادات الخصوصية والكوكيز</strong>
-                                <p>
-                                    نستخدم ملفات ضرورية لتشغيل الموقع، ونطلب موافقتك قبل تشغيل التحليلات أو أدوات التسويق. يمكنك التحكم لاحقًا من إعدادات المتصفح أو من هذا الإشعار عند ظهوره.
-                                </p>
+                                <strong>{labels.privacySettingsTitle}</strong>
+                                <p>{labels.privacyDescription}</p>
                                 {showPrivacySettings && (
                                     <div className="privacy-consent-options">
                                         <label>
                                             <input type="checkbox" checked disabled />
-                                            <span>ملفات ضرورية لتشغيل الموقع</span>
+                                            <span>{labels.privacyEssential}</span>
                                         </label>
                                         <label>
                                             <input
@@ -597,7 +630,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                                                 checked={privacyDraft.analytics}
                                                 onChange={(event) => setPrivacyDraft((current) => ({ ...current, analytics: event.target.checked }))}
                                             />
-                                            <span>تحليلات لتحسين تجربة الاستخدام</span>
+                                            <span>{labels.privacyAnalytics}</span>
                                         </label>
                                         <label>
                                             <input
@@ -606,14 +639,14 @@ export default function SiteShell({ children, initialConfig = null }) {
                                                 checked={privacyDraft.marketing}
                                                 onChange={(event) => setPrivacyDraft((current) => ({ ...current, marketing: event.target.checked }))}
                                             />
-                                            <span>إعلانات وقياس تسويقي</span>
+                                            <span>{labels.privacyMarketing}</span>
                                         </label>
                                     </div>
                                 )}
                             </div>
                             <div className="privacy-consent-actions">
                                 <button type="button" className="privacy-accept" onClick={() => updatePrivacyConsent({ analytics: true, marketing: true })}>
-                                    قبول الكل
+                                    {labels.privacyAcceptAll}
                                 </button>
                                 <button type="button" className="privacy-secondary" onClick={() => {
                                     if (!showPrivacySettings) {
@@ -622,10 +655,10 @@ export default function SiteShell({ children, initialConfig = null }) {
                                     }
                                     updatePrivacyConsent(privacyDraft);
                                 }}>
-                                    {showPrivacySettings ? 'حفظ الاختيارات' : 'تخصيص'}
+                                    {showPrivacySettings ? labels.privacySave : labels.privacyCustomize}
                                 </button>
                                 <button type="button" className="privacy-secondary" onClick={() => updatePrivacyConsent(DEFAULT_PRIVACY_CONSENT)}>
-                                    الضروري فقط
+                                    {labels.privacyEssentialOnly}
                                 </button>
                             </div>
                         </div>
@@ -637,7 +670,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                             onClick={showPendingPrivacyButton ? expandPrivacyPanel : openPrivacySettings}
                         >
                             <i className="fa-solid fa-shield-halved"></i>
-                            إعدادات الخصوصية
+                            {labels.privacySettingsButton}
                         </button>
                     )}
                 </div>

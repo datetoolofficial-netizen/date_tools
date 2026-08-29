@@ -1318,6 +1318,37 @@ export default function AdminToolsPage() {
                     </div>
                 </section>
 
+                <section className="legacy-google-card tools-section-card tools-backup-reminder" id="backup-reminder">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon"><i className="fa-solid fa-database"></i></span>
+                            <div>
+                                <h2>النسخ الاحتياطي والاستعادة</h2>
+                                <p>تذكير بإعداد نسخة دورية واختبار استعادتها بعد تفعيل الخطة المدفوعة.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="tools-table-footer-actions tools-backup-reminder-actions">
+                        <button
+                            type="button"
+                            className="legacy-secondary-btn"
+                            onClick={() => showMessage('error', 'يجب الاشتراك في الخطة المدفوعة لتفعيل النسخ الاحتياطي والاستعادة.')}
+                        >
+                            <i className="fa-solid fa-cloud-arrow-up"></i>
+                            نسخ احتياطي
+                        </button>
+                        <button
+                            type="button"
+                            className="legacy-secondary-btn"
+                            onClick={() => showMessage('error', 'يجب الاشتراك في الخطة المدفوعة لتفعيل النسخ الاحتياطي والاستعادة.')}
+                        >
+                            <i className="fa-solid fa-clock-rotate-left"></i>
+                            استعادة
+                        </button>
+                    </div>
+                </section>
+
                 <footer className="legacy-admin-footer">
                     <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>
                     <div className="legacy-version-badge"><i className="fa-solid fa-screwdriver-wrench"></i> إعدادات الأداة</div>

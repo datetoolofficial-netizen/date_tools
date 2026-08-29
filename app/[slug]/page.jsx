@@ -183,6 +183,8 @@ export default async function Page({ params }) {
                     description={page.description}
                     icon={icons[toolRoute.toolKey]}
                     className={`${toolRoute.toolKey}-hero`}
+                    toolKey={toolRoute.toolKey}
+                    subtoolKey={toolRoute.subtoolKey}
                 />
                 {toolRoute.toolKey === 'date' && (
                     <HomePageClient

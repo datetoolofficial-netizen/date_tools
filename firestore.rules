@@ -102,7 +102,7 @@ service cloud.firestore {
             "toolDisplayName", "toolSlogan", "contactEmail", "hasLogo", "logoUrl",
             "faviconUrl", "appIconUrl", "pwaShortcutDateIconUrl", "pwaShortcutClockIconUrl",
             "pwaShortcutWeatherIconUrl", "copyrightName", "copyrightText", "mainSEO",
-            "linkPreview", "pwaInstallPrompt"
+            "linkPreview", "pwaInstallPrompt", "pwaUpdatePrompt", "identityTranslations"
           ])
         )
         || (
