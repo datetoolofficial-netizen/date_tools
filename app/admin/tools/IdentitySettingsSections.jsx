@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { normalizeIdentityTranslations } from '../../localizedConfig';
 import { normalizePwaUpdatePrompt } from '../../pwaPromptSettings';
 import { APP_VERSION } from '../../version';
+import AdminEnableToggle from '../AdminEnableToggle';
 
 export const IDENTITY_FIELDS = [
     'toolDisplayName',
@@ -177,17 +178,15 @@ export default function IdentitySettingsSections({
 
                             <div className="legacy-field">
                                 <label>إظهار الشعار</label>
-                                <label className="legacy-switch-row admin-toggle-row">
-                                    <input
-                                        type="checkbox"
-                                        checked={identity.hasLogo}
-                                        onChange={(event) => onFieldChange('hasLogo', event.target.checked)}
+                                <div className="legacy-switch-row admin-toggle-row">
+                                    <AdminEnableToggle
+                                        enabled={identity.hasLogo}
+                                        onChange={(enabled) => onFieldChange('hasLogo', enabled)}
+                                        enabledLabel="إخفاء الشعار"
+                                        disabledLabel="إظهار الشعار"
                                     />
-                                    <span className="admin-status-toggle" aria-hidden="true">
-                                        <span>{identity.hasLogo ? 'تشغيل' : 'إيقاف'}</span>
-                                    </span>
                                     <span>إظهار أو إخفاء الشعار فقط بدون إخفاء اسم الأداة</span>
-                                </label>
+                                </div>
                             </div>
 
                             <IdentityMediaField
@@ -316,37 +315,37 @@ export default function IdentitySettingsSections({
                             small
                         />
 
-                        <label className={`ad-settings-switch house compact-switch admin-toggle-card ${identity.pwaInstallPrompt?.enabled !== false ? 'active' : ''}`}>
-                            <input
-                                type="checkbox"
-                                checked={identity.pwaInstallPrompt?.enabled !== false}
-                                onChange={(event) => onPwaInstallPromptChange('enabled', event.target.checked)}
-                            />
+                        <div className="ad-settings-switch house compact-switch admin-toggle-card">
                             <span className="ad-settings-switch-icon"><i className="fa-solid fa-download"></i></span>
                             <span className="ad-settings-switch-copy">
                                 <strong>إظهار زر تثبيت الأداة</strong>
                                 <small>يعرض تنبيه التثبيت عندما يدعم المتصفح تثبيت الموقع كتطبيق.</small>
                             </span>
-                            <span className="admin-status-toggle" aria-hidden="true"><span>{identity.pwaInstallPrompt?.enabled !== false ? 'تشغيل' : 'إيقاف'}</span></span>
-                        </label>
+                            <AdminEnableToggle
+                                enabled={identity.pwaInstallPrompt?.enabled !== false}
+                                onChange={(enabled) => onPwaInstallPromptChange('enabled', enabled)}
+                                enabledLabel="إيقاف تنبيه التثبيت"
+                                disabledLabel="تشغيل تنبيه التثبيت"
+                            />
+                        </div>
 
                         <div className="pwa-update-admin-controls">
-                            <label className={`ad-settings-switch house compact-switch admin-toggle-card ${identity.pwaUpdatePrompt?.enabled === true ? 'active' : ''}`}>
-                                <input
-                                    type="checkbox"
-                                    checked={identity.pwaUpdatePrompt?.enabled === true}
-                                    onChange={(event) => onFieldChange('pwaUpdatePrompt', normalizePwaUpdatePrompt({
-                                        ...(identity.pwaUpdatePrompt || {}),
-                                        enabled: event.target.checked,
-                                    }))}
-                                />
+                            <div className="ad-settings-switch house compact-switch admin-toggle-card">
                                 <span className="ad-settings-switch-icon"><i className="fa-solid fa-arrows-rotate"></i></span>
                                 <span className="ad-settings-switch-copy">
                                     <strong>إعلان تحديث للتطبيقات المثبّتة</strong>
                                     <small>يفحص آخر نسخة تلقائيًا داخل التطبيق المثبّت فقط. عطّل المفتاح مؤقتًا عند الحاجة لإيقاف الإشعارات.</small>
                                 </span>
-                                <span className="admin-status-toggle" aria-hidden="true"><span>{identity.pwaUpdatePrompt?.enabled === true ? 'تشغيل' : 'إيقاف'}</span></span>
-                            </label>
+                                <AdminEnableToggle
+                                    enabled={identity.pwaUpdatePrompt?.enabled === true}
+                                    onChange={(enabled) => onFieldChange('pwaUpdatePrompt', normalizePwaUpdatePrompt({
+                                        ...(identity.pwaUpdatePrompt || {}),
+                                        enabled,
+                                    }))}
+                                    enabledLabel="إيقاف إشعارات التحديث"
+                                    disabledLabel="تشغيل إشعارات التحديث"
+                                />
+                            </div>
                             <div className="legacy-field pwa-update-version-field">
                                 <span>رقم التحديث المعلن</span>
                                 <output dir="ltr" aria-label="آخر إصدار للتطبيق">{APP_VERSION}</output>

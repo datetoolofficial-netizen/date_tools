@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { sanitizeHtml } from '../../sanitizeHtml';
+import AdminEnableToggle from '../AdminEnableToggle';
 import IdentitySettingsSections, {
     EMPTY_IDENTITY,
     normalizePwaInstallPrompt,
@@ -1063,18 +1064,18 @@ export default function AdminToolsPage() {
 
                     <div className="privacy-admin-controls">
                         <SectionLanguageToolbar section="صفحات الخصوصية" language={getSectionLanguage('pages')} onChange={(language) => setSectionLanguage('pages', language)} />
-                        <label className={`privacy-admin-toggle admin-toggle-card ${toolsConfig.privacySettingsButton?.enabled === true ? 'active' : ''}`}>
-                            <input
-                                type="checkbox"
-                                checked={toolsConfig.privacySettingsButton?.enabled === true}
-                                onChange={(event) => updatePrivacySettingsButton('enabled', event.target.checked)}
-                            />
+                        <div className="privacy-admin-toggle admin-toggle-card">
                             <span>
                                 <strong>إظهار زر إعدادات الخصوصية</strong>
                                 <small>بعد موافقة الزائر، يظهر الزر فقط في الصفحات المختارة أدناه.</small>
                             </span>
-                            <span className="admin-status-toggle" aria-hidden="true"><span>{toolsConfig.privacySettingsButton?.enabled === true ? 'تشغيل' : 'إيقاف'}</span></span>
-                        </label>
+                            <AdminEnableToggle
+                                enabled={toolsConfig.privacySettingsButton?.enabled === true}
+                                onChange={(enabled) => updatePrivacySettingsButton('enabled', enabled)}
+                                enabledLabel="إخفاء زر إعدادات الخصوصية"
+                                disabledLabel="إظهار زر إعدادات الخصوصية"
+                            />
+                        </div>
 
                         <div className="privacy-admin-pages">
                             {privacyPageChoices.map((page) => (
@@ -1150,14 +1151,12 @@ export default function AdminToolsPage() {
                                     )}
                                 </div>
                                 <div className="tools-item-actions">
-                                    <button
-                                        type="button"
-                                        className={page.enabled !== false ? 'approve' : 'inactive'}
-                                        onClick={() => updatePage(index, 'enabled', page.enabled === false)}
-                                        title={page.enabled !== false ? 'تعطيل الصفحة' : 'تفعيل الصفحة'}
-                                    >
-                                        <i className={`fa-solid ${page.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
-                                    </button>
+                                    <AdminEnableToggle
+                                        enabled={page.enabled !== false}
+                                        onChange={(enabled) => updatePage(index, 'enabled', enabled)}
+                                        enabledLabel="تعطيل الصفحة"
+                                        disabledLabel="تفعيل الصفحة"
+                                    />
                                     <button type="button" onClick={() => openPageModal(index)} title="معاينة الصفحة">
                                         <i className="fa-solid fa-eye"></i>
                                     </button>
@@ -1242,14 +1241,12 @@ export default function AdminToolsPage() {
                                     )}
                                 </div>
                                 <div className="tools-item-actions">
-                                    <button
-                                        type="button"
-                                        className={link.enabled !== false ? 'approve' : 'inactive'}
-                                        onClick={() => updateArrayItem('externalLinks', index, 'enabled', link.enabled === false)}
-                                        title={link.enabled !== false ? 'تعطيل الرابط' : 'تفعيل الرابط'}
-                                    >
-                                        <i className={`fa-solid ${link.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
-                                    </button>
+                                    <AdminEnableToggle
+                                        enabled={link.enabled !== false}
+                                        onChange={(enabled) => updateArrayItem('externalLinks', index, 'enabled', enabled)}
+                                        enabledLabel="تعطيل الرابط"
+                                        disabledLabel="تفعيل الرابط"
+                                    />
                                     <button type="button" onClick={() => toggleRowEditing('externalLinks', index)} title={isRowEditing('externalLinks', index) ? 'إنهاء التعديل' : 'تعديل الرابط'}>
                                         <i className="fa-solid fa-pen"></i>
                                     </button>
@@ -1351,14 +1348,12 @@ export default function AdminToolsPage() {
                                     </>
                                 )}
                                 <div className="tools-item-actions">
-                                    <button
-                                        type="button"
-                                        className={social.enabled !== false ? 'approve' : 'inactive'}
-                                        onClick={() => updateArrayItem('socialLinks', index, 'enabled', social.enabled === false)}
-                                        title={social.enabled !== false ? 'تعطيل الحساب' : 'تفعيل الحساب'}
-                                    >
-                                        <i className={`fa-solid ${social.enabled !== false ? 'fa-toggle-on' : 'fa-toggle-off'}`}></i>
-                                    </button>
+                                    <AdminEnableToggle
+                                        enabled={social.enabled !== false}
+                                        onChange={(enabled) => updateArrayItem('socialLinks', index, 'enabled', enabled)}
+                                        enabledLabel="تعطيل الحساب"
+                                        disabledLabel="تفعيل الحساب"
+                                    />
                                     <button type="button" onClick={() => toggleRowEditing('socialLinks', index)} title={isRowEditing('socialLinks', index) ? 'إنهاء التعديل' : 'تعديل الحساب'}>
                                         <i className="fa-solid fa-pen"></i>
                                     </button>

@@ -1922,52 +1922,42 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 .admin-toggle-row {
-    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
 }
 
-.admin-toggle-row > input,
-.admin-toggle-card > input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.admin-status-toggle {
-    width: 58px;
-    height: 30px;
-    padding: 3px;
-    border-radius: 999px;
+.admin-enable-toggle {
+    width: var(--admin-icon-button-size);
+    height: var(--admin-icon-button-size);
+    border-radius: var(--admin-control-radius);
+    border: 0;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
-    background: #dc2626;
-    color: #fff;
-    transition: 0.2s ease;
+    justify-content: center;
     flex: 0 0 auto;
+    cursor: pointer;
+    transition: var(--admin-control-transition);
 }
 
-.admin-status-toggle::before {
-    content: '';
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.24);
+.admin-enable-toggle.is-enabled {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border-color: color-mix(in srgb, var(--success-text) 28%, var(--border-color));
 }
 
-.admin-status-toggle > span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
+.admin-enable-toggle.is-disabled {
+    background: color-mix(in srgb, var(--text-sub) 12%, transparent);
+    color: var(--text-sub);
 }
 
-.admin-toggle-row:has(input:checked) .admin-status-toggle,
-.admin-toggle-card.active .admin-status-toggle {
-    justify-content: flex-end;
-    background: #16a34a;
+.admin-enable-toggle:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.admin-enable-toggle:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 .admin-toggle-card {
