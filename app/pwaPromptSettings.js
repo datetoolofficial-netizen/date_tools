@@ -1,13 +1,13 @@
 import { APP_VERSION } from './version';
 
 export const DEFAULT_PWA_UPDATE_PROMPT = {
-    enabled: false,
+    enabled: true,
     version: APP_VERSION,
 };
 
 export function normalizePwaUpdatePrompt(value = {}) {
     return {
-        enabled: value?.enabled === true,
+        enabled: value?.enabled !== false,
         version: APP_VERSION,
     };
 }

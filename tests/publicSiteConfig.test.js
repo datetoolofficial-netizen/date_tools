@@ -128,9 +128,9 @@ describe('public settings projection', () => {
             },
         });
 
-        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.40' });
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.41' });
         expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
         expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(false);
-        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.40');
+        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.41');
     });
 });

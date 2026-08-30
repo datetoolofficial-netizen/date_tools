@@ -326,13 +326,13 @@ export default function IdentitySettingsSections({
                                 <span className="ad-settings-switch-icon"><i className="fa-solid fa-arrows-rotate"></i></span>
                                 <span className="ad-settings-switch-copy">
                                     <strong>إعلان تحديث للتطبيقات المثبّتة</strong>
-                                    <small>يظهر داخل التطبيق المثبّت فقط، مرة واحدة لكل رقم إصدار، وبعد إغلاق نافذة الخصوصية.</small>
+                                    <small>يفحص آخر نسخة تلقائيًا داخل التطبيق المثبّت فقط. عطّل المفتاح مؤقتًا عند الحاجة لإيقاف الإشعارات.</small>
                                 </span>
                             </label>
                             <div className="legacy-field pwa-update-version-field">
                                 <span>رقم التحديث المعلن</span>
                                 <output dir="ltr" aria-label="آخر إصدار للتطبيق">{APP_VERSION}</output>
-                                <small>يُقرأ تلقائيًا من آخر نسخة منشورة. فعّل المفتاح واحفظ لإعلان هذا الإصدار.</small>
+                                <small>يُقرأ تلقائيًا من آخر نسخة منشورة ويُقارن بالنسخة التي تعمل على جهاز المستخدم.</small>
                             </div>
                         </div>
 
