@@ -60,6 +60,7 @@ describe('tool SEO settings', () => {
                     localizations: {
                         en: {
                             seo: { searchTitle: 'English title', h1: 'English heading' },
+                            shareTemplates: { eventsResult: 'Upcoming dates\n{events}\n{url}' },
                             faqs: [{ q: 'English question?', a: 'English answer.' }],
                         },
                     },
@@ -78,7 +79,9 @@ describe('tool SEO settings', () => {
         expect(english.seo.shareImageUrl).toBe('/api/media/seo-share/card.webp');
         expect(arabic.faqs[0].q).toBe('سؤال عربي؟');
         expect(english.faqs[0].q).toBe('English question?');
+        expect(english.shareTemplates.eventsResult).toBe('Upcoming dates\n{events}\n{url}');
         expect(serializeToolSettings(config.toolSettings).date.localizations.en.seo.searchTitle).toBe('English title');
+        expect(serializeToolSettings(config.toolSettings).date.localizations.en.shareTemplates.eventsResult).toBe('Upcoming dates\n{events}\n{url}');
         expect(serializeToolSettings(config.toolSettings).date.localizations.en.faqs[0].a).toBe('English answer.');
     });
 });

@@ -2439,6 +2439,18 @@ body.dark-mode .legacy-nav-links a.active {
     margin: 0;
 }
 
+.pwa-update-version-field output {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    background: var(--input-bg);
+    font-weight: 900;
+}
+
 .pwa-update-version-field small {
     color: var(--text-sub);
     line-height: 1.6;
@@ -2921,6 +2933,34 @@ body.dark-mode .legacy-nav-links a.active {
     line-height: 1.9;
 }
 
+.tool-faq-preview hr {
+    width: 100%;
+    margin: 2px 0;
+    border: 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.tool-bilingual-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.tool-language-editor-card {
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-body);
+}
+
+.tool-language-editor-card > strong {
+    color: var(--tool-color);
+}
+
 .tool-table-footer-actions {
     margin-top: 16px;
     flex-wrap: nowrap;
@@ -3089,6 +3129,20 @@ body.dark-mode .legacy-nav-links a.active {
 .tools-event-name {
     color: var(--text-main);
     font-weight: 900;
+}
+
+.tools-event-name {
+    display: grid;
+    gap: 4px;
+}
+
+.tools-event-name small {
+    overflow: hidden;
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tools-event-value {
@@ -4519,6 +4573,10 @@ body.dark-mode .legacy-nav-links a.active {
     margin-top: 18px;
 }
 
+.date-event-name-grid {
+    margin-top: 18px;
+}
+
 .date-event-color-field input[type='color'] {
     width: 100%;
     min-height: 48px;
@@ -4527,7 +4585,8 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 @media (max-width: 640px) {
-    .date-event-modal-grid {
+    .date-event-modal-grid,
+    .tool-bilingual-editor-grid {
         grid-template-columns: 1fr;
     }
 }

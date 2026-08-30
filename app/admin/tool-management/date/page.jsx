@@ -7,6 +7,7 @@ import ToolContentSettings from '../ToolContentSettings';
 const EMPTY_EVENT = {
     id: '',
     name: '',
+    nameEn: '',
     date: '',
     calendar: 'gregorian',
     repeat: 'once',
@@ -77,7 +78,7 @@ function DateToolEvents({ firebaseApi, showMessage }) {
 
     const applyEventDraft = () => {
         if (!eventModal?.draft?.name?.trim() || !eventModal?.draft?.date) {
-            showMessage('error', 'أدخل اسم الحدث وتاريخه قبل الحفظ.');
+            showMessage('error', 'أدخل اسم الحدث بالعربية وتاريخه قبل الحفظ.');
             return;
         }
 
@@ -146,7 +147,10 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                         <div className="tools-event-icon" style={{ background: `${eventItem.color || '#3b82f6'}22`, color: eventItem.color || '#3b82f6' }}>
                             <i className={`fa-solid ${eventItem.icon || 'fa-star'}`}></i>
                         </div>
-                        <strong className="tools-event-name">{eventItem.name || 'بدون اسم'}</strong>
+                        <div className="tools-event-name">
+                            <strong>{eventItem.name || 'بدون اسم'}</strong>
+                            <small dir="ltr">{eventItem.nameEn || 'English name not added'}</small>
+                        </div>
                         <span className="tools-event-value tools-event-value-ltr">{eventItem.date || '-'}</span>
                         <span className="tools-event-value">
                             {eventItem.repeat === 'monthly' ? 'شهريًا' : eventItem.repeat === 'yearly' ? 'سنويًا' : 'مرة واحدة'}
@@ -195,11 +199,23 @@ function DateToolEvents({ firebaseApi, showMessage }) {
                                 <i className="fa-solid fa-xmark"></i>
                             </button>
                         </div>
+                        <div className="tool-bilingual-editor-grid date-event-name-grid">
+                            <div className="tool-language-editor-card" dir="rtl">
+                                <strong>العربية</strong>
+                                <label className="legacy-field">
+                                    <span>اسم الحدث بالعربية</span>
+                                    <input value={eventModal.draft.name || ''} onChange={(event) => updateEventDraft('name', event.target.value)} />
+                                </label>
+                            </div>
+                            <div className="tool-language-editor-card" dir="ltr">
+                                <strong>English</strong>
+                                <label className="legacy-field">
+                                    <span>Event name in English</span>
+                                    <input value={eventModal.draft.nameEn || ''} onChange={(event) => updateEventDraft('nameEn', event.target.value)} />
+                                </label>
+                            </div>
+                        </div>
                         <div className="legacy-form-grid date-event-modal-grid">
-                            <label className="legacy-field">
-                                <span>اسم الحدث</span>
-                                <input value={eventModal.draft.name || ''} onChange={(event) => updateEventDraft('name', event.target.value)} />
-                            </label>
                             <label className="legacy-field">
                                 <span>التاريخ</span>
                                 <input type="date" value={eventModal.draft.date || ''} onChange={(event) => updateEventDraft('date', event.target.value)} />

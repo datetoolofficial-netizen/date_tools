@@ -133,7 +133,7 @@ export function EventsShareDialog({
 }
 
 export function EventsSection({ lang, upcomingEvents, onShare, canShare = true }) {
-    if (lang !== 'ar' || upcomingEvents.length === 0) return null;
+    if (upcomingEvents.length === 0) return null;
     const labels = i18n[lang] || i18n.ar;
 
     return (

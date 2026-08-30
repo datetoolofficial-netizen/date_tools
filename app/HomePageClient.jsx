@@ -203,14 +203,19 @@ export default function HomePageClient({ children, hideHero = false, initialSect
 
                 let diff = Math.ceil((targetGregDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 if (diff >= 0 && diff <= maxDays) {
-                    events.push({ name: evt.name, days: diff, icon: evt.icon, color: evt.color });
+                    events.push({
+                        name: lang === 'en' ? (evt.nameEn || evt.name) : evt.name,
+                        days: diff,
+                        icon: evt.icon,
+                        color: evt.color,
+                    });
                 }
             });
         }
 
         events.sort((a, b) => a.days - b.days);
         setUpcomingEvents(events);
-    }, [configData]);
+    }, [configData, lang]);
 
     useEffect(() => {
         if (configData) generateTodayAndEvents();

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { normalizeIdentityTranslations } from '../../localizedConfig';
 import { normalizePwaUpdatePrompt } from '../../pwaPromptSettings';
+import { APP_VERSION } from '../../version';
 
 export const IDENTITY_FIELDS = [
     'toolDisplayName',
@@ -328,20 +329,11 @@ export default function IdentitySettingsSections({
                                     <small>يظهر داخل التطبيق المثبّت فقط، مرة واحدة لكل رقم إصدار، وبعد إغلاق نافذة الخصوصية.</small>
                                 </span>
                             </label>
-                            <label className="legacy-field pwa-update-version-field">
+                            <div className="legacy-field pwa-update-version-field">
                                 <span>رقم التحديث المعلن</span>
-                                <input
-                                    type="text"
-                                    dir="ltr"
-                                    value={identity.pwaUpdatePrompt?.version || ''}
-                                    onChange={(event) => onFieldChange('pwaUpdatePrompt', normalizePwaUpdatePrompt({
-                                        ...(identity.pwaUpdatePrompt || {}),
-                                        version: event.target.value,
-                                    }))}
-                                    placeholder="0.3.38"
-                                />
-                                <small>غيّر الرقم عند كل تحديث تريد تنبيه المستخدمين به، ثم فعّل المفتاح واحفظ.</small>
-                            </label>
+                                <output dir="ltr" aria-label="آخر إصدار للتطبيق">{APP_VERSION}</output>
+                                <small>يُقرأ تلقائيًا من آخر نسخة منشورة. فعّل المفتاح واحفظ لإعلان هذا الإصدار.</small>
+                            </div>
                         </div>
 
                         <div className="legacy-form-grid two-columns no-top-margin">

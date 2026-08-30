@@ -207,14 +207,31 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         }
     };
 
-    const updateShareTemplate = (key, value) => {
-        setSettings((current) => ({
-            ...current,
-            shareTemplates: {
-                ...(current.shareTemplates || {}),
-                [key]: value,
-            },
-        }));
+    const updateShareTemplate = (key, language, value) => {
+        setSettings((current) => {
+            if (language === 'en') {
+                return {
+                    ...current,
+                    localizations: {
+                        ...(current.localizations || {}),
+                        en: {
+                            ...(current.localizations?.en || {}),
+                            shareTemplates: {
+                                ...(current.localizations?.en?.shareTemplates || {}),
+                                [key]: value,
+                            },
+                        },
+                    },
+                };
+            }
+            return {
+                ...current,
+                shareTemplates: {
+                    ...(current.shareTemplates || {}),
+                    [key]: value,
+                },
+            };
+        });
     };
 
     const updateShareEnabled = (key, value) => {
@@ -227,17 +244,20 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         }));
     };
 
-    const updateFaq = (index, field, value) => {
+    const updateFaq = (index, language, field, value) => {
         setSettings((current) => {
-            const currentFaqs = contentLanguage === 'en'
-                ? current.localizations?.en?.faqs
-                : current.faqs;
-            const faqs = [...(currentFaqs || [])];
+            const currentFaqs = language === 'en'
+                ? Array.from(
+                    { length: Math.max((current.faqs || []).length, index + 1) },
+                    (_, itemIndex) => current.localizations?.en?.faqs?.[itemIndex] || { q: '', a: '', active: true }
+                )
+                : [...(current.faqs || [])];
+            const faqs = [...currentFaqs];
             faqs[index] = {
                 ...(faqs[index] || {}),
                 [field]: value,
             };
-            if (contentLanguage === 'en') {
+            if (language === 'en') {
                 return {
                     ...current,
                     localizations: {
@@ -250,41 +270,59 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
         });
     };
 
-    const addFaq = () => {
-        const nextIndex = (contentLanguage === 'en' ? settings.localizations?.en?.faqs : settings.faqs)?.length || 0;
-        setSettings((current) => ({
-            ...current,
-            ...(contentLanguage === 'en' ? {
+    const updateFaqActive = (index, active) => {
+        setSettings((current) => {
+            const arabicFaqs = [...(current.faqs || [])];
+            const englishFaqs = Array.from(
+                { length: Math.max(arabicFaqs.length, index + 1) },
+                (_, itemIndex) => current.localizations?.en?.faqs?.[itemIndex] || { q: '', a: '', active: true }
+            );
+            arabicFaqs[index] = { ...(arabicFaqs[index] || {}), active };
+            englishFaqs[index] = { ...(englishFaqs[index] || {}), active };
+            return {
+                ...current,
+                faqs: arabicFaqs,
                 localizations: {
                     ...(current.localizations || {}),
-                    en: {
-                        ...(current.localizations?.en || {}),
-                        faqs: [...(current.localizations?.en?.faqs || []), { q: '', a: '', active: true }],
-                    },
+                    en: { ...(current.localizations?.en || {}), faqs: englishFaqs },
                 },
-            } : {
-                faqs: [...(current.faqs || []), { q: '', a: '', active: true }],
-            }),
+            };
+        });
+    };
+
+    const addFaq = () => {
+        const nextIndex = settings.faqs?.length || 0;
+        setSettings((current) => ({
+            ...current,
+            faqs: [...(current.faqs || []), { q: '', a: '', active: true }],
+            localizations: {
+                ...(current.localizations || {}),
+                en: {
+                    ...(current.localizations?.en || {}),
+                    faqs: [
+                        ...(current.faqs || []).map((_, index) => (
+                            current.localizations?.en?.faqs?.[index] || { q: '', a: '', active: true }
+                        )),
+                        { q: '', a: '', active: true },
+                    ],
+                },
+            },
         }));
         setFaqModal({ mode: 'edit', index: nextIndex });
     };
 
     const removeFaq = (index) => {
-        setSettings((current) => {
-            if (contentLanguage === 'en') {
-                return {
-                    ...current,
-                    localizations: {
-                        ...(current.localizations || {}),
-                        en: {
-                            ...(current.localizations?.en || {}),
-                            faqs: (current.localizations?.en?.faqs || []).filter((_, itemIndex) => itemIndex !== index),
-                        },
-                    },
-                };
-            }
-            return { ...current, faqs: (current.faqs || []).filter((_, itemIndex) => itemIndex !== index) };
-        });
+        setSettings((current) => ({
+            ...current,
+            faqs: (current.faqs || []).filter((_, itemIndex) => itemIndex !== index),
+            localizations: {
+                ...(current.localizations || {}),
+                en: {
+                    ...(current.localizations?.en || {}),
+                    faqs: (current.localizations?.en?.faqs || []).filter((_, itemIndex) => itemIndex !== index),
+                },
+            },
+        }));
     };
 
     const saveSettings = async () => {
@@ -334,14 +372,15 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
 
     const isEnglish = contentLanguage === 'en';
     const editingSettings = isEnglish ? settings.localizations?.en || {} : settings;
-    const activeFaqs = editingSettings.faqs || [];
+    const activeFaqs = settings.faqs || [];
+    const englishFaqs = settings.localizations?.en?.faqs || [];
 
     return (
         <section className="legacy-google-card tools-section-card tool-content-settings">
             <div className="admin-content-language-toolbar tool-content-language-toolbar" aria-label="لغة محتوى SEO">
                 <div>
                     <strong>لغة بيانات SEO</strong>
-                    <small>حرّر النص العربي أو الإنجليزي. الرابط والصورة مشتركان بين اللغتين.</small>
+                    <small>يتغير محتوى المدخلات فقط، بينما تبقى عناوين الإدارة والمعاينة ثابتة.</small>
                 </div>
                 <div className="admin-language-segmented" role="group" aria-label="اختيار لغة بيانات SEO">
                     <button type="button" className={contentLanguage === 'ar' ? 'active' : ''} onClick={() => setContentLanguage('ar')}>العربية</button>
@@ -363,14 +402,14 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                     publicPath={settings.seo?.canonical || defaults.seo?.canonical}
                     enableShareImage={!isEnglish}
                     showTechnicalFields={!isEnglish}
-                    language={contentLanguage}
+                    inputLanguage={contentLanguage}
                     isImageUploading={uploadingSeoImage === 'main'}
                     onImageUpload={(event) => handleSeoImageUpload('main', event)}
                 />
 
                 {Object.entries(defaults.subtoolSeo || {}).map(([subtoolKey]) => (
                     <div className="tool-subtool-seo" key={subtoolKey}>
-                        <h3>{editingSettings.subtools?.[subtoolKey] || settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}</h3>
+                        <h3>{settings.subtools?.[subtoolKey] || defaults.subtools?.[subtoolKey]}</h3>
                         <SeoFields
                             seo={editingSettings.subtoolSeo?.[subtoolKey]}
                             onChange={(field, value) => updateSubtoolSeo(subtoolKey, field, value)}
@@ -378,7 +417,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                             publicPath={TOOL_SECTION_ROUTES[toolKey]?.[subtoolKey]?.publicPath}
                             enableShareImage={!isEnglish}
                             showTechnicalFields={!isEnglish}
-                            language={contentLanguage}
+                            inputLanguage={contentLanguage}
                             isImageUploading={uploadingSeoImage === subtoolKey}
                             onImageUpload={(event) => handleSeoImageUpload(subtoolKey, event)}
                         />
@@ -452,21 +491,45 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         </div>
 
                         {shareModal.mode === 'edit' && (
-                            <label className="legacy-field tool-share-template-full">
-                                <span>النص الكامل القابل للتعديل</span>
-                                <textarea
-                                    rows={8}
-                                    value={settings.shareTemplates?.[shareModal.key] || ''}
-                                    onChange={(event) => updateShareTemplate(shareModal.key, event.target.value)}
-                                    placeholder="اكتب نص المشاركة واستخدم المتغيرات مثل {result} و {url}"
-                                />
-                            </label>
+                            <div className="tool-bilingual-editor-grid tool-share-template-full">
+                                <div className="tool-language-editor-card" dir="rtl">
+                                    <strong>العربية</strong>
+                                    <label className="legacy-field">
+                                        <span>نص المشاركة بالعربية</span>
+                                        <textarea
+                                            rows={8}
+                                            value={settings.shareTemplates?.[shareModal.key] || ''}
+                                            onChange={(event) => updateShareTemplate(shareModal.key, 'ar', event.target.value)}
+                                            placeholder="اكتب نص المشاركة واستخدم المتغيرات مثل {result} و {url}"
+                                        />
+                                    </label>
+                                </div>
+                                <div className="tool-language-editor-card" dir="ltr">
+                                    <strong>English</strong>
+                                    <label className="legacy-field">
+                                        <span>Share text in English</span>
+                                        <textarea
+                                            rows={8}
+                                            value={settings.localizations?.en?.shareTemplates?.[shareModal.key] || ''}
+                                            onChange={(event) => updateShareTemplate(shareModal.key, 'en', event.target.value)}
+                                            placeholder="Write the share text and use variables such as {result} and {url}"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
                         )}
 
                         <div className="tool-share-template-full">
-                            <span>المعاينة بنتائج افتراضية</span>
+                            <span>المعاينة العربية بنتائج افتراضية</span>
                             <div className="tool-share-template-summary full-preview">
                                 <p>{getTemplateSummary(settings.shareTemplates?.[shareModal.key], shareModal.key)}</p>
+                            </div>
+                        </div>
+
+                        <div className="tool-share-template-full" dir="ltr">
+                            <span>English preview with sample results</span>
+                            <div className="tool-share-template-summary full-preview">
+                                <p>{getTemplateSummary(settings.localizations?.en?.shareTemplates?.[shareModal.key], shareModal.key)}</p>
                             </div>
                         </div>
 
@@ -508,7 +571,7 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                                 <button
                                     type="button"
                                     className={faq.active === false ? 'danger' : 'approve'}
-                                    onClick={() => updateFaq(index, 'active', faq.active === false)}
+                                    onClick={() => updateFaqActive(index, faq.active === false)}
                                     title={faq.active === false ? 'تفعيل السؤال' : 'إيقاف السؤال'}
                                 >
                                     <i className={`fa-solid ${faq.active === false ? 'fa-toggle-off' : 'fa-toggle-on'}`}></i>
@@ -553,20 +616,37 @@ export default function ToolContentSettings({ firebaseApi, showMessage, toolKey 
                         </div>
 
                         {faqModal.mode === 'edit' ? (
-                            <div className="legacy-form-grid tool-faq-modal-fields">
-                                <label className="legacy-field full-width">
-                                    <span>السؤال</span>
-                                    <input value={activeFaqs[faqModal.index].q || ''} onChange={(event) => updateFaq(faqModal.index, 'q', event.target.value)} />
-                                </label>
-                                <label className="legacy-field full-width">
-                                    <span>الإجابة</span>
-                                    <textarea rows={7} value={activeFaqs[faqModal.index].a || ''} onChange={(event) => updateFaq(faqModal.index, 'a', event.target.value)} />
-                                </label>
+                            <div className="tool-bilingual-editor-grid tool-faq-modal-fields">
+                                <div className="tool-language-editor-card" dir="rtl">
+                                    <strong>العربية</strong>
+                                    <label className="legacy-field full-width">
+                                        <span>السؤال بالعربية</span>
+                                        <input value={activeFaqs[faqModal.index].q || ''} onChange={(event) => updateFaq(faqModal.index, 'ar', 'q', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field full-width">
+                                        <span>الإجابة بالعربية</span>
+                                        <textarea rows={7} value={activeFaqs[faqModal.index].a || ''} onChange={(event) => updateFaq(faqModal.index, 'ar', 'a', event.target.value)} />
+                                    </label>
+                                </div>
+                                <div className="tool-language-editor-card" dir="ltr">
+                                    <strong>English</strong>
+                                    <label className="legacy-field full-width">
+                                        <span>Question in English</span>
+                                        <input value={englishFaqs[faqModal.index]?.q || ''} onChange={(event) => updateFaq(faqModal.index, 'en', 'q', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field full-width">
+                                        <span>Answer in English</span>
+                                        <textarea rows={7} value={englishFaqs[faqModal.index]?.a || ''} onChange={(event) => updateFaq(faqModal.index, 'en', 'a', event.target.value)} />
+                                    </label>
+                                </div>
                             </div>
                         ) : (
                             <div className="tool-faq-preview">
                                 <strong>{activeFaqs[faqModal.index].q || 'سؤال غير مكتمل'}</strong>
                                 <p>{activeFaqs[faqModal.index].a || 'لم تُكتب الإجابة بعد.'}</p>
+                                <hr />
+                                <strong dir="ltr">{englishFaqs[faqModal.index]?.q || 'English question not completed'}</strong>
+                                <p dir="ltr">{englishFaqs[faqModal.index]?.a || 'The English answer has not been written yet.'}</p>
                             </div>
                         )}
 
@@ -603,41 +683,40 @@ function SeoFields({
     isImageUploading = false,
     onImageUpload,
     showTechnicalFields = true,
-    language = 'ar',
+    inputLanguage = 'ar',
 }) {
-    const labels = language === 'en' ? {
-        searchTitle: 'Search result title', description: 'Search result description', h1: 'Main H1 heading', primary: 'Primary keyword', supporting: 'Supporting keywords', supportingPlaceholder: 'Separate keywords with commas', preview: 'Search result preview', open: 'Open tool link', emptyTitle: 'Search result title', emptyDescription: 'The page description will appear here as users may see it in search results.',
-    } : {
+    const labels = {
         searchTitle: 'عنوان نتائج البحث', description: 'وصف نتائج البحث', h1: 'عنوان H1 الرئيسي', primary: 'العبارة الرئيسية', supporting: 'العبارات المساندة', supportingPlaceholder: 'افصل بينها بفاصلة', preview: 'معاينة نتيجة البحث', open: 'فتح رابط الأداة', emptyTitle: 'عنوان نتيجة البحث', emptyDescription: 'سيظهر وصف الصفحة هنا كما يمكن أن يراه المستخدم في نتائج البحث.',
     };
+    const inputDirection = inputLanguage === 'en' ? 'ltr' : 'rtl';
     const searchTitle = seo.searchTitle || previewLabel;
     const description = seo.metaDescription || '';
     const canonical = seo.canonical || publicPath || '/';
 
     return (
-        <div className="tool-seo-fields-layout" dir={language === 'en' ? 'ltr' : 'rtl'}>
+        <div className="tool-seo-fields-layout" dir="rtl">
             <div className="legacy-form-grid tool-seo-fields">
                 <label className="legacy-field full-width">
                     <span>{labels.searchTitle}</span>
-                    <input value={seo.searchTitle || ''} onChange={(event) => onChange('searchTitle', event.target.value)} maxLength={65} />
+                    <input dir={inputDirection} value={seo.searchTitle || ''} onChange={(event) => onChange('searchTitle', event.target.value)} maxLength={65} />
                     <small>{String(seo.searchTitle || '').length}/65</small>
                 </label>
                 <label className="legacy-field full-width">
                     <span>{labels.description}</span>
-                    <textarea rows={3} value={seo.metaDescription || ''} onChange={(event) => onChange('metaDescription', event.target.value)} maxLength={170} />
+                    <textarea dir={inputDirection} rows={3} value={seo.metaDescription || ''} onChange={(event) => onChange('metaDescription', event.target.value)} maxLength={170} />
                     <small>{String(seo.metaDescription || '').length}/170</small>
                 </label>
                 <label className="legacy-field">
                     <span>{labels.h1}</span>
-                    <input value={seo.h1 || ''} onChange={(event) => onChange('h1', event.target.value)} />
+                    <input dir={inputDirection} value={seo.h1 || ''} onChange={(event) => onChange('h1', event.target.value)} />
                 </label>
                 <label className="legacy-field">
                     <span>{labels.primary}</span>
-                    <input value={seo.primaryKeyword || ''} onChange={(event) => onChange('primaryKeyword', event.target.value)} />
+                    <input dir={inputDirection} value={seo.primaryKeyword || ''} onChange={(event) => onChange('primaryKeyword', event.target.value)} />
                 </label>
                 <label className="legacy-field full-width">
                     <span>{labels.supporting}</span>
-                    <input value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder={labels.supportingPlaceholder} />
+                    <input dir={inputDirection} value={seo.supportingKeywords || ''} onChange={(event) => onChange('supportingKeywords', event.target.value)} placeholder={labels.supportingPlaceholder} />
                 </label>
                 {showTechnicalFields && <label className="legacy-field full-width">
                     <span>الرابط الأساسي Canonical</span>

@@ -72,7 +72,24 @@ describe('admin save and upload flows', () => {
 
         expect(identitySections).toContain('pwaUpdatePrompt');
         expect(identitySections).toContain('إعلان تحديث للتطبيقات المثبّتة');
+        expect(identitySections).toContain('{APP_VERSION}');
+        expect(identitySections).not.toContain("version: event.target.value");
         expect(updatePrompt).toContain('(display-mode: standalone)');
         expect(updatePrompt).toContain('UPDATE_SEEN_KEY');
+    });
+
+    it('edits bilingual FAQs, events, and share templates without translating the admin frame', () => {
+        const toolContent = readFileSync(join(process.cwd(), 'app', 'admin', 'tool-management', 'ToolContentSettings.jsx'), 'utf8');
+        const dateEvents = readFileSync(join(process.cwd(), 'app', 'admin', 'tool-management', 'date', 'page.jsx'), 'utf8');
+
+        expect(toolContent).toContain('السؤال بالعربية');
+        expect(toolContent).toContain('Question in English');
+        expect(toolContent).toContain('نص المشاركة بالعربية');
+        expect(toolContent).toContain('Share text in English');
+        expect(toolContent).toContain('inputLanguage={contentLanguage}');
+        expect(toolContent).not.toContain("searchTitle: 'Search result title'");
+        expect(dateEvents).toContain('اسم الحدث بالعربية');
+        expect(dateEvents).toContain('Event name in English');
+        expect(dateEvents).toContain('nameEn');
     });
 });

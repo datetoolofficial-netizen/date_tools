@@ -426,6 +426,10 @@ function normalizeToolLocalizations(toolKey, value = {}) {
                 key,
                 String(english.subtools?.[key] || fallback).trim() || fallback,
             ])),
+            shareTemplates: Object.fromEntries(Object.keys(DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {}).map((key) => [
+                key,
+                String(english.shareTemplates?.[key] || '').trim(),
+            ])),
             faqs: normalizeFaqItems(english.faqs),
         },
     };
@@ -520,6 +524,10 @@ export function getToolSettings(configData, toolKey, lang = 'ar') {
             { ...value, ...(english.subtoolSeo?.[key] || {}) },
         ])),
         subtools: { ...settings.subtools, ...english.subtools },
+        shareTemplates: Object.fromEntries(Object.entries(settings.shareTemplates || {}).map(([key, value]) => [
+            key,
+            english.shareTemplates?.[key] || value,
+        ])),
         faqs: english.faqs || [],
     };
 }
