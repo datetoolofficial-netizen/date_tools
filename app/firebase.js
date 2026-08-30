@@ -273,6 +273,7 @@ export const defaultSiteConfig = {
         enabled: true,
         text: "ثبّت الأداة على جهازك لاستخدام أسرع",
         buttonText: "ثبّت الأداة",
+        manualInstructions: "على iPhone وiPad: افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.",
     },
     pwaUpdatePrompt: normalizePwaUpdatePrompt(),
     customPages: {},

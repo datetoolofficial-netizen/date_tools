@@ -5,6 +5,24 @@ const IDENTITY_TEXT_FIELDS = [
     'copyrightText',
 ];
 
+const DEFAULT_ENGLISH_IDENTITY = {
+    toolDisplayName: 'Comprehensive Tools',
+    toolSlogan: 'All tools at your fingertips',
+    copyrightName: 'Comprehensive Tools',
+    copyrightText: 'All rights reserved',
+};
+
+const DEFAULT_ENGLISH_PAGE_TITLES = {
+    contact: 'Contact Us',
+    support: 'Contact Us',
+    terms: 'Terms of Use',
+    privacy: 'Privacy Policy',
+    months: 'Months Table',
+    'months-table': 'Months Table',
+    about: 'About Us',
+    'about-us': 'About Us',
+};
+
 function cleanText(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
@@ -13,10 +31,11 @@ export function normalizeIdentityTranslations(value = {}) {
     const english = value?.en || {};
     return {
         en: {
-            ...Object.fromEntries(IDENTITY_TEXT_FIELDS.map((field) => [field, cleanText(english[field])])),
+            ...Object.fromEntries(IDENTITY_TEXT_FIELDS.map((field) => [field, cleanText(english[field]) || DEFAULT_ENGLISH_IDENTITY[field] || ''])),
             pwaInstallPrompt: {
-                text: cleanText(english.pwaInstallPrompt?.text),
-                buttonText: cleanText(english.pwaInstallPrompt?.buttonText),
+                text: cleanText(english.pwaInstallPrompt?.text) || 'Install this tool for faster access.',
+                buttonText: cleanText(english.pwaInstallPrompt?.buttonText) || 'Install',
+                manualInstructions: cleanText(english.pwaInstallPrompt?.manualInstructions) || 'On iPhone or iPad, open Share and choose Add to Home Screen.',
             },
             mainSEO: {
                 title: cleanText(english.mainSEO?.title),
@@ -39,12 +58,27 @@ export function getLocalizedSiteConfig(config = {}, lang = 'ar') {
         ...(config.pwaInstallPrompt || {}),
         ...(english.pwaInstallPrompt.text ? { text: english.pwaInstallPrompt.text } : {}),
         ...(english.pwaInstallPrompt.buttonText ? { buttonText: english.pwaInstallPrompt.buttonText } : {}),
+        ...(english.pwaInstallPrompt.manualInstructions ? { manualInstructions: english.pwaInstallPrompt.manualInstructions } : {}),
     };
     localized.mainSEO = {
         ...(config.mainSEO || {}),
         ...(english.mainSEO.title ? { title: english.mainSEO.title } : {}),
         ...(english.mainSEO.description ? { description: english.mainSEO.description } : {}),
     };
+
+    const localizeItems = (items = []) => items.map((item = {}) => {
+        const fallbackTitle = DEFAULT_ENGLISH_PAGE_TITLES[String(item.slug || '').toLowerCase()] || '';
+        return {
+            ...item,
+            title: cleanText(item.titleEn) || fallbackTitle || item.title,
+            label: cleanText(item.labelEn) || item.label,
+            name: cleanText(item.nameEn) || item.name,
+        };
+    });
+
+    localized.internalPages = localizeItems(config.internalPages);
+    localized.externalLinks = localizeItems(config.externalLinks);
+    localized.socialLinks = localizeItems(config.socialLinks);
 
     return localized;
 }

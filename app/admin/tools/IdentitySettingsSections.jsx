@@ -39,6 +39,7 @@ export const EMPTY_IDENTITY = {
         enabled: true,
         text: 'ثبّت الأداة على جهازك لاستخدام أسرع',
         buttonText: 'ثبّت الأداة',
+        manualInstructions: 'على iPhone وiPad: افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.',
     },
     pwaUpdatePrompt: normalizePwaUpdatePrompt(),
 };
@@ -48,6 +49,7 @@ export function normalizePwaInstallPrompt(value = {}) {
         enabled: value?.enabled !== false,
         text: String(value?.text || 'ثبّت الأداة على جهازك لاستخدام أسرع'),
         buttonText: String(value?.buttonText || 'ثبّت الأداة'),
+        manualInstructions: String(value?.manualInstructions || 'على iPhone وiPad: افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.'),
     };
 }
 
@@ -123,7 +125,7 @@ export default function IdentitySettingsSections({
                         <span className="tools-section-icon color-identity"><i className="fa-solid fa-fingerprint"></i></span>
                         <div>
                             <h2>التعديل الأساسي للأداة</h2>
-                            <p>عدّل اسم الأداة، السلوغن، البريد، اللوقو، الأيقونات، وحقوق الموقع من مكان واحد.</p>
+                            <p>عدّل اسم الأداة، السلوغن، البريد، الشعار، الأيقونات، وحقوق الموقع من مكان واحد.</p>
                         </div>
                     </div>
                 </div>
@@ -174,26 +176,29 @@ export default function IdentitySettingsSections({
                             </div>
 
                             <div className="legacy-field">
-                                <label>إظهار اللوقو</label>
-                                <label className="legacy-switch-row">
+                                <label>إظهار الشعار</label>
+                                <label className="legacy-switch-row admin-toggle-row">
                                     <input
                                         type="checkbox"
                                         checked={identity.hasLogo}
                                         onChange={(event) => onFieldChange('hasLogo', event.target.checked)}
                                     />
-                                    <span>إظهار أو إخفاء اللوقو فقط بدون إخفاء اسم الأداة</span>
+                                    <span className="admin-status-toggle" aria-hidden="true">
+                                        <span>{identity.hasLogo ? 'تشغيل' : 'إيقاف'}</span>
+                                    </span>
+                                    <span>إظهار أو إخفاء الشعار فقط بدون إخفاء اسم الأداة</span>
                                 </label>
                             </div>
 
                             <IdentityMediaField
-                                label="رابط اللوقو"
+                                label="الشعار"
                                 field="logoUrl"
                                 category="logo"
-                                uploadLabel="اللوقو"
+                                uploadLabel="الشعار"
                                 value={identity.logoUrl}
                                 uploadingTarget={uploadingTarget}
                                 onMediaUpload={onMediaUpload}
-                                hint="يفضل لوقو PNG أو WEBP بخلفية شفافة."
+                                hint="يفضل شعار PNG أو WEBP بخلفية شفافة."
                             />
 
                             <IdentityMediaField
@@ -237,7 +242,7 @@ export default function IdentitySettingsSections({
                             <div className="legacy-logo-preview">
                                 {identity.hasLogo && identity.logoUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={identity.logoUrl} alt="معاينة اللوقو" />
+                                    <img src={identity.logoUrl} alt="معاينة الشعار" />
                                 ) : (
                                     <i className="fa-solid fa-calendar-days"></i>
                                 )}
@@ -285,6 +290,17 @@ export default function IdentitySettingsSections({
                     </div>
                 </div>
 
+                <div className="admin-content-language-toolbar section-language-toolbar" aria-label="لغة محتوى التثبيت">
+                    <div>
+                        <strong>لغة نصوص التثبيت</strong>
+                        <small>اختر اللغة التي تريد تعبئة رسالة التثبيت وتعليماتها.</small>
+                    </div>
+                    <div className="admin-language-segmented" role="group" aria-label="اختيار لغة نصوص التثبيت">
+                        <button type="button" className={contentLanguage === 'ar' ? 'active' : ''} onClick={() => setContentLanguage('ar')}>العربية</button>
+                        <button type="button" className={contentLanguage === 'en' ? 'active' : ''} onClick={() => setContentLanguage('en')}>English</button>
+                    </div>
+                </div>
+
                 <div className="identity-pwa-grid">
                     <div className="identity-pwa-controls">
                         <IdentityMediaField
@@ -300,7 +316,7 @@ export default function IdentitySettingsSections({
                             small
                         />
 
-                        <label className={`ad-settings-switch house compact-switch ${identity.pwaInstallPrompt?.enabled !== false ? 'active' : ''}`}>
+                        <label className={`ad-settings-switch house compact-switch admin-toggle-card ${identity.pwaInstallPrompt?.enabled !== false ? 'active' : ''}`}>
                             <input
                                 type="checkbox"
                                 checked={identity.pwaInstallPrompt?.enabled !== false}
@@ -311,10 +327,11 @@ export default function IdentitySettingsSections({
                                 <strong>إظهار زر تثبيت الأداة</strong>
                                 <small>يعرض تنبيه التثبيت عندما يدعم المتصفح تثبيت الموقع كتطبيق.</small>
                             </span>
+                            <span className="admin-status-toggle" aria-hidden="true"><span>{identity.pwaInstallPrompt?.enabled !== false ? 'تشغيل' : 'إيقاف'}</span></span>
                         </label>
 
                         <div className="pwa-update-admin-controls">
-                            <label className={`ad-settings-switch house compact-switch ${identity.pwaUpdatePrompt?.enabled === true ? 'active' : ''}`}>
+                            <label className={`ad-settings-switch house compact-switch admin-toggle-card ${identity.pwaUpdatePrompt?.enabled === true ? 'active' : ''}`}>
                                 <input
                                     type="checkbox"
                                     checked={identity.pwaUpdatePrompt?.enabled === true}
@@ -328,6 +345,7 @@ export default function IdentitySettingsSections({
                                     <strong>إعلان تحديث للتطبيقات المثبّتة</strong>
                                     <small>يفحص آخر نسخة تلقائيًا داخل التطبيق المثبّت فقط. عطّل المفتاح مؤقتًا عند الحاجة لإيقاف الإشعارات.</small>
                                 </span>
+                                <span className="admin-status-toggle" aria-hidden="true"><span>{identity.pwaUpdatePrompt?.enabled === true ? 'تشغيل' : 'إيقاف'}</span></span>
                             </label>
                             <div className="legacy-field pwa-update-version-field">
                                 <span>رقم التحديث المعلن</span>
@@ -357,6 +375,20 @@ export default function IdentitySettingsSections({
                             </div>
                         </div>
 
+                        <div className="legacy-field pwa-manual-install-field">
+                            <label>تعليمات التثبيت للأجهزة دون زر تثبيت مباشر</label>
+                            <textarea
+                                rows={3}
+                                dir={isEnglish ? 'ltr' : 'rtl'}
+                                value={displayedPwaPrompt?.manualInstructions || ''}
+                                onChange={(event) => updatePwaTextField('manualInstructions', event.target.value)}
+                                placeholder={isEnglish
+                                    ? 'Example: On iPhone, open Share and choose Add to Home Screen.'
+                                    : 'مثال: على iPhone افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.'}
+                            />
+                            <span className="legacy-field-hint">تظهر هذه التعليمات فقط عندما لا يوفر النظام زر تثبيت مباشر، مثل Safari على iPhone وiPad.</span>
+                        </div>
+
                         <div className="pwa-shortcut-admin-list">
                             {pwaShortcutItems.map((item) => {
                                 const iconValue = identity[item.field] || '';
@@ -372,7 +404,7 @@ export default function IdentitySettingsSections({
                                         </div>
                                         <div>
                                             <strong>{item.label}</strong>
-                                            <small dir="ltr">{iconValue || 'لم ترفع أيقونة بعد'}</small>
+                                            <small>{iconValue ? 'تم رفع الأيقونة' : 'لم ترفع أيقونة بعد'}</small>
                                         </div>
                                         <label className={`pwa-shortcut-upload ${uploadingTarget === item.field ? 'is-uploading' : ''}`}>
                                             <i className="fa-solid fa-cloud-arrow-up"></i>
@@ -453,20 +485,19 @@ function IdentityMediaField({
     return (
         <div className="legacy-field">
             <label>{label}</label>
-            <label className={`legacy-media-picker ${isUploading ? 'is-uploading' : ''}`}>
+            <label className={`legacy-media-picker legacy-media-tile ${isUploading ? 'is-uploading' : ''}`} title={isUploading ? `جاري رفع ${uploadLabel}` : `استبدال ${uploadLabel}`}>
                 <span className={`legacy-media-picker-preview ${small ? 'small' : ''}`}>
                     {previewValue ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={previewValue} alt={`معاينة ${uploadLabel}`} />
                     ) : (
-                        <i className="fa-regular fa-image"></i>
+                        <i className="fa-solid fa-cloud-arrow-up"></i>
                     )}
                 </span>
-                <span className="legacy-media-picker-text">
-                    <strong>{isUploading ? `جاري رفع ${uploadLabel}...` : `اختر أو استبدل ${uploadLabel}`}</strong>
-                    <small dir="ltr">{value || fallbackValue || `/api/media/${category}/...`}</small>
+                <span className="legacy-media-picker-overlay">
+                    <i className={isUploading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-camera-rotate'}></i>
+                    <strong>{isUploading ? 'جاري الرفع...' : 'استبدال'}</strong>
                 </span>
-                <span className="legacy-media-picker-action"><i className="fa-solid fa-cloud-arrow-up"></i></span>
                 <input
                     type="file"
                     accept=".png,.jpg,.jpeg,.webp,.gif,.ico,image/png,image/jpeg,image/webp,image/gif,image/x-icon,image/vnd.microsoft.icon"

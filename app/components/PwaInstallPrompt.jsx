@@ -25,6 +25,9 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
     const isEnabled = settings?.enabled !== false;
     const promptText = settings?.text?.trim() || DEFAULT_PROMPT_TEXT;
     const buttonText = settings?.buttonText?.trim() || DEFAULT_BUTTON_TEXT;
+    const manualInstructions = settings?.manualInstructions?.trim() || (lang === 'en'
+        ? 'On iPhone or iPad, open Share and choose Add to Home Screen.'
+        : 'على iPhone أو iPad: افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.');
 
     useEffect(() => {
         if (!isEnabled || isStandaloneDisplay()) return undefined;
@@ -131,9 +134,7 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
             <span className="pwa-install-copy">
                 <strong>{buttonText}</strong>
                 <span>{isIosInstall
-                    ? (lang === 'en'
-                        ? 'On iPhone: tap Share, then choose Add to Home Screen.'
-                        : 'على iPhone: اضغط زر المشاركة، ثم اختر إضافة إلى الشاشة الرئيسية.')
+                    ? manualInstructions
                     : promptText}</span>
             </span>
             <span className="pwa-install-actions">

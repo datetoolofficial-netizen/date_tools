@@ -59,10 +59,12 @@ function cleanInternalPages(pages, includeContent) {
     if (!Array.isArray(pages)) return [];
     return pages.map((page = {}) => ({
         title: page.title || page.name || page.label || '',
+        titleEn: page.titleEn || '',
         slug: page.slug || page.path || page.url || '',
         path: page.path || '',
         url: page.url || '',
         location: page.location || '',
+        enabled: page.enabled !== false,
         isActive: page.isActive !== false,
         order: Number(page.order || 0),
         ...(includeContent ? { content: String(page.content || '') } : {}),

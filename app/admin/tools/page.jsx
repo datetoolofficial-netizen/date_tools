@@ -34,6 +34,8 @@ const SOCIAL_PRESETS = [
 ];
 
 const EMPTY_SOCIAL = {
+    title: '',
+    titleEn: '',
     icon: 'fa-x-twitter',
     url: '',
     color: '#111827',
@@ -42,20 +44,38 @@ const EMPTY_SOCIAL = {
 
 const EMPTY_EXTERNAL_LINK = {
     title: '',
+    titleEn: '',
     url: '',
     location: 'footer',
     enabled: true,
 };
 
-function normalizeManagedItems(items) {
+const DEFAULT_PAGE_TITLE_EN = {
+    contact: 'Contact Us',
+    support: 'Contact Us',
+    terms: 'Terms of Use',
+    privacy: 'Privacy Policy',
+    months: 'Months Table',
+    'months-table': 'Months Table',
+    about: 'About Us',
+    'about-us': 'About Us',
+};
+
+function normalizeManagedItems(items, type = '') {
     return Array.isArray(items)
-        ? items.map((item) => ({ ...item, enabled: item?.enabled !== false }))
+        ? items.map((item) => ({
+            ...item,
+            ...(type === 'pages' && !item?.titleEn
+                ? { titleEn: DEFAULT_PAGE_TITLE_EN[String(item?.slug || '').toLowerCase()] || '' }
+                : {}),
+            enabled: item?.enabled !== false,
+        }))
         : [];
 }
 
 function pickToolsConfig(config = {}) {
     return {
-        internalPages: normalizeManagedItems(config.internalPages),
+        internalPages: normalizeManagedItems(config.internalPages, 'pages'),
         customPages: config.customPages || {},
         socialLinks: normalizeManagedItems(config.socialLinks),
         externalLinks: normalizeManagedItems(config.externalLinks),
@@ -112,6 +132,7 @@ function getPageSnapshots(config = {}) {
         const customPage = config.customPages?.[slug] || {};
         snapshots.set(slug, JSON.stringify({
             title: page?.title || '',
+            titleEn: page?.titleEn || '',
             location: page?.location || 'footer',
             enabled: page?.enabled !== false,
             contentTitle: customPage?.title || '',
@@ -167,9 +188,9 @@ function getSocialLabel(icon) {
 
 function getPrivacyPageChoices(pages = []) {
     const choices = [
-        { path: '/', title: 'التاريخ' },
-        { path: '/clock', title: 'الساعة' },
-        { path: '/weather', title: 'الطقس' },
+        { path: '/', title: 'التاريخ', titleEn: 'Date' },
+        { path: '/clock', title: 'الساعة', titleEn: 'Clock' },
+        { path: '/weather', title: 'الطقس', titleEn: 'Weather' },
     ];
 
     pages.forEach((page) => {
@@ -180,11 +201,27 @@ function getPrivacyPageChoices(pages = []) {
             choices.push({
                 path,
                 title: page?.title || path,
+                titleEn: page?.titleEn || DEFAULT_PAGE_TITLE_EN[slug] || '',
             });
         }
     });
 
     return choices;
+}
+
+function SectionLanguageToolbar({ section, language, onChange }) {
+    return (
+        <div className="admin-content-language-toolbar section-language-toolbar" aria-label={`لغة أسماء ${section}`}>
+            <div>
+                <strong>لغة الأسماء</strong>
+                <small>تتغير أسماء العناصر فقط حاليًا؛ الروابط والمسارات وبقية الإعدادات مشتركة.</small>
+            </div>
+            <div className="admin-language-segmented" role="group" aria-label="اختيار لغة الأسماء">
+                <button type="button" className={language === 'ar' ? 'active' : ''} onClick={() => onChange('ar')}>العربية</button>
+                <button type="button" className={language === 'en' ? 'active' : ''} onClick={() => onChange('en')}>English</button>
+            </div>
+        </div>
+    );
 }
 
 function AdminNav({ active = 'tools' }) {
@@ -308,9 +345,20 @@ export default function AdminToolsPage() {
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
     const [editingRow, setEditingRow] = useState(null);
     const [addItemModal, setAddItemModal] = useState(null);
+    const [sectionLanguages, setSectionLanguages] = useState({ pages: 'ar', links: 'ar', social: 'ar' });
     const firebaseApiRef = useRef(null);
     const persistedToolsConfigRef = useRef(pickToolsConfig());
     const messageTimerRef = useRef(null);
+    const getSectionLanguage = (section) => sectionLanguages[section] || 'ar';
+    const setSectionLanguage = (section, language) => {
+        setSectionLanguages((current) => ({ ...current, [section]: language }));
+    };
+    const getLocalizedName = (item, section) => (
+        getSectionLanguage(section) === 'en'
+            ? (item?.titleEn || item?.title || '')
+            : (item?.title || '')
+    );
+    const getNameField = (section) => (getSectionLanguage(section) === 'en' ? 'titleEn' : 'title');
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -699,6 +747,7 @@ export default function AdminToolsPage() {
                 ...current,
                 internalPages: [...(current.internalPages || []), {
                     title,
+                    titleEn: String(addItemModal.titleEn || '').trim(),
                     slug,
                     location: addItemModal.location || 'footer',
                     enabled: true,
@@ -719,6 +768,7 @@ export default function AdminToolsPage() {
                 ...current,
                 externalLinks: [...(current.externalLinks || []), {
                     title,
+                    titleEn: String(addItemModal.titleEn || '').trim(),
                     url,
                     location: addItemModal.location || 'footer',
                     enabled: true,
@@ -733,6 +783,8 @@ export default function AdminToolsPage() {
             setToolsConfig((current) => ({
                 ...current,
                 socialLinks: [...(current.socialLinks || []), {
+                    title: String(addItemModal.title || '').trim(),
+                    titleEn: String(addItemModal.titleEn || '').trim(),
                     icon: addItemModal.icon || EMPTY_SOCIAL.icon,
                     url,
                     color: addItemModal.color || EMPTY_SOCIAL.color,
@@ -1009,7 +1061,8 @@ export default function AdminToolsPage() {
                     </div>
 
                     <div className="privacy-admin-controls">
-                        <label className="privacy-admin-toggle">
+                        <SectionLanguageToolbar section="صفحات الخصوصية" language={getSectionLanguage('pages')} onChange={(language) => setSectionLanguage('pages', language)} />
+                        <label className={`privacy-admin-toggle admin-toggle-card ${toolsConfig.privacySettingsButton?.enabled === true ? 'active' : ''}`}>
                             <input
                                 type="checkbox"
                                 checked={toolsConfig.privacySettingsButton?.enabled === true}
@@ -1019,6 +1072,7 @@ export default function AdminToolsPage() {
                                 <strong>إظهار زر إعدادات الخصوصية</strong>
                                 <small>بعد موافقة الزائر، يظهر الزر فقط في الصفحات المختارة أدناه.</small>
                             </span>
+                            <span className="admin-status-toggle" aria-hidden="true"><span>{toolsConfig.privacySettingsButton?.enabled === true ? 'تشغيل' : 'إيقاف'}</span></span>
                         </label>
 
                         <div className="privacy-admin-pages">
@@ -1029,7 +1083,7 @@ export default function AdminToolsPage() {
                                         checked={selectedPrivacyPages.has(normalizePagePath(page.path))}
                                         onChange={() => togglePrivacySettingsPage(page.path)}
                                     />
-                                    <span>{page.title}</span>
+                                    <span>{getSectionLanguage('pages') === 'en' ? (page.titleEn || page.title) : page.title}</span>
                                     <code dir="ltr">{page.path}</code>
                                 </label>
                             ))}
@@ -1047,6 +1101,8 @@ export default function AdminToolsPage() {
                             </div>
                         </div>
                     </div>
+
+                    <SectionLanguageToolbar section="الصفحات" language={getSectionLanguage('pages')} onChange={(language) => setSectionLanguage('pages', language)} />
 
                     <div className="tools-list tools-managed-table">
                         {(toolsConfig.internalPages || []).length === 0 && (
@@ -1069,7 +1125,7 @@ export default function AdminToolsPage() {
                                         <>
                                             <div className="legacy-field">
                                                 <label>عنوان الصفحة</label>
-                                                <input value={page.title || ''} onChange={(event) => updatePage(index, 'title', event.target.value)} />
+                                                <input dir={getSectionLanguage('pages') === 'en' ? 'ltr' : 'rtl'} value={getLocalizedName(page, 'pages')} onChange={(event) => updatePage(index, getNameField('pages'), event.target.value)} />
                                             </div>
                                             <div className="legacy-field">
                                                 <label>المسار</label>
@@ -1086,7 +1142,7 @@ export default function AdminToolsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <strong className="tools-table-value">{page.title || 'بدون عنوان'}</strong>
+                                            <strong className="tools-table-value">{getLocalizedName(page, 'pages') || 'بدون عنوان'}</strong>
                                             <code className="tools-table-value tools-table-value-ltr">/{page.slug || '-'}</code>
                                             <span className="tools-table-value">{getLocationLabel(page.location)}</span>
                                         </>
@@ -1138,6 +1194,8 @@ export default function AdminToolsPage() {
                         </div>
                     </div>
 
+                    <SectionLanguageToolbar section="الروابط" language={getSectionLanguage('links')} onChange={(language) => setSectionLanguage('links', language)} />
+
                     <div className="tools-list tools-managed-table">
                         {(toolsConfig.externalLinks || []).length === 0 && (
                             <div className="tools-empty">لا توجد روابط خارجية بعد.</div>
@@ -1159,7 +1217,7 @@ export default function AdminToolsPage() {
                                         <>
                                             <div className="legacy-field">
                                                 <label>اسم الرابط</label>
-                                                <input value={link.title || ''} onChange={(event) => updateArrayItem('externalLinks', index, 'title', event.target.value)} />
+                                                <input dir={getSectionLanguage('links') === 'en' ? 'ltr' : 'rtl'} value={getLocalizedName(link, 'links')} onChange={(event) => updateArrayItem('externalLinks', index, getNameField('links'), event.target.value)} />
                                             </div>
                                             <div className="legacy-field">
                                                 <label>الرابط</label>
@@ -1176,7 +1234,7 @@ export default function AdminToolsPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <strong className="tools-table-value">{link.title || 'بدون اسم'}</strong>
+                                            <strong className="tools-table-value">{getLocalizedName(link, 'links') || 'بدون اسم'}</strong>
                                             <code className="tools-table-value tools-table-value-ltr">{link.url || '-'}</code>
                                             <span className="tools-table-value">{getLocationLabel(link.location)}</span>
                                         </>
@@ -1228,6 +1286,8 @@ export default function AdminToolsPage() {
                         </div>
                     </div>
 
+                    <SectionLanguageToolbar section="حسابات التواصل" language={getSectionLanguage('social')} onChange={(language) => setSectionLanguage('social', language)} />
+
                     <div className="tools-social-grid tools-managed-table">
                         {(toolsConfig.socialLinks || []).length === 0 && (
                             <div className="tools-empty">لا توجد حسابات سوشيال بعد.</div>
@@ -1264,6 +1324,12 @@ export default function AdminToolsPage() {
                                                     <option value={preset.icon} key={preset.icon}>{preset.label}</option>
                                                 ))}
                                             </select>
+                                            <input
+                                                dir={getSectionLanguage('social') === 'en' ? 'ltr' : 'rtl'}
+                                                value={getLocalizedName(social, 'social')}
+                                                placeholder={getSectionLanguage('social') === 'en' ? 'Display name' : 'اسم العرض'}
+                                                onChange={(event) => updateArrayItem('socialLinks', index, getNameField('social'), event.target.value)}
+                                            />
                                         </div>
                                         <div className="legacy-field">
                                             <label>الرابط</label>
@@ -1275,7 +1341,7 @@ export default function AdminToolsPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <strong className="tools-table-value">{getSocialLabel(social.icon)}</strong>
+                                        <strong className="tools-table-value">{getLocalizedName(social, 'social') || getSocialLabel(social.icon)}</strong>
                                         <code className="tools-table-value tools-table-value-ltr">{social.url || '-'}</code>
                                         <span className="tools-social-color-display">
                                             <i style={{ backgroundColor: social.color || '#3b82f6' }}></i>
@@ -1374,8 +1440,12 @@ export default function AdminToolsPage() {
                             {addItemModal.type === 'page' && (
                                 <>
                                     <label className="legacy-field">
-                                        <span>عنوان الصفحة</span>
+                                        <span>عنوان الصفحة بالعربية</span>
                                         <input autoFocus value={addItemModal.title || ''} onChange={(event) => updateAddItemModal('title', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>Page title in English</span>
+                                        <input dir="ltr" value={addItemModal.titleEn || ''} onChange={(event) => updateAddItemModal('titleEn', event.target.value)} />
                                     </label>
                                     <label className="legacy-field">
                                         <span>المسار</span>
@@ -1387,8 +1457,12 @@ export default function AdminToolsPage() {
                             {addItemModal.type === 'link' && (
                                 <>
                                     <label className="legacy-field">
-                                        <span>اسم الرابط</span>
+                                        <span>اسم الرابط بالعربية</span>
                                         <input autoFocus value={addItemModal.title || ''} onChange={(event) => updateAddItemModal('title', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>Link name in English</span>
+                                        <input dir="ltr" value={addItemModal.titleEn || ''} onChange={(event) => updateAddItemModal('titleEn', event.target.value)} />
                                     </label>
                                     <label className="legacy-field">
                                         <span>الرابط</span>
@@ -1410,6 +1484,14 @@ export default function AdminToolsPage() {
 
                             {addItemModal.type === 'social' && (
                                 <>
+                                    <label className="legacy-field">
+                                        <span>اسم العرض بالعربية</span>
+                                        <input value={addItemModal.title || ''} onChange={(event) => updateAddItemModal('title', event.target.value)} />
+                                    </label>
+                                    <label className="legacy-field">
+                                        <span>Display name in English</span>
+                                        <input dir="ltr" value={addItemModal.titleEn || ''} onChange={(event) => updateAddItemModal('titleEn', event.target.value)} />
+                                    </label>
                                     <label className="legacy-field">
                                         <span>المنصة</span>
                                         <select value={addItemModal.icon || EMPTY_SOCIAL.icon} onChange={(event) => {
