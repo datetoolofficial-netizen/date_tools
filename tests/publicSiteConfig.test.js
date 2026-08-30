@@ -126,7 +126,7 @@ describe('public settings projection', () => {
             identityTranslations: {},
             internalPages: [
                 { title: 'سياسة الخصوصية', titleEn: 'Privacy Policy', slug: 'privacy', enabled: true },
-                { title: 'جدول الأشهر', slug: 'month-names', enabled: true },
+                { title: 'جدول الأشهر', titleEn: 'جدول الأشهر', slug: 'month-names', enabled: true },
             ],
             externalLinks: [{ title: 'الدعم', titleEn: 'Support', url: 'https://example.com' }],
             pwaInstallPrompt: { text: 'تثبيت', buttonText: 'ثبّت' },
@@ -151,10 +151,10 @@ describe('public settings projection', () => {
             },
         });
 
-        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.42', schemaVersion: 2 });
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.43', schemaVersion: 2 });
         expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
         expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(true);
         expect(normalizePwaUpdatePrompt({ enabled: false, schemaVersion: 2 }).enabled).toBe(false);
-        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.42');
+        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.43');
     });
 });

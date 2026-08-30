@@ -28,6 +28,10 @@ function cleanText(value) {
     return typeof value === 'string' ? value.trim() : '';
 }
 
+function containsArabic(value) {
+    return /[\u0600-\u06ff]/.test(value);
+}
+
 export function normalizeIdentityTranslations(value = {}) {
     const english = value?.en || {};
     return {
@@ -69,9 +73,10 @@ export function getLocalizedSiteConfig(config = {}, lang = 'ar') {
 
     const localizeItems = (items = []) => items.map((item = {}) => {
         const fallbackTitle = DEFAULT_ENGLISH_PAGE_TITLES[String(item.slug || '').toLowerCase()] || '';
+        const savedEnglishTitle = cleanText(item.titleEn);
         return {
             ...item,
-            title: cleanText(item.titleEn) || fallbackTitle || item.title,
+            title: (savedEnglishTitle && !containsArabic(savedEnglishTitle) ? savedEnglishTitle : '') || fallbackTitle || item.title,
             label: cleanText(item.labelEn) || item.label,
             name: cleanText(item.nameEn) || item.name,
         };
