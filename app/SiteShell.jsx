@@ -11,6 +11,8 @@ import { DEFAULT_PRIVACY_CONSENT, getPrivacyConsent, savePrivacyConsent } from '
 import { getLocalizedSiteConfig } from './localizedConfig';
 import { i18n } from './i18n';
 import { getToolSettings } from './toolSettings';
+import { APP_VERSION } from './version';
+import { resolvePrivacyUiState } from './privacyUiState';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -338,16 +340,30 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     useEffect(() => {
         const faviconUrl = configData?.faviconUrl || configData?.appIconUrl || configData?.logoUrl || '';
-        if (!faviconUrl) return;
+        const appleTouchIconUrl = configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || '';
+        if (!faviconUrl && !appleTouchIconUrl) return;
 
-        let icon = document.querySelector("link[rel='icon']");
-        if (!icon) {
-            icon = document.createElement('link');
-            icon.rel = 'icon';
-            document.head.appendChild(icon);
+        if (faviconUrl) {
+            let icon = document.querySelector("link[rel='icon']");
+            if (!icon) {
+                icon = document.createElement('link');
+                icon.rel = 'icon';
+                document.head.appendChild(icon);
+            }
+            icon.href = faviconUrl;
         }
 
-        icon.href = faviconUrl;
+        if (appleTouchIconUrl) {
+            let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
+            if (!appleIcon) {
+                appleIcon = document.createElement('link');
+                appleIcon.rel = 'apple-touch-icon';
+                document.head.appendChild(appleIcon);
+            }
+            const versionedIcon = new URL(appleTouchIconUrl, window.location.origin);
+            versionedIcon.searchParams.set('v', APP_VERSION);
+            appleIcon.href = versionedIcon.toString();
+        }
     }, [configData?.faviconUrl, configData?.appIconUrl, configData?.logoUrl]);
 
     useEffect(() => {
@@ -385,9 +401,13 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, []);
 
     const collapsePrivacyPanel = useCallback(() => {
+        if (privacyConsent !== null) {
+            setShowPrivacySettings(false);
+            return;
+        }
         localStorage.setItem(PRIVACY_PANEL_COLLAPSED_KEY, 'true');
         setIsPrivacyPanelCollapsed(true);
-    }, []);
+    }, [privacyConsent]);
 
     const expandPrivacyPanel = useCallback(() => {
         localStorage.removeItem(PRIVACY_PANEL_COLLAPSED_KEY);
@@ -397,9 +417,13 @@ export default function SiteShell({ children, initialConfig = null }) {
     const openPrivacySettings = useCallback(() => {
         const currentConsent = getPrivacyConsent() || DEFAULT_PRIVACY_CONSENT;
         setPrivacyDraft(currentConsent);
-        setPrivacyConsent(null);
         setShowPrivacySettings(true);
     }, []);
+
+    useEffect(() => {
+        if (privacyConsent === null || shouldShowPrivacySettingsButton(localizedConfigData, pathname)) return;
+        setShowPrivacySettings(false);
+    }, [localizedConfigData, pathname, privacyConsent]);
 
     const requestCurrentLocation = useCallback(async (options = {}) => {
         const forceRefresh = Boolean(options.force);
@@ -542,16 +566,17 @@ export default function SiteShell({ children, initialConfig = null }) {
         privacyConsent,
         updatePrivacyConsent,
     };
-    const showPendingPrivacyButton = isPrivacyReady
-        && privacyConsent === null
-        && isPrivacyPanelCollapsed;
-    const showConfiguredPrivacyButton = privacyConsent !== null
-        && shouldShowPrivacySettingsButton(localizedConfigData, pathname);
-    const showPrivacySettingsButton = !isSiteLoading
-        && (showPendingPrivacyButton || showConfiguredPrivacyButton);
-    const isPrivacyPanelOpen = isPrivacyReady
-        && privacyConsent === null
-        && !isPrivacyPanelCollapsed;
+    const privacyUiState = resolvePrivacyUiState({
+        isReady: isPrivacyReady,
+        consent: privacyConsent,
+        isCollapsed: isPrivacyPanelCollapsed,
+        isSettingsOpen: showPrivacySettings,
+        isConfiguredPage: shouldShowPrivacySettingsButton(localizedConfigData, pathname),
+        isLoading: isSiteLoading,
+    });
+    const showPendingPrivacyButton = privacyUiState.showPendingButton;
+    const showPrivacySettingsButton = privacyUiState.showSettingsButton;
+    const isPrivacyPanelOpen = privacyUiState.isPanelOpen;
 
     if (!shouldUseShell) {
         return (

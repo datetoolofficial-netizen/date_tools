@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 const LEGACY_DISMISSED_KEY = 'date_tools_pwa_install_dismissed';
 const COLLAPSED_KEY = 'date_tools_pwa_install_collapsed';
 const COMPLETED_KEY = 'date_tools_pwa_install_decided';
+const PROMPT_STATE_VERSION_KEY = 'date_tools_pwa_install_state_version';
+const PROMPT_STATE_VERSION = '2';
 const INSTALL_PROMPT_DELAY_MS = 12_000;
 const DEFAULT_PROMPT_TEXT = 'ثبّت الأداة على جهازك لاستخدام أسرع';
 const DEFAULT_BUTTON_TEXT = 'ثبّت الأداة';
@@ -27,8 +29,14 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
     useEffect(() => {
         if (!isEnabled || isStandaloneDisplay()) return undefined;
 
-        const hasDecided = localStorage.getItem(COMPLETED_KEY) === 'true';
-        if (hasDecided) return undefined;
+        // Older releases treated a dismissed prompt as a permanent decision.
+        // A normal browser session should stay eligible until standalone mode is detected.
+        localStorage.removeItem(COMPLETED_KEY);
+        if (localStorage.getItem(PROMPT_STATE_VERSION_KEY) !== PROMPT_STATE_VERSION) {
+            localStorage.removeItem(COLLAPSED_KEY);
+            localStorage.removeItem(LEGACY_DISMISSED_KEY);
+            localStorage.setItem(PROMPT_STATE_VERSION_KEY, PROMPT_STATE_VERSION);
+        }
 
         const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent || '')
             && window.navigator.standalone !== true;

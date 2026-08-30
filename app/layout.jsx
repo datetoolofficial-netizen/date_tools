@@ -51,6 +51,17 @@ async function getMetadataConfig() {
     return getManagedSiteConfig();
 }
 
+function versionedUrl(value = '') {
+    if (!value) return '';
+    try {
+        const url = new URL(value);
+        url.searchParams.set('v', APP_VERSION);
+        return url.toString();
+    } catch {
+        return value;
+    }
+}
+
 export async function generateMetadata() {
     const config = await getMetadataConfig();
     const preview = resolveLinkPreview(config);
@@ -59,6 +70,7 @@ export async function generateMetadata() {
     const siteName = preview.siteName || title;
     const imageUrl = absoluteUrl(preview.imageUrl);
     const faviconUrl = absoluteUrl(config.faviconUrl || config.appIconUrl || config.logoUrl);
+    const appIconUrl = versionedUrl(absoluteUrl(config.appIconUrl || config.logoUrl || config.faviconUrl));
     const images = imageUrl ? [{ url: imageUrl, alt: title }] : undefined;
     const googleSiteVerification = config.externalIntegrations?.googleSiteVerification || '';
     const bingSiteVerification = config.externalIntegrations?.bingSiteVerification || '';
@@ -97,7 +109,7 @@ export async function generateMetadata() {
         icons: faviconUrl ? {
             icon: faviconUrl,
             shortcut: faviconUrl,
-            apple: faviconUrl,
+            apple: appIconUrl || faviconUrl,
         } : undefined,
         verification: {
             google: googleSiteVerification || undefined,
