@@ -124,7 +124,10 @@ describe('public settings projection', () => {
             toolDisplayName: 'الأدوات الشاملة',
             toolSlogan: 'كل الأدوات بين يديك',
             identityTranslations: {},
-            internalPages: [{ title: 'سياسة الخصوصية', titleEn: 'Privacy Policy', slug: 'privacy', enabled: true }],
+            internalPages: [
+                { title: 'سياسة الخصوصية', titleEn: 'Privacy Policy', slug: 'privacy', enabled: true },
+                { title: 'جدول الأشهر', slug: 'month-names', enabled: true },
+            ],
             externalLinks: [{ title: 'الدعم', titleEn: 'Support', url: 'https://example.com' }],
             pwaInstallPrompt: { text: 'تثبيت', buttonText: 'ثبّت' },
         });
@@ -133,6 +136,7 @@ describe('public settings projection', () => {
         expect(english.toolDisplayName).toBe('Comprehensive Tools');
         expect(english.toolSlogan).toBe('All tools at your fingertips');
         expect(english.internalPages[0].title).toBe('Privacy Policy');
+        expect(english.internalPages[1].title).toBe('Months Table');
         expect(english.externalLinks[0].title).toBe('Support');
         expect(english.pwaInstallPrompt.manualInstructions).toContain('Add to Home Screen');
         expect(projected.internalPages[0].enabled).toBe(true);

@@ -57,6 +57,7 @@ const DEFAULT_PAGE_TITLE_EN = {
     privacy: 'Privacy Policy',
     months: 'Months Table',
     'months-table': 'Months Table',
+    'month-names': 'Months Table',
     about: 'About Us',
     'about-us': 'About Us',
 };
