@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { LEGACY_TOOL_SECTION_REDIRECTS } from './toolSectionRoutes';
 
 const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-icon-192.png',
@@ -77,6 +78,14 @@ export function middleware(request) {
     if (pathname === '/index.html') {
         const url = request.nextUrl.clone();
         url.pathname = '/';
+        return applySecurityHeaders(NextResponse.redirect(url, 308));
+    }
+
+    const legacyToolRoute = LEGACY_TOOL_SECTION_REDIRECTS[pathname];
+    if (legacyToolRoute) {
+        const url = request.nextUrl.clone();
+        url.pathname = legacyToolRoute.pagePath;
+        url.hash = legacyToolRoute.sectionId;
         return applySecurityHeaders(NextResponse.redirect(url, 308));
     }
 
