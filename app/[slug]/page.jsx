@@ -2,6 +2,7 @@ import { resolveLinkPreview } from '../linkPreview';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
 import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
 import { serializeJsonLd } from '../safeJsonLd';
+import { buildManagedPageJsonLd } from '../pageJsonLd';
 import { sanitizeHtmlServer } from '../sanitizeHtmlServer';
 import { getToolSectionRouteBySlug } from '../../toolSectionRoutes';
 import HomePageClient from '../HomePageClient';
@@ -127,9 +128,19 @@ export async function generateMetadata({ params }) {
     const canonicalPath = slug ? `/${slug}` : '/';
     const config = await getMetadataConfig();
     const page = findPageBySlug(config, slug);
+    if (!page || page?.isActive === false || page?.enabled === false) {
+        return {
+            title: 'الصفحة غير موجودة',
+            robots: {
+                index: false,
+                follow: false,
+                nocache: true,
+            },
+        };
+    }
     const preview = resolveLinkPreview(config);
-    const pageTitle = page ? getPageTitle(page) : 'صفحة داخلية';
-    const pageDescription = page ? getPageDescription(page) : '';
+    const pageTitle = getPageTitle(page);
+    const pageDescription = getPageDescription(page);
     const siteName = preview.siteName || preview.title || config.toolDisplayName || SITE_NAME;
     const title = `${pageTitle} | ${siteName}`;
     const description = pageDescription || preview.description || config.toolSlogan || DEFAULT_SITE_DESCRIPTION;
@@ -212,21 +223,36 @@ export default async function Page({ params }) {
 
     const config = await getMetadataConfig();
     const page = findPageBySlug(config, slug);
-    const initialPage = page?.isActive === false || page?.enabled === false
-        ? null
-        : {
-            ...page,
-            content: sanitizeHtmlServer(page?.content || ''),
-            html: sanitizeHtmlServer(page?.html || ''),
-            body: sanitizeHtmlServer(page?.body || ''),
-            text: sanitizeHtmlServer(page?.text || ''),
-        };
+    if (!page || page?.isActive === false || page?.enabled === false) notFound();
+
+    const pageTitle = getPageTitle(page);
+    const pageDescription = getPageDescription(page);
+    const siteName = config.toolDisplayName || SITE_NAME;
+    const pageJsonLd = buildManagedPageJsonLd({
+        slug,
+        title: pageTitle,
+        description: pageDescription,
+        siteName,
+    });
+    const initialPage = {
+        ...page,
+        content: sanitizeHtmlServer(page?.content || ''),
+        html: sanitizeHtmlServer(page?.html || ''),
+        body: sanitizeHtmlServer(page?.body || ''),
+        text: sanitizeHtmlServer(page?.text || ''),
+    };
 
     return (
-        <PageClient
-            slug={slug}
-            initialPage={initialPage}
-            initialConfig={{ contactEmail: config.contactEmail || '' }}
-        />
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(pageJsonLd) }}
+            />
+            <PageClient
+                slug={slug}
+                initialPage={initialPage}
+                initialConfig={{ contactEmail: config.contactEmail || '' }}
+            />
+        </>
     );
 }

@@ -75,12 +75,14 @@ export function buildSiteJsonLd() {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
         name: SITE_NAME,
         url: SITE_URL,
         inLanguage: 'ar-SA',
         description: DEFAULT_SITE_DESCRIPTION,
         publisher: {
             '@type': 'Organization',
+            '@id': `${SITE_URL}/#organization`,
             name: SITE_NAME,
             url: SITE_URL,
         },
@@ -95,12 +97,14 @@ export function buildToolJsonLd(toolKey) {
         {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
+            '@id': `${url}#application`,
             name: tool.name,
             url,
             applicationCategory: 'UtilitiesApplication',
             operatingSystem: 'Any',
             inLanguage: 'ar-SA',
             description: tool.description,
+            isPartOf: { '@id': `${SITE_URL}/#website` },
             offers: {
                 '@type': 'Offer',
                 price: '0',

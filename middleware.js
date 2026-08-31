@@ -6,6 +6,11 @@ const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-maskable-512.png',
 ]);
 
+const RETIRED_CONTENT_PATHS = new Set([
+    '/after-14-days.html',
+    '/ad_request.html',
+]);
+
 const INTERNAL_NO_INDEX_PREFIXES = [
     '/admin',
     '/admin_login',
@@ -69,6 +74,12 @@ export function middleware(request) {
         return applySecurityHeaders(NextResponse.redirect(url, 308));
     }
 
+    if (pathname === '/index.html') {
+        const url = request.nextUrl.clone();
+        url.pathname = '/';
+        return applySecurityHeaders(NextResponse.redirect(url, 308));
+    }
+
     if (pathname === '/about') {
         return applySecurityHeaders(new NextResponse('', {
             status: 404,
@@ -79,7 +90,7 @@ export function middleware(request) {
         }));
     }
 
-    if (RETIRED_PWA_ICON_PATHS.has(pathname)) {
+    if (RETIRED_PWA_ICON_PATHS.has(pathname) || RETIRED_CONTENT_PATHS.has(pathname)) {
         return applySecurityHeaders(new NextResponse('', {
             status: 410,
             headers: {

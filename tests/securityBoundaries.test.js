@@ -19,6 +19,9 @@ describe('HTTP security boundaries', () => {
         expect(middleware).toContain("'/admin'");
         expect(middleware).toContain("'/client'");
         expect(middleware).toContain("'/api'");
+        expect(middleware).toContain("pathname === '/index.html'");
+        expect(middleware).toContain("'/after-14-days.html'");
+        expect(middleware).toContain("'/ad_request.html'");
     });
 
     it('does not expose support attachments through the public media categories', () => {

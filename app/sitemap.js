@@ -29,9 +29,9 @@ const staticEntries = [
 
 // Update only the affected family when its public page content changes.
 const toolContentLastModified = {
-    date: '2026-08-10',
-    clock: '2026-08-10',
-    weather: '2026-08-10',
+    date: '2026-08-31',
+    clock: '2026-08-31',
+    weather: '2026-08-31',
 };
 
 function normalizePublicPath(page, fallbackSlug) {

@@ -81,12 +81,14 @@ export function buildManagedToolJsonLd(page, faqs = []) {
         {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
+            '@id': `${url}#application`,
             name: page.title,
             url,
             applicationCategory: 'UtilitiesApplication',
             operatingSystem: 'Any',
             inLanguage: 'ar-SA',
             description: page.seo?.metaDescription || page.description,
+            isPartOf: { '@id': `${SITE_URL}/#website` },
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'SAR' },
         },
         {

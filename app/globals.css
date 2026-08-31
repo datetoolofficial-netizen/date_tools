@@ -3333,6 +3333,35 @@
     border-radius: 12px;
     background: color-mix(in srgb, var(--input-bg) 72%, var(--primary));
 }
+
+.tool-related-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.tool-related-links-grid a {
+    min-height: 48px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--primary) 10%, var(--input-bg));
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.tool-related-links-grid a:hover,
+.tool-related-links-grid a.active {
+    background: var(--primary);
+    color: #fff;
+}
 /* Final homepage surface cleanup: remove section borders while preserving contrast. */
 .result,
 .story-card,

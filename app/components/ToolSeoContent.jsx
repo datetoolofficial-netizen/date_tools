@@ -1,6 +1,35 @@
 'use client';
 
+import Link from 'next/link';
 import { useSiteContext } from '../SiteContext';
+import { TOOL_SECTION_ROUTES } from '../../toolSectionRoutes';
+
+const relatedToolLinks = {
+    date: {
+        parent: { href: '/', ar: 'جميع أدوات التاريخ', en: 'All date tools' },
+        items: [
+            { key: 'ageCalc', ar: 'حاسبة العمر', en: 'Age calculator' },
+            { key: 'dateConverter', ar: 'تحويل التاريخ', en: 'Date converter' },
+            { key: 'durationCalc', ar: 'حساب المدة بين تاريخين', en: 'Date difference' },
+        ],
+    },
+    clock: {
+        parent: { href: '/clock', ar: 'جميع أدوات الوقت', en: 'All time tools' },
+        items: [
+            { key: 'timeConverter', ar: 'تحويل صيغة الوقت', en: 'Time converter' },
+            { key: 'timezoneDiff', ar: 'فرق التوقيت بين المدن', en: 'Time zone difference' },
+        ],
+    },
+    weather: {
+        parent: { href: '/weather', ar: 'جميع أدوات الطقس', en: 'All weather tools' },
+        items: [
+            { key: 'weatherSearch', ar: 'البحث عن طقس مدينة', en: 'Weather search' },
+            { key: 'currentWeather', ar: 'حالة الطقس الحالية', en: 'Current weather' },
+            { key: 'outdoorAdvice', ar: 'نصيحة الخروج', en: 'Outdoor advice' },
+            { key: 'forecast', ar: 'توقعات الطقس', en: 'Weather forecast' },
+        ],
+    },
+};
 
 const toolContent = {
     date: {
@@ -253,6 +282,7 @@ const subtoolContentByTool = {
 
 export default function ToolSeoContent({ tool, subtool = '' }) {
     const { lang } = useSiteContext();
+    const links = relatedToolLinks[tool];
     const content = lang === 'en'
         ? toolContentEn[tool]
         : subtool
@@ -277,6 +307,28 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
                     )}
                 </section>
             ))}
+            {links && (
+                <nav className="seo-card tool-related-links" aria-label={lang === 'en' ? 'Related tools' : 'أدوات مرتبطة'}>
+                    <h2>{lang === 'en' ? 'Related tools' : 'أدوات مرتبطة'}</h2>
+                    <div className="tool-related-links-grid">
+                        <Link href={links.parent.href}>{links.parent[lang] || links.parent.ar}</Link>
+                        {links.items.map((item) => {
+                            const route = TOOL_SECTION_ROUTES[tool]?.[item.key];
+                            if (!route) return null;
+                            return (
+                                <Link
+                                    href={route.publicPath}
+                                    className={subtool === item.key ? 'active' : ''}
+                                    aria-current={subtool === item.key ? 'page' : undefined}
+                                    key={item.key}
+                                >
+                                    {item[lang] || item.ar}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }
