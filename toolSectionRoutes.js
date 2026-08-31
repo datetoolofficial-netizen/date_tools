@@ -26,6 +26,7 @@ export const TOOL_SECTION_ROUTE_ENTRIES = Object.freeze(
     ))
 );
 
-export const LEGACY_TOOL_SECTION_REDIRECTS = Object.freeze(
-    Object.fromEntries(TOOL_SECTION_ROUTE_ENTRIES.map((route) => [route.legacyPath, route]))
-);
+export function getToolSectionRouteBySlug(slug = '') {
+    const publicPath = `/${String(slug).trim().replace(/^\/+|\/+$/g, '')}`;
+    return TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === publicPath) || null;
+}

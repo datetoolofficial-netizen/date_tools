@@ -161,7 +161,7 @@ async function fetchForecast(latitude, longitude) {
     return forecastResponse.json();
 }
 
-export default function WeatherPage({ children, hideHero = false, initialSectionId = '' }) {
+export default function WeatherPage({ children, hideHero = false, initialSectionId = '', standaloneSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -305,6 +305,12 @@ export default function WeatherPage({ children, hideHero = false, initialSection
     };
 
     useSectionHashScroll(WEATHER_SECTION_IDS, !isLoading, initialSectionId);
+    const activeStandaloneSection = WEATHER_SECTION_IDS.includes(standaloneSectionId) ? standaloneSectionId : '';
+    const isStandalone = Boolean(activeStandaloneSection);
+    const showAllWeatherResults = !isStandalone || activeStandaloneSection === 'weather-search';
+    const showCurrentWeather = showAllWeatherResults || activeStandaloneSection === 'current-weather';
+    const showOutdoorAdvice = showAllWeatherResults || activeStandaloneSection === 'outdoor-advice';
+    const showForecast = showAllWeatherResults || activeStandaloneSection === 'weather-forecast';
 
     return (
         <section className="tools-page">
@@ -346,11 +352,10 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
             {error && <p className="inline-error">{error}</p>}
 
-            <PublicAdSlot configData={configData} slotName="weatherMiddle" label={labels.ad} />
+            {!isStandalone && <PublicAdSlot configData={configData} slotName="weatherMiddle" label={labels.ad} />}
 
-            {current ? (
-                <>
-                    <article className="weather-current-card" id="current-weather">
+            {showCurrentWeather && (current ? (
+                <article className="weather-current-card" id="current-weather">
                         <div className="weather-current-main">
                             <div>
                                 <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
@@ -380,34 +385,34 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                                 <i className="fa-solid fa-share-nodes"></i> {labels.shareWeather}
                             </button>
                         )}
-                    </article>
-
-                    <article className="tool-widget advice-card" id="outdoor-advice">
-                        <div className="tool-widget-title">
-                            <i className="fa-solid fa-person-walking"></i>
-                            <h3>{weatherSettings.subtools?.outdoorAdvice}</h3>
-                        </div>
-                        <p>{adviceText}</p>
-                        {isShareTemplateEnabled(weatherSettings, 'outdoorAdviceResult') && (
-                            <button className="share-btn" type="button" onClick={() => shareWeatherResult('outdoorAdviceResult', {
-                                city: cityLabel,
-                                advice: adviceText,
-                            })}>
-                                <i className="fa-solid fa-share-nodes"></i> {labels.shareAdvice}
-                            </button>
-                        )}
-                    </article>
-                </>
+                </article>
             ) : shouldReserveWeatherResults ? (
-                <>
-                    <WeatherCurrentPlaceholder />
-                    <WeatherAdvicePlaceholder />
-                </>
-            ) : null}
+                <WeatherCurrentPlaceholder />
+            ) : null)}
+
+            {showOutdoorAdvice && (current ? (
+                <article className="tool-widget advice-card" id="outdoor-advice">
+                    <div className="tool-widget-title">
+                        <i className="fa-solid fa-person-walking"></i>
+                        <h3>{weatherSettings.subtools?.outdoorAdvice}</h3>
+                    </div>
+                    <p>{adviceText}</p>
+                    {isShareTemplateEnabled(weatherSettings, 'outdoorAdviceResult') && (
+                        <button className="share-btn" type="button" onClick={() => shareWeatherResult('outdoorAdviceResult', {
+                            city: cityLabel,
+                            advice: adviceText,
+                        })}>
+                            <i className="fa-solid fa-share-nodes"></i> {labels.shareAdvice}
+                        </button>
+                    )}
+                </article>
+            ) : shouldReserveWeatherResults ? (
+                <WeatherAdvicePlaceholder />
+            ) : null)}
 
             <PublicAdSlot configData={configData} slotName="weatherBottom" label={labels.ad} />
 
-            {upcomingForecastDays.length ? (
+            {showForecast && (upcomingForecastDays.length ? (
                 <article className="tool-widget" id="weather-forecast">
                     <div className="tool-widget-title">
                         <i className="fa-solid fa-calendar-week"></i>
@@ -434,9 +439,9 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 </article>
             ) : shouldReserveWeatherResults ? (
                 <WeatherForecastPlaceholder />
-            ) : null}
+            ) : null)}
             {children}
-            <ToolFaqSection items={weatherFaqItems} title={lang === 'en' ? 'Frequently Asked Questions' : 'الأسئلة الشائعة'} />
+            {!isStandalone && <ToolFaqSection items={weatherFaqItems} title={lang === 'en' ? 'Frequently Asked Questions' : 'الأسئلة الشائعة'} />}
 
         </section>
     );

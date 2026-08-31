@@ -85,7 +85,7 @@ function HomePageSkeleton() {
     );
 }
 
-export default function HomePageClient({ children, hideHero = false, initialSectionId = '' }) {
+export default function HomePageClient({ children, hideHero = false, initialSectionId = '', standaloneSectionId = '' }) {
     const { lang, configData, isSiteLoading, firebaseApiRef } = useSiteContext();
     const [alertConfig, setAlertConfig] = useState({ show: false, msg: '', type: '' });
     const [ageCalendarMode, setAgeCalendarMode] = useState('gregorian');
@@ -611,6 +611,8 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     };
 
     const isPageLoading = isSiteLoading || configData === null;
+    const activeStandaloneSection = DATE_SECTION_IDS.includes(standaloneSectionId) ? standaloneSectionId : '';
+    const isStandalone = Boolean(activeStandaloneSection);
 
     useSectionHashScroll(DATE_SECTION_IDS, !isPageLoading, initialSectionId);
     const dateToolSettings = getToolSettings(configData, 'date', lang);
@@ -625,15 +627,17 @@ export default function HomePageClient({ children, hideHero = false, initialSect
                 onClose={() => setAlertConfig({ show: false, msg: '', type: '' })}
             />
 
-            <EventsShareDialog
-                isOpen={isEventsShareOpen}
-                events={upcomingEvents}
-                selectedIndexes={selectedEventIndexes}
-                onToggle={toggleSelectedEvent}
-                onToggleAll={toggleAllEvents}
-                onClose={() => setIsEventsShareOpen(false)}
-                onConfirm={confirmEventsShare}
-            />
+            {!isStandalone && (
+                <EventsShareDialog
+                    isOpen={isEventsShareOpen}
+                    events={upcomingEvents}
+                    selectedIndexes={selectedEventIndexes}
+                    onToggle={toggleSelectedEvent}
+                    onToggleAll={toggleAllEvents}
+                    onClose={() => setIsEventsShareOpen(false)}
+                    onConfirm={confirmEventsShare}
+                />
+            )}
 
             {isPageLoading ? (
                 <HomePageSkeleton />
@@ -647,65 +651,73 @@ export default function HomePageClient({ children, hideHero = false, initialSect
                             </div>
                         </div>}
 
-                        <TodayBanner lang={lang} todayInfo={todayInfo} />
+                        {!isStandalone && <TodayBanner lang={lang} todayInfo={todayInfo} />}
                         <PublicAdSlot configData={configData} slotName="dateTop" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
-                        <EventsSection
-                            lang={lang}
-                            upcomingEvents={upcomingEvents}
-                            onShare={openEventsShareDialog}
-                            canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
-                        />
+                        {!isStandalone && (
+                            <EventsSection
+                                lang={lang}
+                                upcomingEvents={upcomingEvents}
+                                onShare={openEventsShareDialog}
+                                canShare={isShareTemplateEnabled(dateToolSettings, 'eventsResult')}
+                            />
+                        )}
 
-                        <AgeCalculatorSection
-                            labels={i18n[lang]}
-                            title={dateToolSettings.subtools?.ageCalc}
-                            lang={lang}
-                            calendarMode={ageCalendarMode}
-                            onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
-                            options={homeOptions}
-                            values={homeValues}
-                            setters={homeSetters}
-                            results={homeResults}
-                            enteredDateInfo={enteredDateInfo}
-                            onShareResult={handleShareResult}
-                            actions={homeActions}
-                        />
+                        {(!isStandalone || activeStandaloneSection === 'age-calculator') && (
+                            <AgeCalculatorSection
+                                labels={i18n[lang]}
+                                title={dateToolSettings.subtools?.ageCalc}
+                                lang={lang}
+                                calendarMode={ageCalendarMode}
+                                onCalendarModeChange={(mode) => setToolCalendarMode(setAgeCalendarMode, mode)}
+                                options={homeOptions}
+                                values={homeValues}
+                                setters={homeSetters}
+                                results={homeResults}
+                                enteredDateInfo={enteredDateInfo}
+                                onShareResult={handleShareResult}
+                                actions={homeActions}
+                            />
+                        )}
 
-                        <PublicAdSlot configData={configData} slotName="dateMiddle" label={i18n[lang].featuredAd || 'إعلان مميز'} />
+                        {!isStandalone && <PublicAdSlot configData={configData} slotName="dateMiddle" label={i18n[lang].featuredAd || 'إعلان مميز'} />}
 
-                        <DateConversionSection
-                            labels={i18n[lang]}
-                            title={dateToolSettings.subtools?.dateConverter}
-                            lang={lang}
-                            calendarMode={conversionCalendarMode}
-                            onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
-                            options={homeOptions}
-                            values={homeValues}
-                            setters={homeSetters}
-                            results={homeResults}
-                            enteredDateInfo={enteredDateInfo}
-                            onShareResult={handleShareResult}
-                            actions={homeActions}
-                        />
+                        {(!isStandalone || activeStandaloneSection === 'date-converter') && (
+                            <DateConversionSection
+                                labels={i18n[lang]}
+                                title={dateToolSettings.subtools?.dateConverter}
+                                lang={lang}
+                                calendarMode={conversionCalendarMode}
+                                onCalendarModeChange={(mode) => setToolCalendarMode(setConversionCalendarMode, mode)}
+                                options={homeOptions}
+                                values={homeValues}
+                                setters={homeSetters}
+                                results={homeResults}
+                                enteredDateInfo={enteredDateInfo}
+                                onShareResult={handleShareResult}
+                                actions={homeActions}
+                            />
+                        )}
 
-                        <DurationSection
-                            labels={i18n[lang]}
-                            title={dateToolSettings.subtools?.durationCalc}
-                            lang={lang}
-                            calendarMode={durationCalendarMode}
-                            onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
-                            options={homeOptions}
-                            values={homeValues}
-                            setters={homeSetters}
-                            results={homeResults}
-                            enteredDateInfo={enteredDateInfo}
-                            onShareResult={handleShareResult}
-                            actions={homeActions}
-                        />
+                        {(!isStandalone || activeStandaloneSection === 'date-difference') && (
+                            <DurationSection
+                                labels={i18n[lang]}
+                                title={dateToolSettings.subtools?.durationCalc}
+                                lang={lang}
+                                calendarMode={durationCalendarMode}
+                                onCalendarModeChange={(mode) => setToolCalendarMode(setDurationCalendarMode, mode)}
+                                options={homeOptions}
+                                values={homeValues}
+                                setters={homeSetters}
+                                results={homeResults}
+                                enteredDateInfo={enteredDateInfo}
+                                onShareResult={handleShareResult}
+                                actions={homeActions}
+                            />
+                        )}
 
                         <PublicAdSlot configData={configData} slotName="dateBottom" label={i18n[lang].adSpace || 'مساحة إعلانية'} />
                         {children}
-                        <SeoSections lang={lang} faqs={dateFaqItems} />
+                        {!isStandalone && <SeoSections lang={lang} faqs={dateFaqItems} />}
                 </>
             )}
         </>

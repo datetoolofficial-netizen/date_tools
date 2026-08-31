@@ -1,8 +1,15 @@
 import { resolveLinkPreview } from '../linkPreview';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
 import { serializeJsonLd } from '../safeJsonLd';
 import { buildManagedPageJsonLd } from '../pageJsonLd';
 import { sanitizeHtmlServer } from '../sanitizeHtmlServer';
+import { getToolSectionRouteBySlug } from '../../toolSectionRoutes';
+import HomePageClient from '../HomePageClient';
+import ClockPageClient from '../clock/ClockPageClient';
+import WeatherPageClient from '../weather/WeatherPageClient';
+import ToolPageHero from '../components/ToolPageHero';
+import ToolSeoContent from '../components/ToolSeoContent';
 import PageClient from './PageClient';
 import { notFound } from 'next/navigation';
 import { getPublicSiteConfigFromFirestore } from '../firestorePublicConfig';
@@ -115,6 +122,9 @@ async function getMetadataConfig() {
 export async function generateMetadata({ params }) {
     const resolvedParams = await params;
     const slug = normalizeSlug(resolvedParams?.slug || '');
+    const toolRoute = getToolSectionRouteBySlug(slug);
+    if (toolRoute) return buildManagedToolMetadata(toolRoute.toolKey, toolRoute.subtoolKey);
+
     const canonicalPath = slug ? `/${slug}` : '/';
     const config = await getMetadataConfig();
     const page = findPageBySlug(config, slug);
@@ -162,6 +172,53 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
     const resolvedParams = await params;
     const slug = normalizeSlug(resolvedParams?.slug || '');
+    const toolRoute = getToolSectionRouteBySlug(slug);
+
+    if (toolRoute) {
+        const page = await getManagedToolPage(toolRoute.toolKey, toolRoute.subtoolKey);
+        const jsonLd = buildManagedToolJsonLd(page);
+        const icons = {
+            date: 'fa-solid fa-calendar-days',
+            clock: 'fa-solid fa-clock',
+            weather: 'fa-solid fa-cloud-sun-rain',
+        };
+
+        return (
+            <>
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+                />
+                <ToolPageHero
+                    title={page.title}
+                    description={page.description}
+                    icon={icons[toolRoute.toolKey]}
+                    className={`${toolRoute.toolKey}-hero`}
+                    toolKey={toolRoute.toolKey}
+                    subtoolKey={toolRoute.subtoolKey}
+                />
+                {toolRoute.toolKey === 'date' && (
+                    <>
+                        <HomePageClient hideHero standaloneSectionId={toolRoute.sectionId} />
+                        <ToolSeoContent tool="date" subtool={toolRoute.subtoolKey} />
+                    </>
+                )}
+                {toolRoute.toolKey === 'clock' && (
+                    <>
+                        <ClockPageClient hideHero standaloneSectionId={toolRoute.sectionId} />
+                        <ToolSeoContent tool="clock" subtool={toolRoute.subtoolKey} />
+                    </>
+                )}
+                {toolRoute.toolKey === 'weather' && (
+                    <>
+                        <WeatherPageClient hideHero standaloneSectionId={toolRoute.sectionId} />
+                        <ToolSeoContent tool="weather" subtool={toolRoute.subtoolKey} />
+                    </>
+                )}
+            </>
+        );
+    }
+
     if (slug === 'about') notFound();
 
     const config = await getMetadataConfig();

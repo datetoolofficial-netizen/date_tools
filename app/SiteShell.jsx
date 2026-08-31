@@ -13,6 +13,7 @@ import { i18n } from './i18n';
 import { getToolSettings } from './toolSettings';
 import { APP_VERSION } from './version';
 import { resolvePrivacyUiState } from './privacyUiState';
+import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -322,8 +323,12 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     useEffect(() => {
         if (!shouldUseShell || !configData) return;
-        const toolKey = pathname.startsWith('/clock') ? 'clock' : pathname.startsWith('/weather') ? 'weather' : 'date';
-        const toolSeo = getToolSettings(configData, toolKey, lang)?.seo || {};
+        const standaloneRoute = TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === pathname);
+        const toolKey = standaloneRoute?.toolKey || (pathname.startsWith('/clock') ? 'clock' : pathname.startsWith('/weather') ? 'weather' : 'date');
+        const toolSettings = getToolSettings(configData, toolKey, lang);
+        const toolSeo = standaloneRoute
+            ? toolSettings?.subtoolSeo?.[standaloneRoute.subtoolKey] || {}
+            : toolSettings?.seo || {};
         const title = toolSeo.searchTitle || localizedConfigData.mainSEO?.title || localizedConfigData.toolDisplayName;
         const description = toolSeo.metaDescription || localizedConfigData.mainSEO?.description || localizedConfigData.toolSlogan;
         if (title) document.title = title;

@@ -1,6 +1,6 @@
 import { SITE_URL, publicToolSeo } from './seoConfig';
 import { normalizeToolSettings } from './toolSettings';
-import { LEGACY_TOOL_SECTION_REDIRECTS } from '../toolSectionRoutes';
+import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
 
 export const revalidate = 3600;
@@ -16,7 +16,7 @@ const reservedSlugs = new Set([
     'sitemap.xml',
     'llms.txt',
     'ads.txt',
-    ...Object.keys(LEGACY_TOOL_SECTION_REDIRECTS).map((legacyPath) => legacyPath.slice(1)),
+    ...TOOL_SECTION_ROUTE_ENTRIES.map(({ publicPath }) => publicPath.slice(1)),
 ]);
 
 const legacyAliasSlugs = new Set(['about']);
@@ -119,7 +119,17 @@ function collectToolEntries(settings = {}) {
         { path: publicToolSeo.weather.path, changeFrequency: 'weekly', priority: 0.85, lastModified: latestLastModified(tools.weather.seo?.lastModified, toolContentLastModified.weather) },
     ];
 
-    return mainTools;
+    const subtools = TOOL_SECTION_ROUTE_ENTRIES.map(({ toolKey, subtoolKey, publicPath }) => ({
+        path: publicPath,
+        changeFrequency: 'weekly',
+        priority: toolKey === 'date' ? 0.9 : 0.8,
+        lastModified: latestLastModified(
+            tools[toolKey]?.subtoolSeo?.[subtoolKey]?.lastModified,
+            toolContentLastModified[toolKey]
+        ),
+    }));
+
+    return [...mainTools, ...subtools];
 }
 
 export default async function sitemap() {

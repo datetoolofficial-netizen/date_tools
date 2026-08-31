@@ -113,7 +113,7 @@ const clockLabels = {
     en: { currentLocation: 'Your current location', invalidTime: 'Enter a valid time', searchError: 'We could not find one of the cities. Try an Arabic or English city name.', currentTime: 'Current time in', hour: 'Hour', minute: 'Minute', hour24: 'Hour in 24-hour format', convert: 'Convert', share: 'Share result', firstCity: 'First city', secondCity: 'Second city', firstExample: 'Example: Riyadh', secondExample: 'Example: London', searchFirst: 'Search for the first city', searchSecond: 'Search for the second city', calculate: 'Calculate', calculating: 'Calculating...', difference: 'Time difference', now: 'current time', ad: 'Ad space', hours: 'hours' },
 };
 
-export default function ClockPage({ children, hideHero = false, initialSectionId = '' }) {
+export default function ClockPage({ children, hideHero = false, initialSectionId = '', standaloneSectionId = '' }) {
     const {
         configData,
         firebaseApiRef,
@@ -133,6 +133,8 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
     const [timezoneDiff, setTimezoneDiff] = useState(null);
     const [timezoneSearchStatus, setTimezoneSearchStatus] = useState('idle');
     const [timezoneSearchError, setTimezoneSearchError] = useState('');
+    const activeStandaloneSection = CLOCK_SECTION_IDS.includes(standaloneSectionId) ? standaloneSectionId : '';
+    const isStandalone = Boolean(activeStandaloneSection);
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
@@ -293,7 +295,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                 </div>
             </div>}
 
-            <div className="today-info-banner clock-now-banner">
+            {!isStandalone && <div className="today-info-banner clock-now-banner">
                 <div className="today-content">
                     <button
                         className="clock-format-toggle"
@@ -310,11 +312,11 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                     </span>
                     <strong>{formatTime(now, cityZone, clockHour12, false, lang)}</strong>
                 </div>
-            </div>
+            </div>}
 
             <PublicAdSlot configData={configData} slotName="clockTop" label={labels.ad} />
 
-            <article className="tool-widget time-converter-card" id="time-converter">
+            {(!isStandalone || activeStandaloneSection === 'time-converter') && <article className="tool-widget time-converter-card" id="time-converter">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-repeat"></i>
                     <h3>{clockSettings.subtools?.timeConverter}</h3>
@@ -358,11 +360,11 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         </>
                     )}
                 </div>
-            </article>
+            </article>}
 
-            <PublicAdSlot configData={configData} slotName="clockMiddle" label={labels.ad} />
+            {!isStandalone && <PublicAdSlot configData={configData} slotName="clockMiddle" label={labels.ad} />}
 
-            <article className="tool-widget timezone-diff-card" id="timezone-difference">
+            {(!isStandalone || activeStandaloneSection === 'timezone-difference') && <article className="tool-widget timezone-diff-card" id="timezone-difference">
                 <div className="tool-widget-title">
                     <i className="fa-solid fa-code-compare"></i>
                     <h3>{clockSettings.subtools?.timezoneDiff}</h3>
@@ -410,11 +412,11 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         </>
                     )}
                 </div>
-            </article>
+            </article>}
 
             <PublicAdSlot configData={configData} slotName="clockBottom" label={labels.ad} />
             {children}
-            <ToolFaqSection items={clockFaqItems} title={lang === 'en' ? 'Frequently Asked Questions' : 'الأسئلة الشائعة'} />
+            {!isStandalone && <ToolFaqSection items={clockFaqItems} title={lang === 'en' ? 'Frequently Asked Questions' : 'الأسئلة الشائعة'} />}
 
         </section>
     );
