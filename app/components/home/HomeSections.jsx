@@ -168,17 +168,20 @@ export function EventsSection({ lang, upcomingEvents, onShare, canShare = true }
 export function ResultCard({ htmlContent, enteredDateInfo, lang, onShare }) {
     const labels = i18n[lang] || i18n.ar;
     const safeHtmlContent = sanitizeHtml(htmlContent);
+    const hasAdditionalInfo = Boolean(enteredDateInfo?.info?.trim());
 
     return (
         <div className="result-container">
             <div className="result" style={{ display: 'block' }} dangerouslySetInnerHTML={{ __html: safeHtmlContent }}></div>
             {enteredDateInfo && (
                 <div className="story-card">
-                    <div className="story-content">
-                        <i className="fa-solid fa-lightbulb" style={{ color: '#f59e0b', marginInlineEnd: '8px' }}></i>
-                        <span style={{ fontWeight: 'bold' }}>{labels.dateInfo}</span>
-                        <p>{enteredDateInfo.info}</p>
-                    </div>
+                    {hasAdditionalInfo && (
+                        <div className="story-content">
+                            <i className="fa-solid fa-lightbulb" style={{ color: '#f59e0b', marginInlineEnd: '8px' }}></i>
+                            <span style={{ fontWeight: 'bold' }}>{labels.dateInfo}</span>
+                            <p>{enteredDateInfo.info}</p>
+                        </div>
+                    )}
                     {enteredDateInfo.canShare !== false && (
                         <button className="share-btn" onClick={onShare}>
                             <i className="fa-solid fa-share-nodes"></i> {labels.shareResult}

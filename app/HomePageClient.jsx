@@ -396,7 +396,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         generateDateStory(gregEquivalent, i18n[lang].storyAgeHijri, durationStr, 'ageResult', {
             toolTitle: dateToolSettings.subtools?.ageCalc,
             inputLabel: i18n[lang].lblBirth,
-            input: formatInputDate(hAgeInput, 'هـ'),
+            input: formatInputDate(hAgeInput, i18n[lang].hijriSuffix.trim()),
         });
         firebaseApiRef.current.trackToolUsage('ageCalc');
     };
@@ -445,7 +445,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         generateDateStory(gDateObj, i18n[lang].storyHijriToGreg, finalRes, 'dateConversionResult', {
             toolTitle: dateToolSettings.subtools?.dateConverter,
             inputLabel: i18n[lang].lblHijri,
-            input: formatInputDate(hConvInput, 'هـ'),
+            input: formatInputDate(hConvInput, i18n[lang].hijriSuffix.trim()),
         });
         firebaseApiRef.current.trackToolUsage('dateConverter');
     };
@@ -467,7 +467,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         const input = `${firstDate} - ${secondDate}`;
         setEnteredDateInfo({
             title: dateToolSettings.subtools?.durationCalc,
-            info: `${inputLabel}: ${input}`,
+            info: '',
             shareText: renderShareTemplate(dateToolSettings, 'durationResult', {
                 toolTitle: dateToolSettings.subtools?.durationCalc,
                 inputLabel,
@@ -511,12 +511,13 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         const durationStr = formatDuration(years, months, days);
         setResDiffHijri(`${i18n[lang].resDiffText} <br><span style="color:inherit;">${durationStr}</span>`);
         const inputLabel = `${i18n[lang].lblDate1} / ${i18n[lang].lblDate2}`;
-        const firstDate = formatInputDate(hDiffInput1, 'هـ');
-        const secondDate = formatInputDate(hDiffInput2, 'هـ');
+        const hijriSuffix = i18n[lang].hijriSuffix.trim();
+        const firstDate = formatInputDate(hDiffInput1, hijriSuffix);
+        const secondDate = formatInputDate(hDiffInput2, hijriSuffix);
         const input = `${firstDate} - ${secondDate}`;
         setEnteredDateInfo({
             title: dateToolSettings.subtools?.durationCalc,
-            info: `${inputLabel}: ${input}`,
+            info: '',
             shareText: renderShareTemplate(dateToolSettings, 'durationResult', {
                 toolTitle: dateToolSettings.subtools?.durationCalc,
                 inputLabel,
