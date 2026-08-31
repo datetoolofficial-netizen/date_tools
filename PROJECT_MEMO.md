@@ -13229,6 +13229,8 @@ rg -n "canonical|alternates|metadata|generateMetadata|noindex|robots" app middle
 - إضافة JSON-LD من نوع `ContactPage` و`AboutPage` أو `WebPage` مع `BreadcrumbList` للصفحات المدارة.
 - إضافة معرفات ثابتة مترابطة لـ`WebSite` و`Organization` و`WebApplication`، مع استمرار التعقيم عبر `serializeJsonLd`.
 - تحديث `lastModified` لعائلات الأدوات في sitemap إلى `2026-08-31` ورفع نسخة التطبيق إلى `0.3.44`.
+- نشر الإصدار `0.3.44` على Cloudflare والتحقق حيًا من الإصدار والروابط الداخلية وSchema وحالات `308` و`410` و`404`.
+- إرسال طلبات فهرسة ناجحة من Google Search Console للصفحات الرئيسية الخمس: `/age-calculator` و`/date-converter` و`/date-difference` و`/clock` و`/weather`.
 
 الأخطاء المكتشفة:
 
@@ -13285,4 +13287,5 @@ git diff --check
 - نجح ESLint و65 اختبارًا في 18 ملفًا، ونجح بناء Next.js الكامل وتوليد 31 صفحة.
 - أثبت فحص الإنتاج المحلي: `308` لـ`/index.html`، و`410` للمسارين القديمين، و`404 + noindex` للـslug الوهمي، و`200` لصفحات الأدوات والصفحات المدارة.
 - ظهرت الروابط الفرعية التسعة في HTML الأولي، وظهرت Schema `WebApplication` و`ContactPage` الصحيحة.
-- ينتظر النشر والفحص الحي قبل إرسال طلبات الفهرسة إلى Google.
+- نُشر الإصدار `0.3.44` وتأكد حيًا من `/api/app-version` ومن sitemap والصفحات الرئيسية دون أخطاء.
+- أكد Google في `2026-08-31` إضافة الصفحات الخمس المطلوبة إلى قائمة انتظار الزحف ذات الأولوية؛ الفهرسة الفعلية ليست فورية وتحتاج متابعة تقرير Search Console بعد إعادة الزحف.
