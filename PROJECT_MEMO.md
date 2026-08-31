@@ -13401,4 +13401,7 @@ git diff --check
 - أثبت الفحص نفسه تحويل `/time-converter` إلى `/clock#time-converter` و`/current-weather` إلى `/weather#current-weather`.
 - أصبحت sitemap المحلية ثمانية عناوين فقط، وتتضمن `/` و`/clock` و`/weather` دون المسارات الفرعية التسعة.
 - بقيت حقول `subtoolSeo` وروابطها الأصلية في الإدارة دون حذف، وتغطي الاختبارات هذا الشرط صراحة.
-- ينتظر النشر والتحقق الحي للإصدار `0.3.46`.
+- نُشر الإصدار `0.3.46` عبر بناء Cloudflare المرتبط بفرع `master` للالتزام `1d39ac0`، وأعادت واجهة الإصدار الحية `version: 0.3.46`.
+- أعادت المسارات الفرعية التسعة حيًا حالة `308 Permanent Redirect` إلى أقسامها الصحيحة، ومنها `/age-calculator` إلى `/#age-calculator` و`/time-converter` إلى `/clock#time-converter` و`/current-weather` إلى `/weather#current-weather`.
+- أثبت الفحص التفاعلي الحي أن رابطَي `/age-calculator` و`/time-converter` يحتفظان بالـHash وتحركهما شيفرة الصفحة إلى العنصر الداخلي المطابق.
+- تعرض sitemap الحية ثمانية عناوين فقط ولا تحتوي أيًا من المسارات الفرعية التسعة، مع بقاء صفحات الأدوات الرئيسية `/` و`/clock` و`/weather`.
