@@ -397,13 +397,14 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     const toggleLang = () => {
         const newLang = lang === 'ar' ? 'en' : 'ar';
-        setLang(newLang);
         localStorage.setItem('site_lang', newLang);
         const targetPath = localizeToolPath(pathname, newLang);
         if (targetPath !== pathname) {
             const suffix = typeof window === 'undefined' ? '' : `${window.location.search}${window.location.hash}`;
             router.push(`${targetPath}${suffix}`);
+            return;
         }
+        setLang(newLang);
     };
 
     const toggleTheme = () => {
