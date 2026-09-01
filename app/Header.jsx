@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { i18n } from './i18n';
+import { localizeToolPath } from './localizedToolRoutes';
 
 function normalizeLinkLocation(value) {
     return String(value || '')
@@ -54,10 +55,11 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
     const themeIcon = isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     const toolName = config?.toolDisplayName || labels.toolNameFallback;
     const toolSlogan = config?.toolSlogan || '';
+    const homeHref = localizeToolPath('/', lang);
     const primaryToolLinks = [
-        { href: '/', label: labels.navHome, icon: 'fa-solid fa-calendar-days' },
-        { href: '/clock', label: labels.navClock, icon: 'fa-solid fa-clock' },
-        { href: '/weather', label: labels.navWeather, icon: 'fa-solid fa-cloud-sun' },
+        { href: homeHref, label: labels.navHome, icon: 'fa-solid fa-calendar-days' },
+        { href: localizeToolPath('/clock', lang), label: labels.navClock, icon: 'fa-solid fa-clock' },
+        { href: localizeToolPath('/weather', lang), label: labels.navWeather, icon: 'fa-solid fa-cloud-sun' },
     ];
 
     const scrollNav = (direction) => {
@@ -91,7 +93,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
             <div className="site-header-panel">
                 <div className="site-brand">
                     {config?.hasLogo && config?.logoUrl && (
-                        <Link href="/" className="site-logo-link" aria-label={toolName}>
+                        <Link href={homeHref} className="site-logo-link" aria-label={toolName}>
                             <Image
                                 src={config.logoUrl}
                                 alt={toolName}
@@ -103,7 +105,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
                         </Link>
                     )}
 
-                    <Link href="/" className="site-brand-text">
+                    <Link href={homeHref} className="site-brand-text">
                         <span className="tool-title">{toolName}</span>
                         {toolSlogan && <p className="tool-slogan">{toolSlogan}</p>}
                     </Link>
@@ -144,7 +146,7 @@ export default function Header({ lang, isDarkMode, toggleLang, toggleTheme, conf
 
                 <nav className="nav-links" ref={navRef} aria-label={labels.siteLinks}>
                     {primaryToolLinks.map((link) => {
-                        const isActive = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+                        const isActive = pathname === link.href || (link.href !== '/' && link.href !== '/en' && pathname.startsWith(`${link.href}/`));
 
                         return (
                             <Link key={link.href} href={link.href} prefetch className={`nav-link${isActive ? ' active' : ''}`}>

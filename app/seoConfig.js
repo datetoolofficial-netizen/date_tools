@@ -78,7 +78,7 @@ export function buildSiteJsonLd() {
         '@id': `${SITE_URL}/#website`,
         name: SITE_NAME,
         url: SITE_URL,
-        inLanguage: 'ar-SA',
+        inLanguage: ['ar-SA', 'en-US'],
         description: DEFAULT_SITE_DESCRIPTION,
         publisher: {
             '@type': 'Organization',

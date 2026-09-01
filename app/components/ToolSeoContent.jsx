@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSiteContext } from '../SiteContext';
 import { getToolSettings } from '../toolSettings';
 import { TOOL_SECTION_ROUTES } from '../../toolSectionRoutes';
+import { localizeToolPath } from '../localizedToolRoutes';
 
 const relatedToolIcons = {
     date: {
@@ -338,7 +339,7 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
             .filter(([key]) => key !== subtool)
             .map(([key, route]) => ({
                 key,
-                href: route.publicPath,
+                href: localizeToolPath(route.publicPath, currentLang),
                 icon: relatedToolIcons[tool]?.[key] || 'fa-solid fa-screwdriver-wrench',
                 name: settings?.subtools?.[key] || settings?.subtoolSeo?.[key]?.h1 || route.sectionId,
                 description: settings?.subtoolSeo?.[key]?.metaDescription || '',

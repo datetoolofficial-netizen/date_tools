@@ -58,6 +58,11 @@ function applySecurityHeaders(response) {
     return response;
 }
 
+function applyLanguageHeader(response, pathname = '/') {
+    response.headers.set('Content-Language', pathname === '/en' || pathname.startsWith('/en/') ? 'en' : 'ar');
+    return response;
+}
+
 function isInternalPath(pathname) {
     return INTERNAL_NO_INDEX_PREFIXES.some((prefix) => (
         pathname === prefix || pathname.startsWith(`${prefix}/`)
@@ -71,36 +76,36 @@ export function middleware(request) {
     if (host.toLowerCase() === 'www.date-tool.com') {
         const url = request.nextUrl.clone();
         url.hostname = 'date-tool.com';
-        return applySecurityHeaders(NextResponse.redirect(url, 308));
+        return applyLanguageHeader(applySecurityHeaders(NextResponse.redirect(url, 308)), pathname);
     }
 
     if (pathname === '/index.html') {
         const url = request.nextUrl.clone();
         url.pathname = '/';
-        return applySecurityHeaders(NextResponse.redirect(url, 308));
+        return applyLanguageHeader(applySecurityHeaders(NextResponse.redirect(url, 308)), pathname);
     }
 
     if (pathname === '/about') {
-        return applySecurityHeaders(new NextResponse('', {
+        return applyLanguageHeader(applySecurityHeaders(new NextResponse('', {
             status: 404,
             headers: {
                 'Cache-Control': 'no-store',
                 'X-Robots-Tag': 'noindex, nofollow, noarchive',
             },
-        }));
+        })), pathname);
     }
 
     if (RETIRED_PWA_ICON_PATHS.has(pathname) || RETIRED_CONTENT_PATHS.has(pathname)) {
-        return applySecurityHeaders(new NextResponse('', {
+        return applyLanguageHeader(applySecurityHeaders(new NextResponse('', {
             status: 410,
             headers: {
                 'Cache-Control': 'no-store',
                 'X-Robots-Tag': 'noindex, nofollow, noarchive',
             },
-        }));
+        })), pathname);
     }
 
-    const response = applySecurityHeaders(NextResponse.next());
+    const response = applyLanguageHeader(applySecurityHeaders(NextResponse.next()), pathname);
 
     if (isInternalPath(pathname)) {
         response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');

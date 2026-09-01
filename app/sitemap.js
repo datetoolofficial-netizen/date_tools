@@ -2,6 +2,7 @@ import { SITE_URL, publicToolSeo } from './seoConfig';
 import { normalizeToolSettings } from './toolSettings';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
+import { getToolLanguageAlternates } from './localizedToolRoutes';
 
 export const revalidate = 3600;
 
@@ -29,9 +30,9 @@ const staticEntries = [
 
 // Update only the affected family when its public page content changes.
 const toolContentLastModified = {
-    date: '2026-08-31',
-    clock: '2026-08-31',
-    weather: '2026-08-31',
+    date: '2026-09-01',
+    clock: '2026-09-01',
+    weather: '2026-09-01',
 };
 
 function normalizePublicPath(page, fallbackSlug) {
@@ -129,7 +130,18 @@ function collectToolEntries(settings = {}) {
         ),
     }));
 
-    return [...mainTools, ...subtools];
+    return [...mainTools, ...subtools].flatMap((entry) => {
+        const paths = getToolLanguageAlternates(entry.path);
+        const languages = {
+            ar: paths.ar === '/' ? SITE_URL : `${SITE_URL}${paths.ar}`,
+            en: `${SITE_URL}${paths.en}`,
+        };
+
+        return [
+            { ...entry, path: paths.ar, alternates: { languages } },
+            { ...entry, path: paths.en, alternates: { languages } },
+        ];
+    });
 }
 
 export default async function sitemap() {

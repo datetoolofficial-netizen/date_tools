@@ -1,6 +1,8 @@
 import { DEFAULT_TOOL_SETTINGS, getToolSettings } from './toolSettings';
 import { SITE_NAME, SITE_URL, absoluteSiteUrl } from './seoConfig';
 import { getPublicSiteConfigFromFirestore } from './firestorePublicConfig';
+import { getLocalizedSiteConfig } from './localizedConfig';
+import { getToolLanguageAlternates } from './localizedToolRoutes';
 
 function absoluteHttpUrl(value = '') {
     const raw = String(value || '').trim();
@@ -25,26 +27,32 @@ function splitKeywords(value = '') {
         .filter(Boolean);
 }
 
-export async function getManagedToolPage(toolKey, subtoolKey = '') {
+export async function getManagedToolPage(toolKey, subtoolKey = '', lang = 'ar') {
     const config = await getManagedSiteConfig();
-    const settings = getToolSettings(config, toolKey) || DEFAULT_TOOL_SETTINGS[toolKey];
+    const currentLang = lang === 'en' ? 'en' : 'ar';
+    const settings = getToolSettings(config, toolKey, currentLang) || DEFAULT_TOOL_SETTINGS[toolKey];
     const seo = subtoolKey
         ? settings.subtoolSeo?.[subtoolKey] || DEFAULT_TOOL_SETTINGS[toolKey]?.subtoolSeo?.[subtoolKey]
         : settings.seo || DEFAULT_TOOL_SETTINGS[toolKey]?.seo;
+    const paths = getToolLanguageAlternates(seo?.canonical || '/');
+    const localizedConfig = getLocalizedSiteConfig(config, currentLang);
 
     return {
         config,
         settings,
         seo,
+        lang: currentLang,
+        siteName: localizedConfig.toolDisplayName || SITE_NAME,
         title: seo?.h1,
         description: seo?.metaDescription,
-        path: seo?.canonical || '/',
+        path: paths[currentLang],
+        alternatePaths: paths,
         keywords: [seo?.primaryKeyword, ...splitKeywords(seo?.supportingKeywords)].filter(Boolean),
     };
 }
 
-export async function buildManagedToolMetadata(toolKey, subtoolKey = '') {
-    const page = await getManagedToolPage(toolKey, subtoolKey);
+export async function buildManagedToolMetadata(toolKey, subtoolKey = '', lang = 'ar') {
+    const page = await getManagedToolPage(toolKey, subtoolKey, lang);
     const title = page.seo?.searchTitle || page.title;
     const description = page.seo?.metaDescription || page.description;
     const url = absoluteSiteUrl(page.path);
@@ -56,13 +64,21 @@ export async function buildManagedToolMetadata(toolKey, subtoolKey = '') {
         title,
         description,
         keywords: page.keywords,
-        alternates: { canonical: page.path },
+        alternates: {
+            canonical: page.path,
+            languages: {
+                'ar-SA': page.alternatePaths.ar,
+                'en-US': page.alternatePaths.en,
+                'x-default': page.alternatePaths.ar,
+            },
+        },
         openGraph: {
             title,
             description,
             url,
-            siteName: SITE_NAME,
-            locale: 'ar_SA',
+            siteName: page.siteName,
+            locale: page.lang === 'en' ? 'en_US' : 'ar_SA',
+            alternateLocale: page.lang === 'en' ? ['ar_SA'] : ['en_US'],
             type: 'website',
             images,
         },
@@ -77,6 +93,7 @@ export async function buildManagedToolMetadata(toolKey, subtoolKey = '') {
 
 export function buildManagedToolJsonLd(page, faqs = []) {
     const url = absoluteSiteUrl(page.path);
+    const homeUrl = absoluteSiteUrl(page.lang === 'en' ? '/en' : '/');
     const schemas = [
         {
             '@context': 'https://schema.org',
@@ -86,7 +103,7 @@ export function buildManagedToolJsonLd(page, faqs = []) {
             url,
             applicationCategory: 'UtilitiesApplication',
             operatingSystem: 'Any',
-            inLanguage: 'ar-SA',
+            inLanguage: page.lang === 'en' ? 'en-US' : 'ar-SA',
             description: page.seo?.metaDescription || page.description,
             isPartOf: { '@id': `${SITE_URL}/#website` },
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'SAR' },
@@ -95,7 +112,7 @@ export function buildManagedToolJsonLd(page, faqs = []) {
             '@context': 'https://schema.org',
             '@type': 'BreadcrumbList',
             itemListElement: [
-                { '@type': 'ListItem', position: 1, name: SITE_NAME, item: SITE_URL },
+                { '@type': 'ListItem', position: 1, name: page.siteName || SITE_NAME, item: homeUrl },
                 { '@type': 'ListItem', position: 2, name: page.title, item: url },
             ],
         },

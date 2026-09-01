@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
@@ -14,6 +14,7 @@ import { getToolSettings } from './toolSettings';
 import { APP_VERSION } from './version';
 import { resolvePrivacyUiState } from './privacyUiState';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
+import { getArabicToolPath, getToolRouteLanguage, localizeToolPath } from './localizedToolRoutes';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -72,7 +73,8 @@ function shouldShowPrivacySettingsButton(configData, pathname) {
         : [];
 
     if (pages.length === 0) return false;
-    return pages.includes(normalizePagePath(pathname));
+    const publicPath = getArabicToolPath(pathname) || pathname;
+    return pages.includes(normalizePagePath(publicPath));
 }
 
 async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
@@ -192,7 +194,9 @@ function PublicShellSkeleton() {
 
 export default function SiteShell({ children, initialConfig = null }) {
     const pathname = usePathname() || '/';
-    const [lang, setLang] = useState('ar');
+    const router = useRouter();
+    const initialRouteLanguageRef = useRef(getToolRouteLanguage(pathname));
+    const [lang, setLang] = useState(() => initialRouteLanguageRef.current || 'ar');
     const [themeMode, setThemeMode] = useState(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
     const [configData, setConfigData] = useState(() => initialConfig || null);
@@ -218,7 +222,7 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     useEffect(() => {
         const savedLang = localStorage.getItem('site_lang') || 'ar';
-        setLang(savedLang);
+        if (!initialRouteLanguageRef.current) setLang(savedLang);
         const savedConsent = getPrivacyConsent();
         setPrivacyConsent(savedConsent);
         setIsPrivacyPanelCollapsed(
@@ -240,6 +244,14 @@ export default function SiteShell({ children, initialConfig = null }) {
         systemTheme.addListener?.(syncWithSystemTheme);
         return () => systemTheme.removeListener?.(syncWithSystemTheme);
     }, []);
+
+    useEffect(() => {
+        const routeLang = getToolRouteLanguage(pathname);
+        if (routeLang) {
+            setLang(routeLang);
+            localStorage.setItem('site_lang', routeLang);
+        }
+    }, [pathname]);
 
     useEffect(() => {
         if (!themeMode) return;
@@ -323,8 +335,9 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     useEffect(() => {
         if (!shouldUseShell || !configData) return;
-        const standaloneRoute = TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === pathname);
-        const toolKey = standaloneRoute?.toolKey || (pathname.startsWith('/clock') ? 'clock' : pathname.startsWith('/weather') ? 'weather' : 'date');
+        const publicPath = getArabicToolPath(pathname) || pathname;
+        const standaloneRoute = TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === publicPath);
+        const toolKey = standaloneRoute?.toolKey || (publicPath.startsWith('/clock') ? 'clock' : publicPath.startsWith('/weather') ? 'weather' : 'date');
         const toolSettings = getToolSettings(configData, toolKey, lang);
         const toolSeo = standaloneRoute
             ? toolSettings?.subtoolSeo?.[standaloneRoute.subtoolKey] || {}
@@ -386,6 +399,11 @@ export default function SiteShell({ children, initialConfig = null }) {
         const newLang = lang === 'ar' ? 'en' : 'ar';
         setLang(newLang);
         localStorage.setItem('site_lang', newLang);
+        const targetPath = localizeToolPath(pathname, newLang);
+        if (targetPath !== pathname) {
+            const suffix = typeof window === 'undefined' ? '' : `${window.location.search}${window.location.hash}`;
+            router.push(`${targetPath}${suffix}`);
+        }
     };
 
     const toggleTheme = () => {
@@ -497,7 +515,8 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [currentLocation, labels.locationDenied, labels.locationNotAllowed, labels.locationUnsupported, lang]);
 
     useEffect(() => {
-        const needsAutomaticLocation = pathname === '/clock' || pathname === '/weather';
+        const publicPath = getArabicToolPath(pathname) || pathname;
+        const needsAutomaticLocation = publicPath === '/clock' || publicPath === '/weather';
         if (!shouldUseShell || !needsAutomaticLocation || isSiteLoading || autoLocationRequestRef.current) return;
 
         autoLocationRequestRef.current = true;

@@ -13,6 +13,7 @@ describe('HTTP security boundaries', () => {
         expect(middleware).toContain("['X-Content-Type-Options', 'nosniff']");
         expect(middleware).toContain("['X-Frame-Options', 'DENY']");
         expect(middleware).toContain("['Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload']");
+        expect(middleware).toContain("response.headers.set('Content-Language'");
         expect(middleware).toContain("['Referrer-Policy', 'strict-origin-when-cross-origin']");
         expect(middleware).toContain("response.headers.set('Content-Security-Policy-Report-Only'");
         expect(middleware).toContain("response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')");

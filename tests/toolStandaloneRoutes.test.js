@@ -6,6 +6,12 @@ import {
     TOOL_SECTION_ROUTE_ENTRIES,
 } from '../toolSectionRoutes';
 import { DEFAULT_TOOL_SETTINGS } from '../app/toolSettings';
+import {
+    getArabicToolPath,
+    getToolLanguageAlternates,
+    getToolRouteLanguage,
+    localizeToolPath,
+} from '../app/localizedToolRoutes';
 
 function readProjectFile(...segments) {
     return readFileSync(join(process.cwd(), ...segments), 'utf8');
@@ -59,7 +65,7 @@ describe('standalone tool routes', () => {
         expect(slugPage).toContain('<ToolSeoContent tool="date" subtool={toolRoute.subtoolKey} />');
         expect(middleware).not.toContain('LEGACY_TOOL_SECTION_REDIRECTS');
         expect(middleware).not.toContain('legacyToolRoute');
-        expect(siteShell).toContain('TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === pathname)');
+        expect(siteShell).toContain('TOOL_SECTION_ROUTE_ENTRIES.find((route) => route.publicPath === publicPath)');
         expect(siteShell).toContain('toolSettings?.subtoolSeo?.[standaloneRoute.subtoolKey]');
     });
 
@@ -83,7 +89,8 @@ describe('standalone tool routes', () => {
         const seoContent = readProjectFile('app', 'components', 'ToolSeoContent.jsx');
 
         expect(sitemap).toContain('const subtools = TOOL_SECTION_ROUTE_ENTRIES.map');
-        expect(sitemap).toContain('return [...mainTools, ...subtools]');
+        expect(sitemap).toContain('return [...mainTools, ...subtools].flatMap');
+        expect(sitemap).toContain("{ ...entry, path: paths.en, alternates: { languages } }");
         expect(seoContent).toContain('const subtoolContent =');
         expect(seoContent).toContain('subtoolContent[currentLang]?.[tool]?.[subtool]');
         expect(seoContent).toContain('كيف تستخدم حاسبة العمر؟');
@@ -95,10 +102,41 @@ describe('standalone tool routes', () => {
         const seoContent = readProjectFile('app', 'components', 'ToolSeoContent.jsx');
 
         expect(seoContent).toContain(".filter(([key]) => key !== subtool)");
-        expect(seoContent).toContain('href: route.publicPath');
+        expect(seoContent).toContain('href: localizeToolPath(route.publicPath, currentLang)');
         expect(seoContent).toContain("title: 'أدوات مشابهة'");
         expect(seoContent).toContain("title: 'Similar Tools'");
         expect(seoContent).toContain('settings?.subtoolSeo?.[key]?.metaDescription');
         expect(seoContent).toContain('relatedTools.length > 0');
+    });
+
+    it('maps every tool page to a stable English counterpart', () => {
+        expect(localizeToolPath('/', 'en')).toBe('/en');
+        expect(localizeToolPath('/clock', 'en')).toBe('/en/clock');
+        expect(localizeToolPath('/age-calculator', 'en')).toBe('/en/age-calculator');
+        expect(localizeToolPath('/en/current-weather', 'ar')).toBe('/current-weather');
+        expect(getArabicToolPath('/en/timezone-difference')).toBe('/timezone-difference');
+        expect(getToolRouteLanguage('/en/weather')).toBe('en');
+        expect(getToolRouteLanguage('/weather')).toBe('ar');
+        expect(getToolRouteLanguage('/en/privacy')).toBe('');
+        expect(getToolLanguageAlternates('/date-converter')).toEqual({
+            ar: '/date-converter',
+            en: '/en/date-converter',
+        });
+    });
+
+    it('renders English family and standalone pages with localized metadata', () => {
+        const englishFamily = readProjectFile('app', 'en', 'page.jsx');
+        const englishStandalone = readProjectFile('app', 'en', '[slug]', 'page.jsx');
+        const englishRenderer = readProjectFile('app', 'en', 'EnglishToolPage.jsx');
+        const seoServer = readProjectFile('app', 'toolSeoServer.js');
+        const siteShell = readProjectFile('app', 'SiteShell.jsx');
+
+        expect(englishFamily).toContain("buildManagedToolMetadata('date', '', 'en')");
+        expect(englishStandalone).toContain("buildManagedToolMetadata(route.toolKey, route.subtoolKey, 'en')");
+        expect(englishStandalone).toContain('sectionId={route.sectionId}');
+        expect(englishRenderer).toContain("getManagedToolPage(toolKey, subtoolKey, 'en')");
+        expect(seoServer).toContain("'en-US': page.alternatePaths.en");
+        expect(seoServer).toContain("'x-default': page.alternatePaths.ar");
+        expect(siteShell).toContain('router.push(`${targetPath}${suffix}`)');
     });
 });

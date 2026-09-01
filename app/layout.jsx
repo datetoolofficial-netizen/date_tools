@@ -20,6 +20,11 @@ const themeBootstrapScript = `(() => {
         document.documentElement.style.colorScheme = resolvedTheme;
     } catch {}
 })();`;
+const languageBootstrapScript = `(() => {
+    const isEnglishRoute = /^\\/en(?:\\/|$)/.test(window.location.pathname);
+    document.documentElement.lang = isEnglishRoute ? 'en' : 'ar';
+    document.documentElement.dir = isEnglishRoute ? 'ltr' : 'rtl';
+})();`;
 
 export const viewport = {
     colorScheme: 'light dark',
@@ -125,6 +130,7 @@ export default async function RootLayout({ children }) {
     return (
         <html lang="ar" dir="rtl" suppressHydrationWarning>
             <head>
+                <script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} />
                 <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
                 <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
                 <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
