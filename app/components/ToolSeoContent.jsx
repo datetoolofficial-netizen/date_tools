@@ -1,6 +1,40 @@
 'use client';
 
+import Link from 'next/link';
 import { useSiteContext } from '../SiteContext';
+import { getToolSettings } from '../toolSettings';
+import { TOOL_SECTION_ROUTES } from '../../toolSectionRoutes';
+
+const relatedToolIcons = {
+    date: {
+        ageCalc: 'fa-solid fa-cake-candles',
+        dateConverter: 'fa-solid fa-calendar-day',
+        durationCalc: 'fa-solid fa-calendar-check',
+    },
+    clock: {
+        timeConverter: 'fa-solid fa-clock-rotate-left',
+        timezoneDiff: 'fa-solid fa-earth-americas',
+    },
+    weather: {
+        weatherSearch: 'fa-solid fa-magnifying-glass-location',
+        currentWeather: 'fa-solid fa-temperature-half',
+        outdoorAdvice: 'fa-solid fa-person-walking',
+        forecast: 'fa-solid fa-cloud-sun-rain',
+    },
+};
+
+const relatedSectionLabels = {
+    ar: {
+        title: 'أدوات مشابهة',
+        description: 'استكشف أدوات أخرى مرتبطة بهذه الأداة.',
+        open: 'فتح الأداة',
+    },
+    en: {
+        title: 'Similar Tools',
+        description: 'Explore other tools related to this one.',
+        open: 'Open tool',
+    },
+};
 
 const toolContent = {
     date: {
@@ -290,12 +324,26 @@ const subtoolContent = {
 };
 
 export default function ToolSeoContent({ tool, subtool = '' }) {
-    const { lang } = useSiteContext();
+    const { configData, lang } = useSiteContext();
+    const currentLang = lang === 'en' ? 'en' : 'ar';
+    const labels = relatedSectionLabels[currentLang];
+    const settings = getToolSettings(configData, tool, currentLang);
     const content = subtool
-        ? subtoolContent[lang === 'en' ? 'en' : 'ar']?.[tool]?.[subtool]
-        : lang === 'en'
+        ? subtoolContent[currentLang]?.[tool]?.[subtool]
+        : currentLang === 'en'
             ? toolContentEn[tool]
             : toolContent[tool];
+    const relatedTools = subtool
+        ? Object.entries(TOOL_SECTION_ROUTES[tool] || {})
+            .filter(([key]) => key !== subtool)
+            .map(([key, route]) => ({
+                key,
+                href: route.publicPath,
+                icon: relatedToolIcons[tool]?.[key] || 'fa-solid fa-screwdriver-wrench',
+                name: settings?.subtools?.[key] || settings?.subtoolSeo?.[key]?.h1 || route.sectionId,
+                description: settings?.subtoolSeo?.[key]?.metaDescription || '',
+            }))
+        : [];
     if (!content) return null;
 
     return (
@@ -315,6 +363,36 @@ export default function ToolSeoContent({ tool, subtool = '' }) {
                     )}
                 </section>
             ))}
+            {relatedTools.length > 0 && (
+                <nav className={`standalone-related-tools related-tools-${tool}`} aria-labelledby={`related-tools-${tool}-${subtool}`}>
+                    <div className="standalone-related-tools-heading">
+                        <span className="standalone-related-tools-heading-icon" aria-hidden="true">
+                            <i className="fa-solid fa-layer-group"></i>
+                        </span>
+                        <div>
+                            <h2 id={`related-tools-${tool}-${subtool}`}>{labels.title}</h2>
+                            <p>{labels.description}</p>
+                        </div>
+                    </div>
+                    <div className="standalone-related-tools-grid">
+                        {relatedTools.map((relatedTool) => (
+                            <Link className="standalone-related-tool-link" href={relatedTool.href} key={relatedTool.key}>
+                                <span className="standalone-related-tool-icon" aria-hidden="true">
+                                    <i className={relatedTool.icon}></i>
+                                </span>
+                                <span className="standalone-related-tool-copy">
+                                    <strong>{relatedTool.name}</strong>
+                                    {relatedTool.description && <small>{relatedTool.description}</small>}
+                                </span>
+                                <span className="standalone-related-tool-action">
+                                    {labels.open}
+                                    <i className={`fa-solid fa-arrow-${currentLang === 'ar' ? 'left' : 'right'}`}></i>
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }

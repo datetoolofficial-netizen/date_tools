@@ -85,9 +85,20 @@ describe('standalone tool routes', () => {
         expect(sitemap).toContain('const subtools = TOOL_SECTION_ROUTE_ENTRIES.map');
         expect(sitemap).toContain('return [...mainTools, ...subtools]');
         expect(seoContent).toContain('const subtoolContent =');
-        expect(seoContent).toContain("subtoolContent[lang === 'en' ? 'en' : 'ar']");
+        expect(seoContent).toContain('subtoolContent[currentLang]?.[tool]?.[subtool]');
         expect(seoContent).toContain('كيف تستخدم حاسبة العمر؟');
         expect(seoContent).toContain('How to Use the Age Calculator');
         expect(seoContent).not.toContain('tool-related-links');
+    });
+
+    it('adds direct localized sibling links only to standalone tool pages', () => {
+        const seoContent = readProjectFile('app', 'components', 'ToolSeoContent.jsx');
+
+        expect(seoContent).toContain(".filter(([key]) => key !== subtool)");
+        expect(seoContent).toContain('href: route.publicPath');
+        expect(seoContent).toContain("title: 'أدوات مشابهة'");
+        expect(seoContent).toContain("title: 'Similar Tools'");
+        expect(seoContent).toContain('settings?.subtoolSeo?.[key]?.metaDescription');
+        expect(seoContent).toContain('relatedTools.length > 0');
     });
 });

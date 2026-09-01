@@ -19,8 +19,8 @@ describe('installed app version checks', () => {
         const response = await getLatestAppVersion();
         const body = await response.json();
 
-        expect(body.version).toBe('0.3.47');
-        expect(body.publishedAt).toBe('2026-08-31');
+        expect(body.version).toBe('0.3.48');
+        expect(body.publishedAt).toBe('2026-09-01');
         expect(response.headers.get('cache-control')).toContain('no-store');
     });
 });
