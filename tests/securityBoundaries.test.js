@@ -23,6 +23,22 @@ describe('HTTP security boundaries', () => {
         expect(middleware).toContain("pathname === '/index.html'");
         expect(middleware).toContain("'/after-14-days.html'");
         expect(middleware).toContain("'/ad_request.html'");
+        expect(middleware).toContain('AUTOMATED_PROBE_PATH_PATTERN.test(pathname)');
+        expect(middleware).toContain('https://static.cloudflareinsights.com');
+        expect(middleware).toContain('https://apis.google.com');
+        expect(middleware).toContain('https://date-tool-official.firebaseapp.com');
+        expect(middleware).toContain('https://www.googletagmanager.com');
+    });
+
+    it('authenticates server-side public Firestore reads when service credentials are available', () => {
+        const publicConfigReader = readProjectFile('app', 'firestorePublicConfig.js');
+        const serverAuth = readProjectFile('app', 'serverFirestoreAuth.js');
+
+        expect(publicConfigReader).toContain('getFirestoreServerAuthorization');
+        expect(publicConfigReader).toContain('{ Authorization: authorization }');
+        expect(serverAuth).toContain("TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore'");
+        expect(serverAuth).toContain("crypto.subtle.sign(");
+        expect(serverAuth).not.toMatch(/privateKey:\s*['\"][^-]/);
     });
 
     it('does not expose support attachments through the public media categories', () => {

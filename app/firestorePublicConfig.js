@@ -1,3 +1,5 @@
+import { getFirestoreServerAuthorization } from './serverFirestoreAuth';
+
 const PROJECT_ID = 'date-tool-official';
 const SETTINGS_BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/settings`;
 
@@ -27,8 +29,12 @@ export function decodeFirestoreFields(fields = {}) {
 }
 
 async function fetchSettingsDocument(documentId, revalidate) {
+    const authorization = await getFirestoreServerAuthorization();
     const response = await fetch(`${SETTINGS_BASE_URL}/${documentId}`, {
-        headers: { Accept: 'application/json' },
+        headers: {
+            Accept: 'application/json',
+            ...(authorization ? { Authorization: authorization } : {}),
+        },
         ...(revalidate === 0 ? { cache: 'no-store' } : { next: { revalidate } }),
     });
 

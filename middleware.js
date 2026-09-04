@@ -19,6 +19,8 @@ const INTERNAL_NO_INDEX_PREFIXES = [
     '/api',
 ];
 
+const AUTOMATED_PROBE_PATH_PATTERN = /(?:\.php(?:\/|$)|(?:^|\/)(?:\.git|\.env(?:\.[^/]+)?|wp-admin|wp-content|wp-includes|wp-json|wordpress|_ignition)(?:\/|$))/i;
+
 const SECURITY_HEADERS = [
     ['X-Content-Type-Options', 'nosniff'],
     ['X-Frame-Options', 'DENY'],
@@ -43,10 +45,10 @@ const REPORT_ONLY_CSP = [
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https://cdnjs.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com",
-    "script-src-elem 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com",
-    "connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://api.bigdatacloud.net https://api.open-meteo.com https://geocoding-api.open-meteo.com https://www.clarity.ms https://*.clarity.ms https://*.google.com https://*.googleapis.com https://*.gstatic.com https://*.googlesyndication.com https://challenges.cloudflare.com",
-    "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://challenges.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com https://static.cloudflareinsights.com https://apis.google.com",
+    "script-src-elem 'self' 'unsafe-inline' blob: https://www.googletagmanager.com https://pagead2.googlesyndication.com https://www.google-analytics.com https://www.clarity.ms https://connect.facebook.net https://challenges.cloudflare.com https://tpc.googlesyndication.com https://fundingchoicesmessages.google.com https://static.cloudflareinsights.com https://apis.google.com",
+    "connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://oauth2.googleapis.com https://www.googleapis.com https://www.google-analytics.com https://www.googletagmanager.com https://stats.g.doubleclick.net https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://api.bigdatacloud.net https://api.open-meteo.com https://geocoding-api.open-meteo.com https://cloudflareinsights.com https://static.cloudflareinsights.com https://www.clarity.ms https://*.clarity.ms https://*.google.com https://*.googleapis.com https://*.gstatic.com https://*.googlesyndication.com https://challenges.cloudflare.com",
+    "frame-src 'self' https://date-tool-official.firebaseapp.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://challenges.cloudflare.com",
     'report-uri /api/csp-report',
 ].join('; ');
 
@@ -100,6 +102,16 @@ export function middleware(request) {
             status: 410,
             headers: {
                 'Cache-Control': 'no-store',
+                'X-Robots-Tag': 'noindex, nofollow, noarchive',
+            },
+        })), pathname);
+    }
+
+    if (AUTOMATED_PROBE_PATH_PATTERN.test(pathname)) {
+        return applyLanguageHeader(applySecurityHeaders(new NextResponse('', {
+            status: 404,
+            headers: {
+                'Cache-Control': 'public, max-age=300, s-maxage=86400',
                 'X-Robots-Tag': 'noindex, nofollow, noarchive',
             },
         })), pathname);
