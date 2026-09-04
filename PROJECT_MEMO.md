@@ -14041,6 +14041,10 @@ Invoke-WebRequest http://127.0.0.1:3000/probe.php
 Invoke-WebRequest http://127.0.0.1:3000/wp-json
 Invoke-WebRequest http://127.0.0.1:3000/.env
 Invoke-WebRequest http://127.0.0.1:3000/ad_request.html
+Invoke-WebRequest https://date-tool.com/api/app-version
+curl.exe https://date-tool.com/probe.php
+curl.exe https://date-tool.com/.env
+curl.exe https://date-tool.com/ad_request.html
 ```
 
 الحالة:
@@ -14050,4 +14054,8 @@ Invoke-WebRequest http://127.0.0.1:3000/ad_request.html
 - نجحت 81 حالة اختبار في 20 ملفًا.
 - أعادت الصفحة العربية والإنجليزية محليًا `200`، وأعادت مسارات الفحص `404` مع `noindex`، وبقي المسار المنتهي `ad_request.html` بحالة `410`.
 - أعاد `/api/app-version` الإصدار `0.3.52`، واحتوت رؤوس CSP المحلية على مصادر التقارير المعالجة.
+- دُفع الالتزام `c66ec37` إلى `master`، واكتمل Cloudflare Build والنشر بنجاح بالإصدار `0.3.52` ونسخة Worker رقم `452bae5c-de09-4241-bdf8-bd0f64ede388`.
+- أكد فحص الإنتاج أن `/probe.php` و`/.env` يعيدان `404` مع `noindex`، وأن `/ad_request.html` يعيد `410`، وأن رؤوس CSP المنشورة تحتوي المصادر التي أظهرتها التقارير.
+- أكد الاختبار المباشر في Search Console أن `/en` و`/en/clock` و`/en/weather` متاحة لمحرك Google وقابلة للفهرسة، وأن بيانات مسار التنقل صالحة في المسارات الثلاثة.
+- تأكد وجود المسارات الإنجليزية الثلاثة في `sitemap.xml` المنشور؛ لم تُرسل طلبات الفهرسة بعد بانتظار تأكيد المستخدم عند خطوة الإرسال الخارجية.
 - المتبقي بعد النشر هو مراقبة CSP وApp Check لنافذة جديدة؛ لا يُفرض أي منهما قبل ثبات القياسات، والنسخ الاحتياطي ما زال مؤجلًا إلى خطة Firebase المدفوعة.
