@@ -254,14 +254,35 @@ export const monthNames = {
     },
 };
 
-export const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+export const dayNames = {
+    ar: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+    en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+};
+
+export const daysAr = dayNames.ar;
+
+const EVENT_NAME_TRANSLATIONS = {
+    'حساب المواطن': 'Citizen Account Payment',
+    'الراتب': 'Salary Payment',
+    'التقاعد': 'Pension Payment',
+};
+
+export function getLocalizedEventName(event, lang = 'ar') {
+    const arabicName = String(event?.name || '').trim();
+    if (lang !== 'en') return arabicName;
+    return String(event?.nameEn || '').trim() || EVENT_NAME_TRANSLATIONS[arabicName] || arabicName;
+}
 
 export function getEventDayText(lang, days) {
     const labels = i18n[lang] || i18n.ar;
     return days === 0 ? labels.eventToday : labels.eventRemaining(days);
 }
 
-export function getTodayInfo({ dayName, gregDay, gregMonth, hijriDay, hijriMonth }) {
+export function getTodayInfo(lang, { dayName, gregDay, gregMonth, hijriDay, hijriMonth }) {
+    if (lang === 'en') {
+        return `Today is ${dayName}, ${gregMonth} ${gregDay} (Gregorian) | ${hijriDay} ${hijriMonth} AH`;
+    }
+
     return `اليوم ${dayName}، ${gregDay} ${gregMonth} م | ${hijriDay} ${hijriMonth} هـ`;
 }
 

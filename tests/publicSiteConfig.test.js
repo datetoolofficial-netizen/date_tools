@@ -13,6 +13,7 @@ describe('public settings projection', () => {
                     slot: '1234567890',
                     format: 'auto',
                     enabledWhenNoAdvertiser: true,
+                    houseAdTextEn: 'Advertise here',
                     htmlSnippet: '<script>unsafe</script>',
                     privateToken: 'secret',
                 },
@@ -35,6 +36,7 @@ describe('public settings projection', () => {
             slot: '1234567890',
             format: 'auto',
             enabledWhenNoAdvertiser: true,
+            houseAdTextEn: 'Advertise here',
         });
         expect(projected.googleAdSlots.dateTop).not.toHaveProperty('htmlSnippet');
         expect(projected.googleAdSlots.dateTop).not.toHaveProperty('privateToken');
@@ -79,7 +81,7 @@ describe('public settings projection', () => {
                 privateNotes: 'internal only',
             }],
             customPages: {
-                privacy: { title: 'Privacy', content: '<p>Public content</p>' },
+                privacy: { title: 'Privacy', titleEn: 'Privacy Policy', content: '<p>Public content</p>', contentEn: '<p>English content</p>' },
             },
             pages: {
                 legacy: { title: 'Legacy', content: '<p>Legacy content</p>' },
@@ -99,6 +101,7 @@ describe('public settings projection', () => {
         });
         expect(contentProjection.internalPages[0]).not.toHaveProperty('privateNotes');
         expect(contentProjection.customPages.privacy.content).toBe('<p>Public content</p>');
+        expect(contentProjection.customPages.privacy.contentEn).toBe('<p>English content</p>');
     });
 
     it('publishes only supported identity translations and selects English safely', () => {

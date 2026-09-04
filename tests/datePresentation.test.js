@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { i18n } from '../app/i18n';
+import { dayNames, getLocalizedEventName, getTodayInfo, i18n } from '../app/i18n';
 import { getToolSettings, renderShareTemplate } from '../app/toolSettings';
 
 describe('date result presentation', () => {
@@ -20,5 +20,18 @@ describe('date result presentation', () => {
 
         expect(shareText).toContain('1/1/1448 هـ');
         expect(shareText).toContain('18/3/1448 هـ');
+    });
+
+    it('localizes the today banner, weekdays, and known appointment names', () => {
+        expect(dayNames.en[1]).toBe('Monday');
+        expect(getTodayInfo('en', {
+            dayName: 'Monday',
+            gregDay: 7,
+            gregMonth: 'September',
+            hijriDay: 25,
+            hijriMonth: 'Rabi al-Awwal',
+        })).toBe('Today is Monday, September 7 (Gregorian) | 25 Rabi al-Awwal AH');
+        expect(getLocalizedEventName({ name: 'الراتب' }, 'en')).toBe('Salary Payment');
+        expect(getLocalizedEventName({ name: 'موعد مخصص', nameEn: 'Custom Event' }, 'en')).toBe('Custom Event');
     });
 });

@@ -26,6 +26,7 @@ const EMPTY_SLOT = {
     htmlSnippet: '',
     showHouseAd: false,
     houseAdText: '',
+    houseAdTextEn: '',
 };
 
 const EMPTY_INTEGRATIONS = {
@@ -496,6 +497,17 @@ export default function AdminAdSettingsPage() {
                                                 placeholder="مثال: أعلن معنا في هذه المساحة"
                                             />
                                             <span className="legacy-field-hint">فعّل خيار "نص تسويقي" من الجدول، ثم اكتب هنا النص الذي تريد ظهوره داخل مربع الإعلان.</span>
+                                        </div>
+                                        <div className="legacy-field full-span">
+                                            <label>Marketing placeholder text in English</label>
+                                            <input
+                                                dir="ltr"
+                                                type="text"
+                                                value={activeSlot.houseAdTextEn || ''}
+                                                onChange={(event) => updateSlot(activeSlotItem.id, 'houseAdTextEn', event.target.value)}
+                                                placeholder="Example: Advertise with us in this space"
+                                            />
+                                            <span className="legacy-field-hint">يظهر هذا النص في الصفحات الإنجليزية عند تفعيل خيار النص التسويقي.</span>
                                         </div>
                                     </div>
                                     <div className="legacy-modal-actions">

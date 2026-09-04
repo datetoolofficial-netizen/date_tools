@@ -84,4 +84,18 @@ describe('tool SEO settings', () => {
         expect(serializeToolSettings(config.toolSettings).date.localizations.en.shareTemplates.eventsResult).toBe('Upcoming dates\n{events}\n{url}');
         expect(serializeToolSettings(config.toolSettings).date.localizations.en.faqs[0].a).toBe('English answer.');
     });
+
+    it('uses complete English defaults when translated templates and FAQs are not saved yet', () => {
+        const date = getToolSettings({}, 'date', 'en');
+        const clock = getToolSettings({}, 'clock', 'en');
+        const weather = getToolSettings({}, 'weather', 'en');
+
+        expect(date.shareTemplates.ageResult).toContain('Result: {result}');
+        expect(clock.shareTemplates.timeConverterResult).toContain('12-hour time');
+        expect(weather.shareTemplates.currentWeatherResult).toContain('Weather in {city}');
+        expect(date.faqs).toHaveLength(3);
+        expect(clock.faqs).toHaveLength(3);
+        expect(weather.faqs).toHaveLength(3);
+        expect(JSON.stringify({ date, clock, weather })).not.toMatch(/[\u0600-\u06ff]/);
+    });
 });

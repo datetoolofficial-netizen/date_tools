@@ -98,6 +98,8 @@ describe('admin save and upload flows', () => {
     it('edits bilingual FAQs, events, and share templates without translating the admin frame', () => {
         const toolContent = readFileSync(join(process.cwd(), 'app', 'admin', 'tool-management', 'ToolContentSettings.jsx'), 'utf8');
         const dateEvents = readFileSync(join(process.cwd(), 'app', 'admin', 'tool-management', 'date', 'page.jsx'), 'utf8');
+        const toolsPage = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'page.jsx'), 'utf8');
+        const publicPage = readFileSync(join(process.cwd(), 'app', '[slug]', 'PageClient.jsx'), 'utf8');
 
         expect(toolContent).toContain('السؤال بالعربية');
         expect(toolContent).toContain('Question in English');
@@ -108,5 +110,19 @@ describe('admin save and upload flows', () => {
         expect(dateEvents).toContain('اسم الحدث بالعربية');
         expect(dateEvents).toContain('Event name in English');
         expect(dateEvents).toContain('nameEn');
+        expect(toolsPage).toContain('لغة محتوى الصفحة');
+        expect(toolsPage).toContain("language === 'en' ? 'contentEn' : 'content'");
+        expect(publicPage).toContain('page?.contentEn');
+        expect(publicPage).toContain('useSiteContext()');
+    });
+
+    it('relocalizes calculated date and clock results when the public language changes', () => {
+        const homePage = readFileSync(join(process.cwd(), 'app', 'HomePageClient.jsx'), 'utf8');
+        const clockPage = readFileSync(join(process.cwd(), 'app', 'clock', 'ClockPageClient.jsx'), 'utf8');
+
+        expect(homePage).toContain('relocalizeResultRef.current()');
+        expect(homePage).toContain("actions[activeResultRef.current]?.({ relocalize: true })");
+        expect(clockPage).toContain('setConvertedTime((current) => current ? previewTime : current)');
+        expect(clockPage).toContain('getDifferenceText(timezoneDiff.diff, lang)');
     });
 });

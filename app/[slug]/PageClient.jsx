@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
 import { sanitizeHtml } from '../sanitizeHtml';
+import { useSiteContext } from '../SiteContext';
 
 const DEFAULT_PAGE_CONTENT = {
     about: `
@@ -54,6 +55,76 @@ const DEFAULT_PAGE_CONTENT = {
             <p>قد يحتوي الموقع على إعلانات أو روابط خارجية. لا نتحمل مسؤولية محتوى المواقع الخارجية، وينبغي للمستخدم مراجعة سياساتها وشروطها قبل التعامل معها.</p>
             <h2>تحديث الشروط</h2>
             <p>قد يتم تحديث هذه الشروط من وقت لآخر لتحسين الوضوح أو مواكبة تغييرات الخدمة. استمرار استخدامك للموقع بعد التحديث يعني قبولك بالشروط الجديدة.</p>
+        </section>
+    `,
+    'month-names': `
+        <section class="static-rich-page">
+            <p>فيما يلي أسماء الأشهر الميلادية والهجرية مرتبة حسب تسلسلها المعتمد.</p>
+            <h2>الأشهر الميلادية</h2>
+            <p>يناير، فبراير، مارس، أبريل، مايو، يونيو، يوليو، أغسطس، سبتمبر، أكتوبر، نوفمبر، ديسمبر.</p>
+            <h2>الأشهر الهجرية</h2>
+            <p>محرم، صفر، ربيع الأول، ربيع الآخر، جمادى الأولى، جمادى الآخرة، رجب، شعبان، رمضان، شوال، ذو القعدة، ذو الحجة.</p>
+        </section>
+    `,
+};
+
+const DEFAULT_PAGE_CONTENT_EN = {
+    about: `
+        <section class="static-rich-page">
+            <p>Comprehensive Tools is a practical website designed to make everyday date calculations clear and straightforward. It includes tools for calculating age, converting between Gregorian and Hijri dates, finding the duration between two dates, and checking time and weather information.</p>
+            <p>We focus on ease of use, fast loading, and a consistent experience across phones and computers. Results are presented in plain language through a clean interface that continues to improve based on visitor feedback.</p>
+            <h2>What do we offer?</h2>
+            <ul>
+                <li>Accurate date tools for personal, educational, and planning purposes.</li>
+                <li>Helpful content that explains calendar differences and how to read results.</li>
+                <li>Clear privacy, terms of use, and contact pages.</li>
+                <li>A responsive experience with reliable performance across devices.</li>
+            </ul>
+            <p>The website is not a substitute for official authorities in legal or government matters, but it provides a convenient way to understand and perform everyday calculations.</p>
+        </section>
+    `,
+    privacy: `
+        <section class="static-rich-page">
+            <p>We respect the privacy of Comprehensive Tools visitors and limit data collection to what is needed to operate the website and improve the experience.</p>
+            <h2>Data we may process</h2>
+            <ul>
+                <li>General usage data, such as visits and tool interactions. We do not sell your personal data.</li>
+                <li>Information you voluntarily submit through the contact form, such as your name, email address, and message.</li>
+                <li>Location permission is requested only to improve time and weather tools. Your coordinates are not stored in our database.</li>
+            </ul>
+            <h2>Advertising and cookies</h2>
+            <p>The website may use Google AdSense or similar services to display ads. These services may use cookies or comparable identifiers to personalize ads and measure performance under their own policies.</p>
+            <p>You can manage cookies and privacy preferences through your browser settings or Google’s advertising controls.</p>
+            <h2>Data protection</h2>
+            <p>We use established services such as Firebase and Cloudflare to operate the website and protect requests. Although we take reasonable measures to safeguard data, no method of transmission over the internet is completely secure.</p>
+            <h2>Contact</h2>
+            <p>For privacy questions, contact us through the Contact Us page or by email at <a href="mailto:{{contactEmail}}">{{contactEmail}}</a>.</p>
+        </section>
+    `,
+    terms: `
+        <section class="static-rich-page">
+            <p>By using Comprehensive Tools, you agree to these terms. If you do not agree, please stop using the website.</p>
+            <h2>Nature of the service</h2>
+            <p>The tools provide calculations and guidance to help users understand dates and times. Results are based on common formulas and calendars, but they are not official documents or a substitute for the relevant authorities.</p>
+            <h2>Acceptable use</h2>
+            <ul>
+                <li>Do not use the website in a way that disrupts its operation or consumes resources through excessive automation.</li>
+                <li>Do not attempt to bypass security controls or misuse contact and advertising features.</li>
+                <li>You are responsible for verifying results before using them in official transactions.</li>
+            </ul>
+            <h2>Advertising and external links</h2>
+            <p>The website may contain advertisements or external links. We are not responsible for third-party content, and users should review the policies and terms of those websites.</p>
+            <h2>Changes to these terms</h2>
+            <p>We may update these terms to improve clarity or reflect changes to the service. Continued use after an update means that you accept the revised terms.</p>
+        </section>
+    `,
+    'month-names': `
+        <section class="static-rich-page">
+            <p>Gregorian and Hijri month names are listed below in their standard order.</p>
+            <h2>Gregorian months</h2>
+            <p>January, February, March, April, May, June, July, August, September, October, November, and December.</p>
+            <h2>Hijri months</h2>
+            <p>Muharram, Safar, Rabi al-Awwal, Rabi al-Thani, Jumada al-Awwal, Jumada al-Thani, Rajab, Shaaban, Ramadan, Shawwal, Dhu al-Qadah, and Dhu al-Hijjah.</p>
         </section>
     `,
 };
@@ -131,7 +202,18 @@ function findPageBySlug(config, slug) {
     return null;
 }
 
-function getPageTitle(page) {
+function getPageTitle(page, lang = 'ar') {
+    if (lang === 'en') {
+        return (
+            page?.titleEn ||
+            page?.pageTitleEn ||
+            page?.nameEn ||
+            page?.labelEn ||
+            page?.title ||
+            'Page'
+        );
+    }
+
     return (
         page?.title ||
         page?.pageTitle ||
@@ -147,13 +229,19 @@ function getFallbackPageTitle(slug, lang = 'ar') {
         contact: { ar: 'اتصل بنا', en: 'Contact us' },
         privacy: { ar: 'سياسة الخصوصية', en: 'Privacy Policy' },
         terms: { ar: 'شروط الاستخدام', en: 'Terms of Use' },
+        about: { ar: 'من نحن', en: 'About Us' },
+        'about-us': { ar: 'من نحن', en: 'About Us' },
         'month-names': { ar: 'جدول الأشهر', en: 'Month Names' },
     };
 
     return titles[normalized]?.[lang] || titles[normalized]?.ar || (lang === 'ar' ? 'صفحة' : 'Page');
 }
 
-function getPageDescription(page) {
+function getPageDescription(page, lang = 'ar') {
+    if (lang === 'en') {
+        return page?.descriptionEn || page?.seoDescriptionEn || page?.summaryEn || '';
+    }
+
     return (
         page?.description ||
         page?.seoDescription ||
@@ -162,7 +250,11 @@ function getPageDescription(page) {
     );
 }
 
-function getPageContent(page) {
+function getPageContent(page, lang = 'ar') {
+    if (lang === 'en') {
+        return page?.contentEn || page?.htmlEn || page?.bodyEn || page?.textEn || '';
+    }
+
     return (
         page?.content ||
         page?.html ||
@@ -180,13 +272,17 @@ function applyConfigVariables(content, config) {
     return String(content || '').replace(/\{\{\s*(contactEmail)\s*\}\}/g, (_, key) => replacements[key]);
 }
 
-function getEnhancedContent(slug, content) {
+function getEnhancedContent(slug, content, lang = 'ar') {
     const normalized = normalizeSlug(slug);
+    const fallbackKey = normalized === 'about-us'
+        ? 'about'
+        : ['months', 'months-table'].includes(normalized) ? 'month-names' : normalized;
     const current = String(content || '').trim();
-    if (normalized === 'about') return current;
+    const fallback = lang === 'en'
+        ? DEFAULT_PAGE_CONTENT_EN[fallbackKey] || ''
+        : DEFAULT_PAGE_CONTENT[fallbackKey] || '';
 
-    const fallback = DEFAULT_PAGE_CONTENT[normalized] || '';
-
+    if (lang === 'en' && current) return current;
     if (!fallback) return current;
     if (current.replace(/<[^>]*>/g, '').trim().length >= 650) return current;
 
@@ -237,7 +333,27 @@ function StaticPageLoading({ isContactPage = false }) {
     );
 }
 
-function ContactForm({ contactEmail = '' }) {
+const CONTACT_COPY = {
+    ar: {
+        invalidAttachmentTitle: 'تعذر اختيار المرفق', invalidAttachment: 'يرجى اختيار صورة فقط بصيغة PNG أو JPG أو WEBP أو GIF.',
+        largeAttachmentTitle: 'حجم الصورة غير مناسب', largeAttachment: 'حجم الصورة كبير. الحد الأقصى المسموح هو 3MB.', attachmentSelected: 'تم اختيار الصورة، وسيتم رفعها بأمان مع الرسالة.',
+        shortMessageTitle: 'الرسالة قصيرة', shortMessage: 'اكتب رسالة أوضح حتى نتمكن من مساعدتك، بحد أدنى 10 أحرف.',
+        successTitle: 'تم إرسال رسالتك بنجاح', successText: 'شكرًا لتواصلك معنا. سيتم الرد على رسالتك خلال 27 ساعة.', ticketNumber: 'رقم التذكرة',
+        errorTitle: 'تعذر إرسال الرسالة', errorWithEmail: 'لم نتمكن من إرسال طلبك الآن. يمكنك المحاولة مرة أخرى أو التواصل معنا عبر البريد المباشر:', errorWithoutEmail: 'لم نتمكن من إرسال طلبك الآن. يرجى المحاولة مرة أخرى بعد قليل.', errorNumber: 'رقم الخطأ',
+        name: 'الاسم', namePlaceholder: 'اكتب اسمك', email: 'البريد الإلكتروني', subject: 'عنوان الرسالة', subjectPlaceholder: 'مثال: اقتراح لتحسين أداة التاريخ', message: 'نص الرسالة', messagePlaceholder: 'اكتب التفاصيل التي تساعدنا على فهم طلبك...', attachment: 'صورة أو لقطة شاشة اختيارية', chooseImage: 'اختر صورة من جهازك', sending: 'جاري الإرسال...', send: 'إرسال الرسالة',
+    },
+    en: {
+        invalidAttachmentTitle: 'Unable to select attachment', invalidAttachment: 'Choose a PNG, JPG, WEBP, or GIF image only.',
+        largeAttachmentTitle: 'Image is too large', largeAttachment: 'The image exceeds the 3 MB limit.', attachmentSelected: 'The image is ready and will be uploaded securely with your message.',
+        shortMessageTitle: 'Message is too short', shortMessage: 'Please provide at least 10 characters so we can understand and respond to your request.',
+        successTitle: 'Your message was sent', successText: 'Thank you for contacting us. We will respond within 27 hours.', ticketNumber: 'Ticket number',
+        errorTitle: 'Unable to send your message', errorWithEmail: 'We could not send your request. Try again or contact us directly by email:', errorWithoutEmail: 'We could not send your request. Please try again shortly.', errorNumber: 'Error number',
+        name: 'Name', namePlaceholder: 'Enter your name', email: 'Email address', subject: 'Subject', subjectPlaceholder: 'Example: Suggestion for improving a date tool', message: 'Message', messagePlaceholder: 'Add the details that will help us understand your request...', attachment: 'Optional image or screenshot', chooseImage: 'Choose an image from your device', sending: 'Sending...', send: 'Send message',
+    },
+};
+
+function ContactForm({ contactEmail = '', lang = 'ar' }) {
+    const copy = CONTACT_COPY[lang] || CONTACT_COPY.ar;
     const [form, setForm] = useState(initialContactForm);
     const [attachmentFile, setAttachmentFile] = useState(null);
     const [notice, setNotice] = useState({ text: '', type: 'info' });
@@ -258,8 +374,8 @@ function ContactForm({ contactEmail = '' }) {
             event.target.value = '';
             setAttachmentFile(null);
             setNotice({
-                title: 'تعذر اختيار المرفق',
-                text: 'يرجى اختيار صورة فقط بصيغة PNG أو JPG أو WEBP أو GIF.',
+                title: copy.invalidAttachmentTitle,
+                text: copy.invalidAttachment,
                 type: 'error',
                 modal: true,
             });
@@ -270,8 +386,8 @@ function ContactForm({ contactEmail = '' }) {
             event.target.value = '';
             setAttachmentFile(null);
             setNotice({
-                title: 'حجم الصورة غير مناسب',
-                text: 'حجم الصورة كبير. الحد الأقصى المسموح هو 3MB.',
+                title: copy.largeAttachmentTitle,
+                text: copy.largeAttachment,
                 type: 'error',
                 modal: true,
             });
@@ -279,7 +395,7 @@ function ContactForm({ contactEmail = '' }) {
         }
 
         setAttachmentFile(file);
-        setNotice({ text: 'تم اختيار الصورة، وسيتم رفعها بأمان مع الرسالة.', type: 'success' });
+        setNotice({ text: copy.attachmentSelected, type: 'success' });
     };
 
     const handleSubmit = async (event) => {
@@ -288,8 +404,8 @@ function ContactForm({ contactEmail = '' }) {
 
         if (form.message.trim().length < 10) {
             setNotice({
-                title: 'الرسالة قصيرة',
-                text: 'اكتب رسالة أوضح حتى نتمكن من مساعدتك، بحد أدنى 10 أحرف.',
+                title: copy.shortMessageTitle,
+                text: copy.shortMessage,
                 type: 'error',
                 modal: true,
             });
@@ -313,11 +429,11 @@ function ContactForm({ contactEmail = '' }) {
             if (!response.ok || !result.ok) throw new Error(result.errorNumber || 'SUP-5000');
 
             setNotice({
-                title: 'تم إرسال رسالتك بنجاح',
-                text: 'شكرًا لتواصلك معنا. ومن منطلق اهتمامنا بعملائنا، سيتم الرد على رسالتك خلال 27 ساعة.',
+                title: copy.successTitle,
+                text: copy.successText,
                 type: 'success',
                 modal: true,
-                referenceLabel: 'رقم التذكرة',
+                referenceLabel: copy.ticketNumber,
                 referenceValue: result.ticketNumber,
             });
             setForm(initialContactForm);
@@ -331,13 +447,13 @@ function ContactForm({ contactEmail = '' }) {
                 : 'SUP-5000';
             const directEmail = String(contactEmail || '').trim();
             setNotice({
-                title: 'تعذر إرسال الرسالة',
+                title: copy.errorTitle,
                 text: directEmail
-                    ? 'لم نتمكن من إرسال طلبك الآن. يمكنك المحاولة مرة أخرى أو التواصل معنا عبر البريد المباشر:'
-                    : 'لم نتمكن من إرسال طلبك الآن. يرجى المحاولة مرة أخرى بعد قليل.',
+                    ? copy.errorWithEmail
+                    : copy.errorWithoutEmail,
                 type: 'error',
                 modal: true,
-                referenceLabel: 'رقم الخطأ',
+                referenceLabel: copy.errorNumber,
                 referenceValue: errorNumber,
                 linkHref: directEmail ? `mailto:${directEmail}` : '',
                 linkLabel: directEmail || '',
@@ -374,31 +490,31 @@ function ContactForm({ contactEmail = '' }) {
 
                 <div className="contact-form-grid">
                     <label>
-                        <span>الاسم</span>
-                        <input required value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} placeholder="اكتب اسمك" />
+                        <span>{copy.name}</span>
+                        <input required value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} placeholder={copy.namePlaceholder} />
                     </label>
                     <label>
-                        <span>البريد الإلكتروني</span>
+                        <span>{copy.email}</span>
                         <input required type="email" dir="ltr" value={form.senderEmail} onChange={(event) => updateField('senderEmail', event.target.value)} placeholder="name@example.com" />
                     </label>
                 </div>
 
                 <label>
-                    <span>عنوان الرسالة</span>
-                    <input required value={form.subject} onChange={(event) => updateField('subject', event.target.value)} placeholder="مثال: اقتراح لتحسين أداة التاريخ" />
+                    <span>{copy.subject}</span>
+                    <input required value={form.subject} onChange={(event) => updateField('subject', event.target.value)} placeholder={copy.subjectPlaceholder} />
                 </label>
 
                 <label>
-                    <span>نص الرسالة</span>
-                    <textarea required value={form.message} onChange={(event) => updateField('message', event.target.value)} placeholder="اكتب التفاصيل التي تساعدنا على فهم طلبك..." />
+                    <span>{copy.message}</span>
+                    <textarea required value={form.message} onChange={(event) => updateField('message', event.target.value)} placeholder={copy.messagePlaceholder} />
                 </label>
 
                 <label>
-                    <span>صورة أو لقطة شاشة اختيارية</span>
+                    <span>{copy.attachment}</span>
                     <div className="contact-upload-field">
                         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={updateAttachment} />
                         <i className="fa-solid fa-cloud-arrow-up"></i>
-                        <strong>{attachmentFile ? attachmentFile.name : 'اختر صورة من جهازك'}</strong>
+                        <strong>{attachmentFile ? attachmentFile.name : copy.chooseImage}</strong>
                     </div>
                 </label>
 
@@ -410,25 +526,18 @@ function ContactForm({ contactEmail = '' }) {
 
                 <button type="submit" disabled={isLoading}>
                     <i className={`fa-solid ${isLoading ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}></i>
-                    {isLoading ? 'جاري الإرسال...' : 'إرسال الرسالة'}
+                    {isLoading ? copy.sending : copy.send}
                 </button>
             </form>
         </section>
     );
 }
 export default function PageClient({ slug, initialPage = null, initialConfig = null }) {
+    const { lang } = useSiteContext();
     const hasInitialPage = Boolean(initialPage);
     const [config, setConfig] = useState(initialConfig);
     const [loading, setLoading] = useState(!hasInitialPage);
     const [error, setError] = useState('');
-    const [lang, setLang] = useState('ar');
-
-    useEffect(() => {
-        const savedLang = localStorage.getItem('site_lang') || 'ar';
-        setLang(savedLang);
-        document.documentElement.lang = savedLang;
-        document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
-    }, []);
 
     useEffect(() => {
         let isMounted = true;
@@ -449,7 +558,7 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
                 console.error('خطأ في قراءة صفحة slug من Firestore:', err);
 
                 if (isMounted && !hasInitialPage) {
-                    setError('تعذر تحميل الصفحة. يرجى المحاولة لاحقًا.');
+                    setError('load_failed');
                 }
             } finally {
                 if (isMounted) {
@@ -488,7 +597,11 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
     if (error) {
         return (
             <PageFrame lang={lang} title={lang === 'ar' ? 'حدث خطأ' : 'Error'} align="center">
-                <p className="static-page-description">{error}</p>
+                <p className="static-page-description">
+                    {lang === 'en'
+                        ? 'Unable to load this page. Please try again later.'
+                        : 'تعذر تحميل الصفحة. يرجى المحاولة لاحقًا.'}
+                </p>
             </PageFrame>
         );
     }
@@ -505,11 +618,11 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
         );
     }
 
-    const title = getPageTitle(page);
-    const description = getPageDescription(page);
+    const title = getPageTitle(page, lang);
+    const description = getPageDescription(page, lang);
     const normalizedSlug = normalizeSlug(slug);
     const isContactPage = normalizedSlug === 'contact';
-    const rawContent = isContactPage ? '' : getEnhancedContent(slug, getPageContent(page));
+    const rawContent = isContactPage ? '' : getEnhancedContent(slug, getPageContent(page, lang), lang);
     const content = sanitizeHtml(applyConfigVariables(rawContent, config));
     const align = lang === 'ar' ? 'right' : 'left';
 
@@ -529,7 +642,7 @@ export default function PageClient({ slug, initialPage = null, initialConfig = n
                 </p>
             ) : null}
 
-            {isContactPage ? <ContactForm contactEmail={config?.contactEmail || ''} /> : null}
+            {isContactPage ? <ContactForm contactEmail={config?.contactEmail || ''} lang={lang} /> : null}
         </PageFrame>
     );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ToolManagementShell from '../ToolManagementShell';
 import ToolContentSettings from '../ToolContentSettings';
+import { getLocalizedEventName } from '../../../i18n';
 
 const EMPTY_EVENT = {
     id: '',
@@ -31,7 +32,14 @@ function DateToolEvents({ firebaseApi, showMessage }) {
             try {
                 setIsLoading(true);
                 const config = await firebaseApi.getSiteConfig();
-                if (isMounted) setEvents(Array.isArray(config.events) ? config.events : []);
+                if (isMounted) {
+                    setEvents(Array.isArray(config.events)
+                        ? config.events.map((eventItem) => ({
+                            ...eventItem,
+                            nameEn: eventItem.nameEn || getLocalizedEventName(eventItem, 'en'),
+                        }))
+                        : []);
+                }
             } catch (error) {
                 console.error('Error loading date tool events:', error);
                 if (isMounted) showMessage('error', 'تعذر تحميل أحداث أداة التاريخ.');

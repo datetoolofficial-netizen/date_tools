@@ -240,6 +240,10 @@ export default async function Page({ params }) {
         html: sanitizeHtmlServer(page?.html || ''),
         body: sanitizeHtmlServer(page?.body || ''),
         text: sanitizeHtmlServer(page?.text || ''),
+        contentEn: sanitizeHtmlServer(page?.contentEn || ''),
+        htmlEn: sanitizeHtmlServer(page?.htmlEn || ''),
+        bodyEn: sanitizeHtmlServer(page?.bodyEn || ''),
+        textEn: sanitizeHtmlServer(page?.textEn || ''),
     };
 
     return (

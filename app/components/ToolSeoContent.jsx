@@ -131,18 +131,90 @@ const toolContent = {
 };
 
 const toolContentEn = {
-    date: { sections: [
-        { title: 'Date Tools Guide', paragraphs: ['Use this page to calculate age, convert between Gregorian and Hijri dates, and find the duration between two dates without creating an account.'] },
-        { title: 'Accuracy and Privacy', paragraphs: ['Shared links do not include birth dates or personal inputs. Hijri conversion may differ by one day from an official calendar, so verify sensitive dates with the relevant authority.'] },
-    ] },
-    clock: { sections: [
-        { title: 'Time Tools Guide', paragraphs: ['Convert 24-hour time to 12-hour time, view the current time, and compare time zones between two cities.'] },
-        { title: 'Location and Accuracy', paragraphs: ['Location access is optional and coordinates are not stored in the database. Time differences may change with daylight saving rules.'] },
-    ] },
-    weather: { sections: [
-        { title: 'Weather Guide', paragraphs: ['View temperature, feels-like temperature, humidity, wind, rain probability, UV index and a five-day forecast in one place.'] },
-        { title: 'Data Source and Limits', paragraphs: ['Weather data comes from Open-Meteo and may vary by update time and the nearest forecast point. Follow official alerts for severe weather and travel decisions.'] },
-    ] },
+    date: {
+        sections: [
+            {
+                title: 'Date Tools Guide',
+                paragraphs: [
+                    'This page brings together the most useful everyday date tools: calculate age, convert between Gregorian and Hijri dates, and find the duration between two dates. You can get a clear result quickly without creating an account or entering unrelated personal information.',
+                    'Use it to calculate an age in years, months, and days, convert an important date to the other calendar, or measure a period of employment, study, or a contract. The results are suitable for everyday planning; verify dates with the relevant authority when an official decision or legal transaction depends on them.',
+                ],
+            },
+            {
+                title: 'When Should You Use Each Tool?',
+                paragraphs: ['Choose the age calculator for a current age, the date converter when matching a date across calendars, and the date difference tool when comparing two past or future dates.'],
+                items: [
+                    'Age calculator: birthdays, personal planning, and quick age checks.',
+                    'Date converter: occasions, documents, and Gregorian–Hijri conversion.',
+                    'Date difference: employment periods, subscriptions, contracts, and countdowns.',
+                    'Upcoming dates: important events, such as salary and benefit payment dates, in a shareable format.',
+                ],
+            },
+            {
+                title: 'Accuracy and Privacy',
+                paragraphs: [
+                    'Birth dates, email addresses, and other personal inputs are not added to the page address, analytics event names, or shared links. Sharing produces text without placing your private inputs in the URL.',
+                    'Calculated Hijri dates may differ by one day from official calendars or local moon-sighting decisions. Treat the result as practical guidance and consult the approved calendar for official or religious matters.',
+                ],
+            },
+        ],
+    },
+    clock: {
+        sections: [
+            {
+                title: 'Time Tools Guide',
+                paragraphs: [
+                    'Use the time page to convert 24-hour time to 12-hour time, view the current local time, and calculate the time difference between two cities by searching for their names.',
+                    'These tools are useful for arranging meetings, following travel schedules, reading official timetables, or converting a time such as 13:30 into the more familiar 1:30 PM format.',
+                ],
+            },
+            {
+                title: 'How to Use the Page',
+                paragraphs: ['Use the time converter for a specific hour. When contacting someone in another city, use the time-difference tool to compare the current time in both places and see the difference in hours.'],
+                items: [
+                    '24-to-12 converter: converts hours and minutes and adds AM or PM.',
+                    'Current time: uses a city or your location after browser permission.',
+                    'Time difference: compares two cities and displays a concise result.',
+                    'Share result: prepares clear text without adding personal data to the URL.',
+                ],
+            },
+            {
+                title: 'Location and Accuracy',
+                paragraphs: [
+                    'Location access is optional and requires your browser permission. Coordinates are used to identify a suitable time zone and are not stored in the site database. You can search manually at any time.',
+                    'City names and time zones depend on the location-data provider. Daylight-saving rules can also change the difference between two cities during the year.',
+                ],
+            },
+        ],
+    },
+    weather: {
+        sections: [
+            {
+                title: 'Weather Guide',
+                paragraphs: [
+                    'The weather page presents current temperature, feels-like temperature, humidity, wind speed, rain probability, UV index, and the upcoming forecast in one clear view.',
+                    'Search by city or use your current location after granting browser permission. Coordinates are used to retrieve nearby weather and are not stored in the site database.',
+                ],
+            },
+            {
+                title: 'Understanding the Indicators',
+                paragraphs: ['Temperature is the measured value, while feels-like temperature estimates outdoor comfort. Humidity, wind, rain probability, and UV index help you plan clothing and activities more effectively.'],
+                items: [
+                    'Feels like: may be higher or lower because of humidity, wind, and sunshine.',
+                    'Rain chance: shows the probability of precipitation for the selected day.',
+                    'UV index: helps you decide when sun protection is advisable.',
+                    'Upcoming forecast: provides a concise view for near-term planning.',
+                ],
+            },
+            {
+                title: 'Data Source and Limits',
+                paragraphs: [
+                    'Weather data comes from Open-Meteo and may vary with the update time, forecast model, or nearest available data point. Use it as a practical guide and follow official alerts for severe weather or important travel decisions.',
+                    'Location permission is requested only to improve time or weather results. Manual city search remains available without sharing your current location.',
+                ],
+            },
+        ],
+    },
 };
 
 const subtoolContent = {

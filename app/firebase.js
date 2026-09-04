@@ -212,7 +212,8 @@ function normalizeGoogleAdSlot(value = {}) {
         enabledWhenNoAdvertiser: value.enabledWhenNoAdvertiser === true,
         htmlSnippet: String(value.htmlSnippet || "").slice(0, 4000),
         showHouseAd: value.showHouseAd === true,
-        houseAdText: String(value.houseAdText || "").slice(0, 160)
+        houseAdText: String(value.houseAdText || "").slice(0, 160),
+        houseAdTextEn: String(value.houseAdTextEn || "").slice(0, 160)
     };
 }
 
@@ -366,7 +367,8 @@ export async function saveSiteConfig(config) {
             slug,
             {
                 ...page,
-                content: sanitizeHtml(page?.content || '')
+                content: sanitizeHtml(page?.content || ''),
+                contentEn: sanitizeHtml(page?.contentEn || '')
             }
         ])
     );
@@ -471,7 +473,8 @@ export async function saveSiteConfigSection(sectionPatch) {
                     ? deleteField()
                     : {
                         ...page,
-                        content: sanitizeHtml(page?.content || '')
+                        content: sanitizeHtml(page?.content || ''),
+                        contentEn: sanitizeHtml(page?.contentEn || '')
                     }
             ])
         );

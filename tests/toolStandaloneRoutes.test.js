@@ -139,4 +139,23 @@ describe('standalone tool routes', () => {
         expect(seoServer).toContain("'x-default': page.alternatePaths.ar");
         expect(siteShell).toContain('router.push(`${targetPath}${suffix}`)');
     });
+
+    it('keeps English lower-page content, FAQs, dates, and sharing controls visible', () => {
+        const dateClient = readProjectFile('app', 'HomePageClient.jsx');
+        const homeSections = readProjectFile('app', 'components', 'home', 'HomeSections.jsx');
+        const seoContent = readProjectFile('app', 'components', 'ToolSeoContent.jsx');
+        const publicAdSlot = readProjectFile('app', 'components', 'PublicAdSlot.jsx');
+
+        expect(dateClient).toContain('<EventsShareDialog');
+        expect(dateClient).toContain('lang={lang}');
+        expect(homeSections).not.toContain("if (lang !== 'ar') return null;");
+        expect(homeSections).toContain("title: 'Choose dates'");
+        expect(homeSections).toContain('getEventDayText(lang, event.days)');
+        expect(homeSections).toContain("if (lang === 'en') {");
+        expect(homeSections).toContain('<h2 className="seo-title">{seo.faqTitle}</h2>');
+        expect(seoContent).toContain("title: 'When Should You Use Each Tool?'");
+        expect(seoContent).toContain("title: 'Understanding the Indicators'");
+        expect(seoContent).toContain("title: 'Location and Accuracy'");
+        expect(publicAdSlot).toContain("clean(slotConfig.houseAdTextEn) || 'Advertise with us in this space'");
+    });
 });

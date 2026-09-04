@@ -7,8 +7,9 @@ import { useSiteContext } from './SiteContext';
 import {
     buildDateStory,
     buildEventsShareText,
-    daysAr,
+    dayNames,
     getEventDayText,
+    getLocalizedEventName,
     getSeasonKey,
     getTodayInfo,
     i18n,
@@ -115,6 +116,9 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     const [enteredDateInfo, setEnteredDateInfo] = useState(null);
 
     const trackedAdImpressionsRef = useRef(new Set());
+    const activeResultRef = useRef('');
+    const previousLangRef = useRef(lang);
+    const relocalizeResultRef = useRef(() => {});
 
     useEffect(() => {
         if (!configData || typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
@@ -140,10 +144,11 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         return () => observer.disconnect();
     }, [configData, firebaseApiRef]);
 
-    const clearResults = () => {
+    const clearResults = (preserveActiveResult = false) => {
         setResAgeGreg(null); setResAgeHijri(null); setResHijriConv(null);
         setResGregConv(null); setResDiffGreg(null); setResDiffHijri(null);
         setEnteredDateInfo(null);
+        if (!preserveActiveResult) activeResultRef.current = '';
     };
 
     const setToolCalendarMode = (setter, mode) => {
@@ -159,14 +164,14 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     const generateTodayAndEvents = useCallback(() => {
         const today = new Date();
         const hParts = getHijriParts(today);
-        const currentDayName = daysAr[today.getDay()];
+        const currentDayName = dayNames[lang][today.getDay()];
         
-        setTodayInfo(getTodayInfo({
+        setTodayInfo(getTodayInfo(lang, {
             dayName: currentDayName,
             gregDay: today.getDate(),
-            gregMonth: monthNames.ar.greg[today.getMonth()],
+            gregMonth: monthNames[lang].greg[today.getMonth()],
             hijriDay: hParts.d,
-            hijriMonth: monthNames.ar.hijri[hParts.m - 1],
+            hijriMonth: monthNames[lang].hijri[hParts.m - 1],
         }));
 
         let events = [];
@@ -204,7 +209,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
                 let diff = Math.ceil((targetGregDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                 if (diff >= 0 && diff <= maxDays) {
                     events.push({
-                        name: lang === 'en' ? (evt.nameEn || evt.name) : evt.name,
+                        name: getLocalizedEventName(evt, lang),
                         days: diff,
                         icon: evt.icon,
                         color: evt.color,
@@ -286,7 +291,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     };
 
     const generateDateStory = (gregDate, title, rawResultText, shareTemplateKey, shareVariables = {}) => {
-        const dName = daysAr[gregDate.getDay()];
+        const dName = dayNames[lang][gregDate.getDay()];
         const m = gregDate.getMonth() + 1;
         const isLeap = new Date(gregDate.getFullYear(), 1, 29).getMonth() === 1;
         const story = buildDateStory(lang, {
@@ -352,8 +357,9 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         return { years, months, days };
     };
 
-    const calculateAgeGreg = () => {
-        clearResults();
+    const calculateAgeGreg = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d, m, y } = gAgeInput;
         if (!d || !m || !y) return showNotification("errSelect");
         const birthDate = new Date(`${y}-${m}-${d}`); const today = new Date();
@@ -367,11 +373,15 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             inputLabel: i18n[lang].lblBirth,
             input: formatInputDate(gAgeInput, i18n[lang].gregorianSuffix.trim()),
         });
-        firebaseApiRef.current.trackToolUsage('ageCalc');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'ageGreg';
+            firebaseApiRef.current.trackToolUsage('ageCalc');
+        }
     };
 
-    const calculateAgeHijri = () => {
-        clearResults();
+    const calculateAgeHijri = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d, m, y } = hAgeInput;
         if (!d || !m || !y) return showNotification("errSelect");
         const bDay = parseInt(d), bMonth = parseInt(m), bYear = parseInt(y);
@@ -398,11 +408,15 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             inputLabel: i18n[lang].lblBirth,
             input: formatInputDate(hAgeInput, i18n[lang].hijriSuffix.trim()),
         });
-        firebaseApiRef.current.trackToolUsage('ageCalc');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'ageHijri';
+            firebaseApiRef.current.trackToolUsage('ageCalc');
+        }
     };
 
-    const convertGregToHijri = () => {
-        clearResults();
+    const convertGregToHijri = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d, m, y } = gConvInput;
         if (!d || !m || !y) return showNotification("errSelect");
         const gDate = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0, 0);
@@ -422,11 +436,15 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             inputLabel: i18n[lang].lblGreg,
             input: formatInputDate(gConvInput, i18n[lang].gregorianSuffix.trim()),
         });
-        firebaseApiRef.current.trackToolUsage('dateConverter');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'gregToHijri';
+            firebaseApiRef.current.trackToolUsage('dateConverter');
+        }
     };
 
-    const convertHijriToGreg = () => {
-        clearResults();
+    const convertHijriToGreg = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d, m, y } = hConvInput;
         if (!d || !m || !y) return showNotification("errSelect");
         let gDateObj;
@@ -435,9 +453,9 @@ export default function HomePageClient({ children, hideHero = false, initialSect
         } catch {
             return showNotification("errSelect");
         }
-        const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' };
+        const dateFormatOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'gregory' };
         const locale = lang === 'ar' ? 'ar-SA-u-ca-gregory' : 'en-US-u-ca-gregory';
-        const gDateFormatted = new Intl.DateTimeFormat(locale, options).format(gDateObj);
+        const gDateFormatted = new Intl.DateTimeFormat(locale, dateFormatOptions).format(gDateObj);
         const suffix = i18n[lang].gregorianSuffix;
         const finalRes = `${gDateFormatted}${suffix}`;
         
@@ -447,11 +465,15 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             inputLabel: i18n[lang].lblHijri,
             input: formatInputDate(hConvInput, i18n[lang].hijriSuffix.trim()),
         });
-        firebaseApiRef.current.trackToolUsage('dateConverter');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'hijriToGreg';
+            firebaseApiRef.current.trackToolUsage('dateConverter');
+        }
     };
 
-    const calcDiffGreg = () => {
-        clearResults();
+    const calcDiffGreg = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d: d1, m: m1, y: y1 } = gDiffInput1;
         const { d: d2, m: m2, y: y2 } = gDiffInput2;
         if (!d1 || !m1 || !y1 || !d2 || !m2 || !y2) return showNotification("errSelect");
@@ -479,11 +501,15 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             }),
             canShare: isShareTemplateEnabled(dateToolSettings, 'durationResult'),
         });
-        firebaseApiRef.current.trackToolUsage('durationCalc');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'diffGreg';
+            firebaseApiRef.current.trackToolUsage('durationCalc');
+        }
     };
 
-    const calcDiffHijri = () => {
-        clearResults();
+    const calcDiffHijri = (options = {}) => {
+        const isRelocalizing = options?.relocalize === true;
+        clearResults(isRelocalizing);
         const { d: d1Val, m: m1Val, y: y1Val } = hDiffInput1;
         const { d: dh2Val, m: mh2Val, y: yh2Val } = hDiffInput2;
         if (!d1Val || !m1Val || !y1Val || !dh2Val || !mh2Val || !yh2Val) return showNotification("errSelect");
@@ -529,7 +555,10 @@ export default function HomePageClient({ children, hideHero = false, initialSect
             }),
             canShare: isShareTemplateEnabled(dateToolSettings, 'durationResult'),
         });
-        firebaseApiRef.current.trackToolUsage('durationCalc');
+        if (!isRelocalizing) {
+            activeResultRef.current = 'diffHijri';
+            firebaseApiRef.current.trackToolUsage('durationCalc');
+        }
     };
 
     const makeYears = (start, end) => {
@@ -618,6 +647,24 @@ export default function HomePageClient({ children, hideHero = false, initialSect
     const dateToolSettings = getToolSettings(configData, 'date', lang);
     const dateFaqItems = getToolFaqs(configData, 'date', lang);
 
+    relocalizeResultRef.current = () => {
+        const actions = {
+            ageGreg: calculateAgeGreg,
+            ageHijri: calculateAgeHijri,
+            gregToHijri: convertGregToHijri,
+            hijriToGreg: convertHijriToGreg,
+            diffGreg: calcDiffGreg,
+            diffHijri: calcDiffHijri,
+        };
+        actions[activeResultRef.current]?.({ relocalize: true });
+    };
+
+    useEffect(() => {
+        if (previousLangRef.current === lang) return;
+        previousLangRef.current = lang;
+        relocalizeResultRef.current();
+    }, [lang]);
+
     return (
         <>
             <Toast
@@ -629,6 +676,7 @@ export default function HomePageClient({ children, hideHero = false, initialSect
 
             {!isStandalone && (
                 <EventsShareDialog
+                    lang={lang}
                     isOpen={isEventsShareOpen}
                     events={upcomingEvents}
                     selectedIndexes={selectedEventIndexes}

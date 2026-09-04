@@ -51,6 +51,7 @@ function cleanGoogleAdSlots(slots = {}) {
             enabledWhenNoAdvertiser: value.enabledWhenNoAdvertiser === true,
             showHouseAd: value.showHouseAd === true,
             houseAdText: String(value.houseAdText || '').trim(),
+            houseAdTextEn: String(value.houseAdTextEn || '').trim(),
         },
     ]));
 }
@@ -67,7 +68,10 @@ function cleanInternalPages(pages, includeContent) {
         enabled: page.enabled !== false,
         isActive: page.isActive !== false,
         order: Number(page.order || 0),
-        ...(includeContent ? { content: String(page.content || '') } : {}),
+        ...(includeContent ? {
+            content: String(page.content || ''),
+            contentEn: String(page.contentEn || ''),
+        } : {}),
     }));
 }
 

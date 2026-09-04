@@ -199,6 +199,10 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
         return `${hour12}:${String(rawMinute).padStart(2, '0')} ${suffix}`;
     }, [inputHour, inputMinute, labels.invalidTime, lang]);
 
+    useEffect(() => {
+        setConvertedTime((current) => current ? previewTime : current);
+    }, [previewTime]);
+
     const calculateTimeConversion = () => {
         setConvertedTime(previewTime);
         firebaseApiRef.current.trackToolUsage('clockTools');
@@ -266,6 +270,9 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
     const minuteOptions = Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0'));
     const clockSettings = getToolSettings(configData, 'clock', lang);
     const clockFaqItems = getToolFaqs(configData, 'clock', lang);
+    const localizedTimezoneDiff = timezoneDiff
+        ? { ...timezoneDiff, text: getDifferenceText(timezoneDiff.diff, lang) }
+        : null;
     const canShareTimeConverter = isShareTemplateEnabled(clockSettings, 'timeConverterResult');
     const canShareTimezoneDiff = isShareTemplateEnabled(clockSettings, 'timezoneDiffResult');
     const currentInputTime = `${String(inputHour).padStart(2, '0')}:${String(inputMinute).padStart(2, '0')}`;
@@ -276,12 +283,12 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
         result: convertedTime,
         url: getSafeCurrentUrl(),
     }) : '';
-    const timezoneShareText = timezoneDiff ? renderShareTemplate(clockSettings, 'timezoneDiffResult', {
-        fromCity: timezoneDiff.fromCity.label,
-        toCity: timezoneDiff.toCity.label,
-        difference: timezoneDiff.text,
-        fromTime: formatTime(now, timezoneDiff.fromCity.zone, clockHour12, false, lang),
-        toTime: formatTime(now, timezoneDiff.toCity.zone, clockHour12, false, lang),
+    const timezoneShareText = localizedTimezoneDiff ? renderShareTemplate(clockSettings, 'timezoneDiffResult', {
+        fromCity: localizedTimezoneDiff.fromCity.label,
+        toCity: localizedTimezoneDiff.toCity.label,
+        difference: localizedTimezoneDiff.text,
+        fromTime: formatTime(now, localizedTimezoneDiff.fromCity.zone, clockHour12, false, lang),
+        toTime: formatTime(now, localizedTimezoneDiff.toCity.zone, clockHour12, false, lang),
         url: getSafeCurrentUrl(),
     }) : '';
 
@@ -397,12 +404,12 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <span>{timezoneSearchStatus === 'loading' ? labels.calculating : labels.calculate}</span>
                     </button>
                     {timezoneSearchError && <p className="inline-error">{timezoneSearchError}</p>}
-                    {timezoneDiff && (
+                    {localizedTimezoneDiff && (
                         <>
                             <div className="tool-result timezone-result">
-                                <strong>{labels.difference}: {timezoneDiff.text}</strong>
-                                <span>{timezoneDiff.fromCity.label}: {labels.now} {formatTime(now, timezoneDiff.fromCity.zone, clockHour12, false, lang)}</span>
-                                <span>{timezoneDiff.toCity.label}: {labels.now} {formatTime(now, timezoneDiff.toCity.zone, clockHour12, false, lang)}</span>
+                                <strong>{labels.difference}: {localizedTimezoneDiff.text}</strong>
+                                <span>{localizedTimezoneDiff.fromCity.label}: {labels.now} {formatTime(now, localizedTimezoneDiff.fromCity.zone, clockHour12, false, lang)}</span>
+                                <span>{localizedTimezoneDiff.toCity.label}: {labels.now} {formatTime(now, localizedTimezoneDiff.toCity.zone, clockHour12, false, lang)}</span>
                             </div>
                             {canShareTimezoneDiff && (
                                 <button className="share-btn clock-result-share" type="button" onClick={() => shareClockResult(timezoneShareText)}>

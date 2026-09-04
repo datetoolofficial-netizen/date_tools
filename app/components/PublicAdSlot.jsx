@@ -83,7 +83,7 @@ function GoogleAdsenseUnit({ ad, scriptId }) {
 }
 
 export default function PublicAdSlot({ configData, slotName, label = 'مساحة إعلانية', compact = false }) {
-    const { privacyConsent } = useSiteContext();
+    const { privacyConsent, lang } = useSiteContext();
     const [imageFailed, setImageFailed] = useState(false);
     const slotConfig = getSlotConfig(configData, slotName);
     const campaign = getActiveCampaign(configData, slotName);
@@ -91,7 +91,9 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     const imageUrl = clean(campaign?.imageUrl);
     const hasActiveCampaign = Boolean(campaign);
     const targetUrl = clean(campaign?.targetUrl);
-    const houseText = clean(slotConfig.houseAdText) || 'أعلن معنا في هذه المساحة';
+    const houseText = lang === 'en'
+        ? clean(slotConfig.houseAdTextEn) || 'Advertise with us in this space'
+        : clean(slotConfig.houseAdText) || 'أعلن معنا في هذه المساحة';
     const shouldShowHouseAd = slotConfig.showHouseAd === true;
     const adId = campaign?.campaignNumber || campaign?.id || `slot_${slotName}`;
 

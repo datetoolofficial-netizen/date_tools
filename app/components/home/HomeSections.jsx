@@ -32,7 +32,6 @@ function getGoogleAdSlot(configData, slotName) {
 }
 
 export function TodayBanner({ lang, todayInfo }) {
-    if (lang !== 'ar') return null;
     const [gregorianDate = todayInfo, hijriDate = ''] = String(todayInfo || '')
         .split('|')
         .map((part) => part.trim());
@@ -52,6 +51,7 @@ export function TodayBanner({ lang, todayInfo }) {
 }
 
 export function EventsShareDialog({
+    lang = 'ar',
     isOpen,
     events,
     selectedIndexes,
@@ -63,6 +63,23 @@ export function EventsShareDialog({
     if (!isOpen) return null;
 
     const allSelected = events.length > 0 && selectedIndexes.length === events.length;
+    const copy = lang === 'en' ? {
+        title: 'Choose dates',
+        description: 'Select the upcoming dates you want to share.',
+        close: 'Close',
+        selectAll: 'Select all',
+        clearAll: 'Clear all',
+        cancel: 'Cancel',
+        confirm: 'Share selected',
+    } : {
+        title: 'اختر المواعيد',
+        description: 'حدد المواعيد التي تريد مشاركتها.',
+        close: 'إغلاق',
+        selectAll: 'تحديد الكل',
+        clearAll: 'إلغاء تحديد الكل',
+        cancel: 'إلغاء',
+        confirm: 'مشاركة المحدد',
+    };
 
     return (
         <div
@@ -80,17 +97,17 @@ export function EventsShareDialog({
             >
                 <div className="events-share-dialog-head">
                     <div>
-                        <h3 id="events-share-title">اختر المواعيد</h3>
-                        <p>حدد المواعيد التي تريد مشاركتها.</p>
+                        <h3 id="events-share-title">{copy.title}</h3>
+                        <p>{copy.description}</p>
                     </div>
-                    <button type="button" className="events-share-close" onClick={onClose} aria-label="إغلاق">
+                    <button type="button" className="events-share-close" onClick={onClose} aria-label={copy.close}>
                         <i className="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
                 <button type="button" className="events-share-select-all" onClick={onToggleAll}>
                     <i className={`fa-${allSelected ? 'solid' : 'regular'} fa-square-check`}></i>
-                    {allSelected ? 'إلغاء تحديد الكل' : 'تحديد الكل'}
+                    {allSelected ? copy.clearAll : copy.selectAll}
                 </button>
 
                 <div className="events-share-options">
@@ -108,7 +125,7 @@ export function EventsShareDialog({
                                 </span>
                                 <span className="events-share-option-copy">
                                     <strong>{event.name}</strong>
-                                    <small>{getEventDayText('ar', event.days)}</small>
+                                    <small>{getEventDayText(lang, event.days)}</small>
                                 </span>
                             </label>
                         );
@@ -116,7 +133,7 @@ export function EventsShareDialog({
                 </div>
 
                 <div className="events-share-actions">
-                    <button type="button" className="events-share-cancel" onClick={onClose}>إلغاء</button>
+                    <button type="button" className="events-share-cancel" onClick={onClose}>{copy.cancel}</button>
                     <button
                         type="button"
                         className="events-share-confirm"
@@ -124,7 +141,7 @@ export function EventsShareDialog({
                         disabled={selectedIndexes.length === 0}
                     >
                         <i className="fa-solid fa-share-nodes"></i>
-                        مشاركة المحدد
+                        {copy.confirm}
                     </button>
                 </div>
             </section>
@@ -568,9 +585,25 @@ export function BottomAdSlots({ configData, labels }) {
 }
 
 export function SeoSections({ lang, faqs }) {
-    if (lang !== 'ar') return null;
-    const seo = i18n.ar.seo;
+    const seo = (i18n[lang] || i18n.ar).seo;
     const faqItems = Array.isArray(faqs) ? faqs : [];
+
+    if (lang === 'en') {
+        if (faqItems.length === 0) return null;
+        return (
+            <div className="seo-sections-wrapper date-guide-sections">
+                <section className="seo-card faq-card">
+                    <h2 className="seo-title">{seo.faqTitle}</h2>
+                    {faqItems.map((item) => (
+                        <div className="faq-item" key={item.q}>
+                            <h4 className="faq-q">{item.q}</h4>
+                            <p className="faq-a">{item.a}</p>
+                        </div>
+                    ))}
+                </section>
+            </div>
+        );
+    }
 
     return (
         <div className="seo-sections-wrapper date-guide-sections">

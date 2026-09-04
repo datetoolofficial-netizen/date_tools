@@ -293,6 +293,17 @@ export const DEFAULT_TOOL_LOCALIZATIONS = {
                 durationCalc: { searchTitle: 'Calculate the Duration Between Two Dates', metaDescription: 'Calculate the difference between two dates in years, months and days for past or future dates.', h1: 'Duration Between Two Dates', primaryKeyword: 'date difference calculator', supportingKeywords: 'days between dates, duration calculator, Hijri and Gregorian dates' },
             },
             subtools: { ageCalc: 'Calculate Your Age', dateConverter: 'Convert Dates', durationCalc: 'Duration Between Dates' },
+            shareTemplates: {
+                eventsResult: 'Upcoming dates from {title}:\n\n{events}\n\nExplore the tools:\n{url}',
+                ageResult: 'I used {toolTitle} to calculate my age.\n\n{inputLabel}: {input}\nResult: {result}\n\nTry it here:\n{url}',
+                dateConversionResult: 'I used {toolTitle} to convert a date.\n\n{inputLabel}: {input}\nResult: {result}\n\nTry it here:\n{url}',
+                durationResult: 'I used {toolTitle} to calculate the duration between two dates.\n\nFirst date: {firstDate}\nSecond date: {secondDate}\nResult: {result}\n\nTry it here:\n{url}',
+            },
+            faqs: [
+                { q: 'How does the Gregorian and Hijri age calculator work?', a: 'Enter your birth date and select the calendar. The calculator compares it with today and shows your age in years, months, and days.', active: true },
+                { q: 'How accurate is Hijri–Gregorian date conversion?', a: 'The conversion uses established calendar calculations. Hijri dates may differ by one day from an official calendar, so verify dates used for formal purposes.', active: true },
+                { q: 'How do I calculate the duration between two dates?', a: 'Select the calendar, enter the first and second dates, then choose Calculate to see the exact duration in years, months, and days.', active: true },
+            ],
         },
     },
     clock: {
@@ -303,6 +314,15 @@ export const DEFAULT_TOOL_LOCALIZATIONS = {
                 timezoneDiff: { searchTitle: 'Time Difference Between Two Cities', metaDescription: 'Find the current time in two cities and calculate the time difference between them.', h1: 'Time Difference Between Two Cities', primaryKeyword: 'time difference between cities', supportingKeywords: 'world clock, current city time, timezone difference' },
             },
             subtools: { timeConverter: 'Convert 24-Hour Time', timezoneDiff: 'Time Difference Between Cities' },
+            shareTemplates: {
+                timeConverterResult: '{input} in 24-hour time is {result} in 12-hour time.\n\n{url}',
+                timezoneDiffResult: 'The time difference between {fromCity} and {toCity} is {difference}.\n\n{url}',
+            },
+            faqs: [
+                { q: 'How do I convert 24-hour time to 12-hour time?', a: 'Enter the hour and minute in 24-hour format, then choose Convert. The result will show the corresponding time with AM or PM.', active: true },
+                { q: 'How is the time difference between two cities calculated?', a: 'Search for both cities, then choose Calculate. The tool uses each city’s current time zone, including daylight-saving changes where applicable.', active: true },
+                { q: 'Why can a city’s time difference change during the year?', a: 'Some countries observe daylight saving time, so their offset may change while the other city’s offset stays the same.', active: true },
+            ],
         },
     },
     weather: {
@@ -315,6 +335,16 @@ export const DEFAULT_TOOL_LOCALIZATIONS = {
                 forecast: { searchTitle: '5-Day Weather Forecast', metaDescription: 'View expected temperature, sky conditions and rain probability for the next five days.', h1: 'Weather Forecast for the Coming Days', primaryKeyword: '5 day weather forecast', supportingKeywords: 'upcoming weather, rain forecast, expected temperature' },
             },
             subtools: { weatherSearch: 'Search Weather', currentWeather: 'Current Weather', outdoorAdvice: 'Outdoor Advice', forecast: '5-Day Forecast' },
+            shareTemplates: {
+                currentWeatherResult: 'Weather in {city}:\nTemperature: {temperature}\nConditions: {condition}\nFeels like: {feelsLike}\nHumidity: {humidity}\nWind: {wind}\nRain chance: {rainChance}\nUV index: {uv}\n\n{url}',
+                outdoorAdviceResult: 'Outdoor advice for {city}: {advice}\n\n{url}',
+                forecastResult: 'Weather forecast for {city}:\n{forecast}\n\n{url}',
+            },
+            faqs: [
+                { q: 'How do I view the weather for my current location?', a: 'Allow location access when prompted. The site uses your coordinates to retrieve local weather without storing them in the database.', active: true },
+                { q: 'What does “feels like” temperature mean?', a: 'It estimates how the temperature feels to the body after factors such as humidity and wind are considered.', active: true },
+                { q: 'How should I use the rain chance and UV index?', a: 'Use the rain chance to plan for precipitation and the UV index to decide when sun protection is advisable.', active: true },
+            ],
         },
     },
 };
@@ -428,9 +458,11 @@ function normalizeToolLocalizations(toolKey, value = {}) {
             ])),
             shareTemplates: Object.fromEntries(Object.keys(DEFAULT_TOOL_SETTINGS[toolKey]?.shareTemplates || {}).map((key) => [
                 key,
-                String(english.shareTemplates?.[key] || '').trim(),
+                String(english.shareTemplates?.[key] || defaults.shareTemplates?.[key] || '').trim(),
             ])),
-            faqs: normalizeFaqItems(english.faqs),
+            faqs: normalizeFaqItems(english.faqs).length > 0
+                ? normalizeFaqItems(english.faqs)
+                : normalizeFaqItems(defaults.faqs),
         },
     };
 }

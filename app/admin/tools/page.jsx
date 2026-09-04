@@ -138,7 +138,9 @@ function getPageSnapshots(config = {}) {
             location: page?.location || 'footer',
             enabled: page?.enabled !== false,
             contentTitle: customPage?.title || '',
+            contentTitleEn: customPage?.titleEn || '',
             content: customPage?.content || '',
+            contentEn: customPage?.contentEn || '',
         }));
     });
 
@@ -345,6 +347,7 @@ export default function AdminToolsPage() {
     const [uploadingTarget, setUploadingTarget] = useState('');
     const [pageModalIndex, setPageModalIndex] = useState(null);
     const [isPageModalEditing, setIsPageModalEditing] = useState(false);
+    const [pageContentLanguage, setPageContentLanguage] = useState('ar');
     const [editingRow, setEditingRow] = useState(null);
     const [addItemModal, setAddItemModal] = useState(null);
     const [sectionLanguages, setSectionLanguages] = useState({ pages: 'ar', links: 'ar', social: 'ar' });
@@ -756,7 +759,12 @@ export default function AdminToolsPage() {
                 }],
                 customPages: {
                     ...(current.customPages || {}),
-                    [slug]: { title, content: '<p>اكتب محتوى الصفحة هنا...</p>' },
+                    [slug]: {
+                        title,
+                        titleEn: String(addItemModal.titleEn || '').trim(),
+                        content: '<p>اكتب محتوى الصفحة هنا...</p>',
+                        contentEn: '<p>Write the English page content here...</p>',
+                    },
                 },
             }));
         } else if (addItemModal.type === 'link') {
@@ -829,7 +837,9 @@ export default function AdminToolsPage() {
                 customPages[nextSlug] = {
                     ...(customPages[oldSlug] || {}),
                     title: nextPage.title || customPages[oldSlug]?.title || '',
+                    titleEn: nextPage.titleEn || customPages[oldSlug]?.titleEn || '',
                     content: customPages[oldSlug]?.content || '',
+                    contentEn: customPages[oldSlug]?.contentEn || '',
                 };
                 delete customPages[oldSlug];
             }
@@ -842,10 +852,20 @@ export default function AdminToolsPage() {
                 };
             }
 
+            if (field === 'titleEn' && nextSlug) {
+                customPages[nextSlug] = {
+                    ...(customPages[nextSlug] || {}),
+                    titleEn: nextValue,
+                    contentEn: customPages[nextSlug]?.contentEn || '',
+                };
+            }
+
             if (nextSlug && !customPages[nextSlug]) {
                 customPages[nextSlug] = {
                     title: nextPage.title || '',
+                    titleEn: nextPage.titleEn || '',
                     content: '',
+                    contentEn: '',
                 };
             }
 
@@ -901,9 +921,10 @@ export default function AdminToolsPage() {
         }
     };
 
-    const updatePageContent = (slug, content) => {
+    const updatePageContent = (slug, language, content) => {
         const safeSlug = normalizeSlug(slug);
         if (!safeSlug) return;
+        const contentField = language === 'en' ? 'contentEn' : 'content';
 
         setToolsConfig((current) => ({
             ...current,
@@ -915,7 +936,11 @@ export default function AdminToolsPage() {
                         current.customPages?.[safeSlug]?.title ||
                         (current.internalPages || []).find((page) => normalizeSlug(page.slug) === safeSlug)?.title ||
                         '',
-                    content,
+                    titleEn:
+                        current.customPages?.[safeSlug]?.titleEn ||
+                        (current.internalPages || []).find((page) => normalizeSlug(page.slug) === safeSlug)?.titleEn ||
+                        '',
+                    [contentField]: content,
                 },
             },
         }));
@@ -924,6 +949,7 @@ export default function AdminToolsPage() {
     const openPageModal = (index, editMode = false) => {
         setPageModalIndex(index);
         setIsPageModalEditing(editMode);
+        setPageContentLanguage(getSectionLanguage('pages'));
     };
 
     const closePageModal = () => {
@@ -933,8 +959,12 @@ export default function AdminToolsPage() {
 
     const selectedPage = pageModalIndex !== null ? (toolsConfig.internalPages || [])[pageModalIndex] : null;
     const selectedPageSlug = normalizeSlug(selectedPage?.slug);
-    const selectedPageTitle = toolsConfig.customPages?.[selectedPageSlug]?.title || selectedPage?.title || 'صفحة';
-    const selectedPageContent = toolsConfig.customPages?.[selectedPageSlug]?.content || '';
+    const selectedPageTitle = pageContentLanguage === 'en'
+        ? toolsConfig.customPages?.[selectedPageSlug]?.titleEn || selectedPage?.titleEn || 'Page'
+        : toolsConfig.customPages?.[selectedPageSlug]?.title || selectedPage?.title || 'صفحة';
+    const selectedPageContent = pageContentLanguage === 'en'
+        ? toolsConfig.customPages?.[selectedPageSlug]?.contentEn || ''
+        : toolsConfig.customPages?.[selectedPageSlug]?.content || '';
     const privacyPageChoices = getPrivacyPageChoices(toolsConfig.internalPages || []);
     const selectedPrivacyPages = new Set((toolsConfig.privacySettingsButton?.pages || []).map(normalizePagePath));
 
@@ -1534,12 +1564,23 @@ export default function AdminToolsPage() {
                             </button>
                         </div>
 
+                        <div className="admin-content-language-toolbar section-language-toolbar" aria-label="لغة محتوى الصفحة">
+                            <div>
+                                <strong>لغة محتوى الصفحة</strong>
+                                <small>حرّر العنوان والمحتوى العربي أو الإنجليزي؛ الرابط وإعدادات الظهور مشتركة.</small>
+                            </div>
+                            <div className="admin-language-segmented" role="group" aria-label="اختيار لغة محتوى الصفحة">
+                                <button type="button" className={pageContentLanguage === 'ar' ? 'active' : ''} onClick={() => setPageContentLanguage('ar')}>العربية</button>
+                                <button type="button" className={pageContentLanguage === 'en' ? 'active' : ''} onClick={() => setPageContentLanguage('en')}>English</button>
+                            </div>
+                        </div>
+
                         {isPageModalEditing ? (
                             <div className="legacy-field">
-                                <label>محتوى الصفحة</label>
+                                <label>{pageContentLanguage === 'en' ? 'English page content' : 'محتوى الصفحة بالعربية'}</label>
                                 <PageHtmlEditor
                                     value={selectedPageContent}
-                                    onChange={(content) => updatePageContent(selectedPageSlug, content)}
+                                    onChange={(content) => updatePageContent(selectedPageSlug, pageContentLanguage, content)}
                                 />
                                 <span className="legacy-field-hint">يمكنك لصق نص منسق من Google Docs أو محرر نصوص، وسيتم تنظيف HTML تلقائيًا قبل الحفظ.</span>
                             </div>
@@ -1548,7 +1589,7 @@ export default function AdminToolsPage() {
                                 {selectedPageContent ? (
                                     <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedPageContent) }} />
                                 ) : (
-                                    <p>لا يوجد محتوى لهذه الصفحة بعد.</p>
+                                    <p>{pageContentLanguage === 'en' ? 'No English content has been added yet.' : 'لا يوجد محتوى لهذه الصفحة بعد.'}</p>
                                 )}
                             </div>
                         )}
