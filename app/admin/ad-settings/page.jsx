@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import Toast from '../../components/Toast';
+import AdminEnableToggle from '../AdminEnableToggle';
 import '../AdminDashboard.css';
 
 const AD_SLOTS = [
@@ -107,74 +107,8 @@ function pickAdSettings(config = {}) {
     };
 }
 
-function AdminNav({ active = 'ad-settings' }) {
-    return (
-        <ul className="legacy-nav-links">
-            <li>
-                <Link href="/admin" className={active === 'home' ? 'active' : ''}>
-                    <i className="fa-solid fa-house"></i>
-                    <span className="nav-text">الرئيسية</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
-                    <i className="fa-solid fa-screwdriver-wrench"></i>
-                    <span className="nav-text">إعدادات الأداة</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/integrations" className={active === 'integrations' ? 'active' : ''}>
-                    <i className="fa-solid fa-plug-circle-bolt"></i>
-                    <span className="nav-text">الربط الخارجي</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/pagespeed" className={active === 'pagespeed' ? 'active' : ''}>
-                    <i className="fa-solid fa-gauge-high"></i>
-                    <span className="nav-text">PageSpeed</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/ad-settings" className={active === 'ad-settings' ? 'active' : ''}>
-                    <i className="fa-solid fa-rectangle-ad"></i>
-                    <span className="nav-text">إدارة الإعلانات</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/ads" className={active === 'ads' ? 'active' : ''}>
-                    <i className="fa-solid fa-bullhorn"></i>
-                    <span className="nav-text">الحملات الإعلانية</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/tool-management">
-                    <i className="fa-solid fa-toolbox"></i>
-                    <span className="nav-text">إدارة الأدوات</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/client/dashboard">
-                    <i className="fa-solid fa-user-tie"></i>
-                    <span className="nav-text">بوابة المعلنين</span>
-                </Link>
-            </li>
-            <li>
-                <Link href="/admin/support">
-                    <i className="fa-solid fa-ticket"></i>
-                    <span className="nav-text">التذاكر</span>
-                </Link>
-            </li>
-        </ul>
-    );
-}
-
 export default function AdminAdSettingsPage() {
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-    const [adminName, setAdminName] = useState('أيها المدير');
-    const [adminRole, setAdminRole] = useState('مدير');
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const [message, setMessage] = useState(null);
     const [saving, setSaving] = useState(false);
@@ -184,56 +118,24 @@ export default function AdminAdSettingsPage() {
     const messageTimerRef = useRef(null);
 
     useEffect(() => {
-        let unsubscribe = () => {};
         let isMounted = true;
 
         async function loadAdSettings() {
             try {
-                const [{ getFirebaseAuth, getAdminProfile, getSiteConfig, saveSiteConfigSection }, { onAuthStateChanged, signOut }] = await Promise.all([
-                    import('../../firebase'),
-                    import('firebase/auth'),
-                ]);
-                const auth = await getFirebaseAuth();
+                const { getSiteConfig, saveSiteConfigSection } = await import('../../firebase');
+                const config = await getSiteConfig();
 
                 if (!isMounted) return;
 
-                firebaseApiRef.current = { auth, signOut, saveSiteConfigSection };
-
-                if (document.body.classList.contains('dark-mode')) setIsDarkMode(true);
-                if (window.localStorage.getItem('admin_sidebar_collapsed') === 'true') setIsSidebarCollapsed(true);
-
-                unsubscribe = onAuthStateChanged(auth, async (user) => {
-                    if (!user) {
-                        window.location.replace('/admin_login');
-                        return;
-                    }
-
-                    try {
-                        const adminProfile = await getAdminProfile(user.uid);
-                        if (!adminProfile || adminProfile.active !== true) {
-                            await signOut(auth);
-                            window.location.replace('/admin_login');
-                            return;
-                        }
-
-                        if (!isMounted) return;
-
-                        setAdminName(adminProfile.name || adminProfile.email || 'أيها المدير');
-                        setAdminRole(adminProfile.role === 'super_admin' ? 'المدير العام' : 'مدير');
-                        setSettings(pickAdSettings(await getSiteConfig()));
-                    } catch (error) {
-                        console.error('Error loading ad settings:', error);
-                        if (isMounted) setLoadError('حدث خطأ في قراءة إعدادات الإعلانات.');
-                    } finally {
-                        if (isMounted) setIsCheckingAuth(false);
-                    }
-                });
+                firebaseApiRef.current = { saveSiteConfigSection };
+                setSettings(pickAdSettings(config));
             } catch (error) {
-                console.error('Error loading ad settings modules:', error);
+                console.error('Error loading ad settings:', error);
                 if (isMounted) {
-                    setLoadError('تعذر تحميل وحدات إعدادات الإعلانات.');
-                    setIsCheckingAuth(false);
+                    setLoadError('حدث خطأ في قراءة إعدادات الإعلانات.');
                 }
+            } finally {
+                if (isMounted) setIsLoading(false);
             }
         }
 
@@ -241,7 +143,6 @@ export default function AdminAdSettingsPage() {
 
         return () => {
             isMounted = false;
-            unsubscribe();
         };
     }, []);
 
@@ -254,28 +155,6 @@ export default function AdminAdSettingsPage() {
         setMessage({ type, text });
         messageTimerRef.current = window.setTimeout(() => setMessage(null), 4500);
     }, []);
-
-    const toggleSidebar = () => {
-        setIsSidebarCollapsed((current) => {
-            const next = !current;
-            window.localStorage.setItem('admin_sidebar_collapsed', String(next));
-            return next;
-        });
-    };
-
-    const toggleDarkMode = () => {
-        document.body.classList.toggle('dark-mode');
-        setIsDarkMode((current) => !current);
-    };
-
-    const handleLogout = async () => {
-        const firebaseApi = firebaseApiRef.current;
-        try {
-            if (firebaseApi?.signOut && firebaseApi?.auth) await firebaseApi.signOut(firebaseApi.auth);
-        } finally {
-            window.location.replace('/admin_login');
-        }
-    };
 
     const updateSlot = (slotId, field, value) => {
         setSettings((current) => ({
@@ -362,7 +241,7 @@ export default function AdminAdSettingsPage() {
         }
     };
 
-    if (isCheckingAuth) {
+    if (isLoading) {
         return (
             <div className="admin-dashboard-loading">
                 <i className="fa-solid fa-rectangle-ad fa-beat-fade"></i>
@@ -374,50 +253,7 @@ export default function AdminAdSettingsPage() {
     if (loadError) return <div className="admin-dashboard-error">{loadError}</div>;
 
     return (
-        <div className={`legacy-admin-shell ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`} dir="rtl">
-            <div className={`legacy-sidebar-overlay ${isMobileSidebarOpen ? 'active' : ''}`} onClick={() => setIsMobileSidebarOpen(false)}></div>
-
-            <aside className={`legacy-sidebar ${isSidebarCollapsed ? 'collapsed' : ''} ${isMobileSidebarOpen ? 'mobile-open' : ''}`}>
-                <div className="legacy-sidebar-header">
-                    <div className="legacy-sidebar-logo">
-                        <i className="fa-solid fa-layer-group"></i>
-                        <h2>بوابة الإدارة</h2>
-                    </div>
-                    <button className="legacy-toggle-sidebar-btn" onClick={toggleSidebar} aria-label="تصغير القائمة">
-                        <i className="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-                <AdminNav active="ad-settings" />
-            </aside>
-
-            <main className="legacy-main-wrapper">
-                <nav className="legacy-top-nav">
-                    <div className="legacy-nav-right">
-                        <button className="legacy-hamburger-btn" onClick={() => setIsMobileSidebarOpen(true)} aria-label="فتح القائمة">
-                            <i className="fa-solid fa-bars"></i>
-                        </button>
-                        <div className="legacy-admin-profile">
-                            <div className="legacy-admin-avatar">
-                                <i className="fa-solid fa-user-tie"></i>
-                            </div>
-                            <div className="legacy-admin-info">
-                                <h2>{adminName}</h2>
-                                <p>{adminRole}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="legacy-nav-controls">
-                        <button className="legacy-theme-toggle" onClick={toggleDarkMode} aria-label="تبديل المظهر">
-                            <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-                        </button>
-                        <button className="legacy-logout-btn" onClick={handleLogout}>
-                            <i className="fa-solid fa-arrow-right-from-bracket"></i>
-                            <span>خروج</span>
-                        </button>
-                    </div>
-                </nav>
-
+        <div className="ad-settings-page" dir="rtl">
                 <Toast
                     message={message?.text || ''}
                     type={message?.type || 'info'}
@@ -440,8 +276,21 @@ export default function AdminAdSettingsPage() {
                     {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
                 </button>
 
-                <section className="legacy-table-card ad-settings-table-card">
-                    <table className="legacy-ads-table ad-settings-table">
+                <section className="legacy-google-card tools-section-card ad-settings-section">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon ad-settings-section-icon">
+                                <i className="fa-solid fa-table-cells-large" aria-hidden="true"></i>
+                            </span>
+                            <div>
+                                <h2>مواضع الإعلانات</h2>
+                                <p>فعّل العرض الاحتياطي لكل موضع، ثم استخدم الإجراءات للمعاينة أو تعديل كود Google.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="ad-settings-table-scroll">
+                        <table className="legacy-ads-table ad-settings-table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -464,46 +313,30 @@ export default function AdminAdSettingsPage() {
                                             <code dir="ltr" className="ad-slot-id-badge">{slotItem.id}</code>
                                         </td>
                                         <td>
-                                            <label className={`ad-settings-switch google ${slot.enabledWhenNoAdvertiser ? 'active' : ''}`}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={slot.enabledWhenNoAdvertiser}
-                                                    onChange={(event) => updateSlot(slotItem.id, 'enabledWhenNoAdvertiser', event.target.checked)}
-                                                />
-                                                <span className="ad-settings-switch-icon">
-                                                    <i className="fa-brands fa-google"></i>
-                                                </span>
-                                                <span className="ad-settings-switch-copy">
-                                                    <strong>{slot.enabledWhenNoAdvertiser ? 'مفعلة' : 'متوقفة'}</strong>
-                                                    <small>عند عدم وجود معلن</small>
-                                                </span>
-                                            </label>
+                                            <AdminEnableToggle
+                                                enabled={slot.enabledWhenNoAdvertiser}
+                                                onChange={(enabled) => updateSlot(slotItem.id, 'enabledWhenNoAdvertiser', enabled)}
+                                                enabledLabel="إيقاف إعلانات Google"
+                                                disabledLabel="تشغيل إعلانات Google"
+                                            />
                                         </td>
                                         <td>
-                                            <label className={`ad-settings-switch house ${slot.showHouseAd === true ? 'active' : ''}`}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={slot.showHouseAd === true}
-                                                    onChange={(event) => updateSlot(slotItem.id, 'showHouseAd', event.target.checked)}
-                                                />
-                                                <span className="ad-settings-switch-icon">
-                                                    <i className="fa-solid fa-bullhorn"></i>
-                                                </span>
-                                                <span className="ad-settings-switch-copy">
-                                                    <strong>{slot.showHouseAd ? 'ظاهر' : 'مخفي'}</strong>
-                                                    <small>اعلن معنا</small>
-                                                </span>
-                                            </label>
+                                            <AdminEnableToggle
+                                                enabled={slot.showHouseAd === true}
+                                                onChange={(enabled) => updateSlot(slotItem.id, 'showHouseAd', enabled)}
+                                                enabledLabel="إخفاء النص التسويقي"
+                                                disabledLabel="إظهار النص التسويقي"
+                                            />
                                         </td>
                                         <td>
-                                            <div className="legacy-row-actions ad-settings-actions">
-                                                <button type="button" onClick={() => openSlotModal('preview', slotItem.id)} title="عرض الإعلان المعروض">
+                                            <div className="tools-item-actions">
+                                                <button type="button" onClick={() => openSlotModal('preview', slotItem.id)} title="عرض الإعلان">
                                                     <i className="fa-solid fa-eye"></i>
                                                 </button>
-                                                <button type="button" onClick={() => openSlotModal('code', slotItem.id)} title="إضافة كود Google">
+                                                <button type="button" onClick={() => openSlotModal('code', slotItem.id)} title="تعديل كود Google">
                                                     <i className="fa-solid fa-code"></i>
                                                 </button>
-                                                <button type="button" onClick={() => openSlotModal('details', slotItem.id)} title="عرض الإعداد الحالي">
+                                                <button type="button" onClick={() => openSlotModal('details', slotItem.id)} title="تفاصيل الإعداد">
                                                     <i className="fa-solid fa-circle-info"></i>
                                                 </button>
                                             </div>
@@ -511,8 +344,9 @@ export default function AdminAdSettingsPage() {
                                     </tr>
                                 );
                             })}
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
 
                 <section className="legacy-google-card ad-integrations-card">
@@ -708,11 +542,6 @@ export default function AdminAdSettingsPage() {
                     </div>
                 )}
 
-                <footer className="legacy-admin-footer">
-                    <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} <strong>بوابة الإدارة</strong></div>
-                    <div className="legacy-version-badge"><i className="fa-solid fa-rectangle-ad"></i> إدارة الإعلانات</div>
-                </footer>
-            </main>
         </div>
     );
 }

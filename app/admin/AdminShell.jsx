@@ -283,6 +283,36 @@ export default function AdminShell({ children }) {
     }, [pathname]);
 
     useEffect(() => {
+        const previousDocumentOverflowX = document.documentElement.style.overflowX;
+        const previousBodyOverflowX = document.body.style.overflowX;
+
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+
+        return () => {
+            document.documentElement.style.overflowX = previousDocumentOverflowX;
+            document.body.style.overflowX = previousBodyOverflowX;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isMobileSidebarOpen) return undefined;
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const closeOnEscape = (event) => {
+            if (event.key === 'Escape') setIsMobileSidebarOpen(false);
+        };
+
+        window.addEventListener('keydown', closeOnEscape);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', closeOnEscape);
+        };
+    }, [isMobileSidebarOpen]);
+
+    useEffect(() => {
         const interceptDelete = (event) => {
             if (!(event.target instanceof Element)) return;
             const button = event.target.closest('button');
@@ -394,6 +424,14 @@ export default function AdminShell({ children }) {
                             <i className="fa-solid fa-layer-group"></i>
                             <h2>بوابة الإدارة</h2>
                         </div>
+                        <button
+                            type="button"
+                            className="legacy-mobile-sidebar-close"
+                            onClick={() => setIsMobileSidebarOpen(false)}
+                            aria-label="إغلاق القائمة"
+                        >
+                            <i className="fa-solid fa-xmark"></i>
+                        </button>
                         <button className="legacy-toggle-sidebar-btn" onClick={toggleSidebar} aria-label="تصغير القائمة">
                             <i className="fa-solid fa-chevron-right"></i>
                         </button>

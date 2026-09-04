@@ -33,11 +33,9 @@ describe('admin save and upload flows', () => {
         expect(toolContent).not.toContain('tool-subtools-list');
     });
 
-    it('keeps tool settings second in every remaining admin navigation definition', () => {
+    it('keeps tool settings second in remaining legacy navigation definitions', () => {
         const navigationFiles = [
             ['app', 'admin', 'AdminShell.jsx'],
-            ['app', 'admin', 'page.jsx'],
-            ['app', 'admin', 'ad-settings', 'page.jsx'],
             ['app', 'admin', 'ads', 'page.jsx'],
             ['app', 'admin', 'integrations', 'page.jsx'],
             ['app', 'admin', 'pagespeed', 'page.jsx'],
@@ -53,6 +51,25 @@ describe('admin save and upload flows', () => {
             expect(toolsIndex, file).toBeGreaterThan(-1);
             expect(integrationsIndex, file).toBeGreaterThan(toolsIndex);
             expect(source, file).not.toContain('/admin/identity');
+        });
+    });
+
+    it('keeps rebuilt admin pages inside the shared shell without duplicate navigation', () => {
+        const adminShell = readFileSync(join(process.cwd(), 'app', 'admin', 'AdminShell.jsx'), 'utf8');
+        const contentPages = [
+            ['app', 'admin', 'page.jsx'],
+            ['app', 'admin', 'ad-settings', 'page.jsx'],
+        ];
+
+        expect(adminShell).toContain("href: '/admin/ad-settings'");
+
+        contentPages.forEach((segments) => {
+            const file = join(process.cwd(), ...segments);
+            const source = readFileSync(file, 'utf8');
+
+            expect(source, file).not.toContain('legacy-sidebar');
+            expect(source, file).not.toContain('legacy-top-nav');
+            expect(source, file).not.toContain('legacy-main-wrapper');
         });
     });
 
