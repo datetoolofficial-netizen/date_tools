@@ -14192,6 +14192,7 @@ git diff --check
 - جعل مساعد تعقيم HTML الخاص بالمتصفح يفشل بإرجاع محتوى فارغ عند غياب `DOMParser`، مع استمرار تعقيم المحتوى المخزن على الخادم بواسطة حزمة `sanitize-html` وقائمة السماح.
 - استبدال التعبير النمطي لتنقية عناوين تقارير CSP بخوارزمية خطية تزيل الاستعلام والجزء وتحد الطول إلى 240 حرفًا.
 - إضافة اختبارات ارتداد لتنقية روابط CSP ولمنع عودة تعقيم HTML القائم على التعبيرات النمطية.
+- تحديث `sanitize-html` من `2.17.6` إلى `2.17.7` و`qs` غير المباشر من `6.15.2` إلى `6.16.0` بعد أن كشف Dependabot ثلاثة تنبيهات متوسطة.
 
 الأخطاء المكتشفة:
 
@@ -14207,6 +14208,12 @@ git diff --check
    - الحل: نقل `stripSensitiveUrl` إلى `app/api/csp-report/cspReportUtils.js` واستيرادها في Route والاختبار.
    - الحالة: محلول؛ نجح بناء Next.js الكامل وتوليد 35 صفحة.
 
+3. **ثلاثة تنبيهات Dependabot متوسطة في sanitize-html وqs**
+   - الأعراض: بعد تفعيل Dependabot ظهر تنبيه Stored XSS في `sanitize-html` وتنبيهان لاستهلاك الموارد وتعطيل الخدمة في `qs` غير المباشر.
+   - السبب: ملف القفل كان يثبت `sanitize-html@2.17.6` و`qs@6.15.2` المشمولتين بالنشرات الأمنية.
+   - الحل: تحديث الحزمتين فقط إلى `sanitize-html@2.17.7` و`qs@6.16.0`، ثم تنفيذ تثبيت نظيف وإعادة التدقيق.
+   - الحالة: محلول محليًا؛ أعاد `npm audit --omit=dev` صفر ثغرات وينتظر إغلاق GitHub التلقائي بعد الدفع.
+
 الملفات المتأثرة:
 
 - `app/sanitizeHtml.js`
@@ -14215,6 +14222,8 @@ git diff --check
 - `app/api/csp-report/cspReportUtils.js`
 - `tests/cspReport.test.js`
 - `tests/settingsSecurity.test.js`
+- `package.json`
+- `package-lock.json`
 - `PROJECT_MEMO.md`
 
 الأوامر المستخدمة:
@@ -14223,6 +14232,8 @@ git diff --check
 npm run lint
 npm test
 npm run build
+npm ci --ignore-scripts
+npm audit --omit=dev --json
 git diff --check
 ```
 
@@ -14230,4 +14241,5 @@ git diff --check
 
 - نجح ESLint وفحص الفروقات وبناء Next.js الكامل وتوليد 35 صفحة.
 - نجحت 89 حالة اختبار في 22 ملفًا.
-- ينتظر الإغلاق الخارجي دفع إصلاحات CodeQL، نجاح الفحص التالي دون تنبيهات مفتوحة، إغلاق تنبيه Firebase Web العام المقيّد بتفسير واضح، والتحقق من نشر Cloudflare.
+- نجح التثبيت النظيف من `package-lock.json`، وأعاد `npm audit` صفر ثغرات بعد تحديث الاعتماديتين.
+- ينتظر الإغلاق الخارجي دفع تحديث الاعتماديات، نجاح فحص CodeQL التالي دون تنبيهات مفتوحة، إغلاق تنبيه Firebase Web العام المقيّد بتفسير واضح، والتحقق من نشر Cloudflare.
