@@ -1,20 +1,9 @@
+import { stripSensitiveUrl } from './cspReportUtils';
+
 export const dynamic = 'force-dynamic';
 
 const SAFE_TEXT_LIMIT = 240;
 const MAX_REPORT_BYTES = 16 * 1024;
-
-function stripSensitiveUrl(value) {
-    if (!value || typeof value !== 'string') return '';
-
-    try {
-        const parsed = new URL(value);
-        parsed.search = '';
-        parsed.hash = '';
-        return parsed.toString().slice(0, SAFE_TEXT_LIMIT);
-    } catch {
-        return value.replace(/[?#].*$/, '').slice(0, SAFE_TEXT_LIMIT);
-    }
-}
 
 function safeText(value) {
     return typeof value === 'string' ? value.slice(0, SAFE_TEXT_LIMIT) : '';

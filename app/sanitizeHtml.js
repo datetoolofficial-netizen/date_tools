@@ -59,13 +59,9 @@ export function sanitizeHtml(html) {
     const value = String(html || '');
     if (!value) return '';
 
-    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
-        return value
-            .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-            .replace(/\son\w+="[^"]*"/gi, '')
-            .replace(/\son\w+='[^']*'/gi, '')
-            .replace(/javascript:/gi, '');
-    }
+    // Stored page HTML is sanitized with sanitize-html on the server. This
+    // browser helper fails closed when a real DOM parser is unavailable.
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') return '';
 
     const parser = new DOMParser();
     const document = parser.parseFromString(`<div>${value}</div>`, 'text/html');

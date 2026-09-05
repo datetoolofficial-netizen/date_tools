@@ -284,7 +284,7 @@ function getEnhancedContent(slug, content, lang = 'ar') {
 
     if (lang === 'en' && current) return current;
     if (!fallback) return current;
-    if (current.replace(/<[^>]*>/g, '').trim().length >= 650) return current;
+    if (current.length >= 650) return current;
 
     return fallback;
 }

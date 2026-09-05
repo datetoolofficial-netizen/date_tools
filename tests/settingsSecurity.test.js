@@ -47,6 +47,14 @@ describe('settings security boundaries', () => {
         expect(source).not.toContain('6LcGrIwsAAAAAP5f-fzzMMmHVZzqtpC2OhslCe_3');
     });
 
+    it('does not use regular expressions as an HTML sanitizer fallback', () => {
+        const source = readProjectFile('app', 'sanitizeHtml.js');
+
+        expect(source).toContain("typeof DOMParser === 'undefined') return ''");
+        expect(source).not.toContain('.replace(/<script');
+        expect(source).not.toContain('javascript:/gi');
+    });
+
     it('filters public campaigns at the response boundary', () => {
         const source = readProjectFile('app', 'api', 'public-campaigns', 'route.js');
 
