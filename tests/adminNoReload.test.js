@@ -59,9 +59,11 @@ describe('admin save and upload flows', () => {
         const contentPages = [
             ['app', 'admin', 'page.jsx'],
             ['app', 'admin', 'ad-settings', 'page.jsx'],
+            ['app', 'admin', 'security', 'page.jsx'],
         ];
 
         expect(adminShell).toContain("href: '/admin/ad-settings'");
+        expect(adminShell).toContain("href: '/admin/security'");
 
         contentPages.forEach((segments) => {
             const file = join(process.cwd(), ...segments);
@@ -74,13 +76,32 @@ describe('admin save and upload flows', () => {
     });
 
     it('keeps backup and restore as paid-plan reminders without executable operations', () => {
-        const toolsPage = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'page.jsx'), 'utf8');
-        const reminderSection = toolsPage.match(/<section className="legacy-google-card tools-section-card tools-backup-reminder"[\s\S]*?<\/section>/)?.[0] || '';
+        const securityPage = readFileSync(join(process.cwd(), 'app', 'admin', 'security', 'page.jsx'), 'utf8');
+        const reminderSection = securityPage.match(/<article className="security-panel">[\s\S]*?النسخ الاحتياطي والاستعادة[\s\S]*?<\/article>/)?.[0] || '';
 
         expect(reminderSection).toContain('نسخ احتياطي');
         expect(reminderSection).toContain('استعادة');
         expect(reminderSection).toContain('يجب الاشتراك في الخطة المدفوعة');
         expect(reminderSection).not.toMatch(/fetch\(|saveSiteConfigSection|firebaseApiRef|router\./);
+    });
+
+    it('consolidates security controls and report links in the security page', () => {
+        const securityPage = readFileSync(join(process.cwd(), 'app', 'admin', 'security', 'page.jsx'), 'utf8');
+        const toolsPage = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'page.jsx'), 'utf8');
+
+        expect(securityPage).toContain('التقارير والأحداث الأمنية');
+        expect(securityPage).toContain('CodeQL');
+        expect(securityPage).toContain('Dependabot');
+        expect(securityPage).toContain('Secret Scanning');
+        expect(securityPage).toContain('خريطة حماية المنصة');
+        expect(securityPage).toContain('Cloudflare WAF وRate Limiting');
+        expect(securityPage).toContain('رفع الملفات إلى R2');
+        expect(securityPage).toContain('/api/admin/cleanup');
+        expect(securityPage).toContain('privacySettingsButton');
+        expect(securityPage).not.toContain('TURNSTILE_SECRET_KEY');
+        expect(toolsPage).not.toContain('تنظيف Firebase');
+        expect(toolsPage).not.toContain('النسخ الاحتياطي والاستعادة');
+        expect(toolsPage).not.toContain('تفعيل زر إعدادات الخصوصية');
     });
 
     it('keeps the installed-app update notice controlled by a versioned admin setting', () => {

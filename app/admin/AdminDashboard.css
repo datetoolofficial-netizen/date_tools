@@ -6688,3 +6688,642 @@ body.dark-mode .admin-overview-hero {
         grid-template-columns: 1fr;
     }
 }
+
+/* Security center. */
+.admin-security-page {
+    width: min(100%, 1240px);
+    min-width: 0;
+    margin-inline: auto;
+    display: grid;
+    gap: 18px;
+}
+
+.security-hero {
+    min-height: 178px;
+    padding: clamp(22px, 3vw, 36px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+    border-radius: var(--legacy-radius);
+    background: #075985;
+    color: #fff;
+    box-shadow: 0 14px 32px rgba(7, 89, 133, 0.2);
+}
+
+body.dark-mode .security-hero {
+    background: #0c4a6e;
+}
+
+.security-hero-eyebrow {
+    display: inline-flex;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.security-hero h1 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    color: #fff;
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1.35;
+}
+
+.security-hero p {
+    max-width: 700px;
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+    line-height: 1.75;
+}
+
+.security-hero-actions {
+    min-width: 190px;
+    display: grid;
+    gap: 8px;
+}
+
+.security-hero-actions > span,
+.security-hero-actions > button {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: var(--admin-control-radius);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.security-hero-actions > span {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+.security-hero-actions > button {
+    background: #fff;
+    color: #075985;
+    cursor: pointer;
+}
+
+.security-hero-actions > button:disabled {
+    opacity: 0.72;
+    cursor: wait;
+}
+
+.security-hero-actions > small {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 10px;
+    text-align: center;
+}
+
+.security-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.security-status-card,
+.security-panel {
+    min-width: 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--legacy-radius);
+    background: var(--bg-container);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+}
+
+.security-status-card {
+    --security-tone: #64748b;
+    --security-tone-bg: rgba(100, 116, 139, 0.12);
+    min-height: 126px;
+    padding: 17px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border-top: 3px solid var(--security-tone);
+}
+
+.security-status-card.is-success {
+    --security-tone: #059669;
+    --security-tone-bg: rgba(5, 150, 105, 0.12);
+}
+
+.security-status-card.is-warning {
+    --security-tone: #d97706;
+    --security-tone-bg: rgba(217, 119, 6, 0.13);
+}
+
+.security-status-card.is-danger {
+    --security-tone: #dc2626;
+    --security-tone-bg: rgba(220, 38, 38, 0.11);
+}
+
+.security-status-card > span {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--security-tone-bg);
+    color: var(--security-tone);
+    font-size: 18px;
+}
+
+.security-status-card > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.security-status-card small,
+.security-status-card p {
+    margin: 0;
+    color: var(--text-sub);
+}
+
+.security-status-card small {
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.security-status-card strong {
+    color: var(--security-tone);
+    font-size: 20px;
+    line-height: 1.25;
+}
+
+.security-status-card p {
+    font-size: 9.5px;
+    line-height: 1.45;
+}
+
+.security-panel {
+    padding: clamp(16px, 2.2vw, 24px);
+}
+
+.security-section-heading {
+    padding-bottom: 15px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.security-section-heading > span {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    background: color-mix(in srgb, #0284c7 12%, transparent);
+    color: #0284c7;
+}
+
+.security-section-heading > div {
+    min-width: 0;
+}
+
+.security-section-heading h2 {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+.security-section-heading p {
+    margin: 3px 0 0;
+    color: var(--text-sub);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.security-report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.security-report-grid > a {
+    --report-tone: #3b82f6;
+    --report-bg: rgba(59, 130, 246, 0.11);
+    min-width: 0;
+    min-height: 112px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid color-mix(in srgb, var(--report-tone) 18%, var(--border-color));
+    border-radius: var(--admin-control-radius);
+    background: color-mix(in srgb, var(--report-bg) 45%, var(--bg-container));
+    color: inherit;
+    text-decoration: none;
+    transition: var(--admin-control-transition);
+}
+
+.security-report-grid > a:hover {
+    border-color: color-mix(in srgb, var(--report-tone) 42%, var(--border-color));
+    transform: translateY(-1px);
+}
+
+.security-report-grid > a.tone-purple { --report-tone: #7c3aed; --report-bg: rgba(124, 58, 237, 0.11); }
+.security-report-grid > a.tone-orange { --report-tone: #d97706; --report-bg: rgba(217, 119, 6, 0.11); }
+.security-report-grid > a.tone-cyan { --report-tone: #0891b2; --report-bg: rgba(8, 145, 178, 0.11); }
+.security-report-grid > a.tone-green { --report-tone: #059669; --report-bg: rgba(5, 150, 105, 0.11); }
+
+.security-report-grid > a > span {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--report-bg);
+    color: var(--report-tone);
+}
+
+.security-report-grid > a > div {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.security-report-grid strong {
+    color: var(--text-main);
+    font-size: 13px;
+}
+
+.security-report-grid p {
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.security-report-grid small {
+    width: fit-content;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--report-bg);
+    color: var(--report-tone);
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.security-report-grid > a > i {
+    color: var(--text-sub);
+    font-size: 11px;
+}
+
+.security-info-note {
+    margin-top: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-radius: var(--admin-control-radius);
+    background: color-mix(in srgb, #0284c7 8%, var(--bg-body));
+    color: var(--text-sub);
+}
+
+.security-info-note > i {
+    margin-top: 3px;
+    color: #0284c7;
+}
+
+.security-info-note p {
+    margin: 0;
+    font-size: 10.5px;
+    line-height: 1.7;
+}
+
+.security-info-note strong {
+    color: var(--text-main);
+}
+
+.security-check-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 20px;
+}
+
+.security-check-list > div {
+    min-width: 0;
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.security-check-list > div > span {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.security-check-list .is-pass {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.security-check-list .is-fail {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+}
+
+.security-check-list > div > div {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.security-check-list strong {
+    color: var(--text-main);
+    font-size: 11px;
+}
+
+.security-check-list code {
+    overflow: hidden;
+    color: var(--text-sub);
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.security-check-list b {
+    color: var(--text-sub);
+    font-size: 9.5px;
+}
+
+.security-protection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.security-protection-grid > article {
+    --protection-tone: #64748b;
+    --protection-bg: rgba(100, 116, 139, 0.11);
+    min-width: 0;
+    min-height: 92px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid color-mix(in srgb, var(--protection-tone) 16%, var(--border-color));
+    border-radius: var(--admin-control-radius);
+    background: color-mix(in srgb, var(--protection-bg) 34%, var(--bg-container));
+}
+
+.security-protection-grid > article.is-success {
+    --protection-tone: #059669;
+    --protection-bg: rgba(5, 150, 105, 0.11);
+}
+
+.security-protection-grid > article.is-warning {
+    --protection-tone: #d97706;
+    --protection-bg: rgba(217, 119, 6, 0.11);
+}
+
+.security-protection-grid > article.is-external {
+    --protection-tone: #64748b;
+    --protection-bg: rgba(100, 116, 139, 0.11);
+}
+
+.security-protection-grid > article > span {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--protection-bg);
+    color: var(--protection-tone);
+}
+
+.security-protection-grid > article > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.security-protection-grid strong {
+    color: var(--text-main);
+    font-size: 11px;
+}
+
+.security-protection-grid p {
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 9.5px;
+    line-height: 1.5;
+}
+
+.security-protection-grid small {
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--protection-bg);
+    color: var(--protection-tone);
+    font-size: 8.5px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.security-privacy-toolbar,
+.security-privacy-toggle {
+    min-width: 0;
+    padding: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border-radius: var(--admin-control-radius);
+    background: var(--bg-body);
+}
+
+.security-privacy-toolbar {
+    margin-bottom: 10px;
+}
+
+.security-privacy-toolbar > div:first-child,
+.security-privacy-toggle > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+.security-privacy-toolbar strong,
+.security-privacy-toggle strong {
+    color: var(--text-main);
+    font-size: 12px;
+}
+
+.security-privacy-toolbar small,
+.security-privacy-toggle small {
+    color: var(--text-sub);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.security-privacy-pages {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.security-privacy-pages > label {
+    min-width: 0;
+    min-height: 48px;
+    padding: 9px 11px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--admin-control-radius);
+    color: var(--text-main);
+    cursor: pointer;
+}
+
+.security-privacy-pages input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--primary-color);
+}
+
+.security-privacy-pages span {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.security-privacy-pages code {
+    color: var(--text-sub);
+    font-size: 9px;
+}
+
+.security-panel-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.security-maintenance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.security-maintenance-action {
+    width: 100%;
+}
+
+.security-backup-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.security-backup-actions .legacy-secondary-btn {
+    width: 100%;
+}
+
+@media (max-width: 920px) {
+    .security-status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-security-page {
+        gap: 12px;
+    }
+
+    .security-hero {
+        min-height: 0;
+        padding: 20px 16px;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .security-hero h1 {
+        font-size: 22px;
+    }
+
+    .security-hero p {
+        font-size: 12px;
+    }
+
+    .security-hero-actions {
+        min-width: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .security-hero-actions > small {
+        grid-column: 1 / -1;
+    }
+
+    .security-report-grid,
+    .security-check-list,
+    .security-protection-grid,
+    .security-maintenance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .security-privacy-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .security-privacy-toolbar .admin-language-segmented {
+        width: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .security-status-grid,
+    .security-privacy-pages,
+    .security-backup-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .security-status-card {
+        min-height: 108px;
+        padding: 13px;
+    }
+
+    .security-report-grid > a {
+        min-height: 104px;
+        padding: 12px;
+    }
+
+    .security-privacy-toggle {
+        align-items: flex-start;
+    }
+
+    .security-panel-actions .legacy-primary-btn {
+        width: 100%;
+    }
+}

@@ -16,6 +16,7 @@ const TOOL_METRICS = [
 
 const QUICK_ACTIONS = [
     { href: '/admin/tools', label: 'إعدادات الأداة', detail: 'الهوية والصفحات والروابط', icon: 'fa-screwdriver-wrench', tone: 'blue' },
+    { href: '/admin/security', label: 'الأمان', detail: 'الفحص والتقارير والخصوصية', icon: 'fa-shield-halved', tone: 'cyan' },
     { href: '/admin/tool-management', label: 'إدارة الأدوات', detail: 'المحتوى والأسئلة والأحداث', icon: 'fa-toolbox', tone: 'purple' },
     { href: '/admin/ads', label: 'الحملات الإعلانية', detail: 'المراجعة والتفعيل والأداء', icon: 'fa-bullhorn', tone: 'orange' },
     { href: '/admin/support', label: 'التذاكر', detail: 'طلبات العملاء والمتابعة', icon: 'fa-ticket', tone: 'green' },

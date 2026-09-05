@@ -154,10 +154,10 @@ describe('public settings projection', () => {
             },
         });
 
-        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.52', schemaVersion: 2 });
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.53', schemaVersion: 2 });
         expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
         expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(true);
         expect(normalizePwaUpdatePrompt({ enabled: false, schemaVersion: 2 }).enabled).toBe(false);
-        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.52');
+        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.53');
     });
 });

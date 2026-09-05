@@ -62,6 +62,14 @@ export async function ensureFirebaseAppCheck() {
     return appCheckPromise;
 }
 
+export async function getFirebaseAppCheckStatus() {
+    const configured = Boolean(appCheckSiteKey);
+    if (!configured) return { configured: false, initialized: false };
+
+    const instance = await ensureFirebaseAppCheck();
+    return { configured: true, initialized: Boolean(instance) };
+}
+
 export async function getFirebaseAuth() {
     await ensureFirebaseAppCheck();
 

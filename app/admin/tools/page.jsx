@@ -81,10 +81,6 @@ function pickToolsConfig(config = {}) {
         customPages: config.customPages || {},
         socialLinks: normalizeManagedItems(config.socialLinks),
         externalLinks: normalizeManagedItems(config.externalLinks),
-        privacySettingsButton: {
-            enabled: config.privacySettingsButton?.enabled === true,
-            pages: Array.isArray(config.privacySettingsButton?.pages) ? config.privacySettingsButton.pages : [],
-        },
     };
 }
 
@@ -173,13 +169,6 @@ function stampChangedPages(config, changedSlugs, timestamp) {
     };
 }
 
-function normalizePagePath(value) {
-    const cleanValue = String(value || '/').trim();
-    if (!cleanValue || cleanValue === '/') return '/';
-    const withoutQuery = cleanValue.split('?')[0].split('#')[0].replace(/\/+$/, '');
-    return withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`;
-}
-
 function getLocationLabel(location) {
     if (location === 'header') return 'الهيدر فقط';
     if (location === 'both') return 'الهيدر والفوتر';
@@ -188,29 +177,6 @@ function getLocationLabel(location) {
 
 function getSocialLabel(icon) {
     return SOCIAL_PRESETS.find((preset) => preset.icon === icon)?.label || 'حساب تواصل';
-}
-
-function getPrivacyPageChoices(pages = []) {
-    const choices = [
-        { path: '/', title: 'التاريخ', titleEn: 'Date' },
-        { path: '/clock', title: 'الساعة', titleEn: 'Clock' },
-        { path: '/weather', title: 'الطقس', titleEn: 'Weather' },
-    ];
-
-    pages.forEach((page) => {
-        const slug = normalizeSlug(page?.slug);
-        if (!slug) return;
-        const path = normalizePagePath(slug);
-        if (!choices.some((choice) => choice.path === path)) {
-            choices.push({
-                path,
-                title: page?.title || path,
-                titleEn: page?.titleEn || DEFAULT_PAGE_TITLE_EN[slug] || '',
-            });
-        }
-    });
-
-    return choices;
 }
 
 function SectionLanguageToolbar({ section, language, onChange }) {
@@ -241,6 +207,12 @@ function AdminNav({ active = 'tools' }) {
                 <Link href="/admin/tools" className={active === 'tools' ? 'active' : ''}>
                     <i className="fa-solid fa-screwdriver-wrench"></i>
                     <span className="nav-text">إعدادات الأداة</span>
+                </Link>
+            </li>
+            <li>
+                <Link href="/admin/security" className={active === 'security' ? 'active' : ''}>
+                    <i className="fa-solid fa-shield-halved"></i>
+                    <span className="nav-text">الأمان</span>
                 </Link>
             </li>
             <li>
@@ -606,49 +578,6 @@ export default function AdminToolsPage() {
         }
     };
 
-    const cleanupFirebaseData = async () => {
-        const firebaseApi = firebaseApiRef.current;
-        const currentUser = firebaseApi?.auth?.currentUser;
-
-        if (!currentUser) {
-            showMessage('error', 'انتهت جلسة المدير. سجّل الدخول مرة أخرى قبل التنظيف.');
-            return;
-        }
-
-        const confirmed = window.confirm('سيتم حذف بيانات Firestore القديمة غير المستخدمة فقط: صفحة من نحن المحذوفة، الحملات القديمة، صور الإعلانات القديمة، pages، وحقل toolSlogan المكرر. هل تريد المتابعة؟');
-        if (!confirmed) return;
-
-        setSaving(true);
-        showMessage('info', 'جاري تنظيف بيانات Firebase القديمة...');
-
-        try {
-            const token = await currentUser.getIdToken();
-            const response = await fetch('/api/admin/cleanup', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const result = await response.json().catch(() => ({}));
-
-            if (!response.ok || !result.ok) {
-                throw new Error(result.error || 'cleanup_failed');
-            }
-
-            setToolsConfig((current) => {
-                const customPages = { ...(current.customPages || {}) };
-                delete customPages.about;
-                return { ...current, customPages };
-            });
-            showMessage('success', 'تم تنظيف بيانات Firebase القديمة بنجاح.');
-        } catch (error) {
-            console.error('Firebase cleanup failed:', error);
-            showMessage('error', 'تعذر تنظيف Firebase. تحقق من صلاحية المدير وإعداد سر Firebase Service Account.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
     const updateArrayItem = (key, index, field, value) => {
         setToolsConfig((current) => {
             const nextItems = [...(current[key] || [])];
@@ -679,35 +608,6 @@ export default function AdminToolsPage() {
         setEditingRow((current) => (
             current?.key === key && current?.index === index ? null : { key, index }
         ));
-    };
-
-    const updatePrivacySettingsButton = (field, value) => {
-        setToolsConfig((current) => ({
-            ...current,
-            privacySettingsButton: {
-                ...(current.privacySettingsButton || { enabled: false, pages: [] }),
-                [field]: value,
-            },
-        }));
-    };
-
-    const togglePrivacySettingsPage = (path) => {
-        const safePath = normalizePagePath(path);
-        setToolsConfig((current) => {
-            const settings = current.privacySettingsButton || { enabled: false, pages: [] };
-            const pages = Array.isArray(settings.pages) ? settings.pages.map(normalizePagePath) : [];
-            const nextPages = pages.includes(safePath)
-                ? pages.filter((pagePath) => pagePath !== safePath)
-                : [...pages, safePath];
-
-            return {
-                ...current,
-                privacySettingsButton: {
-                    ...settings,
-                    pages: nextPages,
-                },
-            };
-        });
     };
 
     const openAddItemModal = (type) => {
@@ -965,9 +865,6 @@ export default function AdminToolsPage() {
     const selectedPageContent = pageContentLanguage === 'en'
         ? toolsConfig.customPages?.[selectedPageSlug]?.contentEn || ''
         : toolsConfig.customPages?.[selectedPageSlug]?.content || '';
-    const privacyPageChoices = getPrivacyPageChoices(toolsConfig.internalPages || []);
-    const selectedPrivacyPages = new Set((toolsConfig.privacySettingsButton?.pages || []).map(normalizePagePath));
-
     if (isCheckingAuth) {
         return (
             <div className="admin-dashboard-loading">
@@ -1067,10 +964,6 @@ export default function AdminToolsPage() {
                         <i className="fa-solid fa-hashtag"></i>
                         <span>السوشيال</span>
                     </a>
-                    <button type="button" className="tools-quick-card color-cleanup" onClick={cleanupFirebaseData} disabled={saving}>
-                        <i className="fa-solid fa-broom"></i>
-                        <span>تنظيف Firebase</span>
-                    </button>
                 </div>
 
                 <IdentitySettingsSections
@@ -1080,48 +973,6 @@ export default function AdminToolsPage() {
                     onPwaInstallPromptChange={setPwaInstallPromptField}
                     onMediaUpload={handleIdentityMediaUpload}
                 />
-
-                <section className="legacy-google-card tools-section-card tools-privacy-settings-card" id="privacy-settings-button">
-                    <div className="tools-section-head">
-                        <div className="tools-section-title">
-                            <span className="tools-section-icon color-privacy"><i className="fa-solid fa-shield-halved"></i></span>
-                            <div>
-                                <h2>تفعيل زر إعدادات الخصوصية</h2>
-                                <p>تحكم في ظهور الزر العائم الذي يسمح للزائر بالعودة إلى إعدادات الخصوصية والكوكيز.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="privacy-admin-controls">
-                        <SectionLanguageToolbar section="صفحات الخصوصية" language={getSectionLanguage('pages')} onChange={(language) => setSectionLanguage('pages', language)} />
-                        <div className="privacy-admin-toggle admin-toggle-card">
-                            <span>
-                                <strong>إظهار زر إعدادات الخصوصية</strong>
-                                <small>بعد موافقة الزائر، يظهر الزر فقط في الصفحات المختارة أدناه.</small>
-                            </span>
-                            <AdminEnableToggle
-                                enabled={toolsConfig.privacySettingsButton?.enabled === true}
-                                onChange={(enabled) => updatePrivacySettingsButton('enabled', enabled)}
-                                enabledLabel="إخفاء زر إعدادات الخصوصية"
-                                disabledLabel="إظهار زر إعدادات الخصوصية"
-                            />
-                        </div>
-
-                        <div className="privacy-admin-pages">
-                            {privacyPageChoices.map((page) => (
-                                <label className="privacy-admin-page" key={page.path}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedPrivacyPages.has(normalizePagePath(page.path))}
-                                        onChange={() => togglePrivacySettingsPage(page.path)}
-                                    />
-                                    <span>{getSectionLanguage('pages') === 'en' ? (page.titleEn || page.title) : page.title}</span>
-                                    <code dir="ltr">{page.path}</code>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                </section>
 
                 <section className="legacy-google-card tools-section-card" id="pages">
                     <div className="tools-section-head">
@@ -1406,37 +1257,6 @@ export default function AdminToolsPage() {
                         <button type="button" className="legacy-primary-btn" onClick={saveTools} disabled={saving}>
                             <i className="fa-solid fa-floppy-disk"></i>
                             حفظ الحسابات
-                        </button>
-                    </div>
-                </section>
-
-                <section className="legacy-google-card tools-section-card tools-backup-reminder" id="backup-reminder">
-                    <div className="tools-section-head">
-                        <div className="tools-section-title">
-                            <span className="tools-section-icon"><i className="fa-solid fa-database"></i></span>
-                            <div>
-                                <h2>النسخ الاحتياطي والاستعادة</h2>
-                                <p>تذكير بإعداد نسخة دورية واختبار استعادتها بعد تفعيل الخطة المدفوعة.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="tools-table-footer-actions tools-backup-reminder-actions">
-                        <button
-                            type="button"
-                            className="legacy-secondary-btn"
-                            onClick={() => showMessage('error', 'يجب الاشتراك في الخطة المدفوعة لتفعيل النسخ الاحتياطي والاستعادة.')}
-                        >
-                            <i className="fa-solid fa-cloud-arrow-up"></i>
-                            نسخ احتياطي
-                        </button>
-                        <button
-                            type="button"
-                            className="legacy-secondary-btn"
-                            onClick={() => showMessage('error', 'يجب الاشتراك في الخطة المدفوعة لتفعيل النسخ الاحتياطي والاستعادة.')}
-                        >
-                            <i className="fa-solid fa-clock-rotate-left"></i>
-                            استعادة
                         </button>
                     </div>
                 </section>

@@ -25,6 +25,13 @@ const NAV_ITEMS = [
         permissionKeys: ['tools', 'settings', 'site-settings', 'pages'],
     },
     {
+        id: 'security',
+        href: '/admin/security',
+        label: 'الأمان',
+        icon: 'fa-shield-halved',
+        permissionKeys: ['security', 'protection', 'privacy'],
+    },
+    {
         id: 'integrations',
         href: '/admin/integrations',
         label: 'الربط الخارجي',

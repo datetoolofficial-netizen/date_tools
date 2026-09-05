@@ -168,6 +168,12 @@ function AdminNav({ active = 'ads' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/security" className={active === 'security' ? 'active' : ''}>
+                    <i className="fa-solid fa-shield-halved"></i>
+                    <span className="nav-text">الأمان</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/admin/integrations" className={active === 'integrations' ? 'active' : ''}>
                     <i className="fa-solid fa-plug-circle-bolt"></i>
                     <span className="nav-text">الربط الخارجي</span>
