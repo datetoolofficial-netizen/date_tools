@@ -12,6 +12,7 @@ import './globals.css';
 
 const siteUrl = 'https://date-tool.com';
 const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+const adsenseClientPattern = /^ca-pub-\d{12,20}$/i;
 const themeBootstrapScript = `(() => {
     try {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -126,10 +127,19 @@ export async function generateMetadata() {
 export default async function RootLayout({ children }) {
     const siteJsonLd = buildSiteJsonLd();
     const initialSiteConfig = pickPublicSiteConfig(await getManagedSiteConfig());
+    const configuredAdsenseClient = String(
+        initialSiteConfig.externalIntegrations?.googleAdsenseClient || ''
+    ).trim().toLowerCase();
+    const adsenseAccount = adsenseClientPattern.test(configuredAdsenseClient)
+        ? configuredAdsenseClient
+        : '';
 
     return (
         <html lang="ar" dir="rtl" suppressHydrationWarning>
             <head>
+                {adsenseAccount && (
+                    <meta name="google-adsense-account" content={adsenseAccount} />
+                )}
                 <script dangerouslySetInnerHTML={{ __html: languageBootstrapScript }} />
                 <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
                 <link rel="manifest" href={`/manifest.webmanifest?v=${APP_VERSION}`} />
