@@ -118,6 +118,7 @@ describe('HTTP security boundaries', () => {
     });
 
     it('loads platform styles from route layouts and keeps the public body neutral', () => {
+        const rootLayout = readProjectFile('app', 'layout.jsx');
         const rootStyles = readProjectFile('app', 'globals.css');
         const siteShell = readProjectFile('app', 'SiteShell.jsx');
         const adminLayout = readProjectFile('app', 'admin', 'layout.jsx');
@@ -134,6 +135,13 @@ describe('HTTP security boundaries', () => {
         expect(siteShell).toContain('if (!shouldUseShell) return undefined;');
         expect(adminLoginStyles).toContain('.login-page-wrapper .login-container');
         expect(existsSync(join(process.cwd(), 'app', 'admin', 'AdminPage.css'))).toBe(false);
+
+        const bootstrapScripts = [...rootLayout.matchAll(/const (?:theme|language)BootstrapScript = `([\s\S]*?)`;/g)];
+        expect(bootstrapScripts).toHaveLength(2);
+        bootstrapScripts.forEach(([, script]) => {
+            const renderedScript = new Function(`return \`${script}\`;`)();
+            expect(() => new Function(renderedScript)).not.toThrow();
+        });
     });
 
     it('keeps protected advertiser pages inside one persistent client shell', () => {
