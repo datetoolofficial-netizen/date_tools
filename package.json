@@ -1,6 +1,6 @@
 {
   "name": "date_tools",
-  "version": "0.3.55",
+  "version": "0.3.56",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -19,7 +19,7 @@
     "@marsidev/react-turnstile": "^1.5.3",
     "@opennextjs/cloudflare": "^1.19.11",
     "firebase": "^12.14.0",
-    "next": "^15.5.23",
+    "next": "^15.5.25",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "sanitize-html": "^2.17.7"
@@ -30,14 +30,15 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.0",
-    "eslint-config-next": "^15.5.21",
+    "eslint-config-next": "^15.5.25",
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10",
+    "vitest": "^4.1.11",
     "wrangler": "^4.121.0"
   },
   "overrides": {
     "postcss": "^8.5.23",
-    "sharp": "^0.35.0"
+    "js-yaml": "^4.3.2",
+    "sharp": "^0.35.4"
   }
 }
