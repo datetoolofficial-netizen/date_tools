@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Toast from '../../components/Toast';
-import ClientShell from '../ClientShell';
+import { useClientPortal } from '../ClientShell';
 import { validateCampaignSubmission } from '../../securityPolicies';
-import '../ClientPortal.css';
+import { ADVERTISER_PERMISSIONS, hasAdvertiserPermission } from '../../advertiserAccess';
+import {
+    createLocalAdvertiserCampaign,
+    readLocalCampaignImage,
+} from '../localAdvertiserDemo';
 
 const AD_LOCATION_OPTIONS = [
     { value: 'dateTop', label: 'التاريخ - إعلان أعلى' },
@@ -53,44 +57,13 @@ function getTargetTool(adLocation) {
 }
 
 export default function CreateCampaignPage() {
-    const [profile, setProfile] = useState(null);
+    const { profile, currentUser, isLocalDemo } = useClientPortal();
     const [form, setForm] = useState(initialForm);
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-
-    useEffect(() => {
-        let unsubscribe = () => {};
-
-        async function init() {
-            const [{ db, getFirebaseAuth }, { onAuthStateChanged }, { doc, getDoc }] = await Promise.all([
-                import('../../firebase'),
-                import('firebase/auth'),
-                import('firebase/firestore'),
-            ]);
-            const auth = await getFirebaseAuth();
-
-            unsubscribe = onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    window.location.replace('/client');
-                    return;
-                }
-
-                setCurrentUser(user);
-                const profileSnap = await getDoc(doc(db, 'advertisers', user.uid));
-                if (!profileSnap.exists()) {
-                    window.location.replace('/client/register');
-                    return;
-                }
-
-                setProfile({ id: user.uid, ...profileSnap.data() });
-            });
-        }
-
-        init();
-        return () => unsubscribe();
-    }, []);
+    const canCreateCampaign = hasAdvertiserPermission(profile, ADVERTISER_PERMISSIONS.CAMPAIGNS_CREATE);
+    const canSubmitCampaign = hasAdvertiserPermission(profile, ADVERTISER_PERMISSIONS.CAMPAIGNS_SUBMIT);
 
     const durationText = useMemo(() => getDurationText(form.startTime, form.endTime), [form.startTime, form.endTime]);
 
@@ -111,6 +84,13 @@ export default function CreateCampaignPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
+            if (isLocalDemo) {
+                const localImage = await readLocalCampaignImage(file);
+                updateField('imageUrl', localImage);
+                setMessage({ text: 'تم تجهيز الصورة داخل بيانات التجربة المحلية.', type: 'success' });
+                return;
+            }
+
             const body = new FormData();
             body.append('file', file);
             body.append('category', 'ads');
@@ -128,9 +108,14 @@ export default function CreateCampaignPage() {
 
             updateField('imageUrl', result.url);
             setMessage({ text: 'تم رفع صورة الإعلان إلى R2 وربطها بالطلب.', type: 'success' });
-        } catch {
+        } catch (error) {
             console.error('Campaign media upload failed.');
-            setMessage({ text: 'تعذر رفع الصورة. تأكد من تسجيل الدخول وحاول مرة أخرى.', type: 'error' });
+            setMessage({
+                text: error.message === 'invalid_local_demo_image'
+                    ? 'صورة التجربة يجب أن تكون PNG أو JPG أو WEBP أو GIF وألا تتجاوز 750KB.'
+                    : 'تعذر رفع الصورة. تأكد من تسجيل الدخول وحاول مرة أخرى.',
+                type: 'error',
+            });
         } finally {
             setIsUploading(false);
             event.target.value = '';
@@ -145,7 +130,7 @@ export default function CreateCampaignPage() {
             return;
         }
 
-        const campaignError = validateCampaignSubmission(form);
+        const campaignError = validateCampaignSubmission(form, { allowLocalMedia: isLocalDemo });
         if (campaignError === 'invalid_campaign_period') {
             setMessage({ text: 'وقت نهاية الإعلان يجب أن يكون بعد وقت البداية.', type: 'error' });
             return;
@@ -159,15 +144,12 @@ export default function CreateCampaignPage() {
         setIsLoading(true);
 
         try {
-            const [{ db }, { addDoc, collection, serverTimestamp }] = await Promise.all([
-                import('../../firebase'),
-                import('firebase/firestore'),
-            ]);
             const campaignNumber = `AD-${Date.now().toString().slice(-8)}`;
-
-            await addDoc(collection(db, 'campaigns'), {
+            const payload = {
                 campaignNumber,
                 advertiserId: currentUser.uid,
+                advertiserOrganizationId: profile?.organizationId || currentUser.uid,
+                createdBy: currentUser.uid,
                 advertiserEmail: currentUser.email || profile?.email || '',
                 storeName: profile?.storeName || '',
                 campaignName: form.campaignName.trim(),
@@ -180,15 +162,32 @@ export default function CreateCampaignPage() {
                 startTime: form.startTime,
                 endTime: form.endTime,
                 notes: form.notes.trim(),
-                status: 'قيد المراجعة',
+                status: canSubmitCampaign ? 'قيد المراجعة' : 'مسودة',
                 views: 0,
                 clicks: 0,
                 portalVersion: 'client',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            };
 
-            setMessage({ text: `تم إرسال حملتك للمراجعة. رقم الإعلان: ${campaignNumber}`, type: 'success' });
+            if (isLocalDemo) {
+                await createLocalAdvertiserCampaign(profile, payload);
+            } else {
+                const [{ db }, { addDoc, collection, serverTimestamp }] = await Promise.all([
+                    import('../../firebase'),
+                    import('firebase/firestore'),
+                ]);
+                await addDoc(collection(db, 'campaigns'), {
+                    ...payload,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                });
+            }
+
+            setMessage({
+                text: canSubmitCampaign
+                    ? `تم إرسال حملتك للمراجعة. رقم الإعلان: ${campaignNumber}`
+                    : `تم حفظ الحملة كمسودة. رقم الإعلان: ${campaignNumber}`,
+                type: 'success',
+            });
             setForm(initialForm);
         } catch {
             console.error('Campaign create failed.');
@@ -199,17 +198,29 @@ export default function CreateCampaignPage() {
     };
 
     return (
-        <ClientShell active="campaign" title="طلب إعلان جديد" userProfile={profile}>
+        <>
             <Toast visible={Boolean(message.text)} message={message.text} type={message.type} onClose={() => setMessage({ text: '', type: 'info' })} />
 
             <section className="client-panel">
-                <div className="client-panel-header">
-                    <h2><i className="fa-solid fa-bullhorn"></i> إضافة حملة إعلانية</h2>
-                </div>
+                <header className="client-panel-header">
+                    <div>
+                        <span className="client-panel-icon"><i className="fa-solid fa-bullhorn"></i></span>
+                        <div>
+                            <h2>بيانات الحملة الإعلانية</h2>
+                            <p>{canSubmitCampaign ? 'أدخل المادة والوجهة والمدة المطلوبة لإرسالها إلى المراجعة.' : 'أدخل بيانات الحملة لحفظها كمسودة يراجعها مدير الحملات.'}</p>
+                        </div>
+                    </div>
+                </header>
 
                 <div className="client-advice">
-                    المقاس المفضل: صورة واضحة وخفيفة، نص قصير، رابط مباشر، وتباين جيد. كل الطلبات تذهب إلى الإدارة بحالة "قيد المراجعة" قبل العرض.
+                    المقاس المفضل: صورة واضحة وخفيفة، نص قصير، رابط مباشر، وتباين جيد. لا تُعرض أي حملة قبل مراجعتها واعتمادها.
                 </div>
+
+                {profile && !canCreateCampaign && (
+                    <div className="client-permission-warning" role="alert">
+                        هذا الدور يملك صلاحية العرض والتقارير فقط، ولا يملك صلاحية إنشاء حملة.
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} style={{ marginTop: 18 }}>
                     <div className="client-form-row">
@@ -271,7 +282,7 @@ export default function CreateCampaignPage() {
                             </span>
                             <span>
                                 <strong>{isUploading ? 'جاري رفع الصورة...' : 'اختر صورة الإعلان'}</strong>
-                                <small dir="ltr">{form.imageUrl || 'PNG / JPG / WEBP / GIF'}</small>
+                                <small dir="ltr">{form.imageUrl ? (isLocalDemo ? 'Local demo image' : form.imageUrl) : 'PNG / JPG / WEBP / GIF'}</small>
                             </span>
                             <span className="client-upload-action">
                                 <i className="fa-solid fa-cloud-arrow-up"></i>
@@ -285,12 +296,14 @@ export default function CreateCampaignPage() {
                         <textarea value={form.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="أي تعليمات عن الجمهور، الرسالة، أو العرض المطلوب..." />
                     </div>
 
-                    <button type="submit" className="client-primary-btn" disabled={isLoading || isUploading || !form.imageUrl} style={{ width: '100%' }}>
+                    <button type="submit" className="client-primary-btn" disabled={isLoading || isUploading || !form.imageUrl || !canCreateCampaign} style={{ width: '100%' }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-rocket"></i>}
-                        {isLoading ? 'جاري إرسال الطلب...' : 'إرسال الإعلان للمراجعة'}
+                        {isLoading
+                            ? (canSubmitCampaign ? 'جاري إرسال الطلب...' : 'جاري حفظ المسودة...')
+                            : (canSubmitCampaign ? 'إرسال الإعلان للمراجعة' : 'حفظ كمسودة')}
                     </button>
                 </form>
             </section>
-        </ClientShell>
+        </>
     );
 }

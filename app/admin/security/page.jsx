@@ -1,14 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
 import { APP_VERSION, APP_VERSION_DATE } from '../../version';
-import AdminEnableToggle from '../AdminEnableToggle';
-import {
-    getPrivacyPageChoices,
-    normalizeSecurityPagePath,
-    pickSecuritySettings,
-} from '../securitySettings';
 
 const REQUIRED_HEADERS = [
     ['x-content-type-options', 'منع تخمين نوع المحتوى'],
@@ -163,11 +157,8 @@ function SectionHeading({ icon, title, description }) {
 export default function AdminSecurityPage() {
     const [loading, setLoading] = useState(true);
     const [checking, setChecking] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [cleaning, setCleaning] = useState(false);
     const [message, setMessage] = useState(null);
-    const [language, setLanguage] = useState('ar');
-    const [settings, setSettings] = useState(pickSecuritySettings());
     const [checks, setChecks] = useState({
         headers: { passed: 0, total: REQUIRED_HEADERS.length, items: [] },
         turnstile: { enabled: false, checked: false },
@@ -190,8 +181,7 @@ export default function AdminSecurityPage() {
 
         try {
             const firebaseApi = await import('../../firebase');
-            const [configResult, appCheckResult, turnstileResult, headersResult, cspResult, versionResult] = await Promise.allSettled([
-                firebaseApi.getSiteConfig(),
+            const [appCheckResult, turnstileResult, headersResult, cspResult, versionResult] = await Promise.allSettled([
                 firebaseApi.getFirebaseAppCheckStatus(),
                 fetch('/api/security/turnstile', { cache: 'no-store' }).then((response) => response.json()),
                 fetch('/', { method: 'HEAD', cache: 'no-store' }),
@@ -201,12 +191,7 @@ export default function AdminSecurityPage() {
 
             firebaseApiRef.current = {
                 getFirebaseAuth: firebaseApi.getFirebaseAuth,
-                saveSiteConfigSection: firebaseApi.saveSiteConfigSection,
             };
-
-            if (configResult.status === 'fulfilled') {
-                setSettings(pickSecuritySettings(configResult.value));
-            }
 
             const headerResponse = headersResult.status === 'fulfilled' ? headersResult.value : null;
             const headerItems = REQUIRED_HEADERS.map(([name, label]) => ({
@@ -252,63 +237,6 @@ export default function AdminSecurityPage() {
             if (messageTimerRef.current) window.clearTimeout(messageTimerRef.current);
         };
     }, [runSecurityChecks]);
-
-    const privacyChoices = useMemo(
-        () => getPrivacyPageChoices(settings.internalPages),
-        [settings.internalPages],
-    );
-    const selectedPrivacyPages = useMemo(
-        () => new Set(settings.privacySettingsButton.pages.map(normalizeSecurityPagePath)),
-        [settings.privacySettingsButton.pages],
-    );
-
-    const updatePrivacyEnabled = (enabled) => {
-        setSettings((current) => ({
-            ...current,
-            privacySettingsButton: { ...current.privacySettingsButton, enabled },
-        }));
-    };
-
-    const togglePrivacyPage = (path) => {
-        const safePath = normalizeSecurityPagePath(path);
-        setSettings((current) => {
-            const pages = current.privacySettingsButton.pages.map(normalizeSecurityPagePath);
-            return {
-                ...current,
-                privacySettingsButton: {
-                    ...current.privacySettingsButton,
-                    pages: pages.includes(safePath)
-                        ? pages.filter((item) => item !== safePath)
-                        : [...pages, safePath],
-                },
-            };
-        });
-    };
-
-    const savePrivacySettings = async () => {
-        if (!firebaseApiRef.current?.saveSiteConfigSection) {
-            showMessage('error', 'لم تكتمل تهيئة إعدادات الموقع بعد.');
-            return;
-        }
-
-        setSaving(true);
-        try {
-            const saved = await firebaseApiRef.current.saveSiteConfigSection({
-                privacySettingsButton: settings.privacySettingsButton,
-            });
-            const savedSettings = pickSecuritySettings(saved);
-            setSettings((current) => ({
-                ...current,
-                privacySettingsButton: savedSettings.privacySettingsButton,
-            }));
-            showMessage('success', 'تم حفظ إعداد زر الخصوصية والصفحات المختارة.');
-        } catch (error) {
-            console.error('Privacy security settings save failed:', error);
-            showMessage('error', 'تعذر حفظ إعداد الخصوصية. تحقق من صلاحية المدير.');
-        } finally {
-            setSaving(false);
-        }
-    };
 
     const cleanupFirebaseData = async () => {
         if (!window.confirm('سيتم حذف حقول Firestore القديمة غير المستخدمة فقط. هل تريد المتابعة؟')) return;
@@ -460,49 +388,6 @@ export default function AdminSecurityPage() {
                             <small>{area.state}</small>
                         </article>
                     ))}
-                </div>
-            </section>
-
-            <section className="security-panel" id="privacy-controls">
-                <SectionHeading
-                    icon="fa-cookie-bite"
-                    title="الخصوصية وموافقة الزائر"
-                    description="بعد أول موافقة يظهر زر إعدادات الخصوصية في الصفحات المختارة فقط؛ قبل الموافقة يبقى تنبيه الموافقة متاحًا للزائر."
-                />
-                <div className="security-privacy-toolbar">
-                    <div><strong>لغة أسماء الصفحات</strong><small>المسارات والإعدادات مشتركة بين العربية والإنجليزية.</small></div>
-                    <div className="admin-language-segmented" role="group" aria-label="لغة أسماء صفحات الخصوصية">
-                        <button type="button" className={language === 'ar' ? 'active' : ''} onClick={() => setLanguage('ar')}>العربية</button>
-                        <button type="button" className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>English</button>
-                    </div>
-                </div>
-                <div className="security-privacy-toggle">
-                    <div><strong>إظهار زر إعدادات الخصوصية</strong><small>يشغّل الزر الدائم في الصفحات المحددة بعد حفظ موافقة الزائر.</small></div>
-                    <AdminEnableToggle
-                        enabled={settings.privacySettingsButton.enabled}
-                        onChange={updatePrivacyEnabled}
-                        enabledLabel="إخفاء زر إعدادات الخصوصية"
-                        disabledLabel="إظهار زر إعدادات الخصوصية"
-                    />
-                </div>
-                <div className="security-privacy-pages">
-                    {privacyChoices.map((page) => (
-                        <label key={page.path}>
-                            <input
-                                type="checkbox"
-                                checked={selectedPrivacyPages.has(normalizeSecurityPagePath(page.path))}
-                                onChange={() => togglePrivacyPage(page.path)}
-                            />
-                            <span>{language === 'en' ? (page.titleEn || page.title) : page.title}</span>
-                            <code dir="ltr">{page.path}</code>
-                        </label>
-                    ))}
-                </div>
-                <div className="security-panel-actions">
-                    <button type="button" className="legacy-primary-btn" onClick={savePrivacySettings} disabled={saving}>
-                        <i className="fa-solid fa-floppy-disk"></i>
-                        {saving ? 'جاري الحفظ...' : 'حفظ إعدادات الخصوصية'}
-                    </button>
                 </div>
             </section>
 

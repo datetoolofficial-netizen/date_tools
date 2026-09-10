@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Toast from '../../components/Toast';
 import TurnstileField from '../../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../../turnstileClient';
 import { CLIENT_PORTAL_VERSION } from '../ClientVersion';
-import '../ClientPortal.css';
+import { buildAdvertiserRegistrationProfile } from '../../advertiserAccess';
+import { isLocalAdvertiserDemoEnabled, registerLocalAdvertiser } from '../localAdvertiserDemo';
 
 const initialForm = {
     storeName: '',
@@ -23,6 +24,11 @@ export default function ClientRegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState('');
     const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+    const [isLocalDemo, setIsLocalDemo] = useState(false);
+
+    useEffect(() => {
+        setIsLocalDemo(isLocalAdvertiserDemoEnabled());
+    }, []);
 
     const updateField = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
@@ -45,6 +51,13 @@ export default function ClientRegisterPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
+            if (isLocalDemo) {
+                await registerLocalAdvertiser(form);
+                setMessage({ text: 'تم إنشاء حساب المعلن داخل بيئة التجربة المحلية.', type: 'success' });
+                window.setTimeout(() => window.location.replace('/client/dashboard'), 800);
+                return;
+            }
+
             await verifyTurnstileChallenge(turnstileToken, 'advertiser-register');
 
             const [{ db, getFirebaseAuth }, { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut }, { doc, setDoc, serverTimestamp }] = await Promise.all([
@@ -59,13 +72,14 @@ export default function ClientRegisterPage() {
 
             await updateProfile(credential.user, { displayName: form.storeName.trim() });
             await setDoc(doc(db, 'advertisers', credential.user.uid), {
-                storeName: form.storeName.trim(),
-                contactName: form.contactName.trim(),
-                email: cleanEmail,
-                phone: form.phone.trim(),
-                status: 'pending_email',
-                portalVersion: CLIENT_PORTAL_VERSION,
-                acceptedTermsAt: new Date().toISOString(),
+                ...buildAdvertiserRegistrationProfile({
+                    uid: credential.user.uid,
+                    storeName: form.storeName,
+                    contactName: form.contactName,
+                    email: cleanEmail,
+                    phone: form.phone,
+                    portalVersion: CLIENT_PORTAL_VERSION,
+                }),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
             });
@@ -99,6 +113,13 @@ export default function ClientRegisterPage() {
                 </div>
                 <h1>إنشاء حساب معلن</h1>
                 <p>أنشئ حسابك لإرسال الحملات ومتابعة نتائجها وحالات المراجعة داخل بوابة واحدة.</p>
+
+                {isLocalDemo && (
+                    <div className="client-local-demo-notice" role="note">
+                        <strong><i className="fa-solid fa-flask"></i> تسجيل محلي معزول</strong>
+                        <span>لن يُنشأ مستخدم في Firebase ولن تُرسل رسالة بريد في وضع التجربة.</span>
+                    </div>
+                )}
 
                 <form onSubmit={handleRegister}>
                     <div className="client-form-row">

@@ -50,6 +50,10 @@
             --soft-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
         }
 
+        .english-route-root {
+            display: contents;
+        }
+
         html[data-site-theme='light'],
         html[data-site-theme='light'] body {
             background-color: #f8fafc;
@@ -57,8 +61,8 @@
         }
 
         /* ================= الوضع المظلم ================= */
-        body.dark-mode,
-        html[data-site-theme='dark'] body {
+        body.dark-mode .public-site-root,
+        html[data-site-theme='dark'] .public-site-root {
             --bg-body: #0f172a;
             --bg-card: #1e293b;
             --text-main: #f8fafc;
@@ -86,7 +90,15 @@
             background-color: var(--bg-body);
             color: var(--text-main);
             margin: 0;
+            padding: 0;
+        }
+
+        .public-site-root {
+            min-height: 100vh;
             padding: var(--page-padding);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            box-sizing: border-box;
             transition: background-color 0.4s ease, color 0.4s ease;
         }
 

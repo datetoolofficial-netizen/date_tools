@@ -3,9 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { isAssistantAdminRole, isFullAdminRole, resolveKnownAdminRole } from '../adminRoles';
+import {
+    ADMIN_PERMISSIONS,
+    getAdminPermissions,
+    getAdminRoleLabel,
+    hasAdminPermission,
+    resolveAdminRole,
+} from '../adminAccess';
 import { ADMIN_VERSION } from '../version';
-import './AdminDashboard.css';
 
 const AdminContext = createContext(null);
 
@@ -15,63 +20,84 @@ const NAV_ITEMS = [
         href: '/admin',
         label: 'الرئيسية',
         icon: 'fa-house',
-        permissionKeys: ['home', 'dashboard', 'admin'],
+        permission: ADMIN_PERMISSIONS.DASHBOARD_READ,
     },
     {
         id: 'tools',
         href: '/admin/tools',
         label: 'إعدادات الأداة',
         icon: 'fa-screwdriver-wrench',
-        permissionKeys: ['tools', 'settings', 'site-settings', 'pages'],
+        permission: ADMIN_PERMISSIONS.SITE_SETTINGS_READ,
     },
     {
         id: 'security',
         href: '/admin/security',
         label: 'الأمان',
         icon: 'fa-shield-halved',
-        permissionKeys: ['security', 'protection', 'privacy'],
+        permission: ADMIN_PERMISSIONS.SECURITY_READ,
     },
     {
         id: 'integrations',
         href: '/admin/integrations',
         label: 'الربط الخارجي',
         icon: 'fa-plug-circle-bolt',
-        permissionKeys: ['integrations', 'external-integrations', 'externalIntegrations'],
+        permission: ADMIN_PERMISSIONS.INTEGRATIONS_READ,
     },
     {
         id: 'pagespeed',
         href: '/admin/pagespeed',
         label: 'PageSpeed',
         icon: 'fa-gauge-high',
-        permissionKeys: ['pagespeed', 'page-speed', 'performance'],
+        permission: ADMIN_PERMISSIONS.PERFORMANCE_READ,
     },
     {
         id: 'ad-settings',
         href: '/admin/ad-settings',
         label: 'إدارة الإعلانات',
         icon: 'fa-rectangle-ad',
-        permissionKeys: ['ad-settings', 'adSettings', 'ads-settings', 'google-ads'],
+        permission: ADMIN_PERMISSIONS.ADS_SETTINGS_READ,
     },
     {
         id: 'ads',
         href: '/admin/ads',
         label: 'الحملات الإعلانية',
         icon: 'fa-bullhorn',
-        permissionKeys: ['ads', 'campaigns', 'ad-campaigns'],
+        permission: ADMIN_PERMISSIONS.CAMPAIGNS_READ,
     },
     {
         id: 'tool-management',
         href: '/admin/tool-management',
         label: 'إدارة الأدوات',
         icon: 'fa-toolbox',
-        permissionKeys: ['tool-management', 'toolManagement', 'tools-management', 'toolsContent'],
+        permission: ADMIN_PERMISSIONS.CONTENT_TOOLS_READ,
+    },
+    {
+        id: 'accounts',
+        href: '/admin/accounts',
+        label: 'الحسابات',
+        icon: 'fa-users-gear',
+        permission: ADMIN_PERMISSIONS.ADVERTISERS_READ,
+    },
+    {
+        id: 'admin-team',
+        href: '/admin/team',
+        label: 'فريق الإدارة',
+        icon: 'fa-user-shield',
+        permission: ADMIN_PERMISSIONS.ADMINS_READ,
+    },
+    {
+        id: 'audit',
+        href: '/admin/audit',
+        label: 'سجل العمليات',
+        icon: 'fa-clock-rotate-left',
+        permission: ADMIN_PERMISSIONS.AUDIT_READ,
     },
     {
         id: 'client',
         href: '/client/dashboard',
         label: 'بوابة المعلنين',
         icon: 'fa-user-tie',
-        permissionKeys: ['client', 'advertisers', 'clients'],
+        permission: ADMIN_PERMISSIONS.ADVERTISERS_READ,
         externalToAdmin: true,
     },
     {
@@ -79,84 +105,17 @@ const NAV_ITEMS = [
         href: '/admin/support',
         label: 'التذاكر',
         icon: 'fa-ticket',
-        permissionKeys: ['support', 'tickets'],
+        permission: ADMIN_PERMISSIONS.SUPPORT_READ,
     },
 ];
 
-function normalizeToken(value) {
-    return String(value || '')
-        .trim()
-        .replace(/^\/?admin\/?/, '')
-        .replace(/^\//, '')
-        .replace(/\//g, '-')
-        .toLowerCase();
-}
-
-function addPermissionValue(value, result) {
-    if (!value) return;
-
-    if (typeof value === 'string') {
-        result.add(normalizeToken(value));
-        return;
-    }
-
-    if (Array.isArray(value)) {
-        value.forEach((item) => addPermissionValue(item, result));
-        return;
-    }
-
-    if (typeof value === 'object') {
-        Object.entries(value).forEach(([key, entryValue]) => {
-            if (entryValue === true) {
-                result.add(normalizeToken(key));
-                return;
-            }
-
-            if (Array.isArray(entryValue) || typeof entryValue === 'string' || typeof entryValue === 'object') {
-                addPermissionValue(entryValue, result);
-            }
-        });
-    }
-}
-
-function getPermissionSet(profile = {}) {
-    const result = new Set();
-    [
-        profile.permissions,
-        profile.adminPermissions,
-        profile.allowedPages,
-        profile.allowedAdminPages,
-        profile.pagePermissions,
-        profile.pageAccess,
-        profile.routes,
-        profile.access,
-    ].forEach((value) => addPermissionValue(value, result));
-
-    return result;
-}
-
-function hasFullAdminAccess(profile = {}) {
-    return isFullAdminRole(resolveKnownAdminRole(profile.role, profile.adminRole));
-}
-
-function isAssistantProfile(profile = {}) {
-    return isAssistantAdminRole(resolveKnownAdminRole(profile.role, profile.adminRole));
-}
-
-function canOpenNavItem(item, profile, permissionSet) {
-    if (!profile) return false;
-    if (hasFullAdminAccess(profile)) return true;
-    if (!isAssistantProfile(profile)) return false;
-
-    if (permissionSet.size === 0) {
-        return item.id === 'home';
-    }
-
-    return item.permissionKeys.some((key) => permissionSet.has(normalizeToken(key)));
+function canOpenNavItem(item, profile) {
+    return Boolean(item?.permission && hasAdminPermission(profile, item.permission));
 }
 
 function getActiveNavId(pathname) {
     const currentPath = pathname || '/admin';
+    if (currentPath === '/admin/advertisers') return 'accounts';
     const matched = NAV_ITEMS
         .filter((item) => !item.externalToAdmin)
         .filter((item) => currentPath === item.href || currentPath.startsWith(`${item.href}/`))
@@ -236,7 +195,7 @@ export default function AdminShell({ children }) {
                         if (
                             !profile
                             || profile.active !== true
-                            || !resolveKnownAdminRole(profile.role, profile.adminRole)
+                            || !resolveAdminRole(profile)
                         ) {
                             await signOut(auth);
                             window.location.replace('/admin_login');
@@ -247,15 +206,8 @@ export default function AdminShell({ children }) {
 
                         setAdminProfile(profile);
                         setAdminName(profile.name || profile.email || 'أيها المدير');
-                        const resolvedRole = resolveKnownAdminRole(profile.role, profile.adminRole);
-                        setAdminRole(
-                            isAssistantAdminRole(resolvedRole)
-                                ? 'مساعد'
-                                : ['super_admin', 'super-admin', 'owner'].includes(resolvedRole)
-                                    ? 'المدير العام'
-                                    : 'مدير'
-                        );
-                        if (hasFullAdminAccess(profile)) {
+                        setAdminRole(getAdminRoleLabel(profile));
+                        if (hasAdminPermission(profile, ADMIN_PERMISSIONS.SITE_SETTINGS_UPDATE)) {
                             syncPublicSiteConfig().catch(() => {
                                 console.error('Unable to synchronize the public site settings.');
                             });
@@ -356,22 +308,23 @@ export default function AdminShell({ children }) {
         setPendingDeleteButton(null);
     };
 
-    const permissionSet = useMemo(() => getPermissionSet(adminProfile || {}), [adminProfile]);
+    const permissions = useMemo(() => getAdminPermissions(adminProfile || {}), [adminProfile]);
     const activeNavId = getActiveNavId(pathname);
     const allowedNavItems = useMemo(
-        () => NAV_ITEMS.filter((item) => canOpenNavItem(item, adminProfile, permissionSet)),
-        [adminProfile, permissionSet],
+        () => NAV_ITEMS.filter((item) => canOpenNavItem(item, adminProfile)),
+        [adminProfile],
     );
     const activeItem = NAV_ITEMS.find((item) => item.id === activeNavId);
-    const isCurrentPageAllowed = !activeItem || canOpenNavItem(activeItem, adminProfile, permissionSet);
+    const isCurrentPageAllowed = !activeItem || canOpenNavItem(activeItem, adminProfile);
 
     const contextValue = useMemo(() => ({
         adminProfile,
         adminName,
         adminRole,
-        permissionSet,
+        permissions,
+        can: (permission) => hasAdminPermission(adminProfile, permission),
         isCurrentPageAllowed,
-    }), [adminProfile, adminName, adminRole, permissionSet, isCurrentPageAllowed]);
+    }), [adminProfile, adminName, adminRole, permissions, isCurrentPageAllowed]);
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {

@@ -1,4 +1,6 @@
 import { noIndexMetadata } from '../seoConfig';
+import ClientLayoutShell from './ClientLayoutShell';
+import './ClientPortal.css';
 
 export const metadata = {
     title: 'بوابة المعلنين | الأدوات الشاملة',
@@ -6,6 +8,5 @@ export const metadata = {
 };
 
 export default function ClientLayout({ children }) {
-    return children;
+    return <ClientLayoutShell>{children}</ClientLayoutShell>;
 }
-

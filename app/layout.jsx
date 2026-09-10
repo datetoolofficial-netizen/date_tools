@@ -15,6 +15,8 @@ const fontAwesomeHref = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4
 const adsenseClientPattern = /^ca-pub-\d{12,20}$/i;
 const themeBootstrapScript = `(() => {
     try {
+        const isInternalRoute = /^\/(?:admin|admin_login|client|support)(?:\/|$)/.test(window.location.pathname);
+        if (isInternalRoute) return;
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const resolvedTheme = prefersDark ? 'dark' : 'light';
         document.documentElement.dataset.siteTheme = resolvedTheme;

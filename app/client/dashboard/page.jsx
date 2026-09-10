@@ -3,10 +3,16 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import Toast from '../../components/Toast';
-import ClientShell from '../ClientShell';
-import '../ClientPortal.css';
+import { useClientPortal } from '../ClientShell';
+import {
+    ADVERTISER_PERMISSIONS,
+    formatOrganizationNumber,
+    hasAdvertiserPermission,
+    resolveOrganizationNumber,
+} from '../../advertiserAccess';
+import { listLocalAdvertiserCampaigns, updateLocalAdvertiserCampaignStatus } from '../localAdvertiserDemo';
 
-const STATUS_OPTIONS = ['قيد المراجعة', 'نشط', 'متوقف مؤقتاً', 'مرفوض', 'منتهي', 'تم تعديله'];
+const STATUS_OPTIONS = ['مسودة', 'قيد المراجعة', 'نشط', 'متوقف مؤقتاً', 'مرفوض', 'منتهي', 'تم تعديله'];
 
 function getStatusClass(status) {
     if (status === 'نشط' || status === 'مقبول') return 'active';
@@ -31,58 +37,50 @@ function formatDate(value) {
 }
 
 export default function ClientDashboardPage() {
-    const [profile, setProfile] = useState(null);
+    const { profile, currentUser, isLocalDemo } = useClientPortal();
     const [campaigns, setCampaigns] = useState([]);
     const [filters, setFilters] = useState({ search: '', status: 'all', date: '' });
     const [message, setMessage] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        let unsubscribe = () => {};
-
         async function loadClientData() {
-            const [{ db, getFirebaseAuth }, { onAuthStateChanged }, { collection, doc, getDoc, getDocs, query, where }] = await Promise.all([
+            if (!profile || !currentUser) return;
+
+            if (isLocalDemo) {
+                setCampaigns(await listLocalAdvertiserCampaigns(profile));
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const [{ db }, { collection, getDocs, query, where }] = await Promise.all([
                 import('../../firebase'),
-                import('firebase/auth'),
                 import('firebase/firestore'),
-            ]);
-            const auth = await getFirebaseAuth();
+                ]);
+                const organizationId = profile.organizationId || currentUser.uid;
+                const [organizationCampaigns, legacyOwnCampaigns] = await Promise.all([
+                    getDocs(query(collection(db, 'campaigns'), where('advertiserOrganizationId', '==', organizationId))),
+                    getDocs(query(collection(db, 'campaigns'), where('advertiserId', '==', currentUser.uid))),
+                ]);
+                const campaignDocuments = new Map();
+                [...organizationCampaigns.docs, ...legacyOwnCampaigns.docs].forEach((item) => {
+                    campaignDocuments.set(item.id, { id: item.id, ...item.data() });
+                });
+                const nextCampaigns = Array.from(campaignDocuments.values())
+                    .sort((a, b) => String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')));
 
-            unsubscribe = onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    window.location.replace('/client');
-                    return;
-                }
-
-                try {
-                    const profileSnap = await getDoc(doc(db, 'advertisers', user.uid));
-                    if (!profileSnap.exists()) {
-                        window.location.replace('/client/register');
-                        return;
-                    }
-
-                    const nextProfile = { id: user.uid, ...profileSnap.data() };
-                    setProfile(nextProfile);
-
-                    const adsQuery = query(collection(db, 'campaigns'), where('advertiserId', '==', user.uid));
-                    const adsSnap = await getDocs(adsQuery);
-                    const nextCampaigns = adsSnap.docs
-                        .map((item) => ({ id: item.id, ...item.data() }))
-                        .sort((a, b) => String(b.createdAt?.seconds || b.createdAt || '').localeCompare(String(a.createdAt?.seconds || a.createdAt || '')));
-
-                    setCampaigns(nextCampaigns);
-                } catch {
-                    console.error('Client campaigns load failed.');
-                    setMessage({ text: 'تعذر تحميل بيانات حملاتك الآن.', type: 'error' });
-                } finally {
-                    setIsLoading(false);
-                }
-            });
+                setCampaigns(nextCampaigns);
+            } catch {
+                console.error('Client campaigns load failed.');
+                setMessage({ text: 'تعذر تحميل بيانات حملاتك الآن.', type: 'error' });
+            } finally {
+                setIsLoading(false);
+            }
         }
 
         loadClientData();
-        return () => unsubscribe();
-    }, []);
+    }, [currentUser, isLocalDemo, profile]);
 
     const filteredCampaigns = useMemo(() => {
         const search = filters.search.trim().toLowerCase();
@@ -110,8 +108,28 @@ export default function ClientDashboardPage() {
         return { views, clicks, active, ctr };
     }, [campaigns]);
 
+    const canCreateCampaign = hasAdvertiserPermission(profile, ADVERTISER_PERMISSIONS.CAMPAIGNS_CREATE);
+    const canUpdateCampaign = hasAdvertiserPermission(profile, ADVERTISER_PERMISSIONS.CAMPAIGNS_PAUSE);
+    const organizationNumber = profile ? resolveOrganizationNumber(profile) : '';
+
+    const copyOrganizationNumber = async () => {
+        try {
+            await navigator.clipboard.writeText(organizationNumber);
+            setMessage({ text: 'تم نسخ رقم المنظمة.', type: 'success' });
+        } catch {
+            setMessage({ text: 'تعذر نسخ الرقم تلقائيًا. حدده وانسخه يدويًا.', type: 'error' });
+        }
+    };
+
     const updateCampaignStatus = async (campaignId, status) => {
         try {
+            if (isLocalDemo) {
+                await updateLocalAdvertiserCampaignStatus(profile, campaignId, status);
+                setCampaigns((current) => current.map((item) => item.id === campaignId ? { ...item, status } : item));
+                setMessage({ text: 'تم تحديث حالة الإعلان داخل التجربة المحلية.', type: 'success' });
+                return;
+            }
+
             const [{ db }, { doc, serverTimestamp, updateDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/firestore'),
@@ -130,49 +148,77 @@ export default function ClientDashboardPage() {
     };
 
     return (
-        <ClientShell active="dashboard" title="لوحة المعلن" userProfile={profile}>
+        <>
             <Toast visible={Boolean(message.text)} message={message.text} type={message.type} onClose={() => setMessage({ text: '', type: 'info' })} />
 
-            <section className="client-welcome">
-                <div>
-                    <h2>أهلًا بك، {profile?.storeName || 'جاري التحميل'}</h2>
-                    <p>تابع حملاتك الإعلانية، حالة المراجعة، الظهور، والنقرات من لوحة واحدة مرتبطة ببيانات الحملات الحالية.</p>
-                </div>
-                <i className="fa-solid fa-chart-line"></i>
-            </section>
-
             <section className="client-stats-grid">
-                <div className="client-stat-card blue">
+                <article className="client-stat-card tone-teal">
                     <span className="client-stat-icon"><i className="fa-solid fa-eye"></i></span>
                     <div>
                         <span>إجمالي الظهور</span>
                         <strong>{isLoading ? '...' : formatNumber(stats.views)}</strong>
+                        <small>مرات ظهور الإعلانات</small>
                     </div>
-                </div>
-                <div className="client-stat-card green">
+                </article>
+                <article className="client-stat-card tone-green">
                     <span className="client-stat-icon"><i className="fa-solid fa-arrow-pointer"></i></span>
                     <div>
                         <span>إجمالي النقرات</span>
                         <strong>{isLoading ? '...' : formatNumber(stats.clicks)}</strong>
+                        <small>تفاعل الزوار مع الحملات</small>
                     </div>
-                </div>
-                <div className="client-stat-card orange">
+                </article>
+                <article className="client-stat-card tone-orange">
                     <span className="client-stat-icon"><i className="fa-solid fa-bullhorn"></i></span>
                     <div>
-                        <span>حملات نشطة / CTR</span>
-                        <strong>{isLoading ? '...' : `${formatNumber(stats.active)} / ${stats.ctr}`}</strong>
+                        <span>الحملات النشطة</span>
+                        <strong>{isLoading ? '...' : formatNumber(stats.active)}</strong>
+                        <small>من {formatNumber(campaigns.length)} حملة</small>
                     </div>
-                </div>
+                </article>
+                <article className="client-stat-card tone-cyan">
+                    <span className="client-stat-icon"><i className="fa-solid fa-chart-pie"></i></span>
+                    <div>
+                        <span>معدل النقر CTR</span>
+                        <strong>{isLoading ? '...' : stats.ctr}</strong>
+                        <small>النقرات مقارنة بالظهور</small>
+                    </div>
+                </article>
             </section>
 
+            {profile && (
+                <section className="client-organization-card" aria-label="بيانات المنظمة">
+                    <span className="client-organization-icon"><i className="fa-solid fa-building-user"></i></span>
+                    <div>
+                        <small>رقم المنظمة الموحد</small>
+                        <strong dir="ltr">{formatOrganizationNumber(organizationNumber)}</strong>
+                        <p>يستخدمه مدير المنصة لربط أعضاء المنظمة بالحساب نفسه، ولا يمنح الرقم وحده صلاحية الدخول.</p>
+                    </div>
+                    <button type="button" className="client-secondary-btn" onClick={copyOrganizationNumber}>
+                        <i className="fa-regular fa-copy"></i>
+                        نسخ الرقم
+                    </button>
+                </section>
+            )}
+
             <section className="client-panel">
-                <div className="client-panel-header">
-                    <h2><i className="fa-solid fa-rectangle-ad"></i> حملاتك الإعلانية</h2>
-                    <Link className="client-primary-btn" href="/client/create-campaign">
-                        <i className="fa-solid fa-plus"></i>
-                        طلب إعلان جديد
-                    </Link>
-                </div>
+                <header className="client-panel-header">
+                    <div>
+                        <span className="client-panel-icon"><i className="fa-solid fa-rectangle-ad"></i></span>
+                        <div>
+                            <h2>حملاتك الإعلانية</h2>
+                            <p>استعرض الأداء والحالة، وابحث في جميع الحملات المرتبطة بالمنظمة.</p>
+                        </div>
+                    </div>
+                    {canCreateCampaign ? (
+                        <Link className="client-primary-btn" href="/client/create-campaign">
+                            <i className="fa-solid fa-plus"></i>
+                            طلب إعلان جديد
+                        </Link>
+                    ) : (
+                        <span className="client-readonly-badge"><i className="fa-solid fa-lock"></i> عرض فقط</span>
+                    )}
+                </header>
 
                 <div className="client-filters">
                     <div className="client-form-group">
@@ -244,7 +290,11 @@ export default function ClientDashboardPage() {
                                                     <i className="fa-solid fa-arrow-up-right-from-square"></i>
                                                 </a>
                                             )}
-                                            {campaign.status === 'متوقف مؤقتاً' ? (
+                                            {canUpdateCampaign && (campaign.status === 'مسودة' ? (
+                                                <button className="client-icon-btn play" type="button" onClick={() => updateCampaignStatus(campaign.id, 'قيد المراجعة')} title="إرسال للمراجعة">
+                                                    <i className="fa-solid fa-paper-plane"></i>
+                                                </button>
+                                            ) : campaign.status === 'متوقف مؤقتاً' ? (
                                                 <button className="client-icon-btn play" type="button" onClick={() => updateCampaignStatus(campaign.id, 'قيد المراجعة')} title="إعادة للمراجعة">
                                                     <i className="fa-solid fa-play"></i>
                                                 </button>
@@ -252,7 +302,7 @@ export default function ClientDashboardPage() {
                                                 <button className="client-icon-btn pause" type="button" onClick={() => updateCampaignStatus(campaign.id, 'متوقف مؤقتاً')} title="إيقاف مؤقت">
                                                     <i className="fa-solid fa-pause"></i>
                                                 </button>
-                                            )}
+                                            ))}
                                         </div>
                                     </td>
                                 </tr>
@@ -261,6 +311,6 @@ export default function ClientDashboardPage() {
                     </table>
                 </div>
             </section>
-        </ClientShell>
+        </>
     );
 }

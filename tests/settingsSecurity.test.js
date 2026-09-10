@@ -30,10 +30,14 @@ describe('settings security boundaries', () => {
     it('fails closed for unknown admin roles and section permissions', () => {
         const rules = readProjectFile('firestore.rules');
 
-        expect(rules).toContain('"super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"');
-        expect(rules).toContain('return isKnownAdminRoleValue(primaryRole)');
+        expect(rules).toContain('"platform_owner", "super_admin", "super-admin", "owner", "admin", "manager"');
+        expect(rules).toContain('let platformRole = adminData().get("platformRole", "")');
+        expect(rules).toContain('let resolvedRole = isKnownAdminRoleValue(platformRole)');
         expect(rules).toContain(': adminData().get("adminRole", "")');
-        expect(rules).not.toContain('!isAssistantAdmin()');
+        expect(rules).toContain('roleHasAdminPermission(adminRole(), permission)');
+        expect(rules).toContain('affectedKeys().hasAny(["name", "platformRole", "role", "permissions"])');
+        expect(rules).toContain('affectedKeys().hasAny(["active"])');
+        expect(rules).toContain('request.resource.data.role == request.resource.data.platformRole');
         expect(rules).not.toContain('commonSettingsFields');
         expect(rules).toContain('changed.hasOnly(["toolSettings", "events"])');
         expect(rules).toContain('allow read: if documentId == "public" || isActiveAdmin();');
@@ -62,5 +66,16 @@ describe('settings security boundaries', () => {
         expect(source).toContain("new URL(value).protocol === 'https:'");
         expect(source).not.toContain("views: getNumberField(fields, 'views')");
         expect(source).not.toContain("clicks: getNumberField(fields, 'clicks')");
+    });
+
+    it('binds audit events and advertiser uploads to action permissions', () => {
+        const auditRoute = readProjectFile('app', 'api', 'admin', 'audit', 'route.js');
+        const uploadRoute = readProjectFile('app', 'api', 'media', 'upload', 'route.js');
+
+        expect(auditRoute).toContain('const AUDIT_ACTION_RULES = Object.freeze({');
+        expect(auditRoute).toContain('actionRule.resourceType !== resourceType');
+        expect(auditRoute).toContain('hasAdminPermission(profile, actionRule.permissions)');
+        expect(uploadRoute).toContain("['owner', 'organization_admin', 'campaign_manager', 'campaign_editor'].includes(role)");
+        expect(uploadRoute).toContain('!canAdvertiserUploadAds(uploader.profile)');
     });
 });

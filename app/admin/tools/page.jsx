@@ -1,16 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
 import { sanitizeHtml } from '../../sanitizeHtml';
 import AdminEnableToggle from '../AdminEnableToggle';
+import {
+    getPrivacyPageChoices,
+    normalizeSecurityPagePath,
+    pickSecuritySettings,
+} from '../securitySettings';
 import IdentitySettingsSections, {
     EMPTY_IDENTITY,
     normalizePwaInstallPrompt,
     pickIdentity,
 } from './IdentitySettingsSections';
-import '../AdminDashboard.css';
 
 const MAX_MEDIA_FILE_BYTES = 5 * 1024 * 1024;
 const SUPPORTED_MEDIA_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'ico']);
@@ -81,6 +85,7 @@ function pickToolsConfig(config = {}) {
         customPages: config.customPages || {},
         socialLinks: normalizeManagedItems(config.socialLinks),
         externalLinks: normalizeManagedItems(config.externalLinks),
+        privacySettingsButton: pickSecuritySettings(config).privacySettingsButton,
     };
 }
 
@@ -246,6 +251,12 @@ function AdminNav({ active = 'tools' }) {
                 </Link>
             </li>
             <li>
+                <Link href="/admin/accounts">
+                    <i className="fa-solid fa-users-gear"></i>
+                    <span className="nav-text">الحسابات</span>
+                </Link>
+            </li>
+            <li>
                 <Link href="/client/dashboard">
                     <i className="fa-solid fa-user-tie"></i>
                     <span className="nav-text">بوابة المعلنين</span>
@@ -336,6 +347,14 @@ export default function AdminToolsPage() {
             : (item?.title || '')
     );
     const getNameField = (section) => (getSectionLanguage(section) === 'en' ? 'titleEn' : 'title');
+    const privacyPageChoices = useMemo(
+        () => getPrivacyPageChoices(toolsConfig.internalPages),
+        [toolsConfig.internalPages],
+    );
+    const selectedPrivacyPages = useMemo(
+        () => new Set(toolsConfig.privacySettingsButton.pages.map(normalizeSecurityPagePath)),
+        [toolsConfig.privacySettingsButton.pages],
+    );
 
     useEffect(() => {
         let unsubscribe = () => {};
@@ -425,6 +444,32 @@ export default function AdminToolsPage() {
                 [field]: value,
             }),
         }));
+    };
+
+    const setPrivacyButtonEnabled = (enabled) => {
+        setToolsConfig((current) => ({
+            ...current,
+            privacySettingsButton: {
+                ...current.privacySettingsButton,
+                enabled,
+            },
+        }));
+    };
+
+    const togglePrivacyPage = (path) => {
+        const normalizedPath = normalizeSecurityPagePath(path);
+        setToolsConfig((current) => {
+            const pages = current.privacySettingsButton.pages.map(normalizeSecurityPagePath);
+            return {
+                ...current,
+                privacySettingsButton: {
+                    ...current.privacySettingsButton,
+                    pages: pages.includes(normalizedPath)
+                        ? pages.filter((pagePath) => pagePath !== normalizedPath)
+                        : [...pages, normalizedPath],
+                },
+            };
+        });
     };
 
     const validateMediaFileBeforeUpload = (file) => {
@@ -964,6 +1009,10 @@ export default function AdminToolsPage() {
                         <i className="fa-solid fa-hashtag"></i>
                         <span>السوشيال</span>
                     </a>
+                    <a href="#privacy-settings-button" className="tools-quick-card color-privacy">
+                        <i className="fa-solid fa-cookie-bite"></i>
+                        <span>الخصوصية</span>
+                    </a>
                 </div>
 
                 <IdentitySettingsSections
@@ -973,6 +1022,68 @@ export default function AdminToolsPage() {
                     onPwaInstallPromptChange={setPwaInstallPromptField}
                     onMediaUpload={handleIdentityMediaUpload}
                 />
+
+                <section className="legacy-google-card tools-section-card tools-privacy-settings-card" id="privacy-settings-button">
+                    <div className="tools-section-head">
+                        <div className="tools-section-title">
+                            <span className="tools-section-icon color-privacy"><i className="fa-solid fa-cookie-bite"></i></span>
+                            <div>
+                                <h2>الخصوصية وموافقة الزائر</h2>
+                                <p>بعد أول موافقة يظهر زر إعدادات الخصوصية في الصفحات المختارة فقط؛ وقبل الموافقة يبقى تنبيه الموافقة متاحًا للزائر.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="privacy-admin-toggle admin-toggle-card tools-privacy-toggle">
+                        <span className="tools-privacy-toggle-icon"><i className="fa-solid fa-shield-halved"></i></span>
+                        <div>
+                            <strong>إظهار زر إعدادات الخصوصية</strong>
+                            <small>يشغّل الزر الدائم في الصفحات المحددة بعد حفظ موافقة الزائر.</small>
+                        </div>
+                        <AdminEnableToggle
+                            enabled={toolsConfig.privacySettingsButton.enabled}
+                            onChange={setPrivacyButtonEnabled}
+                            enabledLabel="إخفاء زر إعدادات الخصوصية"
+                            disabledLabel="إظهار زر إعدادات الخصوصية"
+                        />
+                    </div>
+
+                    <details className="tools-privacy-page-select">
+                        <summary>
+                            <span>
+                                <strong>الصفحات التي يظهر فيها الزر</strong>
+                                <small>اختر صفحة واحدة أو أكثر من القائمة.</small>
+                            </span>
+                            <span className="tools-privacy-selection-count">
+                                {selectedPrivacyPages.size > 0 ? `${selectedPrivacyPages.size} محددة` : 'لم تحدد صفحات'}
+                            </span>
+                            <i className="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                        </summary>
+                        <div className="tools-privacy-page-options" role="group" aria-label="اختيار صفحات ظهور زر إعدادات الخصوصية">
+                            {privacyPageChoices.map((page) => {
+                                const normalizedPath = normalizeSecurityPagePath(page.path);
+                                return (
+                                    <label key={normalizedPath}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPrivacyPages.has(normalizedPath)}
+                                            onChange={() => togglePrivacyPage(normalizedPath)}
+                                        />
+                                        <span>{page.title}</span>
+                                        <code dir="ltr">{normalizedPath}</code>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </details>
+
+                    <div className="tools-table-footer-actions tools-privacy-save-actions">
+                        <button type="button" className="legacy-primary-btn" onClick={saveTools} disabled={saving}>
+                            <i className="fa-solid fa-floppy-disk"></i>
+                            {saving ? 'جاري الحفظ...' : 'حفظ إعدادات الخصوصية'}
+                        </button>
+                    </div>
+                </section>
 
                 <section className="legacy-google-card tools-section-card" id="pages">
                     <div className="tools-section-head">

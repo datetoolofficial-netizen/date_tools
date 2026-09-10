@@ -1,4 +1,11 @@
-import { isAssistantAdminRole, isFullAdminRole, resolveKnownAdminRole } from '../../adminRoles';
+import {
+    ADMIN_PERMISSIONS,
+    ADMIN_ROLES,
+    expandAdminPermissions,
+    getRolePermissions,
+    normalizeAdminPermission,
+    normalizeAdminRole,
+} from '../../adminAccess';
 
 function readTokens(field) {
     if (!field) return [];
@@ -16,25 +23,41 @@ export function isActiveAdminProfile(fields) {
     return fields?.active?.booleanValue === true;
 }
 
-export function hasAdminPermission(fields, permissionKeys = [], { fullOnly = false } = {}) {
-    if (!isActiveAdminProfile(fields)) return false;
+export function resolveEncodedAdminRole(fields = {}) {
+    return normalizeAdminRole(fields?.platformRole?.stringValue)
+        || normalizeAdminRole(fields?.role?.stringValue)
+        || normalizeAdminRole(fields?.adminRole?.stringValue);
+}
 
-    const role = resolveKnownAdminRole(
-        fields?.role?.stringValue,
-        fields?.adminRole?.stringValue,
-    );
-    if (isFullAdminRole(role)) return true;
-    if (!isAssistantAdminRole(role)) return false;
-    if (fullOnly) return false;
-
-    const allowed = new Set([
+function getEncodedPermissions(fields = {}) {
+    return new Set([
         ...readTokens(fields?.permissions),
         ...readTokens(fields?.adminPermissions),
         ...readTokens(fields?.allowedPages),
         ...readTokens(fields?.allowedAdminPages),
         ...readTokens(fields?.pagePermissions),
         ...readTokens(fields?.pageAccess),
-    ].map((value) => String(value).trim().toLowerCase()));
+    ].map(normalizeAdminPermission).filter(Boolean));
+}
 
-    return permissionKeys.some((key) => allowed.has(String(key).trim().toLowerCase()));
+export function hasAdminPermission(fields, permissionKeys = [], { fullOnly = false } = {}) {
+    if (!isActiveAdminProfile(fields)) return false;
+
+    const role = resolveEncodedAdminRole(fields);
+    if (!role) return false;
+    if (fullOnly) return role === ADMIN_ROLES.PLATFORM_OWNER;
+
+    const requested = permissionKeys.map(normalizeAdminPermission).filter(Boolean);
+    if (requested.length === 0) return false;
+    const allowed = new Set(expandAdminPermissions([
+        ...getRolePermissions(role),
+        ...getEncodedPermissions(fields),
+    ]));
+    return requested.some((permission) => allowed.has(permission));
+}
+
+export function isPlatformOwnerProfile(fields) {
+    return isActiveAdminProfile(fields)
+        && resolveEncodedAdminRole(fields) === ADMIN_ROLES.PLATFORM_OWNER
+        && hasAdminPermission(fields, [ADMIN_PERMISSIONS.PLATFORM_OWNERSHIP_MANAGE]);
 }

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getToolSettings } from '../toolSettings';
 import { useAdminShell } from './AdminShell';
-import './AdminDashboard.css';
 
 const TOOL_METRICS = [
     { key: 'ageCalc', labelKey: 'ageCalc', fallback: 'حساب العمر', icon: 'fa-calculator', tone: 'purple' },
@@ -19,6 +18,7 @@ const QUICK_ACTIONS = [
     { href: '/admin/security', label: 'الأمان', detail: 'الفحص والتقارير والخصوصية', icon: 'fa-shield-halved', tone: 'cyan' },
     { href: '/admin/tool-management', label: 'إدارة الأدوات', detail: 'المحتوى والأسئلة والأحداث', icon: 'fa-toolbox', tone: 'purple' },
     { href: '/admin/ads', label: 'الحملات الإعلانية', detail: 'المراجعة والتفعيل والأداء', icon: 'fa-bullhorn', tone: 'orange' },
+    { href: '/admin/accounts', label: 'الحسابات', detail: 'حسابات المعلنين والأدوار والحالات', icon: 'fa-users-gear', tone: 'cyan' },
     { href: '/admin/support', label: 'التذاكر', detail: 'طلبات العملاء والمتابعة', icon: 'fa-ticket', tone: 'green' },
 ];
 

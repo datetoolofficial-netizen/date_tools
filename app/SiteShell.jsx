@@ -221,6 +221,8 @@ export default function SiteShell({ children, initialConfig = null }) {
     const labels = i18n[lang] || i18n.ar;
 
     useEffect(() => {
+        if (!shouldUseShell) return undefined;
+
         const savedLang = localStorage.getItem('site_lang') || 'ar';
         if (!initialRouteLanguageRef.current) setLang(savedLang);
         const savedConsent = getPrivacyConsent();
@@ -243,7 +245,7 @@ export default function SiteShell({ children, initialConfig = null }) {
 
         systemTheme.addListener?.(syncWithSystemTheme);
         return () => systemTheme.removeListener?.(syncWithSystemTheme);
-    }, []);
+    }, [shouldUseShell]);
 
     useEffect(() => {
         const routeLang = getToolRouteLanguage(pathname);
@@ -254,7 +256,7 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [pathname]);
 
     useEffect(() => {
-        if (!themeMode) return;
+        if (!shouldUseShell || !themeMode) return;
 
         const dark = themeMode === 'dark';
         setIsDarkMode(dark);
@@ -271,7 +273,7 @@ export default function SiteShell({ children, initialConfig = null }) {
             document.head.appendChild(themeColor);
         }
         themeColor.content = dark ? '#0f172a' : '#f8fafc';
-    }, [themeMode]);
+    }, [shouldUseShell, themeMode]);
 
     useEffect(() => {
         if (!shouldUseShell || loadedConfigRef.current) return;
@@ -329,9 +331,10 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [privacyConsent?.analytics, shouldUseShell]);
 
     useEffect(() => {
+        if (!shouldUseShell) return;
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    }, [lang]);
+    }, [lang, shouldUseShell]);
 
     useEffect(() => {
         if (!shouldUseShell || !configData) return;
@@ -357,6 +360,7 @@ export default function SiteShell({ children, initialConfig = null }) {
     }, [configData, lang, localizedConfigData, pathname, shouldUseShell]);
 
     useEffect(() => {
+        if (!shouldUseShell) return;
         const faviconUrl = configData?.faviconUrl || configData?.appIconUrl || configData?.logoUrl || '';
         const appleTouchIconUrl = configData?.appIconUrl || configData?.logoUrl || configData?.faviconUrl || '';
         if (!faviconUrl && !appleTouchIconUrl) return;
@@ -382,7 +386,7 @@ export default function SiteShell({ children, initialConfig = null }) {
             versionedIcon.searchParams.set('v', APP_VERSION);
             appleIcon.href = versionedIcon.toString();
         }
-    }, [configData?.faviconUrl, configData?.appIconUrl, configData?.logoUrl]);
+    }, [configData?.faviconUrl, configData?.appIconUrl, configData?.logoUrl, shouldUseShell]);
 
     useEffect(() => {
         const handleBlur = () => {
@@ -613,38 +617,39 @@ export default function SiteShell({ children, initialConfig = null }) {
 
     return (
         <SiteContext.Provider value={contextValue}>
-            <div className="container site-shell-container">
-                {isSiteLoading ? (
-                    <PublicShellSkeleton />
-                ) : (
-                    <Header
-                        lang={lang}
-                        isDarkMode={isDarkMode}
-                        toggleLang={toggleLang}
-                        toggleTheme={toggleTheme}
-                        config={localizedConfigData}
-                    />
-                )}
+            <div className="public-site-root">
+                <div className="container site-shell-container">
+                    {isSiteLoading ? (
+                        <PublicShellSkeleton />
+                    ) : (
+                        <Header
+                            lang={lang}
+                            isDarkMode={isDarkMode}
+                            toggleLang={toggleLang}
+                            toggleTheme={toggleTheme}
+                            config={localizedConfigData}
+                        />
+                    )}
 
-                {!isSiteLoading && (
-                    <main className="site-page-content">
-                        {locationNotice && (
-                            <div className={`location-permission-toast ${locationNotice.type}`} role="status">
-                                <i className={locationNotice.icon}></i>
-                                <div>
-                                    <strong>{locationNotice.title}</strong>
-                                    <p>{locationNotice.message}</p>
+                    {!isSiteLoading && (
+                        <main className="site-page-content">
+                            {locationNotice && (
+                                <div className={`location-permission-toast ${locationNotice.type}`} role="status">
+                                    <i className={locationNotice.icon}></i>
+                                    <div>
+                                        <strong>{locationNotice.title}</strong>
+                                        <p>{locationNotice.message}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                        {children}
-                    </main>
-                )}
-            </div>
+                            )}
+                            {children}
+                        </main>
+                    )}
+                </div>
 
-            {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} />}
-            {!isSiteLoading && (
-                <div className="site-action-stack">
+                {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} />}
+                {!isSiteLoading && (
+                    <div className="site-action-stack">
                     <PwaUpdatePrompt
                         settings={localizedConfigData?.pwaUpdatePrompt}
                         blocked={isPrivacyPanelOpen}
@@ -723,8 +728,9 @@ export default function SiteShell({ children, initialConfig = null }) {
                             {labels.privacySettingsButton}
                         </button>
                     )}
-                </div>
-            )}
+                    </div>
+                )}
+            </div>
         </SiteContext.Provider>
     );
 }

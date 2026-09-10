@@ -5,7 +5,6 @@ import { useState } from 'react';
 import Toast from '../../components/Toast';
 import TurnstileField from '../../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../../turnstileClient';
-import '../ClientPortal.css';
 
 export default function ResetPasswordPage() {
     const [email, setEmail] = useState('');

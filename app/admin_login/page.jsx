@@ -6,7 +6,6 @@ import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../turnstileClient';
 import { evaluateAdminAccess } from '../securityPolicies';
-import './AdminLogin.css';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');

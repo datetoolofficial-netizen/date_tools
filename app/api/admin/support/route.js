@@ -1,6 +1,8 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { ADMIN_PERMISSIONS } from '../../../adminAccess';
+import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
+import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
 
 const FIREBASE_PROJECT_ID = 'date-tool-official';
 const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
@@ -33,19 +35,20 @@ async function getAdminProfile(idToken, uid) {
     return profile?.fields || null;
 }
 
-async function requireActiveAdmin(request) {
+async function requireActiveAdmin(request, permission) {
     const idToken = getBearerToken(request);
     if (!idToken) return null;
 
     const user = await verifyFirebaseIdToken(idToken, FIREBASE_PROJECT_ID);
     if (!user?.localId) return null;
     const profile = await getAdminProfile(idToken, user.localId);
-    if (!hasAdminPermission(profile, ['support', 'tickets'])) return null;
+    if (!hasAdminPermission(profile, [permission])) return null;
 
     return {
         idToken,
         uid: user.localId,
         email: String(user.email || '').slice(0, 160),
+        role: resolveEncodedAdminRole(profile),
     };
 }
 
@@ -133,7 +136,7 @@ async function getMediaBucket() {
 
 export async function GET(request) {
     try {
-        const admin = await requireActiveAdmin(request);
+        const admin = await requireActiveAdmin(request, ADMIN_PERMISSIONS.SUPPORT_READ);
         if (!admin) return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
 
         const url = new URL(request.url);
@@ -182,7 +185,7 @@ export async function GET(request) {
 
 export async function PATCH(request) {
     try {
-        const admin = await requireActiveAdmin(request);
+        const admin = await requireActiveAdmin(request, ADMIN_PERMISSIONS.SUPPORT_STATUS);
         if (!admin) return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
 
         const payload = await request.json().catch(() => ({}));
@@ -216,6 +219,13 @@ export async function PATCH(request) {
         });
 
         if (!response.ok) throw new Error(`ticket_update_failed_${response.status}`);
+        await writeAdminAuditEvent({
+            actor: admin,
+            action: 'support.updated',
+            resourceType: 'support_ticket',
+            resourceId: ticketId,
+            details: { status },
+        });
         return jsonResponse({ ok: true, ticket: decodeTicket(await response.json()) });
     } catch (error) {
         console.error('admin support PATCH failed:', error instanceof Error ? error.message : 'unknown');
@@ -225,7 +235,7 @@ export async function PATCH(request) {
 
 export async function DELETE(request) {
     try {
-        const admin = await requireActiveAdmin(request);
+        const admin = await requireActiveAdmin(request, ADMIN_PERMISSIONS.SUPPORT_DELETE);
         if (!admin) return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
 
         const payload = await request.json().catch(() => ({}));
@@ -258,6 +268,13 @@ export async function DELETE(request) {
         if (!response.ok && response.status !== 404) {
             throw new Error(`ticket_delete_failed_${response.status}`);
         }
+
+        await writeAdminAuditEvent({
+            actor: admin,
+            action: 'support.deleted',
+            resourceType: 'support_ticket',
+            resourceId: ticketId,
+        });
 
         return jsonResponse({ ok: true });
     } catch (error) {

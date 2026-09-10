@@ -16,6 +16,23 @@ describe('admin permissions', () => {
         expect(hasAdminPermission(profile, ['support'])).toBe(true);
     });
 
+    it('reserves owner-only operations for the platform owner', () => {
+        const owner = { active: bool(true), platformRole: text('platform_owner'), role: text('super_admin') };
+        const superAdmin = { active: bool(true), role: text('super_admin') };
+        expect(hasAdminPermission(owner, ['platform.ownership.manage'])).toBe(true);
+        expect(hasAdminPermission(owner, [], { fullOnly: true })).toBe(true);
+        expect(hasAdminPermission(superAdmin, ['platform.ownership.manage'])).toBe(false);
+        expect(hasAdminPermission(superAdmin, [], { fullOnly: true })).toBe(false);
+    });
+
+    it('limits specialist roles to their operational scope', () => {
+        const support = { active: bool(true), platformRole: text('support_agent') };
+        expect(hasAdminPermission(support, ['support.read'])).toBe(true);
+        expect(hasAdminPermission(support, ['support.status'])).toBe(true);
+        expect(hasAdminPermission(support, ['support.delete'])).toBe(false);
+        expect(hasAdminPermission(support, ['campaigns.update'])).toBe(false);
+    });
+
     it('uses a supported adminRole when a legacy role field also exists', () => {
         const profile = {
             active: bool(true),

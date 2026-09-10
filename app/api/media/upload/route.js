@@ -6,7 +6,8 @@ import {
     MAX_IMAGE_BYTES,
 } from '../../_lib/mediaValidation';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
-import { isAssistantAdminRole, isFullAdminRole } from '../../../adminRoles';
+import { ADMIN_PERMISSIONS } from '../../../adminAccess';
+import { hasAdminPermission } from '../../_lib/adminPermissions';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const TOKEN_TTL_SECONDS = 55 * 60;
@@ -195,53 +196,37 @@ async function requireUploader(request) {
     }
 
     const advertiserProfile = await getProfile(serviceAccount, 'advertisers', user.localId);
-    if (advertiserProfile?.status?.stringValue === 'active') return { type: 'advertiser', uid: user.localId };
+    if (advertiserProfile?.status?.stringValue === 'active') {
+        return { type: 'advertiser', uid: user.localId, profile: advertiserProfile };
+    }
 
     return null;
 }
 
-function readProfileTokens(field) {
-    if (!field) return [];
-    if (field.stringValue) return [field.stringValue];
-    if (field.arrayValue?.values) return field.arrayValue.values.flatMap(readProfileTokens);
-    if (field.mapValue?.fields) {
-        return Object.entries(field.mapValue.fields)
-            .filter(([, value]) => value?.booleanValue === true)
-            .map(([key]) => key);
-    }
-    return [];
-}
-
 function canAdminUploadCategory(profile, category) {
-    const role = String(profile?.role?.stringValue || profile?.adminRole?.stringValue || '').toLowerCase();
-    if (isFullAdminRole(role)) return true;
-    if (!isAssistantAdminRole(role)) return false;
-
-    const permissions = new Set([
-        ...readProfileTokens(profile?.permissions),
-        ...readProfileTokens(profile?.adminPermissions),
-        ...readProfileTokens(profile?.allowedPages),
-        ...readProfileTokens(profile?.allowedAdminPages),
-    ].map((value) => String(value).trim().toLowerCase()));
     const identityCategories = new Set([
         'logo', 'favicon', 'link-preview', 'app-icon',
         'pwa-shortcut-date', 'pwa-shortcut-clock', 'pwa-shortcut-weather',
     ]);
 
     if (identityCategories.has(category)) {
-        return ['identity', 'brand', 'branding'].some((permission) => permissions.has(permission));
+        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.SITE_IDENTITY_UPDATE, 'identity']);
     }
 
     if (category === 'seo-share') {
-        return ['tool-management', 'toolmanagement', 'tools-management', 'toolscontent']
-            .some((permission) => permissions.has(permission));
+        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.CONTENT_TOOLS_UPDATE, 'tool-management']);
     }
 
     if (category === 'ads') {
-        return ['ads', 'campaigns', 'ad-campaigns', 'ad-settings', 'ads-settings'].some((permission) => permissions.has(permission));
+        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.CAMPAIGNS_UPDATE, ADMIN_PERMISSIONS.ADS_SETTINGS_UPDATE]);
     }
 
     return false;
+}
+
+function canAdvertiserUploadAds(profile) {
+    const role = profile?.role?.stringValue || 'owner';
+    return ['owner', 'organization_admin', 'campaign_manager', 'campaign_editor'].includes(role);
 }
 
 function getSafeFileName(name) {
@@ -283,7 +268,7 @@ export async function POST(request) {
         return jsonResponse({ ok: false, error: 'invalid_category' }, 400);
     }
 
-    if (uploader.type === 'advertiser' && category !== 'ads') {
+    if (uploader.type === 'advertiser' && (category !== 'ads' || !canAdvertiserUploadAds(uploader.profile))) {
         return jsonResponse({ ok: false, error: 'forbidden_category' }, 403);
     }
     if (uploader.type === 'admin' && !canAdminUploadCategory(uploader.profile, category)) {

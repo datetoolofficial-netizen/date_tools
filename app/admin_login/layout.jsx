@@ -1,4 +1,5 @@
 import { noIndexMetadata } from '../seoConfig';
+import './AdminLogin.css';
 
 export const metadata = {
     title: 'تسجيل دخول الإدارة | الأدوات الشاملة',
@@ -8,4 +9,3 @@ export const metadata = {
 export default function AdminLoginLayout({ children }) {
     return children;
 }
-

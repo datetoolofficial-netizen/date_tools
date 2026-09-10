@@ -25,6 +25,8 @@ describe('login policies', () => {
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: null })).toBe('missing');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'pending_email' } })).toBe('activate');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'active' } })).toBe('allowed');
+        expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'active', role: 'analyst' } })).toBe('allowed');
+        expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'active', role: 'unknown' } })).toBe('unauthorized');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: {} })).toBe('inactive');
         expect(evaluateAdvertiserAccess({ emailVerified: true, profile: { status: 'suspended' } })).toBe('inactive');
     });
@@ -67,5 +69,12 @@ describe('campaign submission', () => {
         expect(validateCampaignSubmission({ ...valid, targetUrl: 'http://example.com' })).toBe('invalid_target_url');
         expect(validateCampaignSubmission({ ...valid, imageUrl: 'https://example.com/ad.png' })).toBe('invalid_campaign_media');
         expect(validateCampaignSubmission({ ...valid, endTime: valid.startTime })).toBe('invalid_campaign_period');
+    });
+
+    it('accepts data images only when the isolated local demo explicitly enables them', () => {
+        const local = { ...valid, imageUrl: 'data:image/png;base64,AAAA' };
+        expect(validateCampaignSubmission(local)).toBe('invalid_campaign_media');
+        expect(validateCampaignSubmission(local, { allowLocalMedia: true })).toBe('');
+        expect(validateCampaignSubmission({ ...local, imageUrl: 'data:text/html;base64,AAAA' }, { allowLocalMedia: true })).toBe('invalid_campaign_media');
     });
 });

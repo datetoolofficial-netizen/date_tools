@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
-import '../AdminDashboard.css';
 
 export default function ToolManagementShell({
     icon = 'fa-toolbox',

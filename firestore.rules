@@ -7,15 +7,96 @@ service cloud.firestore {
     }
 
     function isKnownAdminRoleValue(role) {
-      return role in ["super_admin", "super-admin", "owner", "admin", "manager", "assistant", "helper", "مساعد"];
+      return role in [
+        "platform_owner", "super_admin", "super-admin", "owner", "admin", "manager",
+        "operations_manager", "content_manager", "ads_manager", "accounts_manager",
+        "security_manager", "support_agent", "performance_analyst", "auditor",
+        "admin_assistant", "assistant", "helper", "مساعد"
+      ];
     }
 
-    function isAssistantRoleValue(role) {
-      return role in ["assistant", "helper", "مساعد"];
+    function canonicalAdminRoleValue(role) {
+      return role == "platform_owner" ? "platform_owner"
+        : role in ["super_admin", "super-admin", "owner", "admin", "manager"] ? "super_admin"
+        : role in ["admin_assistant", "assistant", "helper", "مساعد"] ? "admin_assistant"
+        : role;
     }
 
-    function isFullAdminRoleValue(role) {
-      return role in ["super_admin", "super-admin", "owner", "admin", "manager"];
+    function roleHasAdminPermission(role, permission) {
+      return role == "platform_owner"
+        || (
+          role == "super_admin"
+          && !(permission in ["platform.ownership.manage", "admins.delete"])
+        )
+        || (
+          role == "operations_manager"
+          && permission in [
+            "dashboard.read", "site.identity.read", "site.identity.update",
+            "site.settings.read", "site.settings.update", "site.privacy.read", "site.privacy.update",
+            "pwa.settings.read", "pwa.release", "content.tools.read", "content.tools.update",
+            "content.pages.read", "content.pages.create", "content.pages.update",
+            "content.pages.publish", "content.pages.archive", "seo.read", "seo.update",
+            "seo.submit_index", "ads.settings.read", "campaigns.read", "campaigns.review",
+            "campaigns.operate", "advertisers.read", "advertisers.update", "advertisers.status",
+            "support.read", "support.reply", "support.status", "analytics.read",
+            "performance.read", "performance.run"
+          ]
+        )
+        || (
+          role == "content_manager"
+          && permission in [
+            "dashboard.read", "site.identity.read", "site.identity.update",
+            "site.settings.read", "site.settings.update", "site.privacy.read", "site.privacy.update",
+            "pwa.settings.read", "pwa.release", "content.tools.read", "content.tools.update",
+            "content.pages.read", "content.pages.create", "content.pages.update",
+            "content.pages.publish", "content.pages.archive", "seo.read", "seo.update", "seo.submit_index"
+          ]
+        )
+        || (
+          role == "ads_manager"
+          && permission in [
+            "dashboard.read", "ads.settings.read", "ads.settings.update", "campaigns.read",
+            "campaigns.create", "campaigns.update", "campaigns.review", "campaigns.operate",
+            "analytics.read", "analytics.export"
+          ]
+        )
+        || (
+          role == "accounts_manager"
+          && permission in [
+            "dashboard.read", "advertisers.read", "advertisers.create", "advertisers.update",
+            "advertisers.status", "advertisers.roles", "support.read", "support.reply", "support.status"
+          ]
+        )
+        || (
+          role == "security_manager"
+          && permission in [
+            "dashboard.read", "site.privacy.read", "site.privacy.update", "integrations.read",
+            "security.read", "security.operate", "audit.read", "audit.export"
+          ]
+        )
+        || (
+          role == "support_agent"
+          && permission in [
+            "dashboard.read", "advertisers.read", "support.read", "support.reply", "support.status"
+          ]
+        )
+        || (
+          role == "performance_analyst"
+          && permission in [
+            "dashboard.read", "analytics.read", "analytics.export", "performance.read",
+            "performance.run", "campaigns.read"
+          ]
+        )
+        || (
+          role == "auditor"
+          && permission in [
+            "dashboard.read", "site.identity.read", "site.settings.read", "site.privacy.read",
+            "pwa.settings.read", "content.tools.read", "content.pages.read", "seo.read",
+            "ads.settings.read", "campaigns.read", "advertisers.read", "support.read",
+            "analytics.read", "performance.read", "integrations.read", "security.read",
+            "admins.read", "audit.read"
+          ]
+        );
     }
 
     function isActiveAdmin() {
@@ -30,20 +111,14 @@ service cloud.firestore {
     }
 
     function adminRole() {
+      let platformRole = adminData().get("platformRole", "");
       let primaryRole = adminData().get("role", "");
-      return isKnownAdminRoleValue(primaryRole)
-        ? primaryRole
-        : adminData().get("adminRole", "");
-    }
-
-    function isAssistantAdmin() {
-      return isActiveAdmin()
-        && isAssistantRoleValue(adminRole());
-    }
-
-    function isFullAdmin() {
-      return isActiveAdmin()
-        && isFullAdminRoleValue(adminRole());
+      let resolvedRole = isKnownAdminRoleValue(platformRole)
+        ? platformRole
+        : isKnownAdminRoleValue(primaryRole)
+          ? primaryRole
+          : adminData().get("adminRole", "");
+      return canonicalAdminRoleValue(resolvedRole);
     }
 
     function isActiveAdvertiser() {
@@ -52,10 +127,64 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/advertisers/$(request.auth.uid)).data.status == "active";
     }
 
+    function advertiserData() {
+      return get(/databases/$(database)/documents/advertisers/$(request.auth.uid)).data;
+    }
+
+    function advertiserRole() {
+      return advertiserData().get("role", "owner");
+    }
+
+    function advertiserOrganizationId() {
+      return advertiserData().get("organizationId", request.auth.uid);
+    }
+
+    function hasAdvertiserPermission(permission) {
+      return isActiveAdvertiser()
+        && (
+          advertiserRole() == "owner"
+          || (
+            advertiserRole() == "organization_admin"
+            && permission in [
+              "profile.update", "team.read", "team.manage", "campaigns.read", "campaigns.create",
+              "campaigns.update", "campaigns.submit", "campaigns.pause", "reports.read",
+              "reports.export", "billing.read"
+            ]
+          )
+          || (
+            advertiserRole() == "campaign_manager"
+            && permission in [
+              "campaigns.read", "campaigns.create", "campaigns.update", "campaigns.submit",
+              "campaigns.pause", "reports.read", "reports.export"
+            ]
+          )
+          || (
+            advertiserRole() == "campaign_editor"
+            && permission in ["campaigns.read", "campaigns.create", "campaigns.update"]
+          )
+          || (
+            advertiserRole() == "analyst"
+            && permission in ["campaigns.read", "reports.read", "reports.export"]
+          )
+          || (
+            advertiserRole() == "billing_manager"
+            && permission in ["campaigns.read", "reports.read", "billing.read", "billing.manage"]
+          )
+          || (
+            advertiserRole() == "viewer"
+            && permission in ["campaigns.read", "reports.read"]
+          )
+        );
+    }
+
     function hasAdminPermission(permission, aliases) {
-      return isFullAdmin()
+      return (
+        isActiveAdmin()
+        && roleHasAdminPermission(adminRole(), permission)
+      )
         || (
-          isAssistantAdmin()
+          isActiveAdmin()
+          && adminRole() == "admin_assistant"
           && (
             (
               adminData().get("permissions", []) is list
@@ -95,9 +224,8 @@ service cloud.firestore {
 
     function canUpdateMainSettings() {
       let changed = request.resource.data.diff(resource.data).affectedKeys();
-      return isFullAdmin()
-        || (
-          hasAdminPermission("identity", ["identity", "brand", "branding"])
+      return (
+          hasAdminPermission("site.identity.update", ["site.identity.update", "identity", "brand", "branding"])
           && changed.hasOnly([
             "toolDisplayName", "toolSlogan", "contactEmail", "hasLogo", "logoUrl",
             "faviconUrl", "appIconUrl", "pwaShortcutDateIconUrl", "pwaShortcutClockIconUrl",
@@ -106,73 +234,258 @@ service cloud.firestore {
           ])
         )
         || (
-          hasAdminPermission("integrations", ["integrations", "external-integrations", "externalIntegrations"])
+          hasAdminPermission("integrations.update", ["integrations.update", "integrations", "external-integrations", "externalIntegrations"])
           && changed.hasOnly(["externalIntegrations"])
         )
         || (
-          hasAdminPermission("ad-settings", ["ad-settings", "adSettings", "ads-settings", "google-ads"])
+          hasAdminPermission("ads.settings.update", ["ads.settings.update", "ad-settings", "adSettings", "ads-settings", "google-ads"])
           && changed.hasOnly(["googleAdSlots", "externalIntegrations"])
         )
         || (
-          hasAdminPermission("tools", ["tools", "settings", "site-settings", "pages"])
+          hasAdminPermission("site.settings.update", ["site.settings.update", "tools", "settings", "site-settings", "pages"])
           && changed.hasOnly([
             "internalPages", "customPages", "socialLinks", "externalLinks", "privacySettingsButton"
           ])
         )
         || (
-          hasAdminPermission("tool-management", ["tool-management", "toolManagement", "tools-management", "toolsContent"])
+          hasAdminPermission("content.tools.update", ["content.tools.update", "tool-management", "toolManagement", "tools-management", "toolsContent"])
           && changed.hasOnly(["toolSettings", "events"])
         );
     }
 
     match /settings/{documentId} {
       allow read: if documentId == "public" || isActiveAdmin();
-      allow create, delete: if documentId in ["main", "public"] && isFullAdmin();
+      allow create: if documentId in ["main", "public"]
+        && hasAdminPermission("site.settings.update", ["site.settings.update", "tools", "settings"]);
+      allow delete: if documentId in ["main", "public"] && adminRole() == "platform_owner";
       allow update: if documentId in ["main", "public"] && canUpdateMainSettings();
     }
 
     match /statistics/{documentId} {
       allow read: if documentId == "main"
-        && hasAdminPermission("home", ["home", "dashboard", "admin"]);
+        && hasAdminPermission("dashboard.read", ["dashboard.read", "home", "dashboard", "admin"]);
       allow create, update, delete: if false;
     }
 
     match /admins/{userId} {
-      allow get: if isSignedIn() && request.auth.uid == userId;
-      allow list: if false;
+      allow get: if (isSignedIn() && request.auth.uid == userId)
+        || hasAdminPermission("admins.read", [
+          "admins.read", "admins.create", "admins.update_role", "admins.suspend", "admins.delete", "admin-team"
+        ]);
+      allow list: if hasAdminPermission("admins.read", [
+        "admins.read", "admins.create", "admins.update_role", "admins.suspend", "admins.delete", "admin-team"
+      ]);
+      allow create: if hasAdminPermission("admins.create", ["admins.create"])
+        && request.resource.data.keys().hasOnly([
+          "name", "email", "active", "platformRole", "role", "permissions",
+          "createdAt", "updatedAt", "createdBy", "updatedBy"
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.active == true
+        && request.resource.data.platformRole in [
+          "platform_owner", "super_admin", "operations_manager", "content_manager", "ads_manager",
+          "accounts_manager", "security_manager", "support_agent", "performance_analyst",
+          "auditor", "admin_assistant"
+        ]
+        && request.resource.data.role == request.resource.data.platformRole
+        && (request.resource.data.platformRole != "platform_owner" || adminRole() == "platform_owner")
+        && request.resource.data.permissions is list
+        && request.resource.data.permissions.size() <= 80
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
+      allow update: if (
+          hasAdminPermission("admins.update_role", ["admins.update_role"])
+          || hasAdminPermission("admins.suspend", ["admins.suspend"])
+        )
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "name", "active", "platformRole", "role", "permissions", "updatedAt", "updatedBy"
+        ])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(["name", "platformRole", "role", "permissions"])
+          || hasAdminPermission("admins.update_role", ["admins.update_role"])
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(["active"])
+          || hasAdminPermission("admins.suspend", ["admins.suspend"])
+        )
+        && request.resource.data.platformRole in [
+          "platform_owner", "super_admin", "operations_manager", "content_manager", "ads_manager",
+          "accounts_manager", "security_manager", "support_agent", "performance_analyst",
+          "auditor", "admin_assistant"
+        ]
+        && request.resource.data.role == request.resource.data.platformRole
+        && request.resource.data.permissions is list
+        && request.resource.data.permissions.size() <= 80
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedBy == request.auth.uid
+        && (
+          canonicalAdminRoleValue(resource.data.get("platformRole", resource.data.get("role", ""))) != "platform_owner"
+          || adminRole() == "platform_owner"
+        )
+        && (request.resource.data.platformRole != "platform_owner" || adminRole() == "platform_owner")
+        && (
+          request.auth.uid != userId
+          || (
+            request.resource.data.active == true
+            && request.resource.data.platformRole == resource.data.get("platformRole", request.resource.data.platformRole)
+          )
+        );
+      allow delete: if adminRole() == "platform_owner"
+        && hasAdminPermission("admins.delete", ["admins.delete"])
+        && request.auth.uid != userId
+        && canonicalAdminRoleValue(resource.data.get("platformRole", resource.data.get("role", ""))) != "platform_owner";
+    }
+
+    match /audit_logs/{eventId} {
+      allow read: if hasAdminPermission("audit.read", ["audit.read"]);
       allow create, update, delete: if false;
     }
 
     match /advertisers/{userId} {
-      allow get: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn()
-        && request.auth.uid == userId
-        && (
-          (
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(["storeName", "contactName", "phone", "updatedAt"])
-            && request.resource.data.storeName is string
-            && request.resource.data.storeName.size() > 0
-            && request.resource.data.storeName.size() <= 120
-            && request.resource.data.contactName is string
-            && request.resource.data.contactName.size() > 0
-            && request.resource.data.contactName.size() <= 120
-            && request.resource.data.phone is string
-            && request.resource.data.phone.size() <= 40
-            && request.resource.data.updatedAt is timestamp
+      allow get: if (isSignedIn() && request.auth.uid == userId)
+        || hasAdminPermission("advertisers.read", [
+          "advertisers.read", "advertisers.create", "advertisers.update", "advertisers.status",
+          "advertisers.roles", "advertisers.delete", "accounts", "client", "advertisers", "clients"
+        ]);
+      allow update: if (
+          hasAdminPermission("advertisers.update", ["advertisers.update", "accounts", "client", "advertisers", "clients"])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "organizationId", "organizationNumber", "role", "status", "updatedAt"
+          ])
+          && request.resource.data.role in [
+            "owner", "organization_admin", "campaign_manager", "campaign_editor",
+            "analyst", "billing_manager", "viewer"
+          ]
+          && (
+            request.resource.data.role == resource.data.get("role", "owner")
+            || hasAdminPermission("advertisers.roles", ["advertisers.roles", "accounts"])
           )
-          || (
-            request.auth.token.email_verified == true
-            && resource.data.status == "pending_email"
-            && request.resource.data.status == "active"
-            && request.resource.data.updatedAt is timestamp
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
+          && (
+            request.resource.data.status == resource.data.status
+            || hasAdminPermission("advertisers.status", ["advertisers.status", "accounts"])
+          )
+          && request.resource.data.status in ["pending_email", "active", "suspended", "closed"]
+          && request.resource.data.organizationId is string
+          && request.resource.data.organizationId.size() > 0
+          && request.resource.data.organizationId.size() <= 128
+          && request.resource.data.organizationNumber is string
+          && request.resource.data.organizationNumber.matches('^[0-9]{12}$')
+          && request.resource.data.updatedAt is timestamp
+        )
+        || (
+          hasAdvertiserPermission("team.manage")
+          && request.auth.uid != userId
+          && resource.data.get("organizationId", userId) == advertiserOrganizationId()
+          && request.resource.data.get("organizationId", userId) == advertiserOrganizationId()
+          && resource.data.get("role", "owner") != "owner"
+          && request.resource.data.role in [
+            "organization_admin", "campaign_manager", "campaign_editor", "analyst", "billing_manager", "viewer"
+          ]
+          && request.resource.data.status in ["pending_email", "active", "suspended", "closed"]
+          && request.resource.data.updatedAt is timestamp
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["role", "status", "updatedAt"])
+        )
+        || (
+          isSignedIn()
+          && request.auth.uid == userId
+          && (
+            (
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(["storeName", "contactName", "phone", "updatedAt"])
+              && request.resource.data.storeName is string
+              && request.resource.data.storeName.size() > 0
+              && request.resource.data.storeName.size() <= 120
+              && request.resource.data.contactName is string
+              && request.resource.data.contactName.size() > 0
+              && request.resource.data.contactName.size() <= 120
+              && request.resource.data.phone is string
+              && request.resource.data.phone.size() <= 40
+              && request.resource.data.updatedAt is timestamp
+            )
+            || (
+              request.auth.token.email_verified == true
+              && resource.data.status == "pending_email"
+              && request.resource.data.status == "active"
+              && request.resource.data.updatedAt is timestamp
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
+            )
           )
         );
-      allow create: if isSignedIn()
+      allow create: if (
+        hasAdminPermission("advertisers.create", ["advertisers.create", "accounts", "client", "advertisers", "clients"])
+        && request.resource.data.keys().hasOnly([
+          "storeName", "contactName", "email", "phone", "status", "portalVersion",
+          "acceptedTermsAt", "acceptedTermsVersion", "acceptedPrivacyVersion",
+          "organizationId", "organizationNumber", "role", "createdAt", "updatedAt"
+        ])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.storeName is string
+        && request.resource.data.storeName.size() > 0
+        && request.resource.data.storeName.size() <= 120
+        && request.resource.data.contactName is string
+        && request.resource.data.contactName.size() > 0
+        && request.resource.data.contactName.size() <= 120
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.status in ["pending_email", "active", "suspended", "closed"]
+        && request.resource.data.organizationId is string
+        && request.resource.data.organizationId.size() > 0
+        && request.resource.data.organizationId.size() <= 128
+        && request.resource.data.organizationNumber is string
+        && request.resource.data.organizationNumber.matches('^[0-9]{12}$')
+        && request.resource.data.role in [
+          "owner", "organization_admin", "campaign_manager", "campaign_editor",
+          "analyst", "billing_manager", "viewer"
+        ]
+        && request.resource.data.portalVersion is string
+        && request.resource.data.portalVersion.size() <= 40
+        && request.resource.data.acceptedTermsAt is string
+        && request.resource.data.acceptedTermsAt.size() <= 64
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+      ) || (
+        hasAdvertiserPermission("team.manage")
+        && request.resource.data.keys().hasOnly([
+          "storeName", "contactName", "email", "phone", "status", "portalVersion",
+          "acceptedTermsAt", "acceptedTermsVersion", "acceptedPrivacyVersion",
+          "organizationId", "organizationNumber", "role", "createdAt", "updatedAt", "invitedBy"
+        ])
+        && request.resource.data.organizationId == advertiserOrganizationId()
+        && request.resource.data.organizationNumber == advertiserData().get("organizationNumber", "")
+        && request.resource.data.role in [
+          "organization_admin", "campaign_manager", "campaign_editor", "analyst", "billing_manager", "viewer"
+        ]
+        && request.resource.data.status == "pending_email"
+        && request.resource.data.invitedBy == request.auth.uid
+        && request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.storeName is string
+        && request.resource.data.storeName.size() > 0
+        && request.resource.data.storeName.size() <= 120
+        && request.resource.data.contactName is string
+        && request.resource.data.contactName.size() > 0
+        && request.resource.data.contactName.size() <= 120
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.organizationNumber.matches('^[0-9]{12}$')
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+      ) || (
+        isSignedIn()
         && request.auth.uid == userId
         && request.resource.data.keys().hasOnly([
           "storeName", "contactName", "email", "phone", "status", "portalVersion",
-          "acceptedTermsAt", "createdAt", "updatedAt"
+          "acceptedTermsAt", "acceptedTermsVersion", "acceptedPrivacyVersion",
+          "organizationId", "organizationNumber", "role", "createdAt", "updatedAt"
         ])
         && request.resource.data.email is string
         && request.resource.data.email == request.auth.token.email
@@ -186,30 +499,61 @@ service cloud.firestore {
         && request.resource.data.phone is string
         && request.resource.data.phone.size() <= 40
         && request.resource.data.status == "pending_email"
+        && request.resource.data.get("organizationId", userId) == userId
+        && request.resource.data.organizationNumber is string
+        && request.resource.data.organizationNumber.matches('^[0-9]{12}$')
+        && request.resource.data.get("role", "owner") == "owner"
         && request.resource.data.portalVersion is string
         && request.resource.data.portalVersion.size() <= 40
         && request.resource.data.acceptedTermsAt is string
         && request.resource.data.acceptedTermsAt.size() <= 64
         && request.resource.data.createdAt is timestamp
-        && request.resource.data.updatedAt is timestamp;
-      allow list, delete: if hasAdminPermission("client", ["client", "advertisers", "clients", "ads", "campaigns"]);
+        && request.resource.data.updatedAt is timestamp
+      );
+      allow list: if hasAdminPermission("advertisers.read", [
+          "advertisers.read", "advertisers.create", "advertisers.update", "advertisers.status",
+          "advertisers.roles", "advertisers.delete", "accounts", "client", "advertisers", "clients"
+        ])
+        || (
+          hasAdvertiserPermission("team.read")
+          && resource.data.get("organizationId", "") == advertiserOrganizationId()
+        );
+      allow delete: if hasAdminPermission("advertisers.delete", ["advertisers.delete"]);
     }
 
     match /campaigns/{campaignId} {
-      allow read: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
-        || (isActiveAdvertiser() && resource.data.advertiserId == request.auth.uid);
-
-      allow create: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
+      allow read: if hasAdminPermission("campaigns.read", [
+          "campaigns.read", "campaigns.create", "campaigns.update", "campaigns.review",
+          "campaigns.operate", "campaigns.delete", "ads", "campaigns", "ad-campaigns"
+        ])
         || (
-          isActiveAdvertiser()
+          hasAdvertiserPermission("campaigns.read")
+          && (
+            resource.data.advertiserId == request.auth.uid
+            || resource.data.get("advertiserOrganizationId", "") == advertiserOrganizationId()
+          )
+        );
+
+      allow create: if hasAdminPermission("campaigns.create", ["campaigns.create", "ads", "campaigns", "ad-campaigns"])
+        || (
+          hasAdvertiserPermission("campaigns.create")
           && request.resource.data.advertiserId == request.auth.uid
+          && request.resource.data.get("advertiserOrganizationId", request.auth.uid) == advertiserOrganizationId()
+          && request.resource.data.get("createdBy", request.auth.uid) == request.auth.uid
           && request.resource.data.keys().hasOnly([
-            "campaignNumber", "advertiserId", "advertiserEmail", "storeName", "campaignName",
+            "campaignNumber", "advertiserId", "advertiserOrganizationId", "createdBy",
+            "advertiserEmail", "storeName", "campaignName",
             "targetTool", "adLocation", "source", "targetUrl", "imageUrl", "mediaType",
             "startTime", "endTime", "notes", "status", "views", "clicks", "portalVersion",
             "createdAt", "updatedAt"
           ])
-          && request.resource.data.status == "قيد المراجعة"
+          && (
+            (
+              hasAdvertiserPermission("campaigns.submit")
+              && request.resource.data.status == "قيد المراجعة"
+            )
+            || request.resource.data.status == "مسودة"
+          )
           && request.resource.data.campaignNumber is string
           && request.resource.data.campaignNumber.size() <= 40
           && request.resource.data.advertiserEmail is string
@@ -245,21 +589,29 @@ service cloud.firestore {
           && request.resource.data.updatedAt is timestamp
         );
 
-      allow update: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"])
+      allow update: if hasAdminPermission("campaigns.update", ["campaigns.update", "ads", "campaigns", "ad-campaigns"])
         || (
-          isActiveAdvertiser()
-          && resource.data.advertiserId == request.auth.uid
-          && request.resource.data.advertiserId == request.auth.uid
+          hasAdvertiserPermission("campaigns.pause")
+          && (
+            resource.data.advertiserId == request.auth.uid
+            || resource.data.get("advertiserOrganizationId", "") == advertiserOrganizationId()
+          )
+          && request.resource.data.advertiserId == resource.data.advertiserId
+          && request.resource.data.get("advertiserOrganizationId", "") == resource.data.get("advertiserOrganizationId", "")
           && request.resource.data.status in ["قيد المراجعة", "متوقف مؤقتاً"]
           && request.resource.data.updatedAt is timestamp
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "updatedAt"])
         );
 
-      allow delete: if hasAdminPermission("ads", ["ads", "campaigns", "ad-campaigns"]);
+      allow delete: if hasAdminPermission("campaigns.delete", ["campaigns.delete"]);
     }
 
     match /support_tickets/{ticketId} {
-      allow read, update, delete: if hasAdminPermission("support", ["support", "tickets"]);
+      allow read: if hasAdminPermission("support.read", [
+        "support.read", "support.reply", "support.status", "support.delete", "support", "tickets"
+      ]);
+      allow update: if hasAdminPermission("support.status", ["support.status", "support", "tickets"]);
+      allow delete: if hasAdminPermission("support.delete", ["support.delete"]);
       allow create: if false;
     }
 

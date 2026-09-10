@@ -1,5 +1,14 @@
+import {
+    ADMIN_ROLES,
+    isKnownAdminRole as isKnownRole,
+    normalizeAdminRole,
+} from './adminAccess';
+
+export { normalizeAdminRole };
+
 export const FULL_ADMIN_ROLES = new Set([
-    'super_admin',
+    ADMIN_ROLES.PLATFORM_OWNER,
+    ADMIN_ROLES.SUPER_ADMIN,
     'super-admin',
     'owner',
     'admin',
@@ -7,32 +16,30 @@ export const FULL_ADMIN_ROLES = new Set([
 ]);
 
 export const ASSISTANT_ADMIN_ROLES = new Set([
+    ADMIN_ROLES.ADMIN_ASSISTANT,
     'assistant',
     'helper',
     'مساعد',
 ]);
 
-export function normalizeAdminRole(value) {
-    return String(value || '').trim().toLowerCase();
-}
-
 export function isFullAdminRole(value) {
-    return FULL_ADMIN_ROLES.has(normalizeAdminRole(value));
+    const normalized = String(value || '').trim().toLowerCase();
+    return normalizeAdminRole(normalized) === ADMIN_ROLES.PLATFORM_OWNER
+        || normalizeAdminRole(normalized) === ADMIN_ROLES.SUPER_ADMIN;
 }
 
 export function isAssistantAdminRole(value) {
-    return ASSISTANT_ADMIN_ROLES.has(normalizeAdminRole(value));
+    return normalizeAdminRole(value) === ADMIN_ROLES.ADMIN_ASSISTANT;
 }
 
 export function isKnownAdminRole(value) {
-    return isFullAdminRole(value) || isAssistantAdminRole(value);
+    return isKnownRole(value);
 }
 
 export function resolveKnownAdminRole(...values) {
     for (const value of values) {
         const role = normalizeAdminRole(value);
-        if (isKnownAdminRole(role)) return role;
+        if (role) return role;
     }
-
     return '';
 }

@@ -1,13 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../turnstileClient';
 import { evaluateAdvertiserAccess } from '../securityPolicies';
 import { CLIENT_PORTAL_VERSION } from './ClientVersion';
-import './ClientPortal.css';
+import {
+    LOCAL_DEMO_ACCOUNT,
+    isLocalAdvertiserDemoEnabled,
+    loginLocalAdvertiser,
+} from './localAdvertiserDemo';
 
 export default function ClientLoginPage() {
     const [email, setEmail] = useState('');
@@ -16,6 +20,11 @@ export default function ClientLoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [turnstileToken, setTurnstileToken] = useState('');
     const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+    const [isLocalDemo, setIsLocalDemo] = useState(false);
+
+    useEffect(() => {
+        setIsLocalDemo(isLocalAdvertiserDemoEnabled());
+    }, []);
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -23,6 +32,12 @@ export default function ClientLoginPage() {
         setMessage({ text: '', type: 'info' });
 
         try {
+            if (isLocalDemo) {
+                await loginLocalAdvertiser(email, password);
+                window.location.replace('/client/dashboard');
+                return;
+            }
+
             await verifyTurnstileChallenge(turnstileToken, 'advertiser-login');
 
             const [{ db, getFirebaseAuth }, { signInWithEmailAndPassword, signOut }, { doc, getDoc, updateDoc, serverTimestamp }] = await Promise.all([
@@ -71,6 +86,13 @@ export default function ClientLoginPage() {
                 return;
             }
 
+            if (advertiserAccess === 'unauthorized') {
+                await signOut(auth);
+                setMessage({ text: 'دور هذا الحساب غير معروف. تواصل مع الدعم الفني.', type: 'error' });
+                setIsLoading(false);
+                return;
+            }
+
             window.location.replace('/client/dashboard');
         } catch (error) {
             setTurnstileResetKey((value) => value + 1);
@@ -94,6 +116,24 @@ export default function ClientLoginPage() {
                 </div>
                 <h1>بوابة المعلنين</h1>
                 <p>ادخل لمتابعة حملاتك، طلب إعلانات جديدة، وقراءة حالة المراجعة من لوحة واحدة.</p>
+
+                {isLocalDemo && (
+                    <div className="client-local-demo-notice" role="note">
+                        <strong><i className="fa-solid fa-flask"></i> حساب تجربة محلي</strong>
+                        <span dir="ltr">{LOCAL_DEMO_ACCOUNT.email}</span>
+                        <span dir="ltr">{LOCAL_DEMO_ACCOUNT.password}</span>
+                        <button
+                            type="button"
+                            className="client-secondary-btn"
+                            onClick={() => {
+                                setEmail(LOCAL_DEMO_ACCOUNT.email);
+                                setPassword(LOCAL_DEMO_ACCOUNT.password);
+                            }}
+                        >
+                            تعبئة بيانات التجربة
+                        </button>
+                    </div>
+                )}
 
                 <form onSubmit={handleLogin}>
                     <div className="client-form-group">

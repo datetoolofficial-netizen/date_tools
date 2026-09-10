@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Toast from '../../components/Toast';
-import '../AdminDashboard.css';
 
 const EMPTY_INTEGRATIONS = {
     googleTagId: '',
@@ -115,6 +114,12 @@ function AdminNav({ active = 'integrations' }) {
                 <Link href="/admin/tool-management">
                     <i className="fa-solid fa-toolbox"></i>
                     <span className="nav-text">إدارة الأدوات</span>
+                </Link>
+            </li>
+            <li>
+                <Link href="/admin/accounts">
+                    <i className="fa-solid fa-users-gear"></i>
+                    <span className="nav-text">الحسابات</span>
                 </Link>
             </li>
             <li>

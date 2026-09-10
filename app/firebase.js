@@ -15,7 +15,7 @@ import { pickPublicSiteConfig } from "./publicSiteConfig";
 import { normalizeIdentityTranslations } from "./localizedConfig";
 import { normalizePwaUpdatePrompt } from "./pwaPromptSettings";
 
-const firebaseConfig = {
+export const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
     authDomain: "date-tool-official.firebaseapp.com",
     projectId: "date-tool-official",
@@ -504,6 +504,21 @@ export async function saveSiteConfigSection(sectionPatch) {
     }
     await setDoc(configRef, cleanPatch, { merge: true });
     await syncPublicSiteConfig();
+
+    if (typeof window !== 'undefined') {
+        const changedFields = [
+            ...Object.keys(cleanPatch),
+            ...(savedToolSettings ? ['toolSettings'] : []),
+        ];
+        import('./adminAudit')
+            .then(({ recordAdminAudit }) => recordAdminAudit({
+                action: 'settings.updated',
+                resourceType: 'settings',
+                resourceId: 'main',
+                details: { changedFields },
+            }))
+            .catch(() => false);
+    }
 
     return {
         ...cleanPatch,

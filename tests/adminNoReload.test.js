@@ -85,7 +85,7 @@ describe('admin save and upload flows', () => {
         expect(reminderSection).not.toMatch(/fetch\(|saveSiteConfigSection|firebaseApiRef|router\./);
     });
 
-    it('consolidates security controls and report links in the security page', () => {
+    it('keeps security reports in security and privacy controls in tool settings', () => {
         const securityPage = readFileSync(join(process.cwd(), 'app', 'admin', 'security', 'page.jsx'), 'utf8');
         const toolsPage = readFileSync(join(process.cwd(), 'app', 'admin', 'tools', 'page.jsx'), 'utf8');
 
@@ -97,11 +97,14 @@ describe('admin save and upload flows', () => {
         expect(securityPage).toContain('Cloudflare WAF وRate Limiting');
         expect(securityPage).toContain('رفع الملفات إلى R2');
         expect(securityPage).toContain('/api/admin/cleanup');
-        expect(securityPage).toContain('privacySettingsButton');
+        expect(securityPage).not.toContain('privacySettingsButton');
         expect(securityPage).not.toContain('TURNSTILE_SECRET_KEY');
         expect(toolsPage).not.toContain('تنظيف Firebase');
         expect(toolsPage).not.toContain('النسخ الاحتياطي والاستعادة');
-        expect(toolsPage).not.toContain('تفعيل زر إعدادات الخصوصية');
+        expect(toolsPage).toContain('الخصوصية وموافقة الزائر');
+        expect(toolsPage).toContain('tools-privacy-page-select');
+        expect(toolsPage).toContain('privacySettingsButton');
+        expect(toolsPage).not.toContain('لغة أسماء صفحات الخصوصية');
     });
 
     it('keeps the installed-app update notice controlled by a versioned admin setting', () => {

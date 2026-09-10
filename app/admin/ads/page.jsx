@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import '../AdminDashboard.css';
+import { recordAdminAudit } from '../../adminAudit';
 
 const EMPTY_CAMPAIGN = {
     campaignName: '',
@@ -28,6 +28,7 @@ const SUPPORTED_MEDIA_TYPES = new Set([
 ]);
 
 const STATUS_OPTIONS = [
+    'مسودة',
     'قيد المراجعة',
     'نشط',
     'متوقف مؤقتاً',
@@ -201,6 +202,12 @@ function AdminNav({ active = 'ads' }) {
                 <Link href="/admin/tool-management">
                     <i className="fa-solid fa-toolbox"></i>
                     <span className="nav-text">إدارة الأدوات</span>
+                </Link>
+            </li>
+            <li>
+                <Link href="/admin/accounts">
+                    <i className="fa-solid fa-users-gear"></i>
+                    <span className="nav-text">الحسابات</span>
                 </Link>
             </li>
             <li>
@@ -558,10 +565,16 @@ export default function AdminAdsPage() {
                     editReason: campaignForm.notes.trim(),
                     status: campaignForm.status === selectedCampaign.status ? 'تم تعديله' : campaignForm.status
                 });
+                await recordAdminAudit({
+                    action: 'campaign.updated',
+                    resourceType: 'campaign',
+                    resourceId: selectedCampaign.id,
+                    details: { status: payload.status, changedFields: Object.keys(payload) },
+                });
                 showMessage('success', 'تم تعديل الإعلان بنجاح.');
             } else {
                 const campaignNumber = `AD-${Date.now().toString().slice(-8)}`;
-                await addDoc(collection(firebaseApi.db, 'campaigns'), {
+                const campaignRef = await addDoc(collection(firebaseApi.db, 'campaigns'), {
                     ...payload,
                     campaignNumber,
                     views: 0,
@@ -570,6 +583,12 @@ export default function AdminAdsPage() {
                     addedByName: adminName,
                     addedById: firebaseApi.auth?.currentUser?.uid || '',
                     createdAt: serverTimestamp()
+                });
+                await recordAdminAudit({
+                    action: 'campaign.created',
+                    resourceType: 'campaign',
+                    resourceId: campaignRef.id,
+                    details: { status: payload.status, source: 'admin' },
                 });
                 showMessage('success', `تمت إضافة الإعلان رقم ${campaignNumber} وهو بانتظار المراجعة.`);
             }
@@ -591,6 +610,12 @@ export default function AdminAdsPage() {
                 ...extra,
                 updatedAt: serverTimestamp()
             });
+            await recordAdminAudit({
+                action: 'campaign.status_updated',
+                resourceType: 'campaign',
+                resourceId: campaign.id,
+                details: { status, reason: extra.rejectReason || extra.pauseReason || '' },
+            });
             showMessage('success', `تم تغيير حالة الإعلان إلى: ${status}`);
             closeModal();
             await fetchCampaigns();
@@ -604,6 +629,12 @@ export default function AdminAdsPage() {
         try {
             const { deleteDoc, doc } = await import('firebase/firestore');
             await deleteDoc(doc(firebaseApiRef.current.db, 'campaigns', campaign.id));
+            await recordAdminAudit({
+                action: 'campaign.deleted',
+                resourceType: 'campaign',
+                resourceId: campaign.id,
+                details: { status: campaign.status || '' },
+            });
             showMessage('success', 'تم حذف الإعلان.');
             await fetchCampaigns();
         } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { ADMIN_PERMISSIONS } from '../../../adminAccess';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 
 const FIREBASE_PROJECT_ID = 'date-tool-official';
@@ -28,7 +29,7 @@ async function requireActiveAdmin(request) {
     const user = await verifyFirebaseIdToken(idToken, FIREBASE_PROJECT_ID);
     if (!user?.localId) return false;
     const profile = await getAdminProfile(idToken, user.localId);
-    return hasAdminPermission(profile, ['tools', 'settings', 'site-settings', 'pages']);
+    return hasAdminPermission(profile, [ADMIN_PERMISSIONS.SEO_SUBMIT_INDEX]);
 }
 
 function normalizeUrl(value) {

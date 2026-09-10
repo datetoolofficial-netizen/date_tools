@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
 import AdminEnableToggle from '../AdminEnableToggle';
-import '../AdminDashboard.css';
 
 const AD_SLOTS = [
     { id: 'dateTop', label: 'التاريخ - إعلان أعلى', hint: 'بعد بانر اليوم مباشرة' },

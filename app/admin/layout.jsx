@@ -1,5 +1,6 @@
 import AdminShell from './AdminShell';
 import { noIndexMetadata } from '../seoConfig';
+import './AdminDashboard.css';
 
 export const metadata = {
     title: 'بوابة الإدارة | الأدوات الشاملة',

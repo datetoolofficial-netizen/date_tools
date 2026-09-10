@@ -56,6 +56,7 @@ function applySecurityHeaders(response) {
     SECURITY_HEADERS.forEach(([key, value]) => {
         response.headers.set(key, value);
     });
+    response.headers.set('Content-Security-Policy', REPORT_ONLY_CSP);
     response.headers.set('Content-Security-Policy-Report-Only', REPORT_ONLY_CSP);
     return response;
 }
