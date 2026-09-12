@@ -12,6 +12,7 @@ import {
     getToolRouteLanguage,
     localizeToolPath,
 } from '../app/localizedToolRoutes';
+import { collectDynamicPages } from '../app/sitemap';
 
 function readProjectFile(...segments) {
     return readFileSync(join(process.cwd(), ...segments), 'utf8');
@@ -96,6 +97,33 @@ describe('standalone tool routes', () => {
         expect(seoContent).toContain('كيف تستخدم حاسبة العمر؟');
         expect(seoContent).toContain('How to Use the Age Calculator');
         expect(seoContent).not.toContain('tool-related-links');
+    });
+
+    it('keeps disabled managed pages out of the sitemap', () => {
+        const sitemap = readProjectFile('app', 'sitemap.js');
+        const entries = collectDynamicPages({
+            internalPages: [
+                { slug: 'privacy', enabled: true },
+                { slug: 'month-names', enabled: false },
+            ],
+            customPages: {
+                privacy: { content: '<p>Privacy</p>' },
+                'month-names': { content: '<p>Months</p>' },
+            },
+        });
+
+        expect(sitemap).not.toContain("{ path: '/month-names', changeFrequency: 'monthly', priority: 0.6 }");
+        expect(sitemap).toContain('resolveManagedPage(settings, slug)');
+        expect(sitemap).toContain('...collectDynamicPages(settings)');
+        expect(entries.map(({ path }) => path)).toEqual(['/privacy']);
+    });
+
+    it('keeps disabled managed pages out of llms.txt', () => {
+        const llmsRoute = readProjectFile('app', 'llms.txt', 'route.js');
+
+        expect(llmsRoute).toContain('collectManagedPages(config)');
+        expect(llmsRoute).toContain('page?.enabled === false');
+        expect(llmsRoute).not.toContain("{ title: 'جدول الأشهر', path: '/month-names' }");
     });
 
     it('adds direct localized sibling links only to standalone tool pages', () => {

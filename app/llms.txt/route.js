@@ -1,22 +1,36 @@
 import { SITE_URL, publicToolSeo } from '../seoConfig';
+import { getPublicSiteConfigFromFirestore } from '../firestorePublicConfig';
 
 export const revalidate = 3600;
 
-const publicPages = [
+const corePages = [
     { title: 'الرئيسية وأدوات التاريخ', path: '/' },
     { title: 'أدوات الساعة والوقت', path: publicToolSeo.clock.path },
     { title: 'أدوات الطقس', path: publicToolSeo.weather.path },
-    { title: 'جدول الأشهر', path: '/month-names' },
-    { title: 'اتصل بنا', path: '/contact' },
-    { title: 'سياسة الخصوصية', path: '/privacy' },
-    { title: 'شروط الاستخدام', path: '/terms' },
 ];
 
 function pageUrl(path) {
     return path === '/' ? SITE_URL : `${SITE_URL}${path}`;
 }
 
-export function GET() {
+function collectManagedPages(config = {}) {
+    if (!Array.isArray(config.internalPages)) return [];
+
+    return config.internalPages.flatMap((page) => {
+        const slug = String(page?.slug || '').trim().replace(/^\/+|\/+$/g, '');
+        if (!slug || slug.includes('/')) return [];
+        if (page?.enabled === false || page?.isActive === false || page?.deleted === true) return [];
+
+        return [{
+            title: String(page?.title || page?.titleEn || slug).trim(),
+            path: `/${slug}`,
+        }];
+    });
+}
+
+export async function GET() {
+    const config = await getPublicSiteConfigFromFirestore({ revalidate });
+    const publicPages = [...corePages, ...collectManagedPages(config)];
     const body = [
         '# الأدوات الشاملة',
         '',

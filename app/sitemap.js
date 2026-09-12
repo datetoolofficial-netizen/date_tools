@@ -21,12 +21,6 @@ const reservedSlugs = new Set([
 ]);
 
 const legacyAliasSlugs = new Set(['about']);
-const staticEntries = [
-    { path: '/month-names', changeFrequency: 'monthly', priority: 0.6 },
-    { path: '/privacy', changeFrequency: 'monthly', priority: 0.5 },
-    { path: '/terms', changeFrequency: 'monthly', priority: 0.5 },
-    { path: '/contact', changeFrequency: 'monthly', priority: 0.5 },
-];
 
 // Update only the affected family when its public page content changes.
 const toolContentLastModified = {
@@ -64,14 +58,44 @@ function isPageVisible(page = {}) {
     return true;
 }
 
-function collectDynamicPages(settings = {}) {
+function findPageInList(pages, slug) {
+    if (!Array.isArray(pages)) return null;
+    const expectedPath = `/${slug}`;
+
+    return pages.find((page) => normalizePublicPath(page) === expectedPath) || null;
+}
+
+function resolveManagedPage(settings, slug) {
+    const customPages = settings.customPages || {};
+    const pages = settings.pages || {};
+    const internalPage = findPageInList(settings.internalPages, slug);
+
+    if (!Array.isArray(customPages) && customPages[slug]) {
+        return {
+            ...(internalPage || {}),
+            ...customPages[slug],
+            slug,
+            title: customPages[slug].title || internalPage?.title,
+        };
+    }
+
+    if (!Array.isArray(pages) && pages[slug]) return { ...pages[slug], slug };
+
+    const customPage = findPageInList(customPages, slug);
+    if (customPage) return customPage;
+    if (internalPage) return internalPage;
+
+    return findPageInList(pages, slug);
+}
+
+export function collectDynamicPages(settings = {}) {
     const groups = [
         settings.customPages,
         settings.pages,
         settings.internalPages,
     ].filter((group) => group && typeof group === 'object');
 
-    const entries = [];
+    const slugs = new Set();
     groups.forEach((group) => {
         const pages = Array.isArray(group)
             ? group.map((page, index) => [page?.slug || page?.path || String(index), page])
@@ -79,21 +103,26 @@ function collectDynamicPages(settings = {}) {
 
         pages.forEach(([fallbackSlug, page]) => {
             if (!page || typeof page !== 'object') return;
-            if (!isPageVisible(page)) return;
-
             const path = normalizePublicPath(page, fallbackSlug);
             if (!path || path === '/') return;
-
-            entries.push({
-                path,
-                changeFrequency: 'monthly',
-                priority: 0.5,
-                lastModified: page.lastModified || page.updatedAt || page.modifiedAt || page.publishedAt,
-            });
+            slugs.add(path.slice(1));
         });
     });
 
-    return entries;
+    return Array.from(slugs).flatMap((slug) => {
+        const page = resolveManagedPage(settings, slug);
+        if (!page || !isPageVisible(page)) return [];
+
+        const path = normalizePublicPath(page, slug);
+        if (!path || path === '/') return [];
+
+        return [{
+            path,
+            changeFrequency: 'monthly',
+            priority: 0.5,
+            lastModified: page.lastModified || page.updatedAt || page.modifiedAt || page.publishedAt,
+        }];
+    });
 }
 
 async function getSettings() {
@@ -148,7 +177,7 @@ export default async function sitemap() {
     const settings = await getSettings();
     const entriesByPath = new Map();
 
-    [...staticEntries, ...collectToolEntries(settings), ...collectDynamicPages(settings)].forEach((entry) => {
+    [...collectToolEntries(settings), ...collectDynamicPages(settings)].forEach((entry) => {
         entriesByPath.set(entry.path, entry);
     });
 
