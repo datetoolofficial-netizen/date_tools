@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Script from 'next/script';
 import { useEffect, useState } from 'react';
+import { canServeAdsense } from '../adsenseSettings';
 import { useSiteContext } from '../SiteContext';
 
 const ADSENSE_CLIENT_PATTERN = /^ca-pub-\d{12,20}$/i;
@@ -90,6 +91,7 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
     const googleAd = getGoogleAdSlot(configData, slotName);
     const imageUrl = clean(campaign?.imageUrl);
     const hasActiveCampaign = Boolean(campaign);
+    const adsenseServingAllowed = canServeAdsense(configData);
     const targetUrl = clean(campaign?.targetUrl);
     const houseText = lang === 'en'
         ? clean(slotConfig.houseAdTextEn) || 'Advertise with us in this space'
@@ -113,7 +115,7 @@ export default function PublicAdSlot({ configData, slotName, label = 'مساحة
                 onError={() => setImageFailed(true)}
             />
         );
-    } else if (!hasActiveCampaign && privacyConsent?.marketing === true && googleAd?.enabledWhenNoAdvertiser) {
+    } else if (!hasActiveCampaign && adsenseServingAllowed && privacyConsent?.marketing === true && googleAd?.enabledWhenNoAdvertiser) {
         content = <GoogleAdsenseUnit ad={googleAd} scriptId={`adsbygoogle-${slotName}-init`} />;
     } else if (!hasActiveCampaign && shouldShowHouseAd) {
         content = (

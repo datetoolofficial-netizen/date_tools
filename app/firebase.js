@@ -14,6 +14,7 @@ import { DEFAULT_LINK_PREVIEW, normalizeLinkPreviewSettings } from "./linkPrevie
 import { pickPublicSiteConfig } from "./publicSiteConfig";
 import { normalizeIdentityTranslations } from "./localizedConfig";
 import { normalizePwaUpdatePrompt } from "./pwaPromptSettings";
+import { normalizeAdsenseSiteStatus } from "./adsenseSettings";
 
 export const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -100,6 +101,7 @@ const defaultExternalIntegrations = {
     bingSiteVerification: "",
     microsoftClarityProjectId: "",
     metaPixelId: "",
+    adsenseSiteStatus: "under_review",
     adsenseSnippet: "",
     adsTxtSnippet: ""
 };
@@ -206,6 +208,7 @@ function normalizeExternalIntegrations(value = {}) {
         bingSiteVerification: String(value.bingSiteVerification || "").trim(),
         microsoftClarityProjectId: String(value.microsoftClarityProjectId || "").trim(),
         metaPixelId: String(value.metaPixelId || "").trim(),
+        adsenseSiteStatus: normalizeAdsenseSiteStatus(value.adsenseSiteStatus),
         adsenseSnippet: String(value.adsenseSnippet || "").slice(0, 4000),
         adsTxtSnippet: String(value.adsTxtSnippet || "").slice(0, 4000)
     };

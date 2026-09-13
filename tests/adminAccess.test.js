@@ -10,6 +10,11 @@ import {
 } from '../app/adminAccess';
 
 describe('administration role model', () => {
+    it('uses the canonical platform owner key with an underscore', () => {
+        expect(ADMIN_ROLES.PLATFORM_OWNER).toBe('platform_owner');
+        expect(resolveAdminRole({ platformRole: 'platform-owner' })).not.toBe(ADMIN_ROLES.PLATFORM_OWNER);
+    });
+
     it('prefers the staged platformRole without breaking the legacy role', () => {
         const profile = { active: true, platformRole: 'platform_owner', role: 'super_admin' };
         expect(resolveAdminRole(profile)).toBe(ADMIN_ROLES.PLATFORM_OWNER);

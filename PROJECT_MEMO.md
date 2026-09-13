@@ -50,9 +50,9 @@ https://www.date-tool.com
 الصفحات التعريفية الثابتة `contact` و `privacy` و `terms` أزيلت من الكود وتدار الآن عبر صفحات slug من قاعدة البيانات.
 صفحات slug تعمل.
 النشر من GitHub إلى Cloudflare يعمل.
-الإصدار الحالي للتطبيق هو 0.3.57.
-نسخة منصة الإدارة الحالية هي 0.1.53.
-نسخة بوابة المعلنين الحالية هي 1.0.6.
+الإصدار الجاري نشره للتطبيق هو 0.3.58.
+نسخة منصة الإدارة الجاري نشرها هي 0.1.54.
+نسخة بوابة المعلنين الجاري نشرها هي 1.0.7.
 يوجد سجل إصدارات رسمي في VERSION_LOG.md.
 ```
 
@@ -15285,3 +15285,269 @@ git push origin master
 - أُعيد إرسال `https://date-tool.com/sitemap.xml` من Search Console بتاريخ 2026-09-12، وظهر تأكيد Google بأن الملف أُرسل بنجاح وسيُعالج دوريًا.
 - حدّث Search Console تاريخ الإرسال إلى 2026-09-12، بينما بقي تاريخ آخر قراءة 2026-09-09 وعدد الروابط المكتشفة 29 إلى أن تنتهي Google من قراءة النسخة الجديدة.
 - تعذر تشغيل `wrangler tail` لأن جلسة OAuth انتهت قبل منح التفويض؛ لا يؤثر ذلك في النشر أو إرسال الخريطة.
+
+### تحديث تدقيق AdSense والتقرير المرجعي - دون نشر
+
+تم إنجازه:
+
+- مراجعة حالة `date-tool.com` مباشرة داخل حساب AdSense الصحيح؛ الحالة الحالية `يتم تجهيزه` وطلب المراجعة مسجل.
+- التحقق من أن حالة `ads.txt` داخل AdSense هي `معتمَد`.
+- مراجعة صفحة إدارة الإعلانات في AdSense والتأكد من أن `Auto ads` متوقفة للموقع بتاريخ 2026-09-12؛ بقي التحسين التلقائي مفعّلًا ولا يساوي تفعيل عرض الإعلانات التلقائية.
+- فحص DOM للصفحة الرئيسية المنشورة والتأكد من عدم وجود سكربت `adsbygoogle` أو عنصر `ins.adsbygoogle` حاليًا.
+- مراجعة مسار العرض في `PublicAdSlot.jsx`: لا تُحمّل وحدة Google إلا مع بيانات Publisher وSlot صحيحة، وتفعيل الموضع عند غياب حملة معلن، وموافقة تسويقية صريحة.
+- تحديث `COMPREHENSIVE_AUDIT_CHECKLIST.md` إلى الإصدار المرجعي `0.3.57` وإزالة الحالات القديمة المتعلقة بعدم نشر CSP وعدم إثبات Search Console وAdSense.
+- تحديث حالات صفحات حسابات المعلنين والفريق وسجل التدقيق وفق الإصدار المنشور `0.3.56`، مع إبقاء E2E والفوترة والنسخ الاحتياطي ضمن المتبقي الحقيقي.
+
+الأخطاء المكتشفة:
+
+- لا توجد مشكلة تشغيل إعلانية مكتشفة؛ AdSense لا يعرض وحدات تلقائية أو يحمّل سكربت الإعلان حاليًا.
+- بقيت لوحة إعدادات الموقع الإنتاجية بحاجة إلى جلسة مدير عند الرغبة في مراجعة كل مفتاح يدويًا، لكن فحص الصفحة المنشورة أثبت أن مسار الزائر لا ينشئ وحدة أو سكربت AdSense الآن.
+
+الملفات المتأثرة:
+
+- `COMPREHENSIVE_AUDIT_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+rg -n "adsbygoogle|pagead2|AdSense|googleAdSlots|marketingConsent" app tests
+git diff --check
+```
+
+الحالة:
+
+- لم يتغير كود التشغيل أو إعدادات AdSense أو Firebase، ولم تتغير أرقام الإصدارات.
+- لم يُنشر أو يُدفع أي ملف؛ التعديلات الحالية توثيقية ومحلية فقط تنفيذًا لطلب المستخدم.
+- المتبقي في AdSense هو انتظار قرار Google، وعدم تفعيل الوحدات اليدوية أو Auto ads قبل القبول واختبار تجربة الجوال وCLS.
+
+### بوابة قبول AdSense مع الحفاظ على المواضع - محلي فقط
+
+تم إنجازه:
+
+- مراجعة إرشادات AdSense الرسمية والتأكد أن معاينة Auto ads وتشغيلها قبل القبول أمران اختياريان وليسا شرطًا لتفعيل الحساب، وأن Google لا تعرض الإعلانات قبل اعتماد الموقع.
+- اكتشاف أن المواضع التسعة محفوظة ومفعلة في بيانات الإعدادات الحالية، بينما كان منع التحميل يعتمد على عدم وجود موافقة تسويقية أو وحدة صالحة فقط.
+- إضافة حالة عامة لوحدات AdSense بثلاث قيم ثابتة: `under_review` و`approved` و`paused`، مع اعتبار القيمة المفقودة أو غير المعروفة `under_review` بأمان.
+- ربط `PublicAdSlot` بالحالة العامة؛ لا يمكن تحميل سكربت Google أو إنشاء وحدة إعلان إلا عندما تكون الحالة `approved` إضافة إلى الشروط الحالية.
+- إبقاء مواضع التاريخ والساعة والطقس التسعة وأرقام الوحدات وأزرار كل موضع محفوظة دون حذف أو تغيير.
+- إضافة بطاقة واضحة في `/admin/ad-settings` تعرض حالة النشر وتسمح لاحقًا بتغييرها إلى مقبول أو متوقف يدويًا.
+- تحسين نص المعاينة والتفاصيل حتى يوضح أن إعداد الموضع محفوظ لكنه محجوب أثناء مراجعة Google.
+- حذف مكونات AdSense قديمة وغير مستخدمة من `HomeSections.jsx` كانت تكرر مسار التحميل خارج المكوّن المركزي الحالي.
+- التحقق بصريًا من صفحة الإعدادات المحلية على عرض 639 بكسل؛ ظهرت بطاقة الحالة والجدول دون تمدد أفقي، وكانت الحالة الافتراضية `قيد مراجعة Google`.
+
+الأخطاء المكتشفة:
+
+1. **تفعيل المواضع التسعة لم يكن مرتبطًا بحالة قبول الموقع**
+   - الأعراض: جميع مفاتيح Google للمواضع مفعلة في الإعدادات الحالية، ويمكن أن يحاول الزائر تحميل الوحدات بعد موافقة التسويق رغم أن AdSense ما زال يراجع الموقع.
+   - السبب: لم توجد بوابة عامة مستقلة لحالة قبول AdSense.
+   - الحل: إضافة `adsenseSiteStatus` ومنع العرض افتراضيًا حتى تكون قيمته `approved` صراحة.
+   - الحالة: محلول ومختبر محليًا؛ غير منشور.
+
+2. **وجود مسار AdSense قديم مكرر وغير مستخدم**
+   - الأعراض: `HomeSections.jsx` احتوى مكونات تحميل ووحدات قديمة لا يستدعيها أي مسار حالي.
+   - السبب: بقي الكود بعد الانتقال إلى `PublicAdSlot` الموحد.
+   - الحل: حذف المكونات والاستيرادات غير المستخدمة وإبقاء مسار العرض المركزي فقط.
+   - الحالة: محلول محليًا.
+
+الملفات المتأثرة:
+
+- `app/adsenseSettings.js`
+- `app/components/PublicAdSlot.jsx`
+- `app/components/home/HomeSections.jsx`
+- `app/admin/ad-settings/page.jsx`
+- `app/admin/AdminDashboard.css`
+- `app/firebase.js`
+- `app/publicSiteConfig.js`
+- `tests/adsenseReadiness.test.js`
+- `tests/publicSiteConfig.test.js`
+- `COMPREHENSIVE_AUDIT_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test -- --run tests/adsenseReadiness.test.js tests/publicSiteConfig.test.js
+npm run lint
+npm test
+npm run build
+npm run dev -- --hostname 127.0.0.1 --port 3000
+git diff --check
+```
+
+الحالة:
+
+- نجح ESLint ونجحت 123 حالة اختبار في 26 ملفًا، ونجح بناء Next.js الكامل وتوليد 40 مسارًا.
+- صفحة الإدارة المحلية أعادت `200` وحمّلت الإعدادات، وبقيت كل المواضع التسعة ظاهرة ومحفوظة.
+- لم تتغير إعدادات حساب AdSense أو بيانات Firebase، ولم يتغير رقم الإصدار.
+- لم يُنشر أو يُدفع أي تغيير؛ تبقى الحماية الجديدة محلية حتى موافقة المستخدم على النشر.
+
+### استرداد ملفات Next.js والتحقق من دور مالك المنصة - محلي فقط
+
+تم إنجازه:
+
+- فحص صفحة `/admin_login` المنشورة والتحقق أن HTML الحالي لا يشير إلى chunk رقم `2825` الظاهر في رسالة الخطأ.
+- التحقق أن استجابة صفحة الدخول المنشورة كانت قابلة للتخزين المؤقت بخاصية `s-maxage=300` و`stale-while-revalidate`، ما يفسر بقاء مستند قديم يشير إلى ملف JavaScript انتهى بعد نشر نسخة أحدث.
+- تحويل صفحة دخول الإدارة إلى مسار ديناميكي غير قابل لتخزين HTML المشترك عبر `dynamic = 'force-dynamic'` و`revalidate = 0`.
+- إضافة مسترد موحد لأخطاء `ChunkLoadError` يعيد فتح الصفحة مرة واحدة فقط مع وسم الإصدار، ويحافظ على معاملات الرابط الأخرى ويمنع حلقة إعادة التحميل.
+- إزالة وسم الاسترداد تلقائيًا بعد نجاح تحميل الوحدات الديناميكية، وإظهار رسالة عربية واضحة إذا تكرر الفشل في الإصدار نفسه.
+- تثبيت اختبار صريح بأن مفتاح دور مالك المنصة المعتمد هو `platform_owner` بالشرطة السفلية، وأن `platform-owner` ليس دورًا صالحًا.
+- مراجعة `firestore.rules` والشيفرة والاختبارات وسجل النشر؛ جميعها تعتمد `platform_owner`، ولا يوجد فرق محلي غير منشور في ملف القواعد.
+- تأكيد أن قواعد الصلاحيات نُشرت سابقًا إلى مشروع `date-tool-official` ضمن الإصدار `0.3.56`، وأن حساب المالك يحمل `platformRole: platform_owner` مع حقول توافق قديمة بقيمة `super_admin`.
+
+الأخطاء المكتشفة:
+
+1. **صفحة دخول قديمة حاولت تحميل chunk محذوفًا بعد النشر**
+   - الأعراض: ظهور `Loading chunk 2825 failed` عند محاولة تسجيل الدخول من تبويب قديم.
+   - السبب: HTML مخزّن من إصدار سابق يشير إلى اسم ملف JavaScript لم يعد ضمن حزمة الإصدار الحالي.
+   - الحل: منع تخزين مستند صفحة الدخول، وإعادة فتحه مرة واحدة بعنوان موسوم بالإصدار عند اكتشاف خطأ تحميل chunk.
+   - الحالة: محلول ومختبر محليًا؛ غير منشور.
+
+2. **اختلاف كتابي محتمل في اسم دور مالك المنصة**
+   - الأعراض: طلب استخدام `platform-owner` بينما نموذج الصلاحيات المنشور يعتمد `platform_owner`.
+   - السبب: اختلاف الشرطة العادية عن الشرطة السفلية في الاسم النصي للدور.
+   - الحل: إبقاء المفتاح القانوني `platform_owner` وتثبيته باختبار، لأن تغييره دون ترحيل شامل سيمنع تعرف القواعد على المالك.
+   - الحالة: لا يوجد عطل حالي؛ القواعد والشيفرة والحساب متطابقة ومنشورة سابقًا.
+
+الملفات المتأثرة:
+
+- `app/chunkLoadRecovery.js`
+- `app/admin_login/layout.jsx`
+- `app/admin_login/page.jsx`
+- `tests/chunkLoadRecovery.test.js`
+- `tests/adminAccess.test.js`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+rg -n "platform_owner|platform-owner|platformRole|super_admin" firestore.rules app tests PROJECT_MEMO.md
+git diff -- firestore.rules
+Invoke-WebRequest https://date-tool.com/admin_login?chunk-check=0.3.57
+npm test -- --run tests/chunkLoadRecovery.test.js tests/adminAccess.test.js tests/settingsSecurity.test.js tests/adsenseReadiness.test.js tests/publicSiteConfig.test.js
+npm run lint
+npm test
+npm run build
+npm start -- -p 3100
+Invoke-WebRequest http://127.0.0.1:3100/admin_login
+git diff --check
+```
+
+الحالة:
+
+- نجح ESLint، ونجحت 129 حالة اختبار في 27 ملفًا، ونجح بناء Next.js الكامل.
+- ظهر `/admin_login` في ناتج البناء كمسار ديناميكي، وأعاد محليًا `Cache-Control: no-store, must-revalidate, no-cache, max-age=0, private`.
+- ظهرت أخطاء اتصال غير قاتلة أثناء توليد بعض الصفحات الثابتة بسبب انتهاء مهلة Firebase، لكن البناء أكمل جميع الصفحات بنجاح.
+- لا توجد قواعد Firestore أو تغييرات صلاحيات معلقة محليًا؛ القواعد الحالية نُشرت سابقًا ضمن `0.3.56`.
+- لم يُنشر أو يُدفع أي تغيير، ولم تتغير بيانات Firebase أو رقم الإصدار.
+
+### تشخيص واسترداد شبكة Firebase Authentication - محلي فقط
+
+تم إنجازه:
+
+- فحص خطأ صفحة الإدارة المنشورة `auth/network-request-failed` وفصله عن خطأ chunk السابق وعن أخطاء كلمة المرور والصلاحيات.
+- اختبار إعداد مشروع Firebase العام من المصدر نفسه مع `Origin: https://date-tool.com`؛ أعاد `identitytoolkit.googleapis.com/v1/projects` الحالة `200` وسمح للنطاق عبر CORS.
+- اختبار نطاق المصادقة `date-tool-official.firebaseapp.com/__/auth/handler`؛ أعاد الحالة `200`.
+- اختبار CORS التحضيري لنقطة `accounts:signInWithPassword`؛ سمح بطلبات `POST` ورؤوس Firebase من نطاق الموقع.
+- إرسال محاولة اتصال ببيانات وهمية لا تخص أي حساب؛ وصلت إلى المشروع وأعادت `INVALID_LOGIN_CREDENTIALS` كما هو متوقع، ما يثبت سلامة مفتاح Web API وتفعيل نقطة Email/Password وقت الفحص.
+- إضافة معالج مركزي يعيد طلب تسجيل الدخول مرة واحدة فقط بعد تأخير قصير عندما يكون الخطأ `auth/network-request-failed`، ولا يعيد أخطاء كلمة المرور أو الحظر أو الصلاحيات.
+- تطبيق المعالج على دخول الإدارة ودخول المعلنين، مع عدم تطبيقه على إنشاء الحسابات حتى لا تتكرر عملية إنشاء مستخدم عند فقدان الرد.
+- استبدال رسالة Firebase التقنية برسالة عربية تفرق بين عدم وجود إنترنت وبين حجب خدمات Google عبر VPN أو مانع إعلانات أو انقطاع مؤقت.
+- إبقاء Turnstile والتحقق من ملف المدير ودور `platform_owner` دون أي تجاوز أو تغيير.
+
+الأخطاء المكتشفة:
+
+1. **فشل شبكة عابر ظهر كرسالة Firebase تقنية في تسجيل الدخول**
+   - الأعراض: `Firebase: Error (auth/network-request-failed)` بعد نجاح Turnstile.
+   - السبب: الطلب لم يحصل على استجابة في المتصفح وقت المحاولة؛ الاختبارات الخارجية أثبتت أن المشروع ونقطة تسجيل الدخول وCORS متاحة، لذلك لا توجد قرينة على عطل مفتاح أو صلاحية أو حساب.
+   - الحل: إعادة محاولة محدودة لعملية الدخول فقط، ثم رسالة عربية عملية دون كشف تفاصيل SDK.
+   - الحالة: محلول ومختبر محليًا؛ يحتاج نشر التطبيق ليعمل على المنصة الأساسية.
+
+الملفات المتأثرة:
+
+- `app/firebaseAuthRetry.js`
+- `app/admin_login/page.jsx`
+- `app/client/page.jsx`
+- `tests/firebaseAuthRetry.test.js`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+Invoke-WebRequest https://identitytoolkit.googleapis.com/v1/projects?key=...
+Invoke-WebRequest https://date-tool-official.firebaseapp.com/__/auth/handler
+curl.exe -X OPTIONS https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=...
+Invoke-WebRequest -Method Post https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=...
+npm test -- --run tests/firebaseAuthRetry.test.js tests/chunkLoadRecovery.test.js tests/adminAccess.test.js tests/settingsSecurity.test.js
+npm test
+npm run lint
+npm run build
+git diff --check
+```
+
+الحالة:
+
+- أثبت الفحص المباشر أن Firebase Authentication وCORS ومفتاح الموقع تعمل من نطاق الإنتاج، وأن الخطأ المصور خطأ اتصال متصفح لا رفض مصادقة أو صلاحيات.
+- نجحت 134 حالة اختبار في 28 ملفًا ونجح ESLint بعد ربط المعالج بصفحتي دخول الإدارة والمعلنين.
+- نجح بناء Next.js الكامل بعد التعديل النهائي، وبقي `/admin_login` مسارًا ديناميكيًا غير مخزّن.
+- لم تُنشر التغييرات، ولم تُعدّل حسابات Firebase أو القواعد أو الأسرار أو رقم الإصدار.
+
+### تجهيز نشر الإصدار 0.3.58
+
+تم إنجازه:
+
+- تجميع حماية قبول AdSense مع الحفاظ على المواضع التسعة في إصدار إنتاج واحد.
+- تجميع منع تخزين صفحة دخول الإدارة واسترداد أخطاء chunk القديمة لمرة واحدة.
+- تجميع إعادة المحاولة المحدودة لأخطاء شبكة Firebase في دخول الإدارة والمعلنين.
+- رفع رقم التطبيق إلى `0.3.58` بتاريخ 2026-09-13.
+- رفع نسخة الإدارة إلى `0.1.54` ونسخة بوابة المعلنين إلى `1.0.7`.
+- تحديث سجل الإصدارات واختبارات PWA والإعدادات العامة واسترداد chunk لتطابق النسخة الجديدة.
+- التأكد أن `firestore.rules` و`wrangler.jsonc` لم يتغيرا، وأن Worker بقي باسم `datetools`.
+
+الأخطاء المكتشفة:
+
+- فشل بناء OpenNext أول مرة داخل عزل الملفات لأن esbuild لم يستطع قراءة `open-next.config.ts`؛ نجح البناء نفسه عند تشغيله بإذن القراءة المطلوب دون تعديل الإعداد.
+
+الملفات المتأثرة:
+
+- `app/adsenseSettings.js`
+- `app/chunkLoadRecovery.js`
+- `app/firebaseAuthRetry.js`
+- `app/admin/AdminDashboard.css`
+- `app/admin/ad-settings/page.jsx`
+- `app/admin_login/layout.jsx`
+- `app/admin_login/page.jsx`
+- `app/client/ClientVersion.js`
+- `app/client/page.jsx`
+- `app/components/PublicAdSlot.jsx`
+- `app/components/home/HomeSections.jsx`
+- `app/firebase.js`
+- `app/publicSiteConfig.js`
+- `app/version.js`
+- `tests/adminAccess.test.js`
+- `tests/adsenseReadiness.test.js`
+- `tests/chunkLoadRecovery.test.js`
+- `tests/firebaseAuthRetry.test.js`
+- `tests/publicSiteConfig.test.js`
+- `tests/pwaVersionCheck.test.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `COMPREHENSIVE_AUDIT_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm run lint
+npm test
+npm run build
+npx opennextjs-cloudflare build
+git diff --check
+```
+
+الحالة:
+
+- نجح ESLint، ونجحت 134 حالة اختبار في 28 ملفًا، ونجح بناء Next.js الكامل.
+- نجح بناء OpenNext وأُنشئت حزمة Worker المسمى `datetools`.
+- لا يحتاج الإصدار إلى نشر Firestore Rules لعدم وجود تغيير في ملف القواعد.
+- الإصدار جاهز للدفع والنشر والتحقق الإنتاجي تنفيذًا لموافقة المستخدم.

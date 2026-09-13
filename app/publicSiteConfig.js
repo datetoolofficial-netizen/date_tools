@@ -34,6 +34,7 @@ function cleanPublicExternalIntegrations(value = {}) {
         bingSiteVerification: String(value.bingSiteVerification || '').trim(),
         microsoftClarityProjectId: String(value.microsoftClarityProjectId || '').trim(),
         metaPixelId: String(value.metaPixelId || '').trim(),
+        adsenseSiteStatus: normalizeAdsenseSiteStatus(value.adsenseSiteStatus),
         adsTxtSnippet: String(value.adsTxtSnippet || '').trim(),
     };
 }
@@ -100,3 +101,4 @@ export function pickPublicSiteConfig(config = {}, includeContent = false) {
 }
 import { normalizeIdentityTranslations } from './localizedConfig';
 import { normalizePwaUpdatePrompt } from './pwaPromptSettings';
+import { normalizeAdsenseSiteStatus } from './adsenseSettings';

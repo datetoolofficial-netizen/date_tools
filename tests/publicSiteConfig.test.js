@@ -20,6 +20,7 @@ describe('public settings projection', () => {
             },
             externalIntegrations: {
                 googleTagId: 'G-TEST',
+                adsenseSiteStatus: 'approved',
                 adsTxtSnippet: 'pub-id',
                 adsenseSnippet: '<script>unsafe</script>',
                 privateToken: 'secret',
@@ -28,6 +29,7 @@ describe('public settings projection', () => {
 
         expect(projected.toolDisplayName).toBe('Tools');
         expect(projected.externalIntegrations.googleTagId).toBe('G-TEST');
+        expect(projected.externalIntegrations.adsenseSiteStatus).toBe('approved');
         expect(projected.externalIntegrations.adsTxtSnippet).toBe('pub-id');
         expect(projected.externalIntegrations).not.toHaveProperty('adsenseSnippet');
         expect(projected.externalIntegrations).not.toHaveProperty('privateToken');
@@ -68,6 +70,7 @@ describe('public settings projection', () => {
         expect(projected.adCampaigns).toEqual([]);
         expect(projected.externalIntegrations).not.toHaveProperty('privateToken');
         expect(projected.externalIntegrations).not.toHaveProperty('apiSecret');
+        expect(projected.externalIntegrations.adsenseSiteStatus).toBe('under_review');
         expect(projected.internalPages[0]).not.toHaveProperty('content');
         expect(projected.internalPages[0]).not.toHaveProperty('privateNotes');
     });
@@ -154,10 +157,10 @@ describe('public settings projection', () => {
             },
         });
 
-        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.57', schemaVersion: 2 });
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.58', schemaVersion: 2 });
         expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
         expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(true);
         expect(normalizePwaUpdatePrompt({ enabled: false, schemaVersion: 2 }).enabled).toBe(false);
-        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.57');
+        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.58');
     });
 });

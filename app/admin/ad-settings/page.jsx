@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { ADSENSE_SITE_STATUS, normalizeAdsenseSiteStatus } from '../../adsenseSettings';
 import Toast from '../../components/Toast';
 import AdminEnableToggle from '../AdminEnableToggle';
 
@@ -30,8 +31,24 @@ const EMPTY_SLOT = {
 
 const EMPTY_INTEGRATIONS = {
     googleAdsenseClient: '',
+    adsenseSiteStatus: ADSENSE_SITE_STATUS.UNDER_REVIEW,
     adsenseSnippet: '',
     adsTxtSnippet: '',
+};
+
+const ADSENSE_STATUS_COPY = {
+    [ADSENSE_SITE_STATUS.UNDER_REVIEW]: {
+        label: 'قيد مراجعة Google',
+        description: 'تُحفظ المواضع والأكواد، لكن الموقع لا يحمّل أي وحدة AdSense حتى يتم القبول.',
+    },
+    [ADSENSE_SITE_STATUS.APPROVED]: {
+        label: 'مقبول وجاهز للعرض',
+        description: 'يسمح بعرض الوحدات المفعلة فقط بعد موافقة التسويق وعند عدم وجود حملة معلن نشطة.',
+    },
+    [ADSENSE_SITE_STATUS.PAUSED]: {
+        label: 'متوقف يدويًا',
+        description: 'تُحفظ جميع الإعدادات والمواضع، مع إيقاف تحميل وحدات AdSense مؤقتًا.',
+    },
 };
 
 const EMPTY_AD_IMAGES = {
@@ -103,6 +120,7 @@ function pickAdSettings(config = {}) {
         externalIntegrations: {
             ...EMPTY_INTEGRATIONS,
             ...(config.externalIntegrations || {}),
+            adsenseSiteStatus: normalizeAdsenseSiteStatus(config.externalIntegrations?.adsenseSiteStatus),
         },
     };
 }
@@ -213,6 +231,9 @@ export default function AdminAdSettingsPage() {
     const closeSlotModal = () => setActiveSlotModal(null);
     const activeSlotItem = AD_SLOTS.find((item) => item.id === activeSlotModal?.slotId);
     const activeSlot = activeSlotItem ? (settings.googleAdSlots[activeSlotItem.id] || EMPTY_SLOT) : EMPTY_SLOT;
+    const adsenseSiteStatus = normalizeAdsenseSiteStatus(settings.externalIntegrations.adsenseSiteStatus);
+    const adsenseStatusCopy = ADSENSE_STATUS_COPY[adsenseSiteStatus];
+    const adsenseServingAllowed = adsenseSiteStatus === ADSENSE_SITE_STATUS.APPROVED;
 
     const saveAdSettings = async () => {
         const firebaseApi = firebaseApiRef.current;
@@ -276,6 +297,29 @@ export default function AdminAdSettingsPage() {
                     {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
                 </button>
 
+                <section className={`legacy-google-card adsense-review-guard is-${adsenseSiteStatus}`}>
+                    <div className="adsense-review-guard-copy">
+                        <span className="adsense-review-guard-icon" aria-hidden="true">
+                            <i className={`fa-solid ${adsenseServingAllowed ? 'fa-circle-check' : 'fa-shield-halved'}`}></i>
+                        </span>
+                        <div>
+                            <h2>حالة نشر وحدات AdSense</h2>
+                            <p>{adsenseStatusCopy.description}</p>
+                        </div>
+                    </div>
+                    <label className="adsense-review-status-field">
+                        <span>حالة الموقع</span>
+                        <select
+                            value={adsenseSiteStatus}
+                            onChange={(event) => updateIntegration('adsenseSiteStatus', event.target.value)}
+                        >
+                            {Object.entries(ADSENSE_STATUS_COPY).map(([value, copy]) => (
+                                <option key={value} value={value}>{copy.label}</option>
+                            ))}
+                        </select>
+                    </label>
+                </section>
+
                 <section className="legacy-google-card tools-section-card ad-settings-section">
                     <div className="tools-section-head">
                         <div className="tools-section-title">
@@ -284,7 +328,7 @@ export default function AdminAdSettingsPage() {
                             </span>
                             <div>
                                 <h2>مواضع الإعلانات</h2>
-                                <p>فعّل العرض الاحتياطي لكل موضع، ثم استخدم الإجراءات للمعاينة أو تعديل كود Google.</p>
+                                <p>المواضع التسعة ثابتة. يمكن تجهيز كل موضع الآن، ولا يبدأ العرض إلا بعد تغيير الحالة العامة إلى مقبول.</p>
                             </div>
                         </div>
                     </div>
@@ -419,7 +463,9 @@ export default function AdminAdSettingsPage() {
                                         <i className="fa-solid fa-rectangle-ad"></i>
                                         <strong>معاينة الموضع</strong>
                                         <span>
-                                            {activeSlot.enabledWhenNoAdvertiser && activeSlot.client && activeSlot.slot
+                                            {!adsenseServingAllowed
+                                                ? `الموضع محفوظ، لكن AdSense لن يعمل لأن الحالة العامة: ${adsenseStatusCopy.label}.`
+                                                : activeSlot.enabledWhenNoAdvertiser && activeSlot.client && activeSlot.slot
                                                 ? 'سيظهر إعلان Google هنا عند عدم وجود حملة معلن نشطة لهذا الموضع.'
                                                 : activeSlot.showHouseAd
                                                     ? `سيظهر نص تسويقي: ${activeSlot.houseAdText || 'أعلن معنا في هذه المساحة'}`
@@ -520,8 +566,12 @@ export default function AdminAdSettingsPage() {
                             {activeSlotModal.mode === 'details' && (
                                 <dl className="legacy-details-list ad-settings-details-list">
                                     <div>
+                                        <dt>حالة AdSense العامة</dt>
+                                        <dd>{adsenseStatusCopy.label}</dd>
+                                    </div>
+                                    <div>
                                         <dt>حالة Google fallback</dt>
-                                        <dd>{activeSlot.enabledWhenNoAdvertiser ? 'مفعل' : 'غير مفعل'}</dd>
+                                        <dd>{activeSlot.enabledWhenNoAdvertiser ? (adsenseServingAllowed ? 'مفعل' : 'محفوظ وينتظر القبول') : 'غير مفعل'}</dd>
                                     </div>
                                     <div>
                                         <dt>المساحة التسويقية</dt>

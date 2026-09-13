@@ -6,6 +6,11 @@ import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../turnstileClient';
 import { evaluateAdvertiserAccess } from '../securityPolicies';
+import {
+    getFirebaseNetworkErrorMessage,
+    isFirebaseNetworkError,
+    runFirebaseAuthRequestWithRetry,
+} from '../firebaseAuthRetry';
 import { CLIENT_PORTAL_VERSION } from './ClientVersion';
 import {
     LOCAL_DEMO_ACCOUNT,
@@ -47,7 +52,9 @@ export default function ClientLoginPage() {
             ]);
             const auth = await getFirebaseAuth();
 
-            const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+            const credential = await runFirebaseAuthRequestWithRetry(
+                () => signInWithEmailAndPassword(auth, email.trim(), password),
+            );
 
             const profileSnap = credential.user.emailVerified
                 ? await getDoc(doc(db, 'advertisers', credential.user.uid))
@@ -98,6 +105,8 @@ export default function ClientLoginPage() {
             setTurnstileResetKey((value) => value + 1);
             const friendly = error.code === 'security/turnstile-failed'
                 ? 'تعذر إكمال التحقق الأمني. أعد المحاولة من فضلك.'
+                : isFirebaseNetworkError(error)
+                ? getFirebaseNetworkErrorMessage(window.navigator.onLine)
                 : error.code === 'auth/invalid-credential'
                 ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
                 : 'تعذر تسجيل الدخول الآن. حاول مرة أخرى.';

@@ -1757,6 +1757,97 @@ body.dark-mode .legacy-nav-links a.active {
     margin-inline: auto;
 }
 
+.adsense-review-guard {
+    width: min(100%, 1120px);
+    margin-inline: auto;
+    padding: var(--legacy-card-pad);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    border-inline-start: 4px solid #f59e0b;
+}
+
+.adsense-review-guard.is-approved {
+    border-inline-start-color: #22c55e;
+}
+
+.adsense-review-guard.is-paused {
+    border-inline-start-color: #64748b;
+}
+
+.adsense-review-guard-copy {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.adsense-review-guard-icon {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: var(--legacy-radius);
+    background: rgba(245, 158, 11, 0.14);
+    color: #f59e0b;
+    font-size: 19px;
+}
+
+.adsense-review-guard.is-approved .adsense-review-guard-icon {
+    background: rgba(34, 197, 94, 0.14);
+    color: #22c55e;
+}
+
+.adsense-review-guard.is-paused .adsense-review-guard-icon {
+    background: rgba(100, 116, 139, 0.14);
+    color: #64748b;
+}
+
+.adsense-review-guard h2,
+.adsense-review-guard p {
+    margin: 0;
+}
+
+.adsense-review-guard h2 {
+    color: var(--text-main);
+    font-size: 17px;
+}
+
+.adsense-review-guard p {
+    margin-top: 5px;
+    color: var(--text-sub);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.adsense-review-status-field {
+    width: min(100%, 250px);
+    display: grid;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.adsense-review-status-field span {
+    color: var(--text-sub);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.adsense-review-status-field select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--legacy-radius);
+    background: var(--bg-body);
+    color: var(--text-main);
+    padding: 8px 11px;
+    font-family: inherit;
+    font-weight: 800;
+}
+
 .ad-settings-section {
     --tool-color: #3b82f6;
     --tool-bg: rgba(59, 130, 246, 0.14);
@@ -6675,6 +6766,16 @@ body.dark-mode .legacy-nav-links a.active {
 }
 
 @media (max-width: 700px) {
+    .adsense-review-guard {
+        width: 100%;
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .adsense-review-status-field {
+        width: 100%;
+    }
+
     .ad-settings-page .ad-settings-section,
     .ad-settings-page .ad-integrations-card {
         width: 100%;

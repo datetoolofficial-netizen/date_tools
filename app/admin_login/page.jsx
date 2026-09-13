@@ -6,6 +6,12 @@ import Toast from '../components/Toast';
 import TurnstileField from '../components/TurnstileField';
 import { verifyTurnstileChallenge } from '../turnstileClient';
 import { evaluateAdminAccess } from '../securityPolicies';
+import { clearChunkRecoveryMarker, isChunkLoadError, recoverFromChunkLoadError } from '../chunkLoadRecovery';
+import {
+    getFirebaseNetworkErrorMessage,
+    isFirebaseNetworkError,
+    runFirebaseAuthRequestWithRetry,
+} from '../firebaseAuthRetry';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
@@ -39,10 +45,13 @@ export default function AdminLogin() {
                 import('firebase/auth'),
                 import('firebase/firestore'),
             ]);
+            clearChunkRecoveryMarker();
             const auth = await getFirebaseAuth();
 
             // 1. تسجيل الدخول عبر Firebase Auth
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await runFirebaseAuthRequestWithRetry(
+                () => signInWithEmailAndPassword(auth, email, password),
+            );
             const user = userCredential.user;
 
             // 2. التحقق أن المستخدم موجود داخل admins/{uid}
@@ -70,10 +79,16 @@ export default function AdminLogin() {
             }
 
             // 3. الدخول إلى لوحة الإدارة
-        window.location.replace('/admin');
+            window.location.replace('/admin');
         } catch (error) {
             setTurnstileResetKey((value) => value + 1);
-            if (
+            if (recoverFromChunkLoadError(error)) {
+                return;
+            } else if (isChunkLoadError(error)) {
+                setErrorMsg('تعذر تحميل ملفات الإصدار الحالي. أغلق هذا التبويب وافتح صفحة تسجيل الدخول من جديد.');
+            } else if (isFirebaseNetworkError(error)) {
+                setErrorMsg(getFirebaseNetworkErrorMessage(window.navigator.onLine));
+            } else if (
                 error.code === 'auth/invalid-credential' ||
                 error.code === 'auth/user-not-found' ||
                 error.code === 'auth/wrong-password'
