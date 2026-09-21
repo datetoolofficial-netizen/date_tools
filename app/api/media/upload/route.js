@@ -1,13 +1,10 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
-    getAllowedImageInfo,
-    getSafeMediaCategory,
-    hasExpectedImageSignature,
     MAX_IMAGE_BYTES,
 } from '../../_lib/mediaValidation';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
-import { ADMIN_PERMISSIONS } from '../../../adminAccess';
-import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
+import { processAuthorizedMediaUpload } from '../../_lib/mediaUploadHandler';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const TOKEN_TTL_SECONDS = 55 * 60;
@@ -192,50 +189,15 @@ async function requireUploader(request) {
 
     const adminProfile = await getProfile(serviceAccount, 'admins', user.localId);
     if (adminProfile?.active?.booleanValue === true) {
-        return { type: 'admin', uid: user.localId, profile: adminProfile };
+        return { type: 'admin', uid: user.localId, email: user.email || '', profile: adminProfile };
     }
 
     const advertiserProfile = await getProfile(serviceAccount, 'advertisers', user.localId);
     if (advertiserProfile?.status?.stringValue === 'active') {
-        return { type: 'advertiser', uid: user.localId, profile: advertiserProfile };
+        return { type: 'advertiser', uid: user.localId, email: user.email || '', profile: advertiserProfile };
     }
 
     return null;
-}
-
-function canAdminUploadCategory(profile, category) {
-    const identityCategories = new Set([
-        'logo', 'favicon', 'link-preview', 'app-icon',
-        'pwa-shortcut-date', 'pwa-shortcut-clock', 'pwa-shortcut-weather',
-    ]);
-
-    if (identityCategories.has(category)) {
-        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.SITE_IDENTITY_UPDATE, 'identity']);
-    }
-
-    if (category === 'seo-share') {
-        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.CONTENT_TOOLS_UPDATE, 'tool-management']);
-    }
-
-    if (category === 'ads') {
-        return hasAdminPermission(profile, [ADMIN_PERMISSIONS.CAMPAIGNS_UPDATE, ADMIN_PERMISSIONS.ADS_SETTINGS_UPDATE]);
-    }
-
-    return false;
-}
-
-function canAdvertiserUploadAds(profile) {
-    const role = profile?.role?.stringValue || 'owner';
-    return ['owner', 'organization_admin', 'campaign_manager', 'campaign_editor'].includes(role);
-}
-
-function getSafeFileName(name) {
-    return String(name || 'image')
-        .toLowerCase()
-        .replace(/\.[^.]+$/g, '')
-        .replace(/[^a-z0-9_-]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 40) || 'image';
 }
 
 function getMediaBucket(env) {
@@ -260,62 +222,10 @@ export async function POST(request) {
         return jsonResponse({ ok: false, error: 'media_storage_not_configured' }, 503);
     }
 
-    const formData = await request.formData();
-    const file = formData.get('file');
-    const category = getSafeMediaCategory(formData.get('category'));
-
-    if (!category) {
-        return jsonResponse({ ok: false, error: 'invalid_category' }, 400);
-    }
-
-    if (uploader.type === 'advertiser' && (category !== 'ads' || !canAdvertiserUploadAds(uploader.profile))) {
-        return jsonResponse({ ok: false, error: 'forbidden_category' }, 403);
-    }
-    if (uploader.type === 'admin' && !canAdminUploadCategory(uploader.profile, category)) {
-        return jsonResponse({ ok: false, error: 'forbidden_category' }, 403);
-    }
-
-    if (!(file instanceof File)) {
-        return jsonResponse({ ok: false, error: 'missing_file' }, 400);
-    }
-
-    if (file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
-        return jsonResponse({ ok: false, error: 'invalid_file_size' }, 400);
-    }
-
-    const imageInfo = getAllowedImageInfo(file);
-    if (!imageInfo) {
-        return jsonResponse({ ok: false, error: 'unsupported_image_type' }, 400);
-    }
-
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, '0');
-    const safeName = getSafeFileName(file.name);
-    const key = `${category}/${year}/${month}/${crypto.randomUUID()}-${safeName}.${imageInfo.extension}`;
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (!hasExpectedImageSignature(bytes, imageInfo.contentType)) {
-        return jsonResponse({ ok: false, error: 'invalid_image_content' }, 400);
-    }
-
-    await bucket.put(key, bytes, {
-        httpMetadata: {
-            contentType: imageInfo.contentType,
-            cacheControl: 'public, max-age=31536000, immutable',
-        },
-        customMetadata: {
-            originalName: file.name.slice(0, 120),
-            category,
-            uploadedBy: uploader.uid,
-            uploaderType: uploader.type,
-        },
-    });
-
-    return jsonResponse({
-        ok: true,
-        key,
-        url: `/api/media/${key}`,
-        contentType: imageInfo.contentType,
-        size: file.size,
+    return processAuthorizedMediaUpload({
+        request,
+        uploader,
+        bucket,
+        writeAuditEvent: writeAdminAuditEvent,
     });
 }

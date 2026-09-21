@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('PWA install identity', () => {
     it('prioritizes the app icon for iOS home-screen shortcuts', () => {
-        const layout = readFileSync(join(process.cwd(), 'app', 'layout.jsx'), 'utf8');
+        const layout = readFileSync(join(process.cwd(), 'app', 'PublicRootLayout.jsx'), 'utf8');
         const shell = readFileSync(join(process.cwd(), 'app', 'SiteShell.jsx'), 'utf8');
 
         expect(layout).toContain('config.appIconUrl || config.logoUrl || config.faviconUrl');

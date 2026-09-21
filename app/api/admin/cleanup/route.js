@@ -1,6 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
+import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const TOKEN_TTL_SECONDS = 55 * 60;
@@ -167,13 +168,18 @@ async function requireActiveAdmin(request, serviceAccount) {
     const authorization = request.headers.get('authorization') || '';
     const [, idToken] = authorization.match(/^Bearer\s+(.+)$/i) || [];
 
-    if (!idToken) return false;
+    if (!idToken) return null;
 
     const user = await verifyFirebaseIdToken(idToken, DEFAULT_PROJECT_ID);
-    if (!user?.localId) return false;
+    if (!user?.localId) return null;
 
     const adminProfile = await getAdminProfile(serviceAccount, user.localId);
-    return hasAdminPermission(adminProfile, [], { fullOnly: true });
+    if (!hasAdminPermission(adminProfile, [], { fullOnly: true })) return null;
+    return {
+        uid: user.localId,
+        email: user.email || '',
+        role: resolveEncodedAdminRole(adminProfile),
+    };
 }
 
 async function cleanupSettingsDocument(serviceAccount) {
@@ -216,11 +222,19 @@ export async function POST(request) {
             return jsonResponse({ ok: false, error: 'cleanup_not_configured' }, 503);
         }
 
-        if (!(await requireActiveAdmin(request, serviceAccount))) {
+        const admin = await requireActiveAdmin(request, serviceAccount);
+        if (!admin) {
             return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
         }
 
         await cleanupSettingsDocument(serviceAccount);
+        await writeAdminAuditEvent({
+            actor: admin,
+            action: 'settings.cleanup',
+            resourceType: 'settings',
+            resourceId: 'main',
+            details: { changedFields: CLEANUP_FIELD_PATHS },
+        });
 
         return jsonResponse({
             ok: true,

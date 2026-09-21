@@ -57,22 +57,55 @@ describe('HTTP security boundaries', () => {
 
     it('keeps media uploads authenticated and validates file contents before R2 writes', () => {
         const uploadRoute = readProjectFile('app', 'api', 'media', 'upload', 'route.js');
+        const uploadHandler = readProjectFile('app', 'api', '_lib', 'mediaUploadHandler.js');
 
         expect(uploadRoute).toContain('verifyFirebaseIdToken');
-        expect(uploadRoute).toContain('hasExpectedImageSignature');
         expect(uploadRoute).toContain('MAX_IMAGE_BYTES');
-        expect(uploadRoute).toContain('crypto.randomUUID()');
-        expect(uploadRoute).toContain("return jsonResponse({ ok: false, error: 'unsupported_image_type' }, 400)");
+        expect(uploadRoute).toContain('processAuthorizedMediaUpload');
+        expect(uploadHandler).toContain('validateImageUpload');
+        expect(uploadHandler).toContain('crypto.randomUUID()');
+        expect(uploadHandler).toContain('return jsonResponse({ ok: false, error: validation.error }, 400)');
+        expect(uploadHandler.indexOf('validateImageUpload(file, bytes)'))
+            .toBeLessThan(uploadHandler.indexOf('await bucket.put(key, bytes'));
     });
 
-    it('keeps advertiser demo data local to the development host', () => {
+    it('keeps advertiser demo data local to loopback hosts', () => {
         const localDemo = readProjectFile('app', 'client', 'localAdvertiserDemo.js');
 
-        expect(localDemo).toContain("process.env.NODE_ENV !== 'development'");
-        expect(localDemo).toContain("window.location.hostname === 'localhost'");
-        expect(localDemo).toContain("window.location.hostname === '127.0.0.1'");
+        expect(localDemo).toContain("['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)");
+        expect(localDemo).toContain("'::1'");
         expect(localDemo).not.toContain("import('../firebase')");
         expect(localDemo).not.toContain("import('../../firebase')");
+    });
+
+    it('blocks local production mutations in both browser actions and API middleware', () => {
+        const middleware = readProjectFile('middleware.js');
+        const safety = readProjectFile('app', 'localMutationSafety.js');
+        const adminShell = readProjectFile('app', 'admin', 'AdminShell.jsx');
+        const mutatingClientFiles = [
+            ['app', 'firebase.js'],
+            ['app', 'admin', 'ads', 'page.jsx'],
+            ['app', 'admin', 'advertisers', 'page.jsx'],
+            ['app', 'admin', 'team', 'page.jsx'],
+            ['app', 'client', 'page.jsx'],
+            ['app', 'client', 'dashboard', 'page.jsx'],
+            ['app', 'client', 'register', 'page.jsx'],
+            ['app', 'client', 'create-campaign', 'page.jsx'],
+            ['app', 'client', 'ClientShell.jsx'],
+            ['app', 'client', 'team', 'page.jsx'],
+        ];
+
+        expect(safety).toContain("LOCAL_MUTATION_ERROR_CODE = 'local_production_mutation_blocked'");
+        expect(middleware).toContain('LOCAL_READ_ONLY_API_PATHS');
+        expect(middleware).toContain("'/api/media/upload'");
+        expect(middleware).toContain("'/api/statistics'");
+        expect(middleware).toContain("'/api/support'");
+        expect(middleware).toContain('isLocalMutationRequest(request)');
+        expect(middleware).toContain('isSameOriginMutationRequest(request)');
+        expect(adminShell).toContain('وضع محلي للقراءة والاختبار');
+        mutatingClientFiles.forEach((segments) => {
+            expect(readProjectFile(...segments)).toContain('assertProductionMutationAllowed');
+        });
     });
 
     it('enforces advertiser organizations and roles in Firestore rules', () => {
@@ -99,6 +132,8 @@ describe('HTTP security boundaries', () => {
         expect(shell).toContain("label: 'الحسابات'");
         expect(shell).toContain('permission: ADMIN_PERMISSIONS.ADVERTISERS_READ');
         expect(shell).toContain("currentPath === '/admin/advertisers'");
+        expect(shell).toContain("!['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)");
+        expect(shell).toContain('canSynchronizePublicConfig()');
         expect(accountsRoute).toContain("../advertisers/page");
         expect(page).toContain("collection(db, 'advertisers')");
         expect(page).toContain('listLocalAdvertiserAccounts');
@@ -118,7 +153,9 @@ describe('HTTP security boundaries', () => {
     });
 
     it('loads platform styles from route layouts and keeps the public body neutral', () => {
-        const rootLayout = readProjectFile('app', 'layout.jsx');
+        const rootLayout = readProjectFile('app', 'PublicRootLayout.jsx');
+        const arabicRoot = readProjectFile('app', '(arabic)', 'layout.jsx');
+        const englishRoot = readProjectFile('app', '(english)', 'layout.jsx');
         const rootStyles = readProjectFile('app', 'globals.css');
         const siteShell = readProjectFile('app', 'SiteShell.jsx');
         const adminLayout = readProjectFile('app', 'admin', 'layout.jsx');
@@ -133,6 +170,9 @@ describe('HTTP security boundaries', () => {
         expect(rootStyles).toContain('.public-site-root');
         expect(siteShell).toContain('className="public-site-root"');
         expect(siteShell).toContain('if (!shouldUseShell) return undefined;');
+        expect(arabicRoot).toContain('<PublicRootLayout lang="ar">');
+        expect(englishRoot).toContain('<PublicRootLayout lang="en">');
+        expect(rootLayout).toContain("dir={lang === 'en' ? 'ltr' : 'rtl'}");
         expect(adminLoginStyles).toContain('.login-page-wrapper .login-container');
         expect(existsSync(join(process.cwd(), 'app', 'admin', 'AdminPage.css'))).toBe(false);
 

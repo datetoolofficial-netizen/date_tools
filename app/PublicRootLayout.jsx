@@ -126,7 +126,7 @@ export async function generateMetadata() {
     };
 }
 
-export default async function RootLayout({ children }) {
+export default async function PublicRootLayout({ children, lang = 'ar' }) {
     const siteJsonLd = buildSiteJsonLd();
     const initialSiteConfig = pickPublicSiteConfig(await getManagedSiteConfig());
     const configuredAdsenseClient = String(
@@ -137,7 +137,7 @@ export default async function RootLayout({ children }) {
         : '';
 
     return (
-        <html lang="ar" dir="rtl" suppressHydrationWarning>
+        <html lang={lang} dir={lang === 'en' ? 'ltr' : 'rtl'} suppressHydrationWarning>
             <head>
                 {adsenseAccount && (
                     <meta name="google-adsense-account" content={adsenseAccount} />

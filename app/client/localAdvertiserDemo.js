@@ -21,8 +21,8 @@ export const LOCAL_DEMO_ACCOUNT = Object.freeze({
 });
 
 export function isLocalAdvertiserDemoEnabled() {
-    if (process.env.NODE_ENV !== 'development' || typeof window === 'undefined') return false;
-    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (typeof window === 'undefined') return false;
+    return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
 }
 
 async function digest(value) {

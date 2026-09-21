@@ -15,6 +15,7 @@ import { pickPublicSiteConfig } from "./publicSiteConfig";
 import { normalizeIdentityTranslations } from "./localizedConfig";
 import { normalizePwaUpdatePrompt } from "./pwaPromptSettings";
 import { normalizeAdsenseSiteStatus } from "./adsenseSettings";
+import { assertProductionMutationAllowed } from "./localMutationSafety";
 
 export const firebaseConfig = {
     apiKey: "AIzaSyAgdxyNBFrwJuAnoVq6OmZKZZvRknFyVQ8",
@@ -361,6 +362,7 @@ export async function getSiteConfig() {
 }
 
 export async function syncPublicSiteConfig() {
+    assertProductionMutationAllowed();
     await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const publicConfigRef = doc(db, "settings", "public");
@@ -371,6 +373,7 @@ export async function syncPublicSiteConfig() {
 }
 
 export async function saveSiteConfig(config) {
+    assertProductionMutationAllowed();
     await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const customPages = Object.fromEntries(
@@ -432,6 +435,7 @@ export async function saveSiteConfig(config) {
 }
 
 export async function saveSiteConfigSection(sectionPatch) {
+    assertProductionMutationAllowed();
     await ensureFirebaseAppCheck();
     const configRef = doc(db, "settings", "main");
     const cleanPatch = { ...sectionPatch };
@@ -610,6 +614,8 @@ export async function getAdminStats() {
         if (!snap.exists()) {
             return {
                 visits: 0,
+                uniqueVisitors: 0,
+                pwaInstalls: 0,
                 ageCalc: 0,
                 dateConverter: 0,
                 durationCalc: 0,
@@ -624,6 +630,8 @@ export async function getAdminStats() {
 
         return {
             visits: 0,
+            uniqueVisitors: 0,
+            pwaInstalls: 0,
             ageCalc: 0,
             dateConverter: 0,
             durationCalc: 0,

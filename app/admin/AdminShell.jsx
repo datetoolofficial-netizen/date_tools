@@ -11,6 +11,7 @@ import {
     resolveAdminRole,
 } from '../adminAccess';
 import { ADMIN_VERSION } from '../version';
+import { isLocalBrowserRuntime } from '../localMutationSafety';
 
 const AdminContext = createContext(null);
 
@@ -124,6 +125,11 @@ function getActiveNavId(pathname) {
     return matched?.id || 'home';
 }
 
+function canSynchronizePublicConfig() {
+    if (typeof window === 'undefined') return false;
+    return !['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+}
+
 function AdminPageGuard({ children, allowed }) {
     if (allowed) return children;
 
@@ -149,10 +155,15 @@ export default function AdminShell({ children }) {
     const [adminName, setAdminName] = useState('أيها المدير');
     const [adminRole, setAdminRole] = useState('مدير');
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isLocalReadOnly, setIsLocalReadOnly] = useState(false);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [pendingDeleteButton, setPendingDeleteButton] = useState(null);
+
+    useEffect(() => {
+        setIsLocalReadOnly(isLocalBrowserRuntime());
+    }, []);
     const firebaseApiRef = useRef(null);
     const approvedDeleteButtonsRef = useRef(new WeakSet());
 
@@ -207,7 +218,10 @@ export default function AdminShell({ children }) {
                         setAdminProfile(profile);
                         setAdminName(profile.name || profile.email || 'أيها المدير');
                         setAdminRole(getAdminRoleLabel(profile));
-                        if (hasAdminPermission(profile, ADMIN_PERMISSIONS.SITE_SETTINGS_UPDATE)) {
+                        if (
+                            canSynchronizePublicConfig()
+                            && hasAdminPermission(profile, ADMIN_PERMISSIONS.SITE_SETTINGS_UPDATE)
+                        ) {
                             syncPublicSiteConfig().catch(() => {
                                 console.error('Unable to synchronize the public site settings.');
                             });
@@ -438,6 +452,15 @@ export default function AdminShell({ children }) {
                     </nav>
 
                     <div className="admin-persistent-content">
+                        {isLocalReadOnly && (
+                            <div className="admin-local-read-only" role="status">
+                                <i className="fa-solid fa-shield-halved"></i>
+                                <div>
+                                    <strong>وضع محلي للقراءة والاختبار</strong>
+                                    <span>يمكن استعراض بيانات الإدارة، لكن حفظ التغييرات ورفع الملفات إلى بيئة الإنتاج محظوران.</span>
+                                </div>
+                            </div>
+                        )}
                         <AdminPageGuard allowed={isCurrentPageAllowed}>
                             {children}
                         </AdminPageGuard>

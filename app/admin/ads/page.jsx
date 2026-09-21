@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { recordAdminAudit } from '../../adminAudit';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
+import { fetchWithTimeout } from '../../fetchWithTimeout';
 
 const EMPTY_CAMPAIGN = {
     campaignName: '',
@@ -494,18 +496,19 @@ export default function AdminAdsPage() {
         showMessage('success', 'جاري رفع صورة الإعلان إلى R2...');
 
         try {
+            assertProductionMutationAllowed();
             const token = await currentUser.getIdToken();
             const formData = new FormData();
             formData.append('category', 'ads');
             formData.append('file', file);
 
-            const response = await fetch('/api/media/upload', {
+            const response = await fetchWithTimeout('/api/media/upload', {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
                 body: formData
-            });
+            }, { timeoutMs: 25_000 });
             const result = await response.json().catch(() => ({}));
 
             if (!response.ok || !result.ok) {
@@ -523,6 +526,7 @@ export default function AdminAdsPage() {
                 missing_file: 'لم يتم اختيار ملف للرفع.',
                 invalid_file_size: 'حجم الصورة غير مقبول. الحد الأقصى 5MB.',
                 unsupported_image_type: 'نوع الصورة غير مدعوم. استخدم PNG أو JPG أو WEBP أو GIF.',
+                local_production_mutation_blocked: 'الرفع محظور في وضع الإدارة المحلي للقراءة فقط.',
                 upload_failed: 'تعذر رفع الصورة بسبب خطأ غير متوقع.'
             };
             showMessage('error', messages[error.message] || 'تعذر رفع صورة الإعلان.');
@@ -543,6 +547,7 @@ export default function AdminAdsPage() {
         }
 
         try {
+            assertProductionMutationAllowed();
             const { addDoc, collection, doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
             const firebaseApi = firebaseApiRef.current;
             const payload = {
@@ -603,6 +608,7 @@ export default function AdminAdsPage() {
 
     const updateCampaignStatus = async (campaign, status, extra = {}) => {
         try {
+            assertProductionMutationAllowed();
             const { doc, serverTimestamp, updateDoc } = await import('firebase/firestore');
             const firebaseApi = firebaseApiRef.current;
             await updateDoc(doc(firebaseApi.db, 'campaigns', campaign.id), {
@@ -627,6 +633,7 @@ export default function AdminAdsPage() {
 
     const deleteCampaign = async (campaign) => {
         try {
+            assertProductionMutationAllowed();
             const { deleteDoc, doc } = await import('firebase/firestore');
             await deleteDoc(doc(firebaseApiRef.current.db, 'campaigns', campaign.id));
             await recordAdminAudit({

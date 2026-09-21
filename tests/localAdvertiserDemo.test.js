@@ -120,8 +120,15 @@ describe('isolated local advertiser demo', () => {
         })).rejects.toThrow('organization_not_found');
     });
 
-    it('does not enable the demo outside development localhost', () => {
+    it('allows production-mode local testing but never enables the demo on the public host', () => {
         vi.stubEnv('NODE_ENV', 'production');
+        expect(isLocalAdvertiserDemoEnabled()).toBe(true);
+
+        vi.stubGlobal('window', {
+            location: { hostname: 'date-tool.com' },
+            localStorage: createStorage(),
+            crypto: globalThis.crypto,
+        });
         expect(isLocalAdvertiserDemoEnabled()).toBe(false);
     });
 });

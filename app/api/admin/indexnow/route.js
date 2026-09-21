@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { hasAdminPermission } from '../../_lib/adminPermissions';
+import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { ADMIN_PERMISSIONS } from '../../../adminAccess';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
+import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
+import { normalizeIndexNowUrl } from '../../_lib/urlPolicies';
 
 const FIREBASE_PROJECT_ID = 'date-tool-official';
 const SITE_HOST = 'date-tool.com';
@@ -24,30 +26,22 @@ async function getAdminProfile(idToken, uid) {
 async function requireActiveAdmin(request) {
     const authorization = request.headers.get('authorization') || '';
     const [, idToken] = authorization.match(/^Bearer\s+(.+)$/i) || [];
-    if (!idToken) return false;
+    if (!idToken) return null;
 
     const user = await verifyFirebaseIdToken(idToken, FIREBASE_PROJECT_ID);
-    if (!user?.localId) return false;
+    if (!user?.localId) return null;
     const profile = await getAdminProfile(idToken, user.localId);
-    return hasAdminPermission(profile, [ADMIN_PERMISSIONS.SEO_SUBMIT_INDEX]);
-}
-
-function normalizeUrl(value) {
-    try {
-        const url = new URL(String(value || ''), SITE_ORIGIN);
-        if (url.hostname !== SITE_HOST && url.hostname !== `www.${SITE_HOST}`) return '';
-        url.protocol = 'https:';
-        url.hostname = SITE_HOST;
-        url.search = '';
-        url.hash = '';
-        return url.toString();
-    } catch {
-        return '';
-    }
+    if (!hasAdminPermission(profile, [ADMIN_PERMISSIONS.SEO_SUBMIT_INDEX])) return null;
+    return {
+        uid: user.localId,
+        email: user.email || '',
+        role: resolveEncodedAdminRole(profile),
+    };
 }
 
 export async function POST(request) {
-    if (!(await requireActiveAdmin(request))) {
+    const admin = await requireActiveAdmin(request);
+    if (!admin) {
         return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
     }
 
@@ -55,7 +49,7 @@ export async function POST(request) {
     const urlList = Array.from(new Set(
         (Array.isArray(payload.urls) ? payload.urls : [])
             .slice(0, 100)
-            .map(normalizeUrl)
+            .map(normalizeIndexNowUrl)
             .filter(Boolean)
     ));
 
@@ -80,6 +74,14 @@ export async function POST(request) {
             { status: 502 }
         );
     }
+
+    await writeAdminAuditEvent({
+        actor: admin,
+        action: 'seo.indexnow_submitted',
+        resourceType: 'seo_submission',
+        resourceId: SITE_HOST,
+        details: { result: `submitted:${urlList.length}` },
+    });
 
     return NextResponse.json({ ok: true, submitted: urlList.length });
 }

@@ -486,6 +486,7 @@ function ContactForm({ contactEmail = '', lang = 'ar' }) {
                     tabIndex="-1"
                     autoComplete="off"
                     className="contact-hidden-field"
+                    aria-hidden="true"
                 />
 
                 <div className="contact-form-grid">

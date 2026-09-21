@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { CLIENT_PORTAL_VERSION } from './ClientVersion';
+import { assertProductionMutationAllowed } from '../localMutationSafety';
+import { recordAdvertiserAudit } from '../advertiserAudit';
 import {
     ADVERTISER_PERMISSIONS,
     formatOrganizationNumber,
@@ -107,7 +109,15 @@ export default function ClientShell({ children }) {
                         const access = evaluateAdvertiserAccess({ emailVerified: user.emailVerified, profile: nextProfile });
 
                         if (access === 'activate') {
+                            assertProductionMutationAllowed();
                             await updateDoc(profileRef, { status: 'active', updatedAt: serverTimestamp() });
+                            await recordAdvertiserAudit({
+                                user,
+                                action: 'advertiser.activated',
+                                resourceType: 'advertiser',
+                                resourceId: user.uid,
+                                details: { status: 'active', source: 'portal_session' },
+                            });
                             nextProfile = { ...nextProfile, status: 'active' };
                         } else if (access !== 'allowed') {
                             await signOut(auth);

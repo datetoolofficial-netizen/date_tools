@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { buildManagedToolMetadata } from '../../toolSeoServer';
-import { getToolSectionRouteBySlug } from '../../../toolSectionRoutes';
-import EnglishToolPage from '../EnglishToolPage';
+import { buildManagedToolMetadata } from '../../../toolSeoServer';
+import { getToolSectionRouteBySlug } from '../../../../toolSectionRoutes';
+import EnglishToolPage from '../../../en/EnglishToolPage';
 
 export const dynamic = 'force-dynamic';
 

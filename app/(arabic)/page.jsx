@@ -1,8 +1,8 @@
-import HomePageClient from './HomePageClient';
-import ToolSeoContent from './components/ToolSeoContent';
-import ToolPageHero from './components/ToolPageHero';
-import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from './toolSeoServer';
-import { serializeJsonLd } from './safeJsonLd';
+import HomePageClient from '../HomePageClient';
+import ToolSeoContent from '../components/ToolSeoContent';
+import ToolPageHero from '../components/ToolPageHero';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
+import { serializeJsonLd } from '../safeJsonLd';
 
 export async function generateMetadata() {
     return buildManagedToolMetadata('date');

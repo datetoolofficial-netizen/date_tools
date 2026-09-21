@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { normalizePwaUpdatePrompt } from '../pwaPromptSettings';
+import { getPwaConnectionMessage } from '../pwaRuntimePolicy';
 import { APP_VERSION } from '../version';
 import { shouldShowPwaUpdate } from '../pwaVersionCheck';
 
@@ -42,6 +43,7 @@ export default function PwaUpdatePrompt({ settings, blocked = false, lang = 'ar'
     const instructions = useMemo(() => (
         typeof navigator === 'undefined' ? '' : getPlatformInstructions(lang)
     ), [lang]);
+    const connectionMessage = getPwaConnectionMessage(lang);
 
     useEffect(() => {
         if (!normalized.enabled || !isStandaloneDisplay()) {
@@ -129,6 +131,7 @@ export default function PwaUpdatePrompt({ settings, blocked = false, lang = 'ar'
                     <small>{lang === 'en' ? `Published ${latestRelease.publishedAt}` : `تاريخ النشر: ${latestRelease.publishedAt}`}</small>
                 )}
                 <span>{instructions}</span>
+                <small>{connectionMessage}</small>
             </span>
             <span className="pwa-install-actions">
                 <button type="button" className="pwa-install-main" onClick={updateNow}>

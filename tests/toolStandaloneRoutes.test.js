@@ -54,7 +54,7 @@ describe('standalone tool routes', () => {
     });
 
     it('renders each route as an indexable standalone tool instead of redirecting it', () => {
-        const slugPage = readProjectFile('app', '[slug]', 'page.jsx');
+        const slugPage = readProjectFile('app', '(arabic)', '[slug]', 'page.jsx');
         const middleware = readProjectFile('middleware.js');
         const siteShell = readProjectFile('app', 'SiteShell.jsx');
 
@@ -153,8 +153,8 @@ describe('standalone tool routes', () => {
     });
 
     it('renders English family and standalone pages with localized metadata', () => {
-        const englishFamily = readProjectFile('app', 'en', 'page.jsx');
-        const englishStandalone = readProjectFile('app', 'en', '[slug]', 'page.jsx');
+        const englishFamily = readProjectFile('app', '(english)', 'en', 'page.jsx');
+        const englishStandalone = readProjectFile('app', '(english)', 'en', '[slug]', 'page.jsx');
         const englishRenderer = readProjectFile('app', 'en', 'EnglishToolPage.jsx');
         const seoServer = readProjectFile('app', 'toolSeoServer.js');
         const siteShell = readProjectFile('app', 'SiteShell.jsx');

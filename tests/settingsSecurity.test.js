@@ -71,11 +71,13 @@ describe('settings security boundaries', () => {
     it('binds audit events and advertiser uploads to action permissions', () => {
         const auditRoute = readProjectFile('app', 'api', 'admin', 'audit', 'route.js');
         const uploadRoute = readProjectFile('app', 'api', 'media', 'upload', 'route.js');
+        const uploadHandler = readProjectFile('app', 'api', '_lib', 'mediaUploadHandler.js');
 
         expect(auditRoute).toContain('const AUDIT_ACTION_RULES = Object.freeze({');
         expect(auditRoute).toContain('actionRule.resourceType !== resourceType');
         expect(auditRoute).toContain('hasAdminPermission(profile, actionRule.permissions)');
-        expect(uploadRoute).toContain("['owner', 'organization_admin', 'campaign_manager', 'campaign_editor'].includes(role)");
-        expect(uploadRoute).toContain('!canAdvertiserUploadAds(uploader.profile)');
+        expect(uploadRoute).toContain('processAuthorizedMediaUpload');
+        expect(uploadHandler).toContain("['owner', 'organization_admin', 'campaign_manager', 'campaign_editor'].includes(role)");
+        expect(uploadHandler).toContain('!canAdvertiserUploadAds(uploader.profile)');
     });
 });

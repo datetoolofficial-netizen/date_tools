@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -68,3 +70,10 @@ build/
 .wrangler
 .dev.vars*
 !.dev.vars.example
+
+# local verification tools and generated tool logs
+/.tools/
+/firepit-log.txt
+/firestore-debug.log
+/firebase-debug.log
+/ui-debug.log

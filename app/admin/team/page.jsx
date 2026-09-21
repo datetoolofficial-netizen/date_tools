@@ -13,6 +13,7 @@ import {
 } from '../../adminAccess';
 import { recordAdminAudit } from '../../adminAudit';
 import { useAdminShell } from '../AdminShell';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
 
 const ASSISTANT_PERMISSION_OPTIONS = [
     { value: ADMIN_PERMISSIONS.DASHBOARD_READ, label: 'قراءة لوحة المؤشرات' },
@@ -159,6 +160,7 @@ export default function AdminTeamPage() {
 
         setSaving(true);
         try {
+            assertProductionMutationAllowed();
             const [{ db }, { doc, serverTimestamp, updateDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/firestore'),
@@ -202,6 +204,7 @@ export default function AdminTeamPage() {
         let secondaryApp = null;
         let createdUser = null;
         try {
+            assertProductionMutationAllowed();
             const [firebaseModule, appModule, authModule, firestoreModule] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/app'),

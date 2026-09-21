@@ -4657,6 +4657,43 @@ body.dark-mode .legacy-nav-links a.active {
     min-width: 0;
 }
 
+.admin-local-read-only {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 24px 0;
+    padding: 13px 16px;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+}
+
+.admin-local-read-only > i {
+    font-size: 20px;
+}
+
+.admin-local-read-only > div {
+    display: grid;
+    gap: 2px;
+}
+
+.admin-local-read-only strong {
+    font-size: 14px;
+}
+
+.admin-local-read-only span {
+    color: inherit;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+    .admin-local-read-only {
+        margin-inline: 14px;
+    }
+}
+
 .admin-persistent-content > .legacy-admin-shell {
     display: block;
     min-height: 0;

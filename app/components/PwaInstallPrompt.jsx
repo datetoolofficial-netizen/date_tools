@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getPwaConnectionMessage } from '../pwaRuntimePolicy';
+import { trackPwaInstallation } from '../statisticsClient';
 
 const LEGACY_DISMISSED_KEY = 'date_tools_pwa_install_dismissed';
 const COLLAPSED_KEY = 'date_tools_pwa_install_collapsed';
@@ -28,6 +30,7 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
     const manualInstructions = settings?.manualInstructions?.trim() || (lang === 'en'
         ? 'On iPhone or iPad, open Share and choose Add to Home Screen.'
         : 'على iPhone أو iPad: افتح قائمة المشاركة ثم اختر إضافة إلى الشاشة الرئيسية.');
+    const connectionMessage = getPwaConnectionMessage(lang);
 
     useEffect(() => {
         if (!isEnabled || isStandaloneDisplay()) return undefined;
@@ -75,6 +78,7 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
             setView('hidden');
             localStorage.setItem(COMPLETED_KEY, 'true');
             localStorage.removeItem(COLLAPSED_KEY);
+            void trackPwaInstallation('appinstalled');
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -136,6 +140,7 @@ export default function PwaInstallPrompt({ settings, iconUrl, lang = 'ar', block
                 <span>{isIosInstall
                     ? manualInstructions
                     : promptText}</span>
+                <small>{connectionMessage}</small>
             </span>
             <span className="pwa-install-actions">
                 <button type="button" className="pwa-install-main" onClick={installApp}>

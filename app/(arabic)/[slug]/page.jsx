@@ -1,18 +1,18 @@
-import { resolveLinkPreview } from '../linkPreview';
-import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../seoConfig';
-import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
-import { serializeJsonLd } from '../safeJsonLd';
-import { buildManagedPageJsonLd } from '../pageJsonLd';
-import { sanitizeHtmlServer } from '../sanitizeHtmlServer';
-import { getToolSectionRouteBySlug } from '../../toolSectionRoutes';
-import HomePageClient from '../HomePageClient';
-import ClockPageClient from '../clock/ClockPageClient';
-import WeatherPageClient from '../weather/WeatherPageClient';
-import ToolPageHero from '../components/ToolPageHero';
-import ToolSeoContent from '../components/ToolSeoContent';
-import PageClient from './PageClient';
+import { resolveLinkPreview } from '../../linkPreview';
+import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../../seoConfig';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../../toolSeoServer';
+import { serializeJsonLd } from '../../safeJsonLd';
+import { buildManagedPageJsonLd } from '../../pageJsonLd';
+import { sanitizeHtmlServer } from '../../sanitizeHtmlServer';
+import { getToolSectionRouteBySlug } from '../../../toolSectionRoutes';
+import HomePageClient from '../../HomePageClient';
+import ClockPageClient from '../../clock/ClockPageClient';
+import WeatherPageClient from '../../weather/WeatherPageClient';
+import ToolPageHero from '../../components/ToolPageHero';
+import ToolSeoContent from '../../components/ToolSeoContent';
+import PageClient from '../../[slug]/PageClient';
 import { notFound } from 'next/navigation';
-import { getPublicSiteConfigFromFirestore } from '../firestorePublicConfig';
+import { getPublicSiteConfigFromFirestore } from '../../firestorePublicConfig';
 
 export const dynamic = 'force-dynamic';
 

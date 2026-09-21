@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { getEventDayText, i18n } from '../../i18n';
 import { sanitizeHtml } from '../../sanitizeHtml';
 
@@ -32,6 +33,21 @@ export function EventsShareDialog({
     onClose,
     onConfirm,
 }) {
+    const dialogRef = useRef(null);
+    const closeButtonRef = useRef(null);
+    const previousFocusRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+
+        previousFocusRef.current = document.activeElement;
+        const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+        return () => {
+            window.clearTimeout(focusTimer);
+            previousFocusRef.current?.focus?.();
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const allSelected = events.length > 0 && selectedIndexes.length === events.length;
@@ -62,17 +78,35 @@ export function EventsShareDialog({
             }}
         >
             <section
+                ref={dialogRef}
                 className="events-share-dialog"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="events-share-title"
+                aria-describedby="events-share-description"
+                onKeyDown={(event) => {
+                    if (event.key !== 'Tab') return;
+                    const focusable = dialogRef.current?.querySelectorAll(
+                        'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+                    );
+                    if (!focusable?.length) return;
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                }}
             >
                 <div className="events-share-dialog-head">
                     <div>
                         <h3 id="events-share-title">{copy.title}</h3>
-                        <p>{copy.description}</p>
+                        <p id="events-share-description">{copy.description}</p>
                     </div>
-                    <button type="button" className="events-share-close" onClick={onClose} aria-label={copy.close}>
+                    <button ref={closeButtonRef} type="button" className="events-share-close" onClick={onClose} aria-label={copy.close}>
                         <i className="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -132,7 +166,7 @@ export function EventsSection({ lang, upcomingEvents, onShare, canShare = true }
                     <i className="fa-solid fa-bolt" style={{ color: '#f59e0b' }}></i> {labels.eventsTitle}
                 </h3>
                 {canShare && (
-                    <button className="share-events-btn" onClick={onShare}>
+                    <button type="button" className="share-events-btn" onClick={onShare}>
                         <i className="fa-solid fa-share-nodes"></i> {labels.shareEvents}
                     </button>
                 )}

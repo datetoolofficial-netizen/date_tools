@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getToolSettings } from '../toolSettings';
 import { useAdminShell } from './AdminShell';
+import { calculateInstallConversion } from '../statisticsPolicy';
 
 const TOOL_METRICS = [
     { key: 'ageCalc', labelKey: 'ageCalc', fallback: 'حساب العمر', icon: 'fa-calculator', tone: 'purple' },
@@ -196,6 +197,9 @@ export default function AdminDashboardPage() {
     const newTickets = tickets.filter((ticket) => !ticket.status || ticket.status === 'جديدة').length;
 
     const totalVisits = numberValue(stats.visits);
+    const uniqueVisitors = numberValue(stats.uniqueVisitors);
+    const pwaInstalls = numberValue(stats.pwaInstalls);
+    const installConversion = calculateInstallConversion(pwaInstalls, uniqueVisitors);
     const adClicks = numberValue(stats.adClicks);
     const adImpressions = numberValue(stats.adImpressions);
     const adCtr = formatPercent(adClicks, adImpressions);
@@ -279,6 +283,8 @@ export default function AdminDashboardPage() {
 
             <section className="admin-overview-kpi-grid" aria-label="المؤشرات الرئيسية">
                 <KpiCard icon="fa-users" title="إجمالي الزيارات" value={formatNumber(totalVisits)} note="زيارات مسجلة للمنصة" tone="blue" />
+                <KpiCard icon="fa-user-check" title="الزوار الفريدون" value={formatNumber(uniqueVisitors)} note="متصفحات وافقت على التحليلات" tone="cyan" />
+                <KpiCard icon="fa-download" title="مثبتو الأداة" value={formatNumber(pwaInstalls)} note={`${installConversion.toFixed(1)}% من الزوار الفريدين`} tone="green" />
                 <KpiCard icon="fa-wand-magic-sparkles" title="استخدام الأدوات" value={formatNumber(totalToolUses)} note={`${formatPercent(totalToolUses, totalVisits)} من الزيارات`} tone="purple" />
                 <KpiCard icon="fa-eye" title="ظهور الإعلانات" value={formatNumber(adImpressions)} note={`${formatPercent(adImpressions, totalVisits)} من الزيارات`} tone="cyan" />
                 <KpiCard icon="fa-arrow-pointer" title="نقرات الإعلانات" value={formatNumber(adClicks)} note={`CTR ${adCtr}`} tone="orange" />

@@ -9,6 +9,9 @@ import {
     createLocalAdvertiserCampaign,
     readLocalCampaignImage,
 } from '../localAdvertiserDemo';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
+import { fetchWithTimeout } from '../../fetchWithTimeout';
+import { recordAdvertiserAudit } from '../../advertiserAudit';
 
 const AD_LOCATION_OPTIONS = [
     { value: 'dateTop', label: 'التاريخ - إعلان أعلى' },
@@ -91,17 +94,19 @@ export default function CreateCampaignPage() {
                 return;
             }
 
+            assertProductionMutationAllowed();
+
             const body = new FormData();
             body.append('file', file);
             body.append('category', 'ads');
             const idToken = await currentUser?.getIdToken();
             if (!idToken) throw new Error('missing_auth_token');
 
-            const response = await fetch('/api/media/upload', {
+            const response = await fetchWithTimeout('/api/media/upload', {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${idToken}` },
                 body,
-            });
+            }, { timeoutMs: 25_000 });
             const result = await response.json().catch(() => ({}));
 
             if (!response.ok || !result.ok) throw new Error(result.error || 'upload_failed');
@@ -171,14 +176,22 @@ export default function CreateCampaignPage() {
             if (isLocalDemo) {
                 await createLocalAdvertiserCampaign(profile, payload);
             } else {
+                assertProductionMutationAllowed();
                 const [{ db }, { addDoc, collection, serverTimestamp }] = await Promise.all([
                     import('../../firebase'),
                     import('firebase/firestore'),
                 ]);
-                await addDoc(collection(db, 'campaigns'), {
+                const campaignRef = await addDoc(collection(db, 'campaigns'), {
                     ...payload,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
+                });
+                await recordAdvertiserAudit({
+                    user: currentUser,
+                    action: 'campaign.created',
+                    resourceType: 'campaign',
+                    resourceId: campaignRef.id,
+                    details: { status: payload.status, source: 'advertiser_portal' },
                 });
             }
 
@@ -225,23 +238,24 @@ export default function CreateCampaignPage() {
                 <form onSubmit={handleSubmit} style={{ marginTop: 18 }}>
                     <div className="client-form-row">
                         <div className="client-form-group">
-                            <label>اسم الحملة</label>
-                            <input required value={form.campaignName} onChange={(event) => updateField('campaignName', event.target.value)} placeholder="مثال: عرض نهاية الأسبوع" />
+                            <label htmlFor="campaign-name">اسم الحملة</label>
+                            <input id="campaign-name" required value={form.campaignName} onChange={(event) => updateField('campaignName', event.target.value)} placeholder="مثال: عرض نهاية الأسبوع" />
                         </div>
                         <div className="client-form-group">
-                            <label>رابط الوجهة</label>
-                            <input required type="url" dir="ltr" value={form.targetUrl} onChange={(event) => updateField('targetUrl', event.target.value)} placeholder="https://example.com/offer" />
+                            <label htmlFor="campaign-target-url">رابط الوجهة</label>
+                            <input id="campaign-target-url" required type="url" dir="ltr" value={form.targetUrl} onChange={(event) => updateField('targetUrl', event.target.value)} placeholder="https://example.com/offer" />
                         </div>
                     </div>
 
                     <div className="client-form-row">
                         <div className="client-form-group">
-                            <label>الأداة</label>
-                            <input value="كل أدوات الموقع حسب مكان العرض" disabled />
+                            <label htmlFor="campaign-tool">الأداة</label>
+                            <input id="campaign-tool" value="كل أدوات الموقع حسب مكان العرض" disabled />
                         </div>
                         <div className="client-form-group">
-                            <label>مكان العرض المطلوب</label>
+                            <label htmlFor="campaign-location">مكان العرض المطلوب</label>
                             <select
+                                id="campaign-location"
                                 value={form.adLocation}
                                 onChange={(event) => updateField('adLocation', event.target.value)}
                                 aria-label="مكان عرض الإعلان المطلوب"
@@ -254,12 +268,12 @@ export default function CreateCampaignPage() {
 
                     <div className="client-form-row">
                         <div className="client-form-group">
-                            <label>وقت وتاريخ بداية الإعلان</label>
-                            <input required type="datetime-local" value={form.startTime} onChange={(event) => updateField('startTime', event.target.value)} />
+                            <label htmlFor="campaign-start">وقت وتاريخ بداية الإعلان</label>
+                            <input id="campaign-start" required type="datetime-local" value={form.startTime} onChange={(event) => updateField('startTime', event.target.value)} />
                         </div>
                         <div className="client-form-group">
-                            <label>وقت وتاريخ نهاية الإعلان</label>
-                            <input required type="datetime-local" value={form.endTime} onChange={(event) => updateField('endTime', event.target.value)} />
+                            <label htmlFor="campaign-end">وقت وتاريخ نهاية الإعلان</label>
+                            <input id="campaign-end" required type="datetime-local" value={form.endTime} onChange={(event) => updateField('endTime', event.target.value)} />
                         </div>
                     </div>
 
@@ -271,8 +285,8 @@ export default function CreateCampaignPage() {
                     )}
 
                     <div className="client-form-group">
-                        <label>صورة الإعلان</label>
-                        <label className="client-upload-card">
+                        <label htmlFor="campaign-image">صورة الإعلان</label>
+                        <label className="client-upload-card" htmlFor="campaign-image">
                             <span
                                 className="client-upload-preview"
                                 style={form.imageUrl ? { backgroundImage: `url(${form.imageUrl})` } : undefined}
@@ -287,13 +301,13 @@ export default function CreateCampaignPage() {
                             <span className="client-upload-action">
                                 <i className="fa-solid fa-cloud-arrow-up"></i>
                             </span>
-                            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={isUploading} onChange={uploadCampaignMedia} />
+                            <input id="campaign-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={isUploading} onChange={uploadCampaignMedia} />
                         </label>
                     </div>
 
                     <div className="client-form-group">
-                        <label>ملاحظات للمدير</label>
-                        <textarea value={form.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="أي تعليمات عن الجمهور، الرسالة، أو العرض المطلوب..." />
+                        <label htmlFor="campaign-notes">ملاحظات للمدير</label>
+                        <textarea id="campaign-notes" value={form.notes} onChange={(event) => updateField('notes', event.target.value)} placeholder="أي تعليمات عن الجمهور، الرسالة، أو العرض المطلوب..." />
                     </div>
 
                     <button type="submit" className="client-primary-btn" disabled={isLoading || isUploading || !form.imageUrl || !canCreateCampaign} style={{ width: '100%' }}>

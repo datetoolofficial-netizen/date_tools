@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isLocalMutationRequest, isSameOriginMutationRequest } from './app/localMutationSafety';
 
 const RETIRED_PWA_ICON_PATHS = new Set([
     '/pwa-icon-192.png',
@@ -18,6 +19,23 @@ const INTERNAL_NO_INDEX_PREFIXES = [
     '/support',
     '/api',
 ];
+
+const LOCAL_READ_ONLY_API_PATHS = new Set([
+    '/api/admin/audit',
+    '/api/admin/cleanup',
+    '/api/admin/indexnow',
+    '/api/admin/support',
+    '/api/client/audit',
+    '/api/media/upload',
+    '/api/statistics',
+    '/api/support',
+]);
+
+const MUTATING_HTTP_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const ORIGIN_PROTECTED_API_PATHS = new Set([
+    ...LOCAL_READ_ONLY_API_PATHS,
+    '/api/security/turnstile',
+]);
 
 const AUTOMATED_PROBE_PATH_PATTERN = /(?:\.php(?:\/|$)|(?:^|\/)(?:\.git|\.env(?:\.[^/]+)?|wp-admin|wp-content|wp-includes|wp-json|wordpress|_ignition)(?:\/|$))/i;
 
@@ -75,6 +93,34 @@ function isInternalPath(pathname) {
 export function middleware(request) {
     const host = request.headers.get('host') || '';
     const pathname = request.nextUrl.pathname;
+
+    if (
+        MUTATING_HTTP_METHODS.has(request.method.toUpperCase())
+        && LOCAL_READ_ONLY_API_PATHS.has(pathname)
+        && isLocalMutationRequest(request)
+    ) {
+        return applyLanguageHeader(applySecurityHeaders(NextResponse.json({
+            ok: false,
+            error: 'local_production_mutation_blocked',
+        }, {
+            status: 403,
+            headers: { 'Cache-Control': 'no-store' },
+        })), pathname);
+    }
+
+    if (
+        MUTATING_HTTP_METHODS.has(request.method.toUpperCase())
+        && ORIGIN_PROTECTED_API_PATHS.has(pathname)
+        && !isSameOriginMutationRequest(request)
+    ) {
+        return applyLanguageHeader(applySecurityHeaders(NextResponse.json({
+            ok: false,
+            error: 'forbidden_origin',
+        }, {
+            status: 403,
+            headers: { 'Cache-Control': 'no-store' },
+        })), pathname);
+    }
 
     if (host.toLowerCase() === 'www.date-tool.com') {
         const url = request.nextUrl.clone();

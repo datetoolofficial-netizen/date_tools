@@ -8,6 +8,8 @@ import { verifyTurnstileChallenge } from '../../turnstileClient';
 import { CLIENT_PORTAL_VERSION } from '../ClientVersion';
 import { buildAdvertiserRegistrationProfile } from '../../advertiserAccess';
 import { isLocalAdvertiserDemoEnabled, registerLocalAdvertiser } from '../localAdvertiserDemo';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
+import { recordAdvertiserAudit } from '../../advertiserAudit';
 
 const initialForm = {
     storeName: '',
@@ -53,10 +55,11 @@ export default function ClientRegisterPage() {
         try {
             if (isLocalDemo) {
                 await registerLocalAdvertiser(form);
-                setMessage({ text: 'تم إنشاء حساب المعلن داخل بيئة التجربة المحلية.', type: 'success' });
-                window.setTimeout(() => window.location.replace('/client/dashboard'), 800);
+                window.location.replace('/client/dashboard');
                 return;
             }
+
+            assertProductionMutationAllowed();
 
             await verifyTurnstileChallenge(turnstileToken, 'advertiser-register');
 
@@ -82,6 +85,14 @@ export default function ClientRegisterPage() {
                 }),
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
+            });
+
+            await recordAdvertiserAudit({
+                user: credential.user,
+                action: 'advertiser.registered',
+                resourceType: 'advertiser',
+                resourceId: credential.user.uid,
+                details: { status: 'pending_email', source: 'self_registration' },
             });
 
             await sendEmailVerification(credential.user, {
@@ -121,31 +132,31 @@ export default function ClientRegisterPage() {
                     </div>
                 )}
 
-                <form onSubmit={handleRegister}>
+                <form onSubmit={handleRegister} noValidate>
                     <div className="client-form-row">
                         <div className="client-form-group">
-                            <label>اسم المتجر أو الجهة</label>
-                            <input required value={form.storeName} onChange={(event) => updateField('storeName', event.target.value)} />
+                            <label htmlFor="register-store-name">اسم المتجر أو الجهة</label>
+                            <input id="register-store-name" required autoComplete="organization" value={form.storeName} onChange={(event) => updateField('storeName', event.target.value)} />
                         </div>
                         <div className="client-form-group">
-                            <label>اسم المسؤول</label>
-                            <input required value={form.contactName} onChange={(event) => updateField('contactName', event.target.value)} />
+                            <label htmlFor="register-contact-name">اسم المسؤول</label>
+                            <input id="register-contact-name" required autoComplete="name" value={form.contactName} onChange={(event) => updateField('contactName', event.target.value)} />
                         </div>
                     </div>
 
                     <div className="client-form-group">
-                        <label>البريد الإلكتروني</label>
-                        <input type="email" required dir="ltr" value={form.email} onChange={(event) => updateField('email', event.target.value)} />
+                        <label htmlFor="register-email">البريد الإلكتروني</label>
+                        <input id="register-email" type="email" required dir="ltr" autoComplete="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} />
                     </div>
 
                     <div className="client-form-group">
-                        <label>رقم التواصل</label>
-                        <input type="tel" dir="ltr" value={form.phone} onChange={(event) => updateField('phone', event.target.value)} placeholder="+966..." />
+                        <label htmlFor="register-phone">رقم التواصل</label>
+                        <input id="register-phone" type="tel" dir="ltr" autoComplete="tel" value={form.phone} onChange={(event) => updateField('phone', event.target.value)} placeholder="+966..." />
                     </div>
 
                     <div className="client-form-group">
-                        <label>كلمة المرور</label>
-                        <input type="password" required dir="ltr" value={form.password} onChange={(event) => updateField('password', event.target.value)} />
+                        <label htmlFor="register-password">كلمة المرور</label>
+                        <input id="register-password" type="password" required dir="ltr" autoComplete="new-password" value={form.password} onChange={(event) => updateField('password', event.target.value)} />
                         <span className="client-hint">استخدم 8 أحرف على الأقل، ويفضل خلط حروف وأرقام ورموز.</span>
                     </div>
 

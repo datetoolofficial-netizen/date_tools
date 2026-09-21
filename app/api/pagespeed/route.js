@@ -2,14 +2,13 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { hasAdminPermission } from '../_lib/adminPermissions';
 import { ADMIN_PERMISSIONS } from '../../adminAccess';
 import { verifyFirebaseIdToken } from '../_lib/firebaseIdToken';
+import { normalizePagespeedTargetUrl } from '../_lib/urlPolicies';
 
 const DEFAULT_PROJECT_ID = 'date-tool-official';
 const TOKEN_TTL_SECONDS = 55 * 60;
 const TOKEN_SCOPE = 'https://www.googleapis.com/auth/datastore';
 const TOKEN_AUDIENCE = 'https://oauth2.googleapis.com/token';
 const PAGESPEED_ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
-const DEFAULT_TARGET_URL = 'https://date-tool.com/';
-const ALLOWED_HOSTS = new Set(['date-tool.com', 'www.date-tool.com']);
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const PAGESPEED_CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
 
@@ -180,25 +179,6 @@ async function requireActiveAdmin(request, serviceAccount) {
 
 function normalizeStrategy(value) {
     return value === 'desktop' ? 'desktop' : 'mobile';
-}
-
-function normalizeTargetUrl(value) {
-    const rawValue = String(value || '').trim();
-    const parsed = rawValue
-        ? new URL(rawValue.startsWith('/') ? rawValue : rawValue, DEFAULT_TARGET_URL)
-        : new URL(DEFAULT_TARGET_URL);
-
-    if (parsed.protocol !== 'https:') {
-        throw new Error('invalid_target_url');
-    }
-
-    if (!ALLOWED_HOSTS.has(parsed.hostname.toLowerCase())) {
-        throw new Error('invalid_target_url');
-    }
-
-    parsed.hash = '';
-    parsed.search = '';
-    return parsed.toString();
 }
 
 function scoreToPercent(category) {
@@ -375,7 +355,7 @@ export async function GET(request) {
 
         const requestUrl = new URL(request.url);
         const strategy = normalizeStrategy(requestUrl.searchParams.get('strategy'));
-        const targetUrl = normalizeTargetUrl(requestUrl.searchParams.get('url'));
+        const targetUrl = normalizePagespeedTargetUrl(requestUrl.searchParams.get('url'));
         const report = await fetchPagespeedReport(targetUrl, strategy);
 
         return jsonResponse(report, report.ok ? 200 : report.status || 502);

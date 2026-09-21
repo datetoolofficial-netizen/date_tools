@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# date_tools
 
-## Getting Started
+موقع أدوات تاريخ ووقت وطقس ثنائي اللغة مبني بـNext.js 15 وReact 19، ويجهز للنشر إلى Cloudflare Worker المسمى `datetools` عبر OpenNext.
 
-First, run the development server:
+## التشغيل المحلي
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```powershell
+npm ci
+npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح `http://127.0.0.1:3000`. وضع المعلنين المحلي يستخدم بيانات مصطنعة في Local Storage ولا ينشئ حسابات Firebase.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## الفحص
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```powershell
+npm run lint
+npm test
+npm run test:rules
+npm run build
+npm run test:e2e
+npm run quality:local
+```
 
-## Learn More
+`test:e2e` يشغل خادم الإنتاج المحلي، لذلك يسبق بأمر `npm run build`. `quality:local` ينفذ الترتيب كاملًا ولا ينشر شيئًا. اختبارات قواعد Firestore تعمل على Emulator ومشروع تجريبي اسمه يبدأ بـ`demo-` لمنع الوصول العرضي إلى الإنتاج.
+يشغل Playwright الخادم مع `LOCAL_E2E_ISOLATED=1` حتى يستخدم إعدادات وحملات عامة فارغة ولا يتصل ببيانات الإنتاج.
 
-To learn more about Next.js, take a look at the following resources:
+## الصحة والتشغيل
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```powershell
+npm run health:check -- http://127.0.0.1:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- دليل الحوادث والاستعادة: `docs/OPERATIONS_RUNBOOK.md`
+- خطة اختبار القبول: `docs/ACCEPTANCE_TEST_PLAN.md`
+- تعريف إحصاء التثبيت والخصوصية: `docs/STATISTICS_AND_PRIVACY.md`
 
-## Deploy on Vercel
+## النشر
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+النشر لا ينفذ ضمن الفحص المحلي، ويحتاج موافقة صريحة ومصادقة Cloudflare:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+npm run deploy
+```
+
+لا تحفظ `.env.local` أو `.dev.vars` أو مفاتيح Firebase وCloudflare في Git.

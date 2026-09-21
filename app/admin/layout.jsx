@@ -1,6 +1,9 @@
 import AdminShell from './AdminShell';
 import { noIndexMetadata } from '../seoConfig';
+import InternalRootLayout, { internalViewport } from '../InternalRootLayout';
 import './AdminDashboard.css';
+
+export const viewport = internalViewport;
 
 export const metadata = {
     title: 'بوابة الإدارة | الأدوات الشاملة',
@@ -8,5 +11,5 @@ export const metadata = {
 };
 
 export default function AdminLayout({ children }) {
-    return <AdminShell>{children}</AdminShell>;
+    return <InternalRootLayout><AdminShell>{children}</AdminShell></InternalRootLayout>;
 }

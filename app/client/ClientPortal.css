@@ -9,7 +9,7 @@
     --client-primary-dark: #115e59;
     --client-green: #22c55e;
     --client-orange: #f59e0b;
-    --client-red: #ef4444;
+    --client-red: #b91c1c;
     --client-purple: #8b5cf6;
     --client-shadow: 0 12px 30px rgba(20, 64, 59, 0.08);
     --client-sidebar-width: 260px;
@@ -1192,7 +1192,7 @@
     --client-card: #ffffff;
     --client-soft: #edf5f3;
     --client-text: #1c302e;
-    --client-muted: #647a76;
+    --client-muted: #506762;
     --client-border: #cbdcd8;
     --client-primary: #0f766e;
     --client-primary-dark: #115e59;
@@ -1492,8 +1492,10 @@
 .client-workspace .client-logout-btn {
     min-height: 36px;
     padding: 8px 15px;
-    border: 0;
+    border: 1px solid #fecaca;
     border-radius: 8px;
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .client-workspace .client-mobile-menu {
@@ -1543,7 +1545,7 @@
 .client-workspace .client-page-eyebrow {
     display: inline-flex;
     margin-bottom: 8px;
-    color: rgba(255, 255, 255, 0.8);
+    color: #ffffff;
     font-size: 12px;
     font-weight: 900;
 }
@@ -1584,7 +1586,7 @@
 }
 
 .client-workspace .client-page-hero-meta span {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.18);
 }
 
 .client-workspace .client-page-hero-meta small {
@@ -1741,6 +1743,7 @@
 .client-workspace .client-table th {
     padding: var(--client-table-head-pad);
     background: color-mix(in srgb, var(--client-primary) 12%, var(--client-card));
+    color: #405a55;
     font-size: 12px;
 }
 
@@ -1754,11 +1757,27 @@
     padding: 12px 4px;
     border-top: 1px solid color-mix(in srgb, var(--client-muted) 16%, transparent);
     background: transparent;
+    color: #405a55;
     font-size: 12px;
 }
 
 .client-workspace .client-version-badge {
+    color: #405a55;
     font-size: 11px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .client-workspace .client-table th,
+    .client-workspace .client-footer,
+    .client-workspace .client-version-badge {
+        color: #b9d3ce;
+    }
+
+    .client-workspace .client-logout-btn {
+        border-color: #7f1d1d;
+        background: #450a0a;
+        color: #fecaca;
+    }
 }
 
 @media (max-width: 900px) {

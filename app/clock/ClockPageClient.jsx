@@ -121,7 +121,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
         lang,
     } = useSiteContext();
     const labels = clockLabels[lang] || clockLabels.ar;
-    const [now, setNow] = useState(() => new Date());
+    const [now, setNow] = useState(null);
     const [inputHour, setInputHour] = useState('13');
     const [inputMinute, setInputMinute] = useState('30');
     const [convertedTime, setConvertedTime] = useState('');
@@ -138,6 +138,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
 
     useEffect(() => {
         firebaseApiRef.current.trackToolUsage('clockTools');
+        setNow(new Date());
         let timer;
         const minuteDelay = 60000 - (Date.now() % 60000) + 25;
         const minuteStart = window.setTimeout(() => {
@@ -317,7 +318,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <i className="fa-regular fa-clock"></i>
                         <span>{labels.currentTime} {locationLabel}</span>
                     </span>
-                    <strong>{formatTime(now, cityZone, clockHour12, false, lang)}</strong>
+                    <strong>{now ? formatTime(now, cityZone, clockHour12, false, lang) : '--:--'}</strong>
                 </div>
             </div>}
 

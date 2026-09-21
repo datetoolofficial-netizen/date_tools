@@ -135,12 +135,14 @@ export default function AdminLogin() {
 
                 <form onSubmit={handleLogin}>
                     <div className="form-group">
-                        <label>البريد الإلكتروني للإدارة</label>
+                        <label htmlFor="admin-email">البريد الإلكتروني للإدارة</label>
                         <div className="input-wrapper">
                             <i className="fa-regular fa-envelope"></i>
                             <input
+                                id="admin-email"
                                 type="email"
                                 required
+                                autoComplete="username"
                                 placeholder="admin@example.com"
                                 dir="ltr"
                                 value={email}
@@ -150,12 +152,14 @@ export default function AdminLogin() {
                     </div>
 
                     <div className="form-group">
-                        <label>كلمة المرور</label>
+                        <label htmlFor="admin-password">كلمة المرور</label>
                         <div className="input-wrapper">
                             <i className="fa-solid fa-lock"></i>
                             <input
+                                id="admin-password"
                                 type="password"
                                 required
+                                autoComplete="current-password"
                                 placeholder="••••••••"
                                 dir="ltr"
                                 value={password}

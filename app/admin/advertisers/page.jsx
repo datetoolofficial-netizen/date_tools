@@ -14,6 +14,7 @@ import {
     resolveAdvertiserRole,
 } from '../../advertiserAccess';
 import { useAdminShell } from '../AdminShell';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
 
 const ROLE_OPTIONS = [
     { value: ADVERTISER_ROLES.OWNER, label: 'مالك حساب المعلن' },
@@ -225,6 +226,8 @@ export default function AdminAdvertisersPage() {
                 return;
             }
 
+            assertProductionMutationAllowed();
+
             const [{ db }, { doc, serverTimestamp, updateDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/firestore'),
@@ -301,6 +304,8 @@ export default function AdminAdvertisersPage() {
                 });
                 return;
             }
+
+            assertProductionMutationAllowed();
 
             const [firebaseModule, appModule, authModule, firestoreModule] = await Promise.all([
                 import('../../firebase'),

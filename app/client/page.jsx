@@ -17,6 +17,8 @@ import {
     isLocalAdvertiserDemoEnabled,
     loginLocalAdvertiser,
 } from './localAdvertiserDemo';
+import { assertProductionMutationAllowed } from '../localMutationSafety';
+import { recordAdvertiserAudit } from '../advertiserAudit';
 
 export default function ClientLoginPage() {
     const [email, setEmail] = useState('');
@@ -42,6 +44,8 @@ export default function ClientLoginPage() {
                 window.location.replace('/client/dashboard');
                 return;
             }
+
+            assertProductionMutationAllowed();
 
             await verifyTurnstileChallenge(turnstileToken, 'advertiser-login');
 
@@ -83,6 +87,13 @@ export default function ClientLoginPage() {
                 await updateDoc(doc(db, 'advertisers', credential.user.uid), {
                     status: 'active',
                     updatedAt: serverTimestamp(),
+                });
+                await recordAdvertiserAudit({
+                    user: credential.user,
+                    action: 'advertiser.activated',
+                    resourceType: 'advertiser',
+                    resourceId: credential.user.uid,
+                    details: { status: 'active', source: 'login' },
                 });
             }
 
@@ -146,13 +157,13 @@ export default function ClientLoginPage() {
 
                 <form onSubmit={handleLogin}>
                     <div className="client-form-group">
-                        <label>البريد الإلكتروني</label>
-                        <input type="email" required dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="advertiser@example.com" />
+                        <label htmlFor="advertiser-email">البريد الإلكتروني</label>
+                        <input id="advertiser-email" type="email" required autoComplete="username" dir="ltr" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="advertiser@example.com" />
                     </div>
 
                     <div className="client-form-group">
-                        <label>كلمة المرور</label>
-                        <input type="password" required dir="ltr" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
+                        <label htmlFor="advertiser-password">كلمة المرور</label>
+                        <input id="advertiser-password" type="password" required autoComplete="current-password" dir="ltr" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" />
                     </div>
 
                     <div className="client-turnstile-note" hidden>

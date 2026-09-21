@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import PublicAdSlot from '../components/PublicAdSlot';
 import ToolFaqSection from '../components/ToolFaqSection';
 import { getSafeCurrentUrl } from '../privacyConsent';
+import { fetchJsonWithTimeout } from '../fetchWithTimeout';
 import { useSiteContext } from '../SiteContext';
 import { getToolFaqs, getToolSettings, isShareTemplateEnabled, renderShareTemplate } from '../toolSettings';
 import { useSectionHashScroll } from '../useSectionHashScroll';
@@ -157,8 +158,9 @@ async function fetchForecast(latitude, longitude) {
         forecast_days: '6',
     });
 
-    const forecastResponse = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
-    return forecastResponse.json();
+    return fetchJsonWithTimeout(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, {}, {
+        timeoutMs: 12_000,
+    });
 }
 
 export default function WeatherPage({ children, hideHero = false, initialSectionId = '', standaloneSectionId = '' }) {
@@ -171,7 +173,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
         lang,
     } = useSiteContext();
     const labels = weatherUi[lang] || weatherUi.ar;
-    const [query, setQuery] = useState('Riyadh');
+    const [query, setQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [weather, setWeather] = useState(null);
@@ -187,8 +189,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
         try {
             const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanQuery)}&count=1&language=${lang === 'en' ? 'en' : 'ar'}&format=json`;
-            const geoResponse = await fetch(geoUrl);
-            const geoData = await geoResponse.json();
+            const geoData = await fetchJsonWithTimeout(geoUrl, {}, { timeoutMs: 10_000 });
             const place = geoData.results?.[0];
             if (!place) throw new Error('city_not_found');
 
@@ -254,7 +255,8 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 return;
             }
 
-            await loadWeather('Riyadh');
+            setError(labels.locationError);
+            setIsLoading(false);
         }
 
         loadInitialWeather();

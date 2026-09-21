@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { normalizeAnonymousAnalyticsId } from '../../statisticsPolicy';
 
 const MAX_BODY_BYTES = 2048;
 const TOKEN_TTL_SECONDS = 55 * 60;
@@ -300,6 +301,58 @@ async function commitStatisticIncrement(serviceAccount, fieldPaths) {
     }
 }
 
+async function hashAnonymousId(value) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`date-tools:${value}`));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function commitUniqueStatisticIncrement(serviceAccount, collectionName, anonymousId, counterField) {
+    const token = await getAccessToken(serviceAccount);
+    const projectId = serviceAccount.projectId || DEFAULT_PROJECT_ID;
+    const databaseName = `projects/${projectId}/databases/(default)`;
+    const documentName = `${databaseName}/documents/statistics/main`;
+    const markerId = await hashAnonymousId(anonymousId);
+    const markerName = `${databaseName}/documents/${collectionName}/${markerId}`;
+    const now = new Date().toISOString();
+    const response = await fetch(`https://firestore.googleapis.com/v1/${databaseName}/documents:commit`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            writes: [
+                {
+                    update: {
+                        name: markerName,
+                        fields: { createdAt: { timestampValue: now } },
+                    },
+                    currentDocument: { exists: false },
+                },
+                {
+                    transform: {
+                        document: documentName,
+                        fieldTransforms: [
+                            { fieldPath: counterField, increment: { integerValue: '1' } },
+                            { fieldPath: 'lastUpdated', setToServerValue: 'REQUEST_TIME' },
+                        ],
+                    },
+                },
+            ],
+        }),
+    });
+
+    if (response.status === 409) {
+        await response.text();
+        return false;
+    }
+    if (!response.ok) {
+        await response.text();
+        throw new Error(`firestore_failed_${response.status}`);
+    }
+    return true;
+}
+
 export async function POST(request) {
     if (!(await isAllowedOrigin(request))) {
         return jsonResponse({ ok: false, error: 'forbidden_origin' }, 403);
@@ -322,6 +375,22 @@ export async function POST(request) {
             throw error;
         }
 
+        const anonymousId = normalizeAnonymousAnalyticsId(payload.visitorId);
+
+        if (payload.event === 'pwaInstall') {
+            if (!anonymousId || !['appinstalled', 'standalone'].includes(payload.method)) {
+                return jsonResponse({ ok: false, error: 'invalid_event' }, 400);
+            }
+
+            const counted = await commitUniqueStatisticIncrement(
+                serviceAccount,
+                'statistics_pwa_installs',
+                anonymousId,
+                'pwaInstalls',
+            );
+            return jsonResponse({ ok: true, counted });
+        }
+
         const fieldPaths = getFieldTransforms(payload);
 
         if (fieldPaths.length === 0) {
@@ -329,6 +398,15 @@ export async function POST(request) {
         }
 
         await commitStatisticIncrement(serviceAccount, fieldPaths);
+
+        if (payload.event === 'visit' && anonymousId) {
+            await commitUniqueStatisticIncrement(
+                serviceAccount,
+                'statistics_unique_visitors',
+                anonymousId,
+                'uniqueVisitors',
+            );
+        }
 
         return jsonResponse({ ok: true });
     } catch (error) {

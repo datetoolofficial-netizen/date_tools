@@ -15,6 +15,7 @@ import { APP_VERSION } from './version';
 import { resolvePrivacyUiState } from './privacyUiState';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 import { getArabicToolPath, getToolRouteLanguage, localizeToolPath } from './localizedToolRoutes';
+import { sendPublicStatisticEvent, trackPwaInstallation } from './statisticsClient';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -130,28 +131,11 @@ async function fetchPublicSiteConfig() {
     }
 }
 
-async function sendStatisticEvent(payload) {
-    if (getPrivacyConsent()?.analytics !== true) return;
-
-    try {
-        await fetch('/api/statistics', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-            keepalive: true,
-        });
-    } catch {
-        // Statistics should never break the visitor experience.
-    }
-}
-
 const publicRuntimeApi = {
-    initAndTrackVisit: () => sendStatisticEvent({ event: 'visit' }),
-    trackToolUsage: (toolName) => sendStatisticEvent({ event: 'tool', toolName }),
-    trackAdClick: (adId) => sendStatisticEvent({ event: 'adClick', adId }),
-    trackAdImpression: (adId) => sendStatisticEvent({ event: 'adImpression', adId }),
+    initAndTrackVisit: () => sendPublicStatisticEvent({ event: 'visit' }),
+    trackToolUsage: (toolName) => sendPublicStatisticEvent({ event: 'tool', toolName }),
+    trackAdClick: (adId) => sendPublicStatisticEvent({ event: 'adClick', adId }),
+    trackAdImpression: (adId) => sendPublicStatisticEvent({ event: 'adImpression', adId }),
     getSiteConfig: fetchPublicSiteConfig,
 };
 
@@ -328,6 +312,13 @@ export default function SiteShell({ children, initialConfig = null }) {
 
         visitTrackedRef.current = true;
         firebaseApiRef.current.initAndTrackVisit();
+        if (
+            window.matchMedia?.('(display-mode: standalone)').matches
+            || window.navigator.standalone === true
+            || document.referrer.startsWith('android-app://')
+        ) {
+            trackPwaInstallation('standalone');
+        }
     }, [privacyConsent?.analytics, shouldUseShell]);
 
     useEffect(() => {

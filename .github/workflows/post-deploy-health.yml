@@ -1,0 +1,42 @@
+name: Post-deploy health
+
+on:
+  workflow_dispatch:
+    inputs:
+      expectedVersion:
+        description: Expected package version, for example 0.3.58
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      expectedVersion:
+        required: false
+        type: string
+  repository_dispatch:
+    types: [production-deployed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: post-deploy-health-production
+  cancel-in-progress: false
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HEALTH_BASE_URL: https://date-tool.com
+      EXPECTED_VERSION: ${{ inputs.expectedVersion || github.event.client_payload.version || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 20
+
+      - name: Verify the deployed version and critical routes
+        run: node scripts/post-deploy-health.mjs

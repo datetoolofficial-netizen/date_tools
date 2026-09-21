@@ -1,8 +1,8 @@
-import ToolSeoContent from '../components/ToolSeoContent';
-import ToolPageHero from '../components/ToolPageHero';
-import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
-import { serializeJsonLd } from '../safeJsonLd';
-import WeatherPageClient from './WeatherPageClient';
+import ToolSeoContent from '../../components/ToolSeoContent';
+import ToolPageHero from '../../components/ToolPageHero';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../../toolSeoServer';
+import { serializeJsonLd } from '../../safeJsonLd';
+import WeatherPageClient from '../../weather/WeatherPageClient';
 
 export async function generateMetadata() {
     return buildManagedToolMetadata('weather');

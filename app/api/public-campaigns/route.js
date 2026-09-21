@@ -214,6 +214,10 @@ async function fetchCampaignDocuments(serviceAccount) {
 }
 
 export async function GET() {
+    if (process.env.LOCAL_E2E_ISOLATED === '1') {
+        return jsonResponse({ ok: true, campaigns: [] });
+    }
+
     try {
         const serviceAccount = await getServiceAccount();
         if (!serviceAccount?.clientEmail || !serviceAccount?.privateKey) {

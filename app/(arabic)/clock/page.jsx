@@ -1,8 +1,8 @@
-import ToolSeoContent from '../components/ToolSeoContent';
-import ToolPageHero from '../components/ToolPageHero';
-import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../toolSeoServer';
-import { serializeJsonLd } from '../safeJsonLd';
-import ClockPageClient from './ClockPageClient';
+import ToolSeoContent from '../../components/ToolSeoContent';
+import ToolPageHero from '../../components/ToolPageHero';
+import { buildManagedToolJsonLd, buildManagedToolMetadata, getManagedToolPage } from '../../toolSeoServer';
+import { serializeJsonLd } from '../../safeJsonLd';
+import ClockPageClient from '../../clock/ClockPageClient';
 
 export async function generateMetadata() {
     return buildManagedToolMetadata('clock');

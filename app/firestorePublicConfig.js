@@ -44,6 +44,8 @@ async function fetchSettingsDocument(documentId, revalidate) {
 }
 
 export async function getPublicSiteConfigFromFirestore({ revalidate = 300 } = {}) {
+    if (process.env.LOCAL_E2E_ISOLATED === '1') return {};
+
     try {
         return (await fetchSettingsDocument('public', revalidate)) || {};
     } catch {

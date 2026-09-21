@@ -9,7 +9,7 @@ function readProjectFile(...segments) {
 
 describe('AdSense readiness', () => {
     it('publishes the account verification meta without loading ads globally', () => {
-        const layout = readProjectFile('app', 'layout.jsx');
+        const layout = readProjectFile('app', 'PublicRootLayout.jsx');
 
         expect(layout).toContain('<meta name="google-adsense-account" content={adsenseAccount} />');
         expect(layout).toContain('adsenseClientPattern.test(configuredAdsenseClient)');

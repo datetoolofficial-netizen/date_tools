@@ -11,6 +11,8 @@ import {
     resolveOrganizationNumber,
 } from '../../advertiserAccess';
 import { listLocalAdvertiserCampaigns, updateLocalAdvertiserCampaignStatus } from '../localAdvertiserDemo';
+import { assertProductionMutationAllowed } from '../../localMutationSafety';
+import { recordAdvertiserAudit } from '../../advertiserAudit';
 
 const STATUS_OPTIONS = ['مسودة', 'قيد المراجعة', 'نشط', 'متوقف مؤقتاً', 'مرفوض', 'منتهي', 'تم تعديله'];
 
@@ -130,6 +132,8 @@ export default function ClientDashboardPage() {
                 return;
             }
 
+            assertProductionMutationAllowed();
+
             const [{ db }, { doc, serverTimestamp, updateDoc }] = await Promise.all([
                 import('../../firebase'),
                 import('firebase/firestore'),
@@ -138,6 +142,13 @@ export default function ClientDashboardPage() {
             await updateDoc(doc(db, 'campaigns', campaignId), {
                 status,
                 updatedAt: serverTimestamp(),
+            });
+            await recordAdvertiserAudit({
+                user: currentUser,
+                action: 'campaign.status_updated',
+                resourceType: 'campaign',
+                resourceId: campaignId,
+                details: { status },
             });
 
             setCampaigns((current) => current.map((item) => item.id === campaignId ? { ...item, status } : item));
@@ -238,8 +249,8 @@ export default function ClientDashboardPage() {
                         </select>
                     </div>
                     <div className="client-form-group">
-                        <label>تاريخ البداية أو النهاية</label>
-                        <input type="date" value={filters.date} onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value }))} />
+                        <label htmlFor="campaign-date-filter">تاريخ البداية أو النهاية</label>
+                        <input id="campaign-date-filter" type="date" value={filters.date} onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value }))} />
                     </div>
                 </div>
 

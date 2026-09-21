@@ -177,15 +177,9 @@ service cloud.firestore {
         );
     }
 
-    function hasAdminPermission(permission, aliases) {
-      return (
-        isActiveAdmin()
-        && roleHasAdminPermission(adminRole(), permission)
-      )
-        || (
-          isActiveAdmin()
-          && adminRole() == "admin_assistant"
-          && (
+    function assistantHasAdminPermission(permission, aliases) {
+      return adminRole() == "admin_assistant"
+        && (
             (
               adminData().get("permissions", []) is list
               && adminData().get("permissions", []).hasAny(aliases)
@@ -218,38 +212,62 @@ service cloud.firestore {
               adminData().get("allowedAdminPages", {}) is map
               && adminData().get("allowedAdminPages", {}).get(permission, false) == true
             )
-          )
+        );
+    }
+
+    function hasAdminPermission(permission, aliases) {
+      return isActiveAdmin()
+        && (
+          roleHasAdminPermission(adminRole(), permission)
+          || assistantHasAdminPermission(permission, aliases)
         );
     }
 
     function canUpdateMainSettings() {
       let changed = request.resource.data.diff(resource.data).affectedKeys();
-      return (
-          hasAdminPermission("site.identity.update", ["site.identity.update", "identity", "brand", "branding"])
-          && changed.hasOnly([
+      let role = adminRole();
+      return isActiveAdmin()
+        && (
+          (
+            changed.hasOnly([
             "toolDisplayName", "toolSlogan", "contactEmail", "hasLogo", "logoUrl",
             "faviconUrl", "appIconUrl", "pwaShortcutDateIconUrl", "pwaShortcutClockIconUrl",
             "pwaShortcutWeatherIconUrl", "copyrightName", "copyrightText", "mainSEO",
             "linkPreview", "pwaInstallPrompt", "pwaUpdatePrompt", "identityTranslations"
-          ])
-        )
-        || (
-          hasAdminPermission("integrations.update", ["integrations.update", "integrations", "external-integrations", "externalIntegrations"])
-          && changed.hasOnly(["externalIntegrations"])
-        )
-        || (
-          hasAdminPermission("ads.settings.update", ["ads.settings.update", "ad-settings", "adSettings", "ads-settings", "google-ads"])
-          && changed.hasOnly(["googleAdSlots", "externalIntegrations"])
-        )
-        || (
-          hasAdminPermission("site.settings.update", ["site.settings.update", "tools", "settings", "site-settings", "pages"])
-          && changed.hasOnly([
-            "internalPages", "customPages", "socialLinks", "externalLinks", "privacySettingsButton"
-          ])
-        )
-        || (
-          hasAdminPermission("content.tools.update", ["content.tools.update", "tool-management", "toolManagement", "tools-management", "toolsContent"])
-          && changed.hasOnly(["toolSettings", "events"])
+            ])
+            && (
+              role in ["platform_owner", "super_admin", "operations_manager", "content_manager"]
+              || assistantHasAdminPermission("site.identity.update", ["site.identity.update", "identity", "brand", "branding"])
+            )
+          )
+          || (
+            changed.hasOnly(["externalIntegrations"])
+            && (
+              role in ["platform_owner", "super_admin"]
+              || assistantHasAdminPermission("integrations.update", ["integrations.update", "integrations", "external-integrations", "externalIntegrations"])
+            )
+          )
+          || (
+            changed.hasOnly(["googleAdSlots", "externalIntegrations"])
+            && (
+              role in ["platform_owner", "super_admin", "ads_manager"]
+              || assistantHasAdminPermission("ads.settings.update", ["ads.settings.update", "ad-settings", "adSettings", "ads-settings", "google-ads"])
+            )
+          )
+          || (
+            changed.hasOnly(["internalPages", "customPages", "socialLinks", "externalLinks", "privacySettingsButton"])
+            && (
+              role in ["platform_owner", "super_admin", "operations_manager", "content_manager"]
+              || assistantHasAdminPermission("site.settings.update", ["site.settings.update", "tools", "settings", "site-settings", "pages"])
+            )
+          )
+          || (
+            changed.hasOnly(["toolSettings", "events"])
+            && (
+              role in ["platform_owner", "super_admin", "operations_manager", "content_manager"]
+              || assistantHasAdminPermission("content.tools.update", ["content.tools.update", "tool-management", "toolManagement", "tools-management", "toolsContent"])
+            )
+          )
         );
     }
 

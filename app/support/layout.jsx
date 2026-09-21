@@ -1,4 +1,7 @@
 import { noIndexMetadata } from '../seoConfig';
+import InternalRootLayout, { internalViewport } from '../InternalRootLayout';
+
+export const viewport = internalViewport;
 
 export const metadata = {
     title: 'الدعم الفني | الأدوات الشاملة',
@@ -6,6 +9,5 @@ export const metadata = {
 };
 
 export default function SupportLayout({ children }) {
-    return children;
+    return <InternalRootLayout>{children}</InternalRootLayout>;
 }
-

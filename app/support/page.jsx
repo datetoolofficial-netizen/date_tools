@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Toast from '../components/Toast';
 import '../client/ClientPortal.css';
 
@@ -18,6 +18,11 @@ export default function SupportPage() {
     const [form, setForm] = useState(initialForm);
     const [notice, setNotice] = useState({ text: '', type: 'info' });
     const [isLoading, setIsLoading] = useState(false);
+    const [isReady, setIsReady] = useState(false);
+
+    useEffect(() => {
+        setIsReady(true);
+    }, []);
 
     const updateField = (field, value) => {
         setForm((current) => ({ ...current, [field]: value }));
@@ -71,7 +76,7 @@ export default function SupportPage() {
                     في حال وجود خطأ ظاهر، اكتب نص الرسالة أو ضع رابط صورة في حقل الملاحظات. مرفقات الصور الخاصة ستُربط لاحقًا بتخزين خاص وليس عبر مسار R2 العام.
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                     <input
                         type="text"
                         value={form.website}
@@ -79,35 +84,36 @@ export default function SupportPage() {
                         tabIndex="-1"
                         autoComplete="off"
                         style={{ display: 'none' }}
+                        aria-hidden="true"
                     />
 
                     <div className="client-form-row">
                         <div className="client-form-group">
-                            <label>الاسم أو الجهة</label>
-                            <input required value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} />
+                            <label htmlFor="support-name">الاسم أو الجهة</label>
+                            <input id="support-name" required autoComplete="name" value={form.senderName} onChange={(event) => updateField('senderName', event.target.value)} />
                         </div>
                         <div className="client-form-group">
-                            <label>البريد الإلكتروني</label>
-                            <input required type="email" dir="ltr" value={form.senderEmail} onChange={(event) => updateField('senderEmail', event.target.value)} />
+                            <label htmlFor="support-email">البريد الإلكتروني</label>
+                            <input id="support-email" required type="email" dir="ltr" autoComplete="email" value={form.senderEmail} onChange={(event) => updateField('senderEmail', event.target.value)} />
                         </div>
                     </div>
 
                     <div className="client-form-group">
-                        <label>عنوان الطلب</label>
-                        <input required value={form.subject} onChange={(event) => updateField('subject', event.target.value)} placeholder="مثال: مشكلة في رفع إعلان" />
+                        <label htmlFor="support-subject">عنوان الطلب</label>
+                        <input id="support-subject" required value={form.subject} onChange={(event) => updateField('subject', event.target.value)} placeholder="مثال: مشكلة في رفع إعلان" />
                     </div>
 
                     <div className="client-form-group">
-                        <label>وصف المشكلة / الاستفسار</label>
-                        <textarea required value={form.message} onChange={(event) => updateField('message', event.target.value)} />
+                        <label htmlFor="support-message">وصف المشكلة / الاستفسار</label>
+                        <textarea id="support-message" required value={form.message} onChange={(event) => updateField('message', event.target.value)} />
                     </div>
 
                     <div className="client-form-group">
-                        <label>رابط صورة أو ملاحظة مرفق اختياري</label>
-                        <input value={form.attachmentNote} onChange={(event) => updateField('attachmentNote', event.target.value)} placeholder="رابط لقطة شاشة أو وصف للمرفق" />
+                        <label htmlFor="support-attachment-note">رابط صورة أو ملاحظة مرفق اختياري</label>
+                        <input id="support-attachment-note" value={form.attachmentNote} onChange={(event) => updateField('attachmentNote', event.target.value)} placeholder="رابط لقطة شاشة أو وصف للمرفق" />
                     </div>
 
-                    <button type="submit" className="client-primary-btn" disabled={isLoading} style={{ width: '100%' }}>
+                    <button type="submit" className="client-primary-btn" disabled={!isReady || isLoading} style={{ width: '100%' }}>
                         {isLoading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-regular fa-paper-plane"></i>}
                         {isLoading ? 'جاري إرسال الطلب...' : 'إرسال طلب الدعم'}
                     </button>
