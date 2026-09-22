@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { pickPublicSiteConfig } from '../app/publicSiteConfig';
 import { getLocalizedSiteConfig } from '../app/localizedConfig';
 import { normalizePwaUpdatePrompt } from '../app/pwaPromptSettings';
+import { APP_VERSION } from '../app/version';
 
 describe('public settings projection', () => {
     it('keeps public integrations and removes executable snippets', () => {
@@ -157,10 +158,10 @@ describe('public settings projection', () => {
             },
         });
 
-        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: '0.3.58', schemaVersion: 2 });
+        expect(projected.pwaUpdatePrompt).toEqual({ enabled: true, version: APP_VERSION, schemaVersion: 2 });
         expect(projected.pwaUpdatePrompt).not.toHaveProperty('privateToken');
         expect(normalizePwaUpdatePrompt({ enabled: false, version: '' }).enabled).toBe(true);
         expect(normalizePwaUpdatePrompt({ enabled: false, schemaVersion: 2 }).enabled).toBe(false);
-        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe('0.3.58');
+        expect(normalizePwaUpdatePrompt({ enabled: true, version: 'stale-version' }).version).toBe(APP_VERSION);
     });
 });

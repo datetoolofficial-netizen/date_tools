@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compareVersions, shouldShowPwaUpdate } from '../app/pwaVersionCheck';
 import { GET as getLatestAppVersion } from '../app/api/app-version/route';
+import { APP_VERSION, APP_VERSION_DATE } from '../app/version';
 
 describe('installed app version checks', () => {
     it('compares dotted versions numerically', () => {
@@ -19,8 +20,8 @@ describe('installed app version checks', () => {
         const response = await getLatestAppVersion();
         const body = await response.json();
 
-        expect(body.version).toBe('0.3.58');
-        expect(body.publishedAt).toBe('2026-09-13');
+        expect(body.version).toBe(APP_VERSION);
+        expect(body.publishedAt).toBe(APP_VERSION_DATE);
         expect(response.headers.get('cache-control')).toContain('no-store');
     });
 });
