@@ -19,6 +19,8 @@ jobs:
     name: Verify application and rules
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/playwright-browsers
 
     steps:
       - name: Checkout repository
