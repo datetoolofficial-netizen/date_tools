@@ -16457,11 +16457,11 @@ npm run test:e2e
 
 - دُفع التصحيح إلى `master` في الالتزام `a1b226d`، ولم يغير نسخة Worker المنشورة أو قواعد Firestore.
 - نجح `CodeQL` لهذا الالتزام، ونجحت مرحلتا `npm ci` وتثبيت Playwright على GitHub. بعد فتح السجل بجلسة مصادقة، اتضح أن `36` اختبار متصفح فشلت لأن Playwright لم يجد Chromium في مسار التشغيل، بينما نجح `14` اختبارًا لا يحتاج المتصفح.
-- السبب: خطوة التثبيت استخدمت مسار Playwright الافتراضي على Linux، لكن `scripts/run-browser-tests.mjs` يضع `XDG_CACHE_HOME` تحت `.tools/cache`، فتبدل مكان البحث أثناء الاختبار. عُيّن `PLAYWRIGHT_BROWSERS_PATH` على مستوى مهمة GitHub إلى `${{ runner.temp }}/playwright-browsers` ليستخدمه التثبيت والاختبار معًا.
+- السبب: خطوة التثبيت استخدمت مسار Playwright الافتراضي على Linux، لكن `scripts/run-browser-tests.mjs` يضع `XDG_CACHE_HOME` تحت `.tools/cache`، فتبدل مكان البحث أثناء الاختبار. عُيّن `PLAYWRIGHT_BROWSERS_PATH` على مستوى مهمة GitHub إلى `${{ github.workspace }}/.tools/playwright-browsers` ليستخدمه التثبيت والاختبار معًا. المحاولة الأولى باستخدام `runner.temp` رُفضت عند تحليل ملف العمل لأن سياق `runner` غير متاح في متغيرات مستوى المهمة، لذا استُبدل بـ`github.workspace`.
 
 المتبقي المحفوظ:
 
-- اختبار تصحيح مسار Playwright على GitHub والتحقق من نجاح بوابة الجودة كاملة. رابط الفشل السابق: `https://github.com/datetoolofficial-netizen/date_tools/actions/runs/35723270789/job/106730837222`.
+- اختبار تصحيح مسار Playwright على GitHub والتحقق من نجاح بوابة الجودة كاملة. رابط فشل المتصفح السابق: `https://github.com/datetoolofficial-netizen/date_tools/actions/runs/35723270789/job/106730837222`. رابط فشل تعريف `runner.temp`: `https://github.com/datetoolofficial-netizen/date_tools/actions/runs/35724404494`.
 
 ### إكمال مراجعة مستخدمي AdSense H-IAM-04
 
