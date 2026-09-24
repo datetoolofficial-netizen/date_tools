@@ -13,8 +13,19 @@ export function buildPostDeployChecks(expectedVersion) {
         { path: '/weather', type: 'text', validate: (body) => /<h1[\s>]/i.test(body) },
         { path: '/en/weather', type: 'text', validate: (body) => /<h1[\s>]/i.test(body) },
         { path: '/manifest.webmanifest', type: 'json', validate: (body) => body.start_url === '/' },
-        { path: '/robots.txt', type: 'text', validate: (body) => /sitemap:\s*https:\/\/date-tool\.com\/sitemap\.xml/i.test(body) },
-        { path: '/sitemap.xml', type: 'text', validate: (body) => /<urlset/i.test(body) && /https:\/\/date-tool\.com\/en/i.test(body) },
+        {
+            path: '/robots.txt',
+            type: 'text',
+            validate: (body) => String(body).toLowerCase().includes('sitemap: https://date-tool.com/sitemap.xml'),
+        },
+        {
+            path: '/sitemap.xml',
+            type: 'text',
+            validate: (body) => {
+                const normalizedBody = String(body).toLowerCase();
+                return normalizedBody.includes('<urlset') && normalizedBody.includes('https://date-tool.com/en');
+            },
+        },
         { path: '/ads.txt', type: 'text', validate: (body) => /google\.com,\s*pub-1147243690926079,\s*DIRECT/i.test(body) },
     ];
 }
