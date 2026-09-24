@@ -301,6 +301,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <label>
                             <span>{labels.hour}</span>
                             <select
+                                className="public-tool-field"
                                 value={inputHour}
                                 onChange={(event) => { setInputHour(event.target.value); setConvertedTime(''); }}
                                 aria-label={labels.hour24}
@@ -312,6 +313,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <label>
                             <span>{labels.minute}</span>
                             <select
+                                className="public-tool-field"
                                 value={inputMinute}
                                 onChange={(event) => { setInputMinute(event.target.value); setConvertedTime(''); }}
                                 aria-label={labels.minute}
@@ -349,6 +351,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <label className="timezone-search-field">
                             <span>{labels.firstCity}</span>
                             <input
+                                className="public-tool-field"
                                 value={fromCity.query}
                                 onChange={(event) => updateCityQuery(setFromCity, event.target.value)}
                                 placeholder={labels.firstExample}
@@ -359,6 +362,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                         <label className="timezone-search-field">
                             <span>{labels.secondCity}</span>
                             <input
+                                className="public-tool-field"
                                 value={toCity.query}
                                 onChange={(event) => updateCityQuery(setToCity, event.target.value)}
                                 placeholder={labels.secondExample}

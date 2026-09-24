@@ -73,7 +73,9 @@ export async function getFirebaseAppCheckStatus() {
 }
 
 export async function getFirebaseAuth() {
-    await ensureFirebaseAppCheck();
+    // App Check is optional for Authentication and must not hold the login UI
+    // while its provider is unavailable or blocked by the browser.
+    void ensureFirebaseAppCheck();
 
     if (!authInstance) {
         const { getAuth } = await import("firebase/auth");

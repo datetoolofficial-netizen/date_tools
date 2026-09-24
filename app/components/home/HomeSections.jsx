@@ -234,6 +234,7 @@ function DateDropdowns({ values, onChange, dayMax, months, years, labels, defaul
     return (
         <div className="date-dropdowns" onFocusCapture={fillMissingDate} onPointerDownCapture={fillMissingDate}>
             <select
+                className="public-tool-field"
                 value={values.d}
                 onChange={(e) => onChange({ ...values, d: e.target.value })}
                 aria-label={labels.day}
@@ -245,6 +246,7 @@ function DateDropdowns({ values, onChange, dayMax, months, years, labels, defaul
                 ))}
             </select>
             <select
+                className="public-tool-field"
                 value={values.m}
                 onChange={(e) => onChange({ ...values, m: e.target.value })}
                 aria-label={labels.month}
@@ -256,6 +258,7 @@ function DateDropdowns({ values, onChange, dayMax, months, years, labels, defaul
                 ))}
             </select>
             <select
+                className="public-tool-field"
                 value={values.y}
                 onChange={(e) => onChange({ ...values, y: e.target.value })}
                 aria-label={labels.year}

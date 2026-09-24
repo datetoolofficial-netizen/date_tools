@@ -86,8 +86,8 @@ test('clock and weather show the city when the original provider is blocked', as
 
     await page.goto('/clock', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.clock-now-label')).toContainText('تبوك');
-    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toHaveCount(0);
     await page.goto('/weather', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.weather-current-main .muted-text')).toHaveText('تبوك');
-    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toHaveCount(0);
 });

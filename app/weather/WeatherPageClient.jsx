@@ -334,6 +334,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
             <form className="weather-search" id="weather-search" onSubmit={(event) => { event.preventDefault(); loadWeather(); }}>
                 <input
+                    className="public-tool-field"
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder={labels.placeholder}

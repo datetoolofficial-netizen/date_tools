@@ -641,7 +641,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                     )}
                 </div>
 
-                {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} locationSource={currentLocation?.nameSource} />}
+                {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} />}
                 {!isSiteLoading && (
                     <div className="site-action-stack">
                     <PwaUpdatePrompt

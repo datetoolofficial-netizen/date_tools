@@ -60,6 +60,22 @@ describe('Firebase Authentication network recovery', () => {
         expect(sleep).toHaveBeenCalledTimes(2);
     });
 
+    it('turns a stalled authentication request into a retryable network error', async () => {
+        const operation = vi.fn(() => new Promise(() => {}));
+        const sleep = vi.fn().mockResolvedValue(undefined);
+
+        await expect(runFirebaseAuthRequestWithRetry(operation, {
+            attempts: 1,
+            operationTimeoutMs: 5,
+            sleep,
+        })).rejects.toMatchObject({
+            code: 'auth/network-request-failed',
+            reason: 'timeout',
+        });
+        expect(operation).toHaveBeenCalledTimes(1);
+        expect(sleep).not.toHaveBeenCalled();
+    });
+
     it('provides useful Arabic messages without exposing Firebase internals', () => {
         expect(isFirebaseNetworkError(networkError())).toBe(true);
         expect(getFirebaseNetworkErrorMessage(true)).toContain('VPN');
