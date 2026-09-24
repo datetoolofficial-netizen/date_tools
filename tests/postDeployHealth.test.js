@@ -23,6 +23,14 @@ describe('post-deploy health verification', () => {
         ]);
     });
 
+    it('requires the exact production origin for the English sitemap entry', () => {
+        const sitemapCheck = buildPostDeployChecks('0.3.58').find((check) => check.path === '/sitemap.xml');
+
+        expect(sitemapCheck.validate('<urlset><loc>https://date-tool.com/en</loc></urlset>')).toBe(true);
+        expect(sitemapCheck.validate('<urlset><loc>https://date-tool.com.evil/en</loc></urlset>')).toBe(false);
+        expect(sitemapCheck.validate('<urlset><loc>not a URL</loc></urlset>')).toBe(false);
+    });
+
     it('passes a fully propagated deployment', async () => {
         const fetchImpl = vi.fn((url) => Promise.resolve(responseFor(url)));
         await expect(runPostDeployHealth({

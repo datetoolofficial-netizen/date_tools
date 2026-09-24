@@ -4,6 +4,23 @@ import { pathToFileURL } from 'node:url';
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const DEFAULT_BASE_URL = 'https://date-tool.com';
 
+function hasExpectedEnglishSitemapEntry(body) {
+    return String(body)
+        .split('<loc>')
+        .slice(1)
+        .some((entry) => {
+            const closingTagIndex = entry.indexOf('</loc>');
+            if (closingTagIndex === -1) return false;
+
+            try {
+                const url = new URL(entry.slice(0, closingTagIndex).trim());
+                return url.origin === DEFAULT_BASE_URL && url.pathname === '/en';
+            } catch {
+                return false;
+            }
+        });
+}
+
 export function buildPostDeployChecks(expectedVersion) {
     return [
         { path: '/api/health', type: 'json', validate: (body) => body.status === 'ok' && body.version === expectedVersion },
@@ -23,7 +40,7 @@ export function buildPostDeployChecks(expectedVersion) {
             type: 'text',
             validate: (body) => {
                 const normalizedBody = String(body).toLowerCase();
-                return normalizedBody.includes('<urlset') && normalizedBody.includes('https://date-tool.com/en');
+                return normalizedBody.includes('<urlset') && hasExpectedEnglishSitemapEntry(normalizedBody);
             },
         },
         { path: '/ads.txt', type: 'text', validate: (body) => /google\.com,\s*pub-1147243690926079,\s*DIRECT/i.test(body) },
