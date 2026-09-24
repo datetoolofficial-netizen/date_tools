@@ -11,7 +11,7 @@ function normalizeLinkLocation(value) {
         .replace(/\s+/g, '-');
 }
 
-export default function Footer({ lang, config }) {
+export default function Footer({ lang, config, locationSource }) {
     const footerLinks = [];
     const seenLinks = new Set();
 
@@ -105,6 +105,14 @@ export default function Footer({ lang, config }) {
                     <p>© {currentYear} {copyrightText} {copyrightName}</p>
                     <span className="footer-version">v{APP_VERSION}</span>
                 </div>
+                {locationSource === 'photon' && (
+                    <small className="muted-text">
+                        {lang === 'en' ? 'City names: ' : 'أسماء المدن: '}
+                        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>
+                        {' / '}
+                        <a href="https://photon.komoot.io" target="_blank" rel="noopener noreferrer">Photon</a>
+                    </small>
+                )}
             </div>
         </footer>
     );

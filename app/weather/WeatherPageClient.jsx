@@ -216,6 +216,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
             const place = {
                 name: location.label || '',
                 country: '',
+                approximate: location.approximate,
             };
 
             setQuery('');
@@ -241,7 +242,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
             return;
         }
 
-        const locationKey = `${location.latitude}:${location.longitude}`;
+        const locationKey = `${location.latitude}:${location.longitude}:${location.label}`;
         loadedLocationKeyRef.current = locationKey;
         await loadWeatherByLocation(location);
     };
@@ -254,7 +255,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
             const location = currentLocation || await requestCurrentLocation();
 
             if (location) {
-                const locationKey = `${location.latitude}:${location.longitude}`;
+                const locationKey = `${location.latitude}:${location.longitude}:${location.label}`;
                 loadedLocationKeyRef.current = locationKey;
                 await loadWeatherByLocation(location);
                 return;
@@ -271,7 +272,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
     useEffect(() => {
         if (!currentLocation) return;
 
-        const locationKey = `${currentLocation.latitude}:${currentLocation.longitude}`;
+        const locationKey = `${currentLocation.latitude}:${currentLocation.longitude}:${currentLocation.label}`;
         if (loadedLocationKeyRef.current === locationKey) return;
 
         loadedLocationKeyRef.current = locationKey;
@@ -365,7 +366,11 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 <article className="weather-current-card" id="current-weather">
                         <div className="weather-current-main">
                             <div>
-                                {(weather.place.name || weather.place.country) && <span className="muted-text">{[weather.place.name, weather.place.country].filter(Boolean).join('، ')}</span>}
+                                <span className="muted-text">
+                                    {weather.place.name
+                                        ? `${[weather.place.name, weather.place.country].filter(Boolean).join(lang === 'en' ? ', ' : '، ')}${weather.place.approximate ? (lang === 'en' ? ' (approximate location)' : ' (موقع تقريبي)') : ''}`
+                                        : (lang === 'en' ? 'City name unavailable. Try the location button again or search by city.' : 'تعذر تحديد اسم المدينة. أعد تحديد الموقع أو ابحث باسم المدينة.')}
+                                </span>
                                 <h3>{Math.round(current.temperature_2m)}°</h3>
                                 <p>{weatherText(current.weather_code, lang)} - {labels.feels} {Math.round(current.apparent_temperature)}°</p>
                             </div>

@@ -281,7 +281,9 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                     </button>
                     <span className="clock-now-label">
                         <i className="fa-regular fa-clock"></i>
-                        <span>{locationLabel ? `${labels.currentTime} ${locationLabel}` : labels.now}</span>
+                        <span>{locationLabel
+                            ? `${labels.currentTime} ${locationLabel}${currentLocation?.approximate ? (lang === 'en' ? ' (approximate location)' : ' (موقع تقريبي)') : ''}`
+                            : currentLocation ? (lang === 'en' ? 'Current time (city name unavailable)' : 'الساعة الآن (تعذر تحديد المدينة)') : labels.now}</span>
                     </span>
                     <strong>{now && cityZone ? formatTime(now, cityZone, clockHour12, false, lang) : '--:--'}</strong>
                 </div>

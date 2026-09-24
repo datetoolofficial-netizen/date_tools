@@ -17,7 +17,7 @@ test('clock and weather start without a city when location is unavailable', asyn
 
 test('clock and weather use the coordinates rather than the device city', async ({ page, context }) => {
     await context.grantPermissions(['geolocation']);
-    await context.setGeolocation({ latitude: 51.5072, longitude: -0.1276, accuracy: 40 });
+    await context.setGeolocation({ latitude: 51.5072, longitude: -0.1276, accuracy: 50000 });
     await page.route('**/api.bigdatacloud.net/data/reverse-geocode-client?*', async (route) => {
         await route.fulfill({ json: { city: 'لندن', principalSubdivision: 'إنجلترا' } });
     });
@@ -53,7 +53,7 @@ test('clock and weather use the coordinates rather than the device city', async 
     await expect(page.getByRole('textbox', { name: 'ابحث باسم المدينة' })).toHaveValue('');
 });
 
-test('clock uses the provider alternate endpoint when the first city lookup fails', async ({ page, context }) => {
+test('clock uses the alternate domain after a temporary city lookup failure', async ({ page, context }) => {
     await context.grantPermissions(['geolocation']);
     await context.setGeolocation({ latitude: 26.4207, longitude: 50.0888, accuracy: 40 });
     await page.route('**/api.bigdatacloud.net/data/reverse-geocode-client?*', (route) => route.fulfill({ status: 503 }));
@@ -67,4 +67,27 @@ test('clock uses the provider alternate endpoint when the first city lookup fail
     await page.goto('/clock', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.clock-now-label')).toContainText('الدمام');
     await expect(page.locator('.clock-now-label')).not.toContainText('موقعك الحالي');
+});
+
+test('clock and weather show the city when the original provider is blocked', async ({ page, context }) => {
+    await context.grantPermissions(['geolocation']);
+    await context.setGeolocation({ latitude: 28.3838, longitude: 36.5662, accuracy: 40 });
+    await page.route('**/api.bigdatacloud.net/**', (route) => route.abort('blockedbyclient'));
+    await page.route('**/api-bdc.net/**', (route) => route.abort('blockedbyclient'));
+    await page.route('**/photon.komoot.io/reverse?*', (route) => route.fulfill({
+        json: { features: [{ properties: { city: 'تبوك' } }] },
+    }));
+    await page.route('**/api.open-meteo.com/v1/forecast?*', (route) => route.fulfill({
+        json: { timezone: 'Asia/Riyadh', current: {
+            temperature_2m: 25, apparent_temperature: 24, relative_humidity_2m: 20,
+            wind_speed_10m: 5, weather_code: 0, precipitation: 0,
+        }, daily: { time: [] } },
+    }));
+
+    await page.goto('/clock', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.clock-now-label')).toContainText('تبوك');
+    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toBeVisible();
+    await page.goto('/weather', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.weather-current-main .muted-text')).toHaveText('تبوك');
+    await expect(page.getByRole('link', { name: '© OpenStreetMap' })).toBeVisible();
 });

@@ -16,7 +16,7 @@ import { resolvePrivacyUiState } from './privacyUiState';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 import { getArabicToolPath, getToolRouteLanguage, localizeToolPath } from './localizedToolRoutes';
 import { sendPublicStatisticEvent, trackPwaInstallation } from './statisticsClient';
-import { getLocationCityLabel, MAX_CITY_ACCURACY_METERS } from './locationDisplay';
+import { resolveLocationLabel, MAX_CITY_ACCURACY_METERS } from './locationDisplay';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -71,33 +71,6 @@ function shouldShowPrivacySettingsButton(configData, pathname) {
     if (pages.length === 0) return false;
     const publicPath = getArabicToolPath(pathname) || pathname;
     return pages.includes(normalizePagePath(publicPath));
-}
-
-async function resolveLocationLabel(latitude, longitude, accuracy, lang) {
-    if (!Number.isFinite(accuracy) || accuracy > MAX_CITY_ACCURACY_METERS) return '';
-    const params = new URLSearchParams({
-        latitude: String(latitude),
-        longitude: String(longitude),
-        localityLanguage: lang === 'en' ? 'en' : 'ar',
-    });
-
-    for (const origin of ['https://api.bigdatacloud.net', 'https://api-bdc.net']) {
-        const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 6000);
-        try {
-            const response = await fetch(`${origin}/data/reverse-geocode-client?${params.toString()}`, {
-                signal: controller.signal,
-            });
-            if (!response.ok) continue;
-            const city = getLocationCityLabel(await response.json(), accuracy);
-            if (city) return city;
-        } catch {
-            // Try the provider's alternate client endpoint when the first is unavailable.
-        } finally {
-            window.clearTimeout(timer);
-        }
-    }
-    return '';
 }
 
 async function resolveLocationTimezone(latitude, longitude, fallbackTimezone) {
@@ -164,7 +137,7 @@ const publicRuntimeApi = {
     getSiteConfig: fetchPublicSiteConfig,
 };
 
-function PublicShellSkeleton({ pageType = 'date' }) {
+function PublicShellSkeleton() {
     return (
         <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
             <div className="skeleton-header-panel">
@@ -188,44 +161,15 @@ function PublicShellSkeleton({ pageType = 'date' }) {
             </div>
 
             <span className="skeleton-block skeleton-hero"></span>
-            {pageType === 'weather' ? (
-                <>
-                    <div className="skeleton-weather-search">
-                        <span className="skeleton-block skeleton-weather-input"></span>
-                        <span className="skeleton-block skeleton-weather-button"></span>
-                    </div>
-                    <div className="skeleton-weather-current">
-                        <span className="skeleton-block skeleton-weather-heading"></span>
-                        <span className="skeleton-block skeleton-weather-temperature"></span>
-                        <div className="skeleton-weather-metrics">
-                            {Array.from({ length: 4 }).map((_, index) => <span className="skeleton-block skeleton-weather-metric" key={index}></span>)}
-                        </div>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <span className="skeleton-block skeleton-banner"></span>
-                    {pageType === 'clock' ? (
-                        <div className="skeleton-clock-panel">
-                            <span className="skeleton-block skeleton-section-title centered"></span>
-                            <div className="skeleton-clock-fields">
-                                <span className="skeleton-block skeleton-input"></span>
-                                <span className="skeleton-block skeleton-input"></span>
-                            </div>
-                            <span className="skeleton-block skeleton-action"></span>
-                        </div>
-                    ) : (
-                        <>
-                            <span className="skeleton-block skeleton-ad"></span>
-                            <div className="skeleton-events-grid">
-                                <span className="skeleton-block skeleton-event-card"></span>
-                                <span className="skeleton-block skeleton-event-card"></span>
-                            </div>
-                            <span className="skeleton-block skeleton-card-large"></span>
-                        </>
-                    )}
-                </>
-            )}
+            <span className="skeleton-block skeleton-banner"></span>
+            <span className="skeleton-block skeleton-ad"></span>
+
+            <div className="skeleton-events-grid">
+                <span className="skeleton-block skeleton-event-card"></span>
+                <span className="skeleton-block skeleton-event-card"></span>
+            </div>
+
+            <span className="skeleton-block skeleton-card-large"></span>
         </div>
     );
 }
@@ -501,7 +445,7 @@ export default function SiteShell({ children, initialConfig = null }) {
     const requestCurrentLocation = useCallback(async (options = {}) => {
         const forceRefresh = Boolean(options.force);
         if (currentLocation && !forceRefresh) return currentLocation;
-        if (locationRequestRef.current && !forceRefresh) return locationRequestRef.current;
+        if (locationRequestRef.current) return locationRequestRef.current;
 
         if (typeof navigator === 'undefined' || !navigator.geolocation) {
             setLocationStatus('error');
@@ -522,6 +466,8 @@ export default function SiteShell({ children, initialConfig = null }) {
             }
         }
 
+        // Permission queries may overlap when the shell and weather page both request a location.
+        if (locationRequestRef.current) return locationRequestRef.current;
         setLocationStatus('loading');
         setLocationError('');
 
@@ -531,15 +477,17 @@ export default function SiteShell({ children, initialConfig = null }) {
                     const latitude = position.coords.latitude;
                     const longitude = position.coords.longitude;
                     const fallbackTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-                    const [label, timezone] = await Promise.all([
-                        resolveLocationLabel(latitude, longitude, position.coords.accuracy, lang),
+                    const [place, timezone] = await Promise.all([
+                        resolveLocationLabel(latitude, longitude, lang),
                         resolveLocationTimezone(latitude, longitude, fallbackTimezone),
                     ]);
                     const location = {
                         latitude,
                         longitude,
                         timezone,
-                        label,
+                        label: place.label,
+                        nameSource: place.source,
+                        approximate: !Number.isFinite(position.coords.accuracy) || position.coords.accuracy > MAX_CITY_ACCURACY_METERS,
                     };
 
                     setCurrentLocation(location);
@@ -666,7 +614,7 @@ export default function SiteShell({ children, initialConfig = null }) {
             <div className="public-site-root">
                 <div className="container site-shell-container">
                     {isSiteLoading ? (
-                        <PublicShellSkeleton pageType={pathname === '/weather' || pathname === '/en/weather' ? 'weather' : pathname === '/clock' || pathname === '/en/clock' ? 'clock' : 'date'} />
+                        <PublicShellSkeleton />
                     ) : (
                         <Header
                             lang={lang}
@@ -693,7 +641,7 @@ export default function SiteShell({ children, initialConfig = null }) {
                     )}
                 </div>
 
-                {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} />}
+                {!isSiteLoading && <Footer lang={lang} config={localizedConfigData} locationSource={currentLocation?.nameSource} />}
                 {!isSiteLoading && (
                     <div className="site-action-stack">
                     <PwaUpdatePrompt
