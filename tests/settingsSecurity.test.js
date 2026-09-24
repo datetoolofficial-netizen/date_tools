@@ -45,9 +45,12 @@ describe('settings security boundaries', () => {
 
     it('does not initialize App Check with a hardcoded interactive key', () => {
         const source = readProjectFile('app', 'firebase.js');
+        const envExample = readProjectFile('.dev.vars.example');
 
         expect(source).toContain('NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY');
-        expect(source).toContain('if (!appCheckSiteKey) return null;');
+        expect(source).toContain("process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED === 'true'");
+        expect(source).toContain('if (!appCheckEnabled || !appCheckSiteKey) return null;');
+        expect(envExample).toContain('NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=false');
         expect(source).not.toContain('6LcGrIwsAAAAAP5f-fzzMMmHVZzqtpC2OhslCe_3');
     });
 

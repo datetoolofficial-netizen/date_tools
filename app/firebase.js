@@ -36,10 +36,11 @@ let storageInstance = null;
 let appCheckPromise = null;
 const adminProfileCache = new Map();
 const appCheckSiteKey = String(process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY || '').trim();
+const appCheckEnabled = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED === 'true';
 
 export async function ensureFirebaseAppCheck() {
     if (typeof window === "undefined") return null;
-    if (!appCheckSiteKey) return null;
+    if (!appCheckEnabled || !appCheckSiteKey) return null;
     if (appCheckPromise) return appCheckPromise;
 
     appCheckPromise = import("firebase/app-check")
@@ -66,10 +67,12 @@ export async function ensureFirebaseAppCheck() {
 
 export async function getFirebaseAppCheckStatus() {
     const configured = Boolean(appCheckSiteKey);
-    if (!configured) return { configured: false, initialized: false };
+    if (!configured || !appCheckEnabled) {
+        return { configured, enabled: appCheckEnabled, initialized: false };
+    }
 
     const instance = await ensureFirebaseAppCheck();
-    return { configured: true, initialized: Boolean(instance) };
+    return { configured: true, enabled: true, initialized: Boolean(instance) };
 }
 
 export async function getFirebaseAuth() {

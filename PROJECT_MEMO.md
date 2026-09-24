@@ -17491,3 +17491,58 @@ npm run health:production
 
 - اختبار تسجيل الدخول الحقيقي بواسطة المستخدم دون كشف كلمة المرور للتأكيد النهائي على معالجة خطأ الشبكة من جهاز المستخدم.
 - إذا استمر خطأ الشبكة بعد النشر، يُلتقط توقيت الخطأ وسجل المتصفح الآمن دون بيانات اعتماد لتحديد مزود الشبكة المتعثر.
+
+### إصلاح حجز Firebase Auth بواسطة App Check - الإصدار 0.3.63
+
+تم إنجازه:
+
+- إعادة إنتاج خطأ `auth/network-request-failed` على الموقع المنشور ببيانات تشخيصية وهمية، بما يثبت أن المشكلة عامة وليست في كلمة مرور المالك أو صلاحية `platform_owner`.
+- إثبات أن Turnstile ينجح وأن Firebase Identity Toolkit يستجيب فورًا لطلب REST من أصل `https://date-tool.com` مع CORS صحيح وخطأ الاعتماد المتوقع؛ المفتاح والدومين وخدمة Auth سليمة.
+- إثبات أن النسخة المنشورة تحقن سكربت `reCAPTCHA Enterprise` وتنشئ حاوية `fire_app_check_[DEFAULT]`، لكن `window.grecaptcha.enterprise` يبقى غير متاح ولا ينشأ iframe للمزود.
+- تحديد سلسلة العطل الدقيقة: Firebase Auth ينتظر `appCheckServiceProvider.getToken()` قبل إرسال طلب كلمة المرور، وانتظار مزود reCAPTCHA غير المكتمل يمنع الطلب حتى تحوله مهلة التطبيق إلى خطأ شبكة.
+- فصل تشغيل Firebase App Check عن مجرد وجود المفتاح؛ أصبح يتطلب أيضًا `NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=true`، ويبقى متوقفًا افتراضيًا حتى نجاح اختبار المزود الإنتاجي.
+- الحفاظ على Cloudflare Turnstile وFirebase Authentication وقواعد Firestore وأدوار الحسابات دون تغيير.
+- تحديث بطاقة App Check في مركز الأمان لتعرض `موقوف مؤقتًا` بوضوح عند وجود المفتاح وتعطيل التشغيل الآمن.
+- بناء نسخة إنتاج محلية بمفتاح App Check تشخيصي وعلم تشغيل `false`؛ لم تُنشأ أي عناصر reCAPTCHA، ووصل طلب Auth وأعاد خطأ الاعتماد المتوقع بدل التعليق.
+- نجاح بوابة الجودة الكاملة: فحص الأسرار، و`npm audit` دون ثغرات، و214 اختبارًا، و8 اختبارات Firestore، و57 اختبار متصفح مع تجاوز واحد مقصود ودون فشل.
+
+الأخطاء المكتشفة:
+
+1. **وجود مفتاح App Check كان يفعّل المزود تلقائيًا قبل إثبات جاهزيته**
+   - الأعراض: كل محاولة دخول تنتظر محاولتين مدة كل منهما 10 ثوانٍ ثم تعرض `auth/network-request-failed`، حتى ببيانات وهمية وعلى جلسة نظيفة.
+   - السبب: سكربت reCAPTCHA Enterprise لا يوفّر `grecaptcha.enterprise` في الجلسة الإنتاجية، بينما Firebase Auth ينتظر رمز App Check قبل استدعاء Identity Toolkit.
+   - الحل: إضافة علم تفعيل مستقل يفشل إلى الوضع الآمن `false`، وعدم تشغيل App Check بمجرد وجود المفتاح.
+   - الحالة: محلول محليًا ومثبت ببناء إنتاج واختبار متصفح؛ ينتظر النشر والتحقق الإنتاجي.
+
+الملفات المتأثرة:
+
+- `app/firebase.js`
+- `app/admin/security/page.jsx`
+- `.dev.vars.example`
+- `tests/settingsSecurity.test.js`
+- `app/version.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test -- --run tests/settingsSecurity.test.js tests/firebaseAuthRetry.test.js
+npm run lint
+npm run build
+npm start -- -p 3100
+npm run quality:local
+git diff --check
+```
+
+الحالة:
+
+- الإصدار `0.3.63` جاهز للنشر بعد نجاح جميع الفحوص المحلية.
+- لا يتطلب الحل تغيير حساب المالك أو دوره أو قواعد Firebase.
+
+المتبقي المحفوظ:
+
+- نشر `0.3.63`، إعادة محاولة الدخول الوهمية على الإنتاج، ثم تجربة المستخدم لحسابه الحقيقي دون مشاركة كلمة المرور.
+- لا يعاد تفعيل App Check إلا بعد نجاح `grecaptcha.enterprise` ومراقبة المقاييس أولًا، ثم يفعّل الفرض تدريجيًا وفق توثيق Firebase.

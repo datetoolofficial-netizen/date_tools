@@ -162,7 +162,7 @@ export default function AdminSecurityPage() {
     const [checks, setChecks] = useState({
         headers: { passed: 0, total: REQUIRED_HEADERS.length, items: [] },
         turnstile: { enabled: false, checked: false },
-        appCheck: { configured: false, initialized: false, checked: false },
+        appCheck: { configured: false, enabled: false, initialized: false, checked: false },
         csp: { available: false, reportOnly: false },
         version: APP_VERSION,
         checkedAt: null,
@@ -213,6 +213,7 @@ export default function AdminSecurityPage() {
                 turnstile: { enabled: turnstile.enabled === true, checked: true },
                 appCheck: {
                     configured: appCheck.configured === true,
+                    enabled: appCheck.enabled === true,
                     initialized: appCheck.initialized === true,
                     checked: true,
                 },
@@ -272,7 +273,8 @@ export default function AdminSecurityPage() {
     }
 
     const allHeadersEnabled = checks.headers.passed === checks.headers.total;
-    const appCheckHealthy = checks.appCheck.configured && checks.appCheck.initialized;
+    const appCheckHealthy = checks.appCheck.configured && checks.appCheck.enabled && checks.appCheck.initialized;
+    const appCheckPaused = checks.appCheck.configured && !checks.appCheck.enabled;
 
     return (
         <div className="admin-security-page" dir="rtl">
@@ -317,9 +319,11 @@ export default function AdminSecurityPage() {
                 <SecurityStatusCard
                     icon="fa-fingerprint"
                     title="Firebase App Check"
-                    value={appCheckHealthy ? 'مهيأ' : 'يحتاج مراجعة'}
-                    detail="الفرض يبقى Monitoring حتى استقرار التقارير"
-                    tone={statusTone(appCheckHealthy, appCheckHealthy)}
+                    value={appCheckHealthy ? 'مهيأ' : appCheckPaused ? 'موقوف مؤقتًا' : 'يحتاج مراجعة'}
+                    detail={appCheckPaused
+                        ? 'أوقف لحماية الدخول حتى نجاح اختبار reCAPTCHA Enterprise'
+                        : 'الفرض يبقى Monitoring حتى استقرار التقارير'}
+                    tone={statusTone(appCheckHealthy, appCheckPaused)}
                 />
                 <SecurityStatusCard
                     icon="fa-file-shield"

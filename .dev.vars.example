@@ -8,3 +8,5 @@ TURNSTILE_ALLOWED_HOSTNAMES=date-tool.com,www.date-tool.com
 # Public score-based reCAPTCHA Enterprise site key used by Firebase App Check.
 # Leave empty until Firebase App Check is registered with a score-based key.
 NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY=
+# Activate only after the production reCAPTCHA script and App Check metrics are verified.
+NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=false
