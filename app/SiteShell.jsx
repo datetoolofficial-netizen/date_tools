@@ -16,6 +16,7 @@ import { resolvePrivacyUiState } from './privacyUiState';
 import { TOOL_SECTION_ROUTE_ENTRIES } from '../toolSectionRoutes';
 import { getArabicToolPath, getToolRouteLanguage, localizeToolPath } from './localizedToolRoutes';
 import { sendPublicStatisticEvent, trackPwaInstallation } from './statisticsClient';
+import { getLocationCityLabel, MAX_CITY_ACCURACY_METERS } from './locationDisplay';
 
 const excludedShellPrefixes = ['/admin', '/admin_login', '/client', '/support'];
 const LOCATION_SUCCESS_NOTICE_SEEN_KEY = 'date_tools_location_success_notice_seen';
@@ -52,12 +53,6 @@ function writeCachedSiteConfig(data) {
     }
 }
 
-function timezoneLabel(timezone, lang = 'ar') {
-    const fallback = lang === 'en' ? 'Your current location' : 'موقعك الحالي';
-    if (!timezone) return fallback;
-    return timezone.split('/').pop()?.replaceAll('_', ' ') || fallback;
-}
-
 function normalizePagePath(value) {
     const cleanValue = String(value || '/').trim();
     if (!cleanValue || cleanValue === '/') return '/';
@@ -78,7 +73,34 @@ function shouldShowPrivacySettingsButton(configData, pathname) {
     return pages.includes(normalizePagePath(publicPath));
 }
 
-async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
+async function resolveLocationLabel(latitude, longitude, accuracy, lang) {
+    if (!Number.isFinite(accuracy) || accuracy > MAX_CITY_ACCURACY_METERS) return '';
+    const params = new URLSearchParams({
+        latitude: String(latitude),
+        longitude: String(longitude),
+        localityLanguage: lang === 'en' ? 'en' : 'ar',
+    });
+
+    for (const origin of ['https://api.bigdatacloud.net', 'https://api-bdc.net']) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 6000);
+        try {
+            const response = await fetch(`${origin}/data/reverse-geocode-client?${params.toString()}`, {
+                signal: controller.signal,
+            });
+            if (!response.ok) continue;
+            const city = getLocationCityLabel(await response.json(), accuracy);
+            if (city) return city;
+        } catch {
+            // Try the provider's alternate client endpoint when the first is unavailable.
+        } finally {
+            window.clearTimeout(timer);
+        }
+    }
+    return '';
+}
+
+async function resolveLocationTimezone(latitude, longitude, fallbackTimezone) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 3500);
 
@@ -86,18 +108,21 @@ async function resolveLocationLabel(latitude, longitude, fallbackLabel) {
         const params = new URLSearchParams({
             latitude: String(latitude),
             longitude: String(longitude),
-            localityLanguage: 'ar',
+            timezone: 'auto',
+            current: 'temperature_2m',
+            forecast_days: '1',
         });
-        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?${params.toString()}`, {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, {
             signal: controller.signal,
         });
-
-        if (!response.ok) return fallbackLabel;
+        if (!response.ok) return fallbackTimezone;
 
         const data = await response.json();
-        return data.city || data.locality || data.principalSubdivision || data.countryName || fallbackLabel;
+        if (!data.timezone) return fallbackTimezone;
+        new Intl.DateTimeFormat('en-US', { timeZone: data.timezone });
+        return data.timezone;
     } catch {
-        return fallbackLabel;
+        return fallbackTimezone;
     } finally {
         window.clearTimeout(timer);
     }
@@ -139,7 +164,7 @@ const publicRuntimeApi = {
     getSiteConfig: fetchPublicSiteConfig,
 };
 
-function PublicShellSkeleton() {
+function PublicShellSkeleton({ pageType = 'date' }) {
     return (
         <div className="home-skeleton shell-skeleton" aria-label="جاري تحميل الموقع">
             <div className="skeleton-header-panel">
@@ -163,15 +188,44 @@ function PublicShellSkeleton() {
             </div>
 
             <span className="skeleton-block skeleton-hero"></span>
-            <span className="skeleton-block skeleton-banner"></span>
-            <span className="skeleton-block skeleton-ad"></span>
-
-            <div className="skeleton-events-grid">
-                <span className="skeleton-block skeleton-event-card"></span>
-                <span className="skeleton-block skeleton-event-card"></span>
-            </div>
-
-            <span className="skeleton-block skeleton-card-large"></span>
+            {pageType === 'weather' ? (
+                <>
+                    <div className="skeleton-weather-search">
+                        <span className="skeleton-block skeleton-weather-input"></span>
+                        <span className="skeleton-block skeleton-weather-button"></span>
+                    </div>
+                    <div className="skeleton-weather-current">
+                        <span className="skeleton-block skeleton-weather-heading"></span>
+                        <span className="skeleton-block skeleton-weather-temperature"></span>
+                        <div className="skeleton-weather-metrics">
+                            {Array.from({ length: 4 }).map((_, index) => <span className="skeleton-block skeleton-weather-metric" key={index}></span>)}
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <span className="skeleton-block skeleton-banner"></span>
+                    {pageType === 'clock' ? (
+                        <div className="skeleton-clock-panel">
+                            <span className="skeleton-block skeleton-section-title centered"></span>
+                            <div className="skeleton-clock-fields">
+                                <span className="skeleton-block skeleton-input"></span>
+                                <span className="skeleton-block skeleton-input"></span>
+                            </div>
+                            <span className="skeleton-block skeleton-action"></span>
+                        </div>
+                    ) : (
+                        <>
+                            <span className="skeleton-block skeleton-ad"></span>
+                            <div className="skeleton-events-grid">
+                                <span className="skeleton-block skeleton-event-card"></span>
+                                <span className="skeleton-block skeleton-event-card"></span>
+                            </div>
+                            <span className="skeleton-block skeleton-card-large"></span>
+                        </>
+                    )}
+                </>
+            )}
         </div>
     );
 }
@@ -474,15 +528,16 @@ export default function SiteShell({ children, initialConfig = null }) {
         const requestPromise = new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Riyadh';
-                    const label = await resolveLocationLabel(
-                        position.coords.latitude,
-                        position.coords.longitude,
-                        timezoneLabel(timezone, lang),
-                    );
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    const fallbackTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+                    const [label, timezone] = await Promise.all([
+                        resolveLocationLabel(latitude, longitude, position.coords.accuracy, lang),
+                        resolveLocationTimezone(latitude, longitude, fallbackTimezone),
+                    ]);
                     const location = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
+                        latitude,
+                        longitude,
                         timezone,
                         label,
                     };
@@ -497,9 +552,9 @@ export default function SiteShell({ children, initialConfig = null }) {
                     resolve(null);
                 },
                 {
-                    enableHighAccuracy: false,
-                    timeout: 10000,
-                    maximumAge: forceRefresh ? 0 : 1000 * 60 * 20,
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0,
                 },
             );
         }).finally(() => {
@@ -611,7 +666,7 @@ export default function SiteShell({ children, initialConfig = null }) {
             <div className="public-site-root">
                 <div className="container site-shell-container">
                     {isSiteLoading ? (
-                        <PublicShellSkeleton />
+                        <PublicShellSkeleton pageType={pathname === '/weather' || pathname === '/en/weather' ? 'weather' : pathname === '/clock' || pathname === '/en/clock' ? 'clock' : 'date'} />
                     ) : (
                         <Header
                             lang={lang}

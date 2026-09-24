@@ -41,8 +41,8 @@ const weatherLabelsEn = {
 };
 
 const weatherUi = {
-    ar: { currentLocation: 'موقعك الحالي', byLocation: 'حسب موقعك', fetchError: 'تعذر جلب الطقس لهذه المدينة. جرب اسمًا آخر.', locationWeatherError: 'تعذر جلب الطقس من موقعك الحالي. جرّب البحث باسم المدينة.', locationError: 'تعذر تحديد موقعك الحالي. تأكد من السماح للموقع من إعدادات المتصفح.', placeholder: 'اكتب اسم المدينة، مثال: الرياض', search: 'جاري البحث...', locationButton: 'عرض طقس موقعي الحالي', feels: 'الإحساس', humidity: 'الرطوبة', wind: 'الرياح', rain: 'توقع المطر', shareWeather: 'مشاركة معلومات الطقس', shareAdvice: 'مشاركة نصيحة اليوم', shareForecast: 'مشاركة توقعات الطقس', ad: 'مساحة إعلانية', rainShort: 'مطر', speed: 'كم/س' },
-    en: { currentLocation: 'Your current location', byLocation: 'Based on your location', fetchError: 'Weather could not be loaded for this city. Try another name.', locationWeatherError: 'Weather could not be loaded for your current location. Try searching by city.', locationError: 'Your location could not be determined. Allow location access in your browser settings.', placeholder: 'Enter a city, for example: Riyadh', search: 'Searching...', locationButton: 'Show weather for my current location', feels: 'Feels like', humidity: 'Humidity', wind: 'Wind', rain: 'Rain chance', shareWeather: 'Share weather', shareAdvice: 'Share today’s advice', shareForecast: 'Share forecast', ad: 'Ad space', rainShort: 'rain', speed: 'km/h' },
+    ar: { currentLocation: 'موقعك الحالي', byLocation: 'حسب موقعك', fetchError: 'تعذر جلب الطقس لهذه المدينة. جرب اسمًا آخر.', locationWeatherError: 'تعذر جلب الطقس من موقعك الحالي. جرّب البحث باسم المدينة.', locationError: 'تعذر تحديد موقعك الحالي. تأكد من السماح للموقع من إعدادات المتصفح.', placeholder: 'ابحث باسم المدينة', search: 'جاري البحث...', locationButton: 'عرض طقس موقعي الحالي', feels: 'الإحساس', humidity: 'الرطوبة', wind: 'الرياح', rain: 'توقع المطر', shareWeather: 'مشاركة معلومات الطقس', shareAdvice: 'مشاركة نصيحة اليوم', shareForecast: 'مشاركة توقعات الطقس', ad: 'مساحة إعلانية', rainShort: 'مطر', speed: 'كم/س' },
+    en: { currentLocation: 'Your current location', byLocation: 'Based on your location', fetchError: 'Weather could not be loaded for this city. Try another name.', locationWeatherError: 'Weather could not be loaded for your current location. Try searching by city.', locationError: 'Your location could not be determined. Allow location access in your browser settings.', placeholder: 'Search by city name', search: 'Searching...', locationButton: 'Show weather for my current location', feels: 'Feels like', humidity: 'Humidity', wind: 'Wind', rain: 'Rain chance', shareWeather: 'Share weather', shareAdvice: 'Share today’s advice', shareForecast: 'Share forecast', ad: 'Ad space', rainShort: 'rain', speed: 'km/h' },
 };
 
 function WeatherCurrentPlaceholder() {
@@ -207,17 +207,18 @@ export default function WeatherPage({ children, hideHero = false, initialSection
     const loadWeatherByLocation = async (location) => {
         setIsLoading(true);
         setError('');
+        setWeather(null);
 
         try {
             if (!location) return;
 
             const forecastData = await fetchForecast(location.latitude, location.longitude);
             const place = {
-                name: location.label || labels.currentLocation,
-                country: labels.byLocation,
+                name: location.label || '',
+                country: '',
             };
 
-            setQuery(place.name);
+            setQuery('');
             setWeather({ place, forecast: forecastData });
             firebaseApiRef.current.trackToolUsage('weatherTools');
         } catch {
@@ -229,10 +230,14 @@ export default function WeatherPage({ children, hideHero = false, initialSection
 
     const handleUseCurrentLocation = async () => {
         setError('');
+        setWeather(null);
+        setQuery('');
+        setIsLoading(true);
 
-        const location = await requestCurrentLocation({ force: true }) || currentLocation;
+        const location = await requestCurrentLocation({ force: true });
         if (!location) {
             setError(labels.locationError);
+            setIsLoading(false);
             return;
         }
 
@@ -360,7 +365,7 @@ export default function WeatherPage({ children, hideHero = false, initialSection
                 <article className="weather-current-card" id="current-weather">
                         <div className="weather-current-main">
                             <div>
-                                <span className="muted-text">{weather.place.name}، {weather.place.country}</span>
+                                {(weather.place.name || weather.place.country) && <span className="muted-text">{[weather.place.name, weather.place.country].filter(Boolean).join('، ')}</span>}
                                 <h3>{Math.round(current.temperature_2m)}°</h3>
                                 <p>{weatherText(current.weather_code, lang)} - {labels.feels} {Math.round(current.apparent_temperature)}°</p>
                             </div>

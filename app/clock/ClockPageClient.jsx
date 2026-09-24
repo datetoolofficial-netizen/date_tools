@@ -10,22 +10,7 @@ import { useSectionHashScroll } from '../useSectionHashScroll';
 
 const CLOCK_SECTION_IDS = ['time-converter', 'timezone-difference'];
 
-const defaultFromCity = {
-    query: 'الرياض',
-    label: 'الرياض',
-    zone: 'Asia/Riyadh',
-    resolvedQuery: 'الرياض',
-};
-
-const defaultToCity = {
-    query: 'لندن',
-    label: 'لندن',
-    zone: 'Europe/London',
-    resolvedQuery: 'لندن',
-};
-
-const englishDefaultFromCity = { ...defaultFromCity, query: 'Riyadh', label: 'Riyadh', resolvedQuery: 'Riyadh' };
-const englishDefaultToCity = { ...defaultToCity, query: 'London', label: 'London', resolvedQuery: 'London' };
+const emptyCity = { query: '', label: '', zone: '', resolvedQuery: '' };
 
 function formatTime(date, zone, hour12 = false, includeSeconds = true, lang = 'ar') {
     const options = {
@@ -109,8 +94,8 @@ function getDifferenceText(diff, lang = 'ar') {
 }
 
 const clockLabels = {
-    ar: { currentLocation: 'موقعك الحالي', invalidTime: 'أدخل وقتًا صحيحًا', searchError: 'تعذر العثور على إحدى المدينتين. جرّب كتابة اسم المدينة بالعربية أو الإنجليزية.', currentTime: 'الساعة الآن في', hour: 'الساعة', minute: 'الدقيقة', hour24: 'الساعة بنظام 24', convert: 'تحويل', share: 'مشاركة النتيجة', firstCity: 'المدينة الأولى', secondCity: 'المدينة الثانية', firstExample: 'مثال: الرياض', secondExample: 'مثال: لندن', searchFirst: 'ابحث عن المدينة الأولى', searchSecond: 'ابحث عن المدينة الثانية', calculate: 'احسب', calculating: 'جاري الحساب...', difference: 'فرق التوقيت', now: 'الساعة الآن', ad: 'مساحة إعلانية', hours: 'ساعة' },
-    en: { currentLocation: 'Your current location', invalidTime: 'Enter a valid time', searchError: 'We could not find one of the cities. Try an Arabic or English city name.', currentTime: 'Current time in', hour: 'Hour', minute: 'Minute', hour24: 'Hour in 24-hour format', convert: 'Convert', share: 'Share result', firstCity: 'First city', secondCity: 'Second city', firstExample: 'Example: Riyadh', secondExample: 'Example: London', searchFirst: 'Search for the first city', searchSecond: 'Search for the second city', calculate: 'Calculate', calculating: 'Calculating...', difference: 'Time difference', now: 'current time', ad: 'Ad space', hours: 'hours' },
+    ar: { invalidTime: 'أدخل وقتًا صحيحًا', searchError: 'تعذر العثور على إحدى المدينتين. جرّب كتابة اسم المدينة بالعربية أو الإنجليزية.', currentTime: 'الساعة الآن في', hour: 'الساعة', minute: 'الدقيقة', hour24: 'الساعة بنظام 24', convert: 'تحويل', share: 'مشاركة النتيجة', firstCity: 'المدينة الأولى', secondCity: 'المدينة الثانية', firstExample: 'اسم المدينة الأولى', secondExample: 'اسم المدينة الثانية', searchFirst: 'ابحث عن المدينة الأولى', searchSecond: 'ابحث عن المدينة الثانية', calculate: 'احسب', calculating: 'جاري الحساب...', difference: 'فرق التوقيت', now: 'الساعة الآن', ad: 'مساحة إعلانية', hours: 'ساعة' },
+    en: { invalidTime: 'Enter a valid time', searchError: 'We could not find one of the cities. Try an Arabic or English city name.', currentTime: 'Current time in', hour: 'Hour', minute: 'Minute', hour24: 'Hour in 24-hour format', convert: 'Convert', share: 'Share result', firstCity: 'First city', secondCity: 'Second city', firstExample: 'First city name', secondExample: 'Second city name', searchFirst: 'Search for the first city', searchSecond: 'Search for the second city', calculate: 'Calculate', calculating: 'Calculating...', difference: 'Time difference', now: 'current time', ad: 'Ad space', hours: 'hours' },
 };
 
 export default function ClockPage({ children, hideHero = false, initialSectionId = '', standaloneSectionId = '' }) {
@@ -125,10 +110,10 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
     const [inputHour, setInputHour] = useState('13');
     const [inputMinute, setInputMinute] = useState('30');
     const [convertedTime, setConvertedTime] = useState('');
-    const [cityZone, setCityZone] = useState('Asia/Riyadh');
-    const [fromCity, setFromCity] = useState(defaultFromCity);
-    const [toCity, setToCity] = useState(defaultToCity);
-    const [locationLabel, setLocationLabel] = useState(defaultFromCity.label);
+    const [cityZone, setCityZone] = useState('');
+    const [fromCity, setFromCity] = useState(emptyCity);
+    const [toCity, setToCity] = useState(emptyCity);
+    const [locationLabel, setLocationLabel] = useState('');
     const [clockHour12, setClockHour12] = useState(false);
     const [timezoneDiff, setTimezoneDiff] = useState(null);
     const [timezoneSearchStatus, setTimezoneSearchStatus] = useState('idle');
@@ -155,31 +140,11 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
     useSectionHashScroll(CLOCK_SECTION_IDS, true, initialSectionId);
 
     useEffect(() => {
-        if (currentLocation) return;
-        setFromCity((current) => {
-            if (lang === 'en' && current.resolvedQuery === defaultFromCity.resolvedQuery) return englishDefaultFromCity;
-            if (lang === 'ar' && current.resolvedQuery === englishDefaultFromCity.resolvedQuery) return defaultFromCity;
-            return current;
-        });
-        setToCity((current) => {
-            if (lang === 'en' && current.resolvedQuery === defaultToCity.resolvedQuery) return englishDefaultToCity;
-            if (lang === 'ar' && current.resolvedQuery === englishDefaultToCity.resolvedQuery) return defaultToCity;
-            return current;
-        });
-        setLocationLabel((current) => {
-            if (lang === 'en' && current === defaultFromCity.label) return englishDefaultFromCity.label;
-            if (lang === 'ar' && current === englishDefaultFromCity.label) return defaultFromCity.label;
-            return current;
-        });
-        setTimezoneDiff(null);
-    }, [currentLocation, lang]);
-
-    useEffect(() => {
         if (!currentLocation) return;
-        const label = currentLocation.label || labels.currentLocation;
+        const label = currentLocation.label || '';
 
         setCityZone(currentLocation.timezone);
-        setFromCity({
+        if (label) setFromCity({
             query: label,
             label,
             zone: currentLocation.timezone,
@@ -187,7 +152,7 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
         });
         setLocationLabel(label);
         setTimezoneDiff(null);
-    }, [currentLocation, labels.currentLocation]);
+    }, [currentLocation]);
 
     const previewTime = useMemo(() => {
         const rawHour = Number(inputHour);
@@ -316,9 +281,9 @@ export default function ClockPage({ children, hideHero = false, initialSectionId
                     </button>
                     <span className="clock-now-label">
                         <i className="fa-regular fa-clock"></i>
-                        <span>{labels.currentTime} {locationLabel}</span>
+                        <span>{locationLabel ? `${labels.currentTime} ${locationLabel}` : labels.now}</span>
                     </span>
-                    <strong>{now ? formatTime(now, cityZone, clockHour12, false, lang) : '--:--'}</strong>
+                    <strong>{now && cityZone ? formatTime(now, cityZone, clockHour12, false, lang) : '--:--'}</strong>
                 </div>
             </div>}
 
