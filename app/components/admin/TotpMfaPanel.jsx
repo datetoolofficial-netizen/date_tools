@@ -204,7 +204,7 @@ export default function TotpMfaPanel({ user, onComplete, onDisabled, required = 
                     <div className={styles.disableConfirmation} role="alert">
                         <div>
                             <strong>هل تريد إيقاف Authenticator؟</strong>
-                            <p>سيعود الحساب إلى عامل دخول واحد حتى تعيد التفعيل. قد يسجل Firebase خروجك لإتمام التغيير بأمان.</p>
+                            <p>سيعود الحساب إلى عامل دخول واحد حتى تعيد التفعيل. قد يسجل خروجك لإتمام التغيير بأمان.</p>
                         </div>
                         <div className={styles.actions}>
                             <button type="button" className={styles.danger} onClick={disableEnrollment} disabled={busy}>

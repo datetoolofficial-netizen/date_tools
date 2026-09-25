@@ -29,6 +29,8 @@ describe('administrator account settings', () => {
         expect(accountPage).toContain('assertProductionMutationAllowed');
         expect(accountPage).toContain('hasTotpSecondFactorClaim');
         expect(accountPage).toContain('onDisabled');
+        expect(mfaPanel).toContain('قد يسجل خروجك لإتمام التغيير بأمان.');
+        expect(mfaPanel).not.toContain('قد يسجل Firebase خروجك');
         expect(securityPage).not.toContain('TotpMfaPanel');
         expect(securityPage).toContain('href="/admin/account"');
         expect(mfaPanel).toContain("/admin/account");
