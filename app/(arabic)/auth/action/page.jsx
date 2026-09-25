@@ -110,7 +110,7 @@ export default function FirebaseEmailActionPage() {
         }
     };
 
-    const destination = params?.continueUrl || (params?.mode === 'verifyEmail' ? '/admin/security' : '/client');
+    const destination = params?.continueUrl || (params?.mode === 'verifyEmail' ? '/admin/account' : '/client');
 
     return (
         <main className={styles.page} dir="rtl">

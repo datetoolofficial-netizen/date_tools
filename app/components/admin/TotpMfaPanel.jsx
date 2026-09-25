@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { multiFactor } from 'firebase/auth';
 import Image from 'next/image';
 import {
+    findTotpFactor,
     getMfaErrorMessage,
     hasTotpFactor,
     isValidTotpCode,
@@ -11,7 +12,7 @@ import {
 } from '../../firebaseMfa';
 import styles from './TotpMfaPanel.module.css';
 
-export default function TotpMfaPanel({ user, onComplete, required = false }) {
+export default function TotpMfaPanel({ user, onComplete, onDisabled, required = false }) {
     const [secret, setSecret] = useState(null);
     const [qrDataUrl, setQrDataUrl] = useState('');
     const [verificationCode, setVerificationCode] = useState('');
@@ -20,6 +21,7 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
     const [enrolled, setEnrolled] = useState(false);
     const [emailVerified, setEmailVerified] = useState(Boolean(user?.emailVerified));
     const [verificationEmailSent, setVerificationEmailSent] = useState(false);
+    const [confirmDisable, setConfirmDisable] = useState(false);
 
     const enrolledFactors = useMemo(() => {
         if (!user) return [];
@@ -82,7 +84,7 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
         try {
             const { sendEmailVerification } = await import('firebase/auth');
             await sendEmailVerification(user, {
-                url: `${window.location.origin}/admin/security`,
+                url: `${window.location.origin}/admin/account`,
                 handleCodeInApp: false,
             });
             setVerificationEmailSent(true);
@@ -144,6 +146,36 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
         }
     };
 
+    const disableEnrollment = async () => {
+        setErrorMessage('');
+        const factor = findTotpFactor(multiFactor(user).enrolledFactors);
+        if (!factor) {
+            setEnrolled(false);
+            setConfirmDisable(false);
+            return;
+        }
+
+        setBusy(true);
+        try {
+            await multiFactor(user).unenroll(factor.uid);
+            await user.getIdToken(true);
+            setEnrolled(false);
+            setConfirmDisable(false);
+            await onDisabled?.({ signedOut: false });
+        } catch (error) {
+            if (error?.code === 'auth/user-token-expired') {
+                setEnrolled(false);
+                setConfirmDisable(false);
+                await onDisabled?.({ signedOut: true });
+                return;
+            }
+            console.error('Unable to disable TOTP enrollment:', error?.code || 'unknown');
+            setErrorMessage(getMfaErrorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+
     if (!user) {
         return (
             <div className={styles.panel}>
@@ -162,7 +194,28 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
                         <small>سيُطلب رمز مؤقت بعد كلمة المرور في كل جلسة دخول جديدة.</small>
                     </div>
                 </div>
-                <p className={styles.warning}>لا تُحذف الوسيلة من Firebase قبل التأكد من وجود طريق استرداد إداري موثوق.</p>
+                {!confirmDisable ? (
+                    <div className={styles.actions}>
+                        <button type="button" className={styles.danger} onClick={() => setConfirmDisable(true)}>
+                            إيقاف المصادقة الثنائية
+                        </button>
+                    </div>
+                ) : (
+                    <div className={styles.disableConfirmation} role="alert">
+                        <div>
+                            <strong>هل تريد إيقاف Authenticator؟</strong>
+                            <p>سيعود الحساب إلى عامل دخول واحد حتى تعيد التفعيل. قد يسجل Firebase خروجك لإتمام التغيير بأمان.</p>
+                        </div>
+                        <div className={styles.actions}>
+                            <button type="button" className={styles.danger} onClick={disableEnrollment} disabled={busy}>
+                                {busy ? 'جاري الإيقاف...' : 'نعم، إيقاف العامل الثاني'}
+                            </button>
+                            <button type="button" className={styles.secondary} onClick={() => setConfirmDisable(false)} disabled={busy}>إلغاء</button>
+                        </div>
+                    </div>
+                )}
+                {errorMessage ? <p className={styles.error} role="alert">{errorMessage}</p> : null}
+                <p className={styles.warning}>لا توقف الوسيلة إلا بعد التأكد من البريد وطرق الاسترداد. يمكنك إعادة تفعيلها لاحقًا من الصفحة نفسها.</p>
             </div>
         );
     }

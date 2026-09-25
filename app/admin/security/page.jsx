@@ -1,8 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
-import TotpMfaPanel from '../../components/admin/TotpMfaPanel';
 import { APP_VERSION, APP_VERSION_DATE } from '../../version';
 
 const REQUIRED_HEADERS = [
@@ -160,7 +160,6 @@ export default function AdminSecurityPage() {
     const [checking, setChecking] = useState(false);
     const [cleaning, setCleaning] = useState(false);
     const [message, setMessage] = useState(null);
-    const [authUser, setAuthUser] = useState(null);
     const [checks, setChecks] = useState({
         headers: { passed: 0, total: REQUIRED_HEADERS.length, items: [] },
         turnstile: { enabled: false, checked: false },
@@ -194,10 +193,6 @@ export default function AdminSecurityPage() {
             firebaseApiRef.current = {
                 getFirebaseAuth: firebaseApi.getFirebaseAuth,
             };
-
-            const auth = await firebaseApi.getFirebaseAuth();
-            if (typeof auth.authStateReady === 'function') await auth.authStateReady();
-            setAuthUser(auth.currentUser || null);
 
             const headerResponse = headersResult.status === 'fulfilled' ? headersResult.value : null;
             const headerItems = REQUIRED_HEADERS.map(([name, label]) => ({
@@ -410,13 +405,14 @@ export default function AdminSecurityPage() {
             <section className="security-panel">
                 <SectionHeading
                     icon="fa-mobile-screen-button"
-                    title="المصادقة الثنائية لحساب الإدارة"
-                    description="اربط تطبيق Authenticator بحسابك بعد ترقية Firebase Authentication وتفعيل TOTP. لا يُرسل المفتاح إلى أي خدمة QR خارجية."
+                    title="أمان الحساب الشخصي"
+                    description="نُقلت المصادقة الثنائية وبيانات تسجيل الدخول إلى إعدادات الحساب حتى تبقى هذه الصفحة مخصصة لحماية المنصة."
                 />
-                <TotpMfaPanel
-                    user={authUser}
-                    onComplete={() => showMessage('success', 'تم تفعيل المصادقة الثنائية لهذا الحساب. سجّل الخروج واختبر الدخول بالرمز قبل فرضها على الأدوار الحساسة.')}
-                />
+                <div className="security-info-note security-account-settings-link">
+                    <i className="fa-solid fa-user-shield"></i>
+                    <p><strong>إعدادات الحساب</strong> اعرض بيانات حسابك وحالة البريد والمصادقة الثنائية ووسائل استرداد الدخول من صفحة واحدة.</p>
+                    <Link href="/admin/account" className="legacy-secondary-btn">فتح إعدادات الحساب</Link>
+                </div>
             </section>
 
             <section className="security-maintenance-grid">

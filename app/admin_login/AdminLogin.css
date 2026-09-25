@@ -204,6 +204,34 @@
     color: #1e293b;
 }
 
+.login-page-wrapper .login-method-divider {
+    margin: 12px 0 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.login-page-wrapper .login-method-divider::before,
+.login-page-wrapper .login-method-divider::after {
+    height: 1px;
+    flex: 1;
+    background: #e2e8f0;
+    content: '';
+}
+
+.login-page-wrapper .email-link-success {
+    margin: 10px 0 0;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #15803d;
+    font-size: 11px;
+    line-height: 1.7;
+    text-align: right;
+}
+
 .login-page-wrapper .error-message {
     background-color: #fef2f2;
     color: #ef4444;

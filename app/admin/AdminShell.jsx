@@ -114,9 +114,18 @@ const NAV_ITEMS = [
         icon: 'fa-ticket',
         permission: ADMIN_PERMISSIONS.SUPPORT_READ,
     },
+    {
+        id: 'account',
+        href: '/admin/account',
+        label: 'إعدادات الحساب',
+        icon: 'fa-user-gear',
+        alwaysAvailable: true,
+        placement: 'bottom',
+    },
 ];
 
 function canOpenNavItem(item, profile) {
+    if (item?.alwaysAvailable) return Boolean(profile?.active);
     return Boolean(item?.permission && hasAdminPermission(profile, item.permission));
 }
 
@@ -158,6 +167,7 @@ export default function AdminShell({ children }) {
     const pathname = usePathname();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminProfile, setAdminProfile] = useState(null);
+    const [authUser, setAuthUser] = useState(null);
     const [adminName, setAdminName] = useState('أيها المدير');
     const [adminRole, setAdminRole] = useState('مدير');
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -202,6 +212,7 @@ export default function AdminShell({ children }) {
 
                 unsubscribe = onAuthStateChanged(auth, async (user) => {
                     if (!user) {
+                        setAuthUser(null);
                         window.location.replace('/admin_login');
                         return;
                     }
@@ -233,6 +244,7 @@ export default function AdminShell({ children }) {
 
                         if (!isMounted) return;
 
+                        setAuthUser(user);
                         setAdminProfile(profile);
                         setAdminName(profile.name || profile.email || 'أيها المدير');
                         setAdminRole(getAdminRoleLabel(profile));
@@ -346,17 +358,20 @@ export default function AdminShell({ children }) {
         () => NAV_ITEMS.filter((item) => canOpenNavItem(item, adminProfile)),
         [adminProfile],
     );
+    const primaryNavItems = allowedNavItems.filter((item) => item.placement !== 'bottom');
+    const bottomNavItems = allowedNavItems.filter((item) => item.placement === 'bottom');
     const activeItem = NAV_ITEMS.find((item) => item.id === activeNavId);
     const isCurrentPageAllowed = !activeItem || canOpenNavItem(activeItem, adminProfile);
 
     const contextValue = useMemo(() => ({
         adminProfile,
+        authUser,
         adminName,
         adminRole,
         permissions,
         can: (permission) => hasAdminPermission(adminProfile, permission),
         isCurrentPageAllowed,
-    }), [adminProfile, adminName, adminRole, permissions, isCurrentPageAllowed]);
+    }), [adminProfile, authUser, adminName, adminRole, permissions, isCurrentPageAllowed]);
 
     const toggleSidebar = () => {
         setIsSidebarCollapsed((current) => {
@@ -430,7 +445,17 @@ export default function AdminShell({ children }) {
                     </div>
 
                     <ul className="legacy-nav-links">
-                        {allowedNavItems.map((item) => (
+                        {primaryNavItems.map((item) => (
+                            <li key={item.id}>
+                                <Link href={item.href} className={activeNavId === item.id ? 'active' : ''}>
+                                    <i className={`fa-solid ${item.icon}`}></i>
+                                    <span className="nav-text">{item.label}</span>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                    <ul className="legacy-nav-links legacy-nav-links-bottom">
+                        {bottomNavItems.map((item) => (
                             <li key={item.id}>
                                 <Link href={item.href} className={activeNavId === item.id ? 'active' : ''}>
                                     <i className={`fa-solid ${item.icon}`}></i>

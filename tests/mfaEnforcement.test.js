@@ -13,10 +13,16 @@ describe('administrator MFA enforcement coverage', () => {
         expect(panel).toContain('generateQrCodeUrl');
         expect(panel).toContain('sendEmailVerification');
         expect(panel).toContain('user.reload()');
+        expect(panel).toContain('multiFactor(user).unenroll');
+        expect(panel).toContain('نعم، إيقاف العامل الثاني');
         expect(panel).toContain('handleCodeInApp: false');
         expect(panel).not.toMatch(/chart\.googleapis|api\.qrserver|quickchart/i);
         expect(login).toContain('auth/multi-factor-auth-required');
         expect(login).toContain('assertionForSignIn');
+        expect(login).toContain('sendSignInLinkToEmail');
+        expect(login).toContain('signInWithEmailLink');
+        expect(login).toContain('isSignInWithEmailLink');
+        expect(login).toContain('handleCodeInApp: true');
     });
 
     it('guards every sensitive server route behind the MFA policy switch', () => {

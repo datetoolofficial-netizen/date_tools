@@ -53,12 +53,12 @@ describe('Firebase MFA policy helpers', () => {
 
     it('wires enrollment and challenge handling into the admin surfaces', () => {
         const loginSource = readFileSync(join(process.cwd(), 'app', 'admin_login', 'page.jsx'), 'utf8');
-        const securitySource = readFileSync(join(process.cwd(), 'app', 'admin', 'security', 'page.jsx'), 'utf8');
+        const accountSource = readFileSync(join(process.cwd(), 'app', 'admin', 'account', 'page.jsx'), 'utf8');
 
         expect(loginSource).toContain("auth/multi-factor-auth-required");
         expect(loginSource).toContain('assertionForSignIn');
         expect(loginSource).toContain('TotpMfaPanel');
-        expect(securitySource).toContain('TotpMfaPanel');
+        expect(accountSource).toContain('TotpMfaPanel');
     });
 
     it('returns safe Arabic errors without exposing provider details', () => {
