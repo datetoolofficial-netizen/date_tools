@@ -125,6 +125,18 @@
     gap: 8px;
 }
 
+.verification {
+    display: grid;
+    gap: 10px;
+}
+
+.verification > p {
+    margin: 0;
+    color: var(--text-sub, #64748b);
+    font-size: 11px;
+    line-height: 1.7;
+}
+
 .primary,
 .secondary {
     min-height: 42px;
@@ -158,6 +170,16 @@
     border-radius: 8px;
     background: rgba(220, 38, 38, 0.08);
     color: #b91c1c;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.success {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(22, 163, 74, 0.08);
+    color: #15803d !important;
     font-size: 11px;
     line-height: 1.6;
 }

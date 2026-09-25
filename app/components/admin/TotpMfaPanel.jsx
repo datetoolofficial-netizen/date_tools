@@ -18,6 +18,8 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
     const [busy, setBusy] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [enrolled, setEnrolled] = useState(false);
+    const [emailVerified, setEmailVerified] = useState(Boolean(user?.emailVerified));
+    const [verificationEmailSent, setVerificationEmailSent] = useState(false);
 
     const enrolledFactors = useMemo(() => {
         if (!user) return [];
@@ -28,6 +30,10 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
         setEnrolled(hasTotpFactor(enrolledFactors));
     }, [enrolledFactors]);
 
+    useEffect(() => {
+        setEmailVerified(Boolean(user?.emailVerified));
+    }, [user?.emailVerified]);
+
     useEffect(() => () => {
         setSecret(null);
         setQrDataUrl('');
@@ -37,7 +43,7 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
     const beginEnrollment = async () => {
         setErrorMessage('');
 
-        if (!user?.emailVerified) {
+        if (!emailVerified) {
             setErrorMessage(getMfaErrorMessage({ code: 'auth/unverified-email' }));
             return;
         }
@@ -64,6 +70,42 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
             setVerificationCode('');
         } catch (error) {
             console.error('Unable to start TOTP enrollment:', error?.code || 'unknown');
+            setErrorMessage(getMfaErrorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const sendVerificationMessage = async () => {
+        setErrorMessage('');
+        setBusy(true);
+        try {
+            const { sendEmailVerification } = await import('firebase/auth');
+            await sendEmailVerification(user, {
+                url: `${window.location.origin}/admin/security`,
+                handleCodeInApp: false,
+            });
+            setVerificationEmailSent(true);
+        } catch (error) {
+            console.error('Unable to send administrator email verification:', error?.code || 'unknown');
+            setErrorMessage(getMfaErrorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const refreshEmailVerification = async () => {
+        setErrorMessage('');
+        setBusy(true);
+        try {
+            await user.reload();
+            const verified = Boolean(user.emailVerified);
+            setEmailVerified(verified);
+            if (!verified) {
+                setErrorMessage('لم يكتمل توثيق البريد بعد. افتح رابط التوثيق من البريد ثم أعد التحقق.');
+            }
+        } catch (error) {
+            console.error('Unable to refresh administrator email verification:', error?.code || 'unknown');
             setErrorMessage(getMfaErrorMessage(error));
         } finally {
             setBusy(false);
@@ -135,7 +177,22 @@ export default function TotpMfaPanel({ user, onComplete, required = false }) {
                 </div>
             </div>
 
-            {!secret ? (
+            {!emailVerified ? (
+                <div className={styles.verification}>
+                    <p>وثّق بريد حساب الإدارة قبل إنشاء مفتاح Authenticator. لا تعرض المنصة عنوان البريد أو رابط التوثيق داخل الصفحة.</p>
+                    <div className={styles.actions}>
+                        <button type="button" className={styles.primary} onClick={sendVerificationMessage} disabled={busy}>
+                            {busy ? 'جاري الإرسال...' : 'إرسال رسالة توثيق البريد'}
+                        </button>
+                        <button type="button" className={styles.secondary} onClick={refreshEmailVerification} disabled={busy}>
+                            تحققت من البريد
+                        </button>
+                    </div>
+                    {verificationEmailSent ? (
+                        <p className={styles.success} role="status">أُرسلت رسالة التوثيق. افتح الرابط من بريدك ثم عد واضغط «تحققت من البريد».</p>
+                    ) : null}
+                </div>
+            ) : !secret ? (
                 <div className={styles.actions}>
                     <button type="button" className={styles.primary} onClick={beginEnrollment} disabled={busy}>
                         <i className={`fa-solid ${busy ? 'fa-spinner fa-spin' : 'fa-qrcode'}`} aria-hidden="true"></i>{' '}

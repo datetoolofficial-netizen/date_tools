@@ -11,6 +11,9 @@ describe('administrator MFA enforcement coverage', () => {
 
         expect(panel).toContain("import('qrcode')");
         expect(panel).toContain('generateQrCodeUrl');
+        expect(panel).toContain('sendEmailVerification');
+        expect(panel).toContain('user.reload()');
+        expect(panel).toContain('handleCodeInApp: false');
         expect(panel).not.toMatch(/chart\.googleapis|api\.qrserver|quickchart/i);
         expect(login).toContain('auth/multi-factor-auth-required');
         expect(login).toContain('assertionForSignIn');

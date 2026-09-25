@@ -52,6 +52,9 @@ export function getMfaErrorMessage(error) {
     if (code === 'auth/unverified-email') {
         return 'يجب توثيق بريد الحساب أولًا قبل تفعيل المصادقة الثنائية.';
     }
+    if (code === 'auth/too-many-requests') {
+        return 'أُرسلت طلبات كثيرة خلال وقت قصير. انتظر قليلًا ثم أعد المحاولة.';
+    }
     if (code === 'auth/operation-not-allowed' || code === 'auth/unsupported-first-factor') {
         return 'ميزة TOTP غير مفعّلة بعد في إعدادات Firebase Authentication.';
     }
