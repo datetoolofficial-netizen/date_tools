@@ -2,6 +2,9 @@
   "name": "date_tools",
   "version": "0.3.64",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -43,6 +46,7 @@
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.0",
     "eslint-config-next": "^15.5.25",
     "tailwindcss": "^4.3.1",
