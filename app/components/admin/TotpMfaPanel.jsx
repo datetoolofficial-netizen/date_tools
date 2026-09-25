@@ -1,0 +1,205 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { multiFactor } from 'firebase/auth';
+import Image from 'next/image';
+import {
+    getMfaErrorMessage,
+    hasTotpFactor,
+    isValidTotpCode,
+    normalizeTotpCode,
+} from '../../firebaseMfa';
+import styles from './TotpMfaPanel.module.css';
+
+export default function TotpMfaPanel({ user, onComplete, required = false }) {
+    const [secret, setSecret] = useState(null);
+    const [qrDataUrl, setQrDataUrl] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [enrolled, setEnrolled] = useState(false);
+
+    const enrolledFactors = useMemo(() => {
+        if (!user) return [];
+        return multiFactor(user).enrolledFactors || [];
+    }, [user]);
+
+    useEffect(() => {
+        setEnrolled(hasTotpFactor(enrolledFactors));
+    }, [enrolledFactors]);
+
+    useEffect(() => () => {
+        setSecret(null);
+        setQrDataUrl('');
+        setVerificationCode('');
+    }, []);
+
+    const beginEnrollment = async () => {
+        setErrorMessage('');
+
+        if (!user?.emailVerified) {
+            setErrorMessage(getMfaErrorMessage({ code: 'auth/unverified-email' }));
+            return;
+        }
+
+        setBusy(true);
+        try {
+            const [{ multiFactor, TotpMultiFactorGenerator }, qrCodeModule] = await Promise.all([
+                import('firebase/auth'),
+                import('qrcode'),
+            ]);
+            const session = await multiFactor(user).getSession();
+            const generatedSecret = await TotpMultiFactorGenerator.generateSecret(session);
+            const uri = generatedSecret.generateQrCodeUrl(user.email || user.uid, 'date-tool.com');
+            const toDataUrl = qrCodeModule.toDataURL || qrCodeModule.default?.toDataURL;
+            if (!toDataUrl) throw new Error('qr_encoder_unavailable');
+            const dataUrl = await toDataUrl(uri, {
+                errorCorrectionLevel: 'M',
+                margin: 1,
+                width: 220,
+            });
+
+            setSecret(generatedSecret);
+            setQrDataUrl(dataUrl);
+            setVerificationCode('');
+        } catch (error) {
+            console.error('Unable to start TOTP enrollment:', error?.code || 'unknown');
+            setErrorMessage(getMfaErrorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const finishEnrollment = async (event) => {
+        event.preventDefault();
+        setErrorMessage('');
+
+        if (!secret || !isValidTotpCode(verificationCode)) {
+            setErrorMessage('أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.');
+            return;
+        }
+
+        setBusy(true);
+        try {
+            const { multiFactor, TotpMultiFactorGenerator } = await import('firebase/auth');
+            const assertion = TotpMultiFactorGenerator.assertionForEnrollment(
+                secret,
+                normalizeTotpCode(verificationCode),
+            );
+            await multiFactor(user).enroll(assertion, 'تطبيق المصادقة');
+            await user.getIdToken(true);
+
+            setSecret(null);
+            setQrDataUrl('');
+            setVerificationCode('');
+            setEnrolled(true);
+            await onComplete?.();
+        } catch (error) {
+            console.error('Unable to finish TOTP enrollment:', error?.code || 'unknown');
+            setErrorMessage(getMfaErrorMessage(error));
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    if (!user) {
+        return (
+            <div className={styles.panel}>
+                <p className={styles.error}>تعذر قراءة جلسة الحساب الحالية. أعد تسجيل الدخول ثم حاول مرة أخرى.</p>
+            </div>
+        );
+    }
+
+    if (enrolled) {
+        return (
+            <div className={styles.panel}>
+                <div className={styles.status}>
+                    <i className="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <div>
+                        <strong>المصادقة الثنائية عبر تطبيق Authenticator مفعّلة</strong>
+                        <small>سيُطلب رمز مؤقت بعد كلمة المرور في كل جلسة دخول جديدة.</small>
+                    </div>
+                </div>
+                <p className={styles.warning}>لا تُحذف الوسيلة من Firebase قبل التأكد من وجود طريق استرداد إداري موثوق.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.panel}>
+            <div className={styles.status}>
+                <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                <div>
+                    <strong>{required ? 'يجب حماية هذا الحساب بعامل ثانٍ' : 'المصادقة الثنائية غير مفعّلة لهذا الحساب'}</strong>
+                    <small>يُنشأ السر ويُعرض داخل هذه الجلسة فقط، ولا يُرسل إلى خادم QR خارجي.</small>
+                </div>
+            </div>
+
+            {!secret ? (
+                <div className={styles.actions}>
+                    <button type="button" className={styles.primary} onClick={beginEnrollment} disabled={busy}>
+                        <i className={`fa-solid ${busy ? 'fa-spinner fa-spin' : 'fa-qrcode'}`} aria-hidden="true"></i>{' '}
+                        {busy ? 'جاري إنشاء الرمز...' : 'بدء إعداد تطبيق المصادقة'}
+                    </button>
+                </div>
+            ) : (
+                <form className={styles.setup} onSubmit={finishEnrollment}>
+                    <Image
+                        className={styles.qr}
+                        src={qrDataUrl}
+                        width={220}
+                        height={220}
+                        unoptimized
+                        alt="رمز QR لإضافة حساب date-tool.com إلى تطبيق المصادقة"
+                    />
+                    <div className={styles.steps}>
+                        <ol>
+                            <li>افتح تطبيق Authenticator على جهاز موثوق.</li>
+                            <li>امسح رمز QR، أو أدخل المفتاح يدويًا.</li>
+                            <li>أدخل الرمز الحالي المكوّن من 6 أرقام لإكمال الربط.</li>
+                        </ol>
+                        <div className={styles.secret}>
+                            <span>المفتاح اليدوي</span>
+                            <code dir="ltr">{secret.secretKey}</code>
+                        </div>
+                        <label className={styles.codeField}>
+                            <span>رمز تطبيق المصادقة</span>
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                value={verificationCode}
+                                onChange={(event) => setVerificationCode(normalizeTotpCode(event.target.value))}
+                                maxLength={6}
+                                required
+                                dir="ltr"
+                                aria-label="رمز تطبيق المصادقة"
+                            />
+                        </label>
+                        <div className={styles.actions}>
+                            <button type="submit" className={styles.primary} disabled={busy || !isValidTotpCode(verificationCode)}>
+                                {busy ? 'جاري التحقق...' : 'تفعيل المصادقة الثنائية'}
+                            </button>
+                            <button
+                                type="button"
+                                className={styles.secondary}
+                                disabled={busy}
+                                onClick={() => {
+                                    setSecret(null);
+                                    setQrDataUrl('');
+                                    setVerificationCode('');
+                                    setErrorMessage('');
+                                }}
+                            >
+                                إلغاء هذا الرمز
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            )}
+
+            {errorMessage ? <p className={styles.error} role="alert">{errorMessage}</p> : null}
+            <p className={styles.warning}>Firebase لا ينشئ رموز استعادة تلقائيًا لـTOTP؛ يبقى حساب Google المالك المحمي وFirebase Console مسار الاسترداد الإداري عند فقد الجهاز.</p>
+        </div>
+    );
+}

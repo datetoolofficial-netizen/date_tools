@@ -12,6 +12,12 @@ import {
 } from '../adminAccess';
 import { ADMIN_VERSION } from '../version';
 import { isLocalBrowserRuntime } from '../localMutationSafety';
+import {
+    hasTotpFactor,
+    hasTotpSecondFactorClaim,
+    isAdminMfaRequired,
+    isMfaProtectedAdmin,
+} from '../firebaseMfa';
 
 const AdminContext = createContext(null);
 
@@ -173,7 +179,7 @@ export default function AdminShell({ children }) {
 
         async function loadAdminShell() {
             try {
-                const [{ getFirebaseAuth, getAdminProfile, syncPublicSiteConfig }, { onAuthStateChanged, signOut }] = await Promise.all([
+                const [{ getFirebaseAuth, getAdminProfile, syncPublicSiteConfig }, { multiFactor, onAuthStateChanged, signOut }] = await Promise.all([
                     import('../firebase'),
                     import('firebase/auth'),
                 ]);
@@ -211,6 +217,18 @@ export default function AdminShell({ children }) {
                             await signOut(auth);
                             window.location.replace('/admin_login');
                             return;
+                        }
+
+                        if (isAdminMfaRequired() && isMfaProtectedAdmin(profile)) {
+                            const tokenResult = await user.getIdTokenResult();
+                            const hasEnrolledTotp = hasTotpFactor(multiFactor(user).enrolledFactors);
+                            const signedInWithTotp = hasTotpSecondFactorClaim(tokenResult.claims);
+
+                            if (!hasEnrolledTotp || !signedInWithTotp) {
+                                await signOut(auth);
+                                window.location.replace('/admin_login?mfa=required');
+                                return;
+                            }
                         }
 
                         if (!isMounted) return;

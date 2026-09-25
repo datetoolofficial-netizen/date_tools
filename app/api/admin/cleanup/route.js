@@ -1,5 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
+import { adminMfaRequirementSatisfied, hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
 
@@ -175,6 +175,7 @@ async function requireActiveAdmin(request, serviceAccount) {
 
     const adminProfile = await getAdminProfile(serviceAccount, user.localId);
     if (!hasAdminPermission(adminProfile, [], { fullOnly: true })) return null;
+    if (!adminMfaRequirementSatisfied(adminProfile, user)) return null;
     return {
         uid: user.localId,
         email: user.email || '',

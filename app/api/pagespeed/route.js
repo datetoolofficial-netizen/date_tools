@@ -1,5 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { hasAdminPermission } from '../_lib/adminPermissions';
+import { adminMfaRequirementSatisfied, hasAdminPermission } from '../_lib/adminPermissions';
 import { ADMIN_PERMISSIONS } from '../../adminAccess';
 import { verifyFirebaseIdToken } from '../_lib/firebaseIdToken';
 import { normalizePagespeedTargetUrl } from '../_lib/urlPolicies';
@@ -174,7 +174,8 @@ async function requireActiveAdmin(request, serviceAccount) {
     if (!user?.localId) return false;
 
     const adminProfile = await getAdminProfile(serviceAccount, user.localId);
-    return hasAdminPermission(adminProfile, [ADMIN_PERMISSIONS.PERFORMANCE_RUN]);
+    return hasAdminPermission(adminProfile, [ADMIN_PERMISSIONS.PERFORMANCE_RUN])
+        && adminMfaRequirementSatisfied(adminProfile, user);
 }
 
 function normalizeStrategy(value) {

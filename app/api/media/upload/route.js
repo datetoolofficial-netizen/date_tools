@@ -3,6 +3,7 @@ import {
     MAX_IMAGE_BYTES,
 } from '../../_lib/mediaValidation';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
+import { adminMfaRequirementSatisfied } from '../../_lib/adminPermissions';
 import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
 import { processAuthorizedMediaUpload } from '../../_lib/mediaUploadHandler';
 
@@ -189,6 +190,7 @@ async function requireUploader(request) {
 
     const adminProfile = await getProfile(serviceAccount, 'admins', user.localId);
     if (adminProfile?.active?.booleanValue === true) {
+        if (!adminMfaRequirementSatisfied(adminProfile, user)) return null;
         return { type: 'admin', uid: user.localId, email: user.email || '', profile: adminProfile };
     }
 

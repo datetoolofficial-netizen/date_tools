@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
+import { adminMfaRequirementSatisfied, hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { ADMIN_PERMISSIONS } from '../../../adminAccess';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 import { writeAdminAuditEvent } from '../../_lib/writeAdminAudit';
@@ -32,6 +32,7 @@ async function requireActiveAdmin(request) {
     if (!user?.localId) return null;
     const profile = await getAdminProfile(idToken, user.localId);
     if (!hasAdminPermission(profile, [ADMIN_PERMISSIONS.SEO_SUBMIT_INDEX])) return null;
+    if (!adminMfaRequirementSatisfied(profile, user)) return null;
     return {
         uid: user.localId,
         email: user.email || '',

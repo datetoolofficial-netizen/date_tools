@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Toast from '../../components/Toast';
+import TotpMfaPanel from '../../components/admin/TotpMfaPanel';
 import { APP_VERSION, APP_VERSION_DATE } from '../../version';
 
 const REQUIRED_HEADERS = [
@@ -159,10 +160,11 @@ export default function AdminSecurityPage() {
     const [checking, setChecking] = useState(false);
     const [cleaning, setCleaning] = useState(false);
     const [message, setMessage] = useState(null);
+    const [authUser, setAuthUser] = useState(null);
     const [checks, setChecks] = useState({
         headers: { passed: 0, total: REQUIRED_HEADERS.length, items: [] },
         turnstile: { enabled: false, checked: false },
-        appCheck: { configured: false, enabled: false, initialized: false, checked: false },
+        appCheck: { configured: false, enabled: false, initialized: false, tokenValid: false, checked: false },
         csp: { available: false, reportOnly: false },
         version: APP_VERSION,
         checkedAt: null,
@@ -193,6 +195,10 @@ export default function AdminSecurityPage() {
                 getFirebaseAuth: firebaseApi.getFirebaseAuth,
             };
 
+            const auth = await firebaseApi.getFirebaseAuth();
+            if (typeof auth.authStateReady === 'function') await auth.authStateReady();
+            setAuthUser(auth.currentUser || null);
+
             const headerResponse = headersResult.status === 'fulfilled' ? headersResult.value : null;
             const headerItems = REQUIRED_HEADERS.map(([name, label]) => ({
                 name,
@@ -215,6 +221,7 @@ export default function AdminSecurityPage() {
                     configured: appCheck.configured === true,
                     enabled: appCheck.enabled === true,
                     initialized: appCheck.initialized === true,
+                    tokenValid: appCheck.tokenValid === true,
                     checked: true,
                 },
                 csp: { available: cspAvailable, reportOnly: Boolean(cspHeader) },
@@ -273,7 +280,10 @@ export default function AdminSecurityPage() {
     }
 
     const allHeadersEnabled = checks.headers.passed === checks.headers.total;
-    const appCheckHealthy = checks.appCheck.configured && checks.appCheck.enabled && checks.appCheck.initialized;
+    const appCheckHealthy = checks.appCheck.configured
+        && checks.appCheck.enabled
+        && checks.appCheck.initialized
+        && checks.appCheck.tokenValid;
     const appCheckPaused = checks.appCheck.configured && !checks.appCheck.enabled;
 
     return (
@@ -322,7 +332,9 @@ export default function AdminSecurityPage() {
                     value={appCheckHealthy ? 'مهيأ' : appCheckPaused ? 'موقوف مؤقتًا' : 'يحتاج مراجعة'}
                     detail={appCheckPaused
                         ? 'أوقف لحماية الدخول حتى نجاح اختبار reCAPTCHA Enterprise'
-                        : 'الفرض يبقى Monitoring حتى استقرار التقارير'}
+                        : appCheckHealthy
+                            ? 'تم إصدار رمز App Check صالح؛ الفرض يبقى Monitoring حتى استقرار التقارير'
+                            : 'تعذر إثبات إصدار رمز App Check صالح'}
                     tone={statusTone(appCheckHealthy, appCheckPaused)}
                 />
                 <SecurityStatusCard
@@ -393,6 +405,18 @@ export default function AdminSecurityPage() {
                         </article>
                     ))}
                 </div>
+            </section>
+
+            <section className="security-panel">
+                <SectionHeading
+                    icon="fa-mobile-screen-button"
+                    title="المصادقة الثنائية لحساب الإدارة"
+                    description="اربط تطبيق Authenticator بحسابك بعد ترقية Firebase Authentication وتفعيل TOTP. لا يُرسل المفتاح إلى أي خدمة QR خارجية."
+                />
+                <TotpMfaPanel
+                    user={authUser}
+                    onComplete={() => showMessage('success', 'تم تفعيل المصادقة الثنائية لهذا الحساب. سجّل الخروج واختبر الدخول بالرمز قبل فرضها على الأدوار الحساسة.')}
+                />
             </section>
 
             <section className="security-maintenance-grid">

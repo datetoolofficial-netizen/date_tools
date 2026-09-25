@@ -104,6 +104,7 @@ beforeEach(async () => {
             }),
             setDoc(doc(db, 'settings/public'), { toolDisplayName: 'Date Tools' }),
             setDoc(doc(db, 'admins/owner-admin'), adminDocument('platform_owner')),
+            setDoc(doc(db, 'admins/mfa-owner'), adminDocument('platform_owner', { mfaRequired: true })),
             setDoc(doc(db, 'admins/super-admin'), adminDocument('super_admin')),
             setDoc(doc(db, 'admins/ads-admin'), adminDocument('ads_manager')),
             setDoc(doc(db, 'admins/assistant-admin'), adminDocument('admin_assistant', {
@@ -150,6 +151,17 @@ describe('public and default-deny boundaries', () => {
 });
 
 describe('platform administration', () => {
+    it('requires a TOTP-authenticated token when an administrator is marked mfaRequired', async () => {
+        const passwordOnlyDb = testEnv.authenticatedContext('mfa-owner', auth('mfa-owner')).firestore();
+        const totpDb = testEnv.authenticatedContext('mfa-owner', {
+            ...auth('mfa-owner'),
+            firebase: { sign_in_provider: 'password', sign_in_second_factor: 'enrollment-id' },
+        }).firestore();
+
+        await assertFails(getDoc(doc(passwordOnlyDb, 'settings/main')));
+        await assertSucceeds(getDoc(doc(totpDb, 'settings/main')));
+    });
+
     it('uses platform_owner as the only ownership role and protects every owner', async () => {
         const ownerDb = testEnv.authenticatedContext('owner-admin', auth('owner-admin')).firestore();
         const superDb = testEnv.authenticatedContext('super-admin', auth('super-admin')).firestore();

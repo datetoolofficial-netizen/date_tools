@@ -1,6 +1,6 @@
 import { ADMIN_PERMISSIONS } from '../../../adminAccess';
 import { getFirestoreServerAuthorization } from '../../../serverFirestoreAuth';
-import { hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
+import { adminMfaRequirementSatisfied, hasAdminPermission, resolveEncodedAdminRole } from '../../_lib/adminPermissions';
 import { verifyFirebaseIdToken } from '../../_lib/firebaseIdToken';
 
 const FIREBASE_PROJECT_ID = 'date-tool-official';
@@ -95,6 +95,9 @@ export async function POST(request) {
         if (!profile?.active?.booleanValue || !resolveEncodedAdminRole(profile)) {
             return jsonResponse({ ok: false, error: 'unauthorized' }, 401);
         }
+        if (!adminMfaRequirementSatisfied(profile, user)) {
+            return jsonResponse({ ok: false, error: 'mfa_required' }, 403);
+        }
 
         const payload = await request.json().catch(() => ({}));
         const action = String(payload.action || '');
@@ -146,6 +149,9 @@ export async function GET(request) {
     const profile = await getAdminProfile(idToken, user.localId);
     if (!hasAdminPermission(profile, [ADMIN_PERMISSIONS.AUDIT_READ])) {
         return jsonResponse({ ok: false, error: 'forbidden' }, 403);
+    }
+    if (!adminMfaRequirementSatisfied(profile, user)) {
+        return jsonResponse({ ok: false, error: 'mfa_required' }, 403);
     }
     return jsonResponse({ ok: true });
 }

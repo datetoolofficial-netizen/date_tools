@@ -17602,3 +17602,259 @@ git status --short --branch
 - النسخ والاستعادة والتنبيهات التي تتطلب خطة أو قرار تكلفة: Firestore وR2 وCloudflare Health Checks.
 - اختبارات الأجهزة الفعلية وإمكانية الوصول وPWA، والمراجعة القانونية البشرية.
 - البنود الزمنية: فهرسة Search Console، وتحسين محتوى AdSense وانتظار قبوله، وبيانات CrUX/PageSpeed الحقيقية.
+
+### تجهيز المصادقة الثنائية داخل منصة الإدارة - محلي غير منشور 2026-09-24
+
+تم إنجازه:
+
+- التحقق من مشروع Firebase `date-tool-official` قراءة فقط: الخطة الحالية Spark المجانية، والبريد/كلمة المرور والهاتف مفعّلان، لكن Authentication لم يُرقَّ بعد إلى Identity Platform.
+- اختيار TOTP عبر تطبيق Authenticator بدل SMS لتجنب الاعتماد على رسائل مدفوعة، مع اشتراط توثيق بريد الحساب قبل التسجيل.
+- إضافة واجهة آمنة داخل مركز أمان الإدارة لإنشاء سر TOTP وQR محليًا داخل المتصفح دون إرسال السر إلى خدمة QR خارجية.
+- إضافة تدفق تحدي العامل الثاني إلى `/admin_login` لمعالجة `auth/multi-factor-auth-required` وإكمال الدخول برمز من 6 أرقام.
+- إضافة فرض مرحلي للحسابات الحساسة `platform_owner` و`super_admin` و`security_manager` في غلاف الإدارة ومسارات الخادم الحساسة.
+- إضافة فرض مستقل في قواعد Firestore بواسطة حقل `mfaRequired` في وثيقة المدير، مع إبقاء الحقل غير مفعل حاليًا حتى ينجح اختبار الدخول الحقيقي.
+- حماية مسارات التدقيق والتنظيف وIndexNow والدعم ورفع الوسائط وPageSpeed عند تفعيل سياسة MFA.
+- إضافة علم إصدار `NEXT_PUBLIC_FIREBASE_MFA_REQUIRED=false` افتراضيًا لمنع قفل المالك قبل اكتمال التسجيل والاختبار.
+- تصحيح فحص رمز Firebase ليقبل وجود معرّف عامل ثانٍ موثق غير فارغ بدل افتراض أن قيمة `sign_in_second_factor` تساوي النص `totp`.
+- إضافة اعتماد `qrcode@1.5.4` لتوليد QR محليًا؛ تدقيق npm انتهى دون ثغرات.
+- نجاح بوابة الجودة الكاملة: ESLint، فحص الأسرار، `npm audit` مع `0 vulnerabilities`، و224 اختبار وحدة وتكامل في 43 ملفًا.
+- نجاح 9 اختبارات لقواعد Firestore على المحاكي، ونجاح بناء Next.js وتوليد 39 صفحة.
+- نجاح 57 اختبار متصفح على سطح المكتب والجوال مع تجاوز واحد مقصود ودون فشل.
+
+الأخطاء المكتشفة:
+
+1. **التحقق الأولي افترض قيمة ثابتة لنوع العامل الثاني داخل ID token**
+   - الأعراض: كان فرض MFA قد يرفض جلسة صحيحة إذا أعاد Firebase معرّف تسجيل العامل بدل النص `totp` في `sign_in_second_factor`.
+   - السبب: الخلط بين `factorId` في بيانات التسجيل وبين قيمة إثبات العامل الثاني في ID token.
+   - الحل: التحقق من أن الحساب نفسه مسجل بعامل TOTP في العميل، ومن وجود `sign_in_second_factor` غير فارغ في الجلسة الموثقة خادميًا وقواعد Firestore.
+   - الحالة: محلول محليًا ومغطى باختبارات الوحدة وقواعد Firestore.
+2. **إعداد Firebase الخارجي لا يدعم TOTP قبل ترقية Authentication**
+   - الأعراض: صفحة Sign-in method تعرض أن MFA يحتاج Upgrade، ولا يمكن تسجيل TOTP في الحالة الحالية.
+   - السبب: TOTP MFA يتطلب Firebase Authentication with Identity Platform.
+   - الحل: ترقية الخدمة بعد موافقة المالك، ثم تفعيل TOTP واختبار التسجيل والدخول قبل فرض العلم أو حقل `mfaRequired`.
+   - الحالة: مفتوح خارجيًا؛ لم يُنفذ أي تغيير في Firebase ولم يُنشر الكود.
+
+الملفات المتأثرة:
+
+- `.dev.vars.example`
+- `app/firebaseMfa.js`
+- `app/components/admin/TotpMfaPanel.jsx`
+- `app/components/admin/TotpMfaPanel.module.css`
+- `app/admin_login/page.jsx`
+- `app/admin_login/AdminLogin.css`
+- `app/admin/AdminShell.jsx`
+- `app/admin/security/page.jsx`
+- `app/api/_lib/adminPermissions.js`
+- `app/api/admin/audit/route.js`
+- `app/api/admin/cleanup/route.js`
+- `app/api/admin/indexnow/route.js`
+- `app/api/admin/support/route.js`
+- `app/api/media/upload/route.js`
+- `app/api/pagespeed/route.js`
+- `firestore.rules`
+- `emulator-tests/firestoreRules.test.js`
+- `tests/firebaseMfa.test.js`
+- `tests/mfaEnforcement.test.js`
+- `tests/adminPermissions.test.js`
+- `package.json`
+- `package-lock.json`
+- `docs/HUMAN_VERIFICATION_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm install qrcode@1.5.4
+npm ls firebase qrcode --depth=0
+npx vitest run tests/firebaseMfa.test.js tests/firebaseAuthRetry.test.js tests/adminPermissions.test.js tests/apiAbuseProtection.test.js tests/mfaEnforcement.test.js
+npm run test:rules
+npm run quality:local
+git diff --check
+```
+
+الحالة:
+
+- التنفيذ البرمجي للبند الأول جاهز محليًا واجتاز كل الفحوص، لكنه غير منشور وغير مفروض على أي حساب.
+- لم تُجر ترقية Identity Platform أو تفعيل TOTP أو تعديل وثيقة حساب المالك أو قواعد الإنتاج.
+- خطة Spark لا تتطلب وسيلة دفع لهذه الترقية، لكن Identity Platform يطبق حد 3,000 مستخدم نشط يوميًا لموفري المستوى الأول؛ الاستخدام الحالي أقل بكثير، ومع ذلك يلزم تأكيد المالك قبل التغيير الخارجي.
+
+المتبقي المحفوظ:
+
+- موافقة المالك على ترقية Firebase Authentication إلى Identity Platform.
+- تفعيل TOTP على المشروع ثم نشر النسخة المرحلية مع بقاء `NEXT_PUBLIC_FIREBASE_MFA_REQUIRED=false`.
+- تسجيل حساب `platform_owner` في تطبيق Authenticator واختبار خروج ودخول حقيقي بالعامل الثاني.
+- بعد نجاح الاختبار فقط: ضبط `mfaRequired=true` للمالك، تفعيل علم الإصدار، ونشر قواعد Firestore ثم إعادة اختبار الاسترداد.
+- لا يوفر Firebase رموز استعادة TOTP؛ حساب Google المالك المحمي وFirebase Console هما مسار الاسترداد الإداري، ولا يُحذف عامل TOTP قبل التحقق من هذا المسار.
+- بعد إغلاق هذا البند ينتقل العمل إلى App Check حسب ترتيب المستخدم.
+
+### حسم تكلفة Identity Platform وإغلاق اختبارات الأجهزة - 2026-09-24
+
+تم إنجازه:
+
+- التحقق من وثائق Firebase وGoogle Cloud الحالية بأن ترقية Firebase Authentication إلى Identity Platform متاحة مع بقاء المشروع على خطة Spark المجانية ودون إضافة وسيلة دفع.
+- توثيق أثر الترقية على Spark: حد 3,000 مستخدم نشط يوميًا لمعظم موفري تسجيل الدخول بدل تحويل المشروع تلقائيًا إلى Blaze.
+- فحص معالج الترقية داخل Firebase حتى خطوة التأكيد النهائية: الخطة بقيت `Spark / No-cost ($0/month)`، وأظهرت لوحة آخر 30 يومًا ذروة 7 مستخدمين نشطين يوميًا فقط مقابل حد 3,000.
+- تأكيد أن TOTP عبر تطبيق Authenticator لا يرسل رسائل SMS؛ رسوم الرسائل تخص MFA المعتمد على SMS، وهو غير مختار لهذا المشروع.
+- اعتماد تأكيد المستخدم بأن اختبارات الأجهزة الحقيقية وقارئ الشاشة ولوحة المفاتيح والتكبير 200% وPWA والوضعين واللغتين أُنجزت وكانت نتائجها جيدة.
+- تحديث قائمة الاختبارات البشرية ونقل اختبارات الأجهزة وإمكانية الوصول وPWA إلى مكتملة.
+
+الأخطاء المكتشفة:
+
+1. **التباس بين ترقية المنتج والترقية إلى خطة مدفوعة**
+   - الأعراض: احتمال تأجيل MFA باعتقاد أن Identity Platform يتطلب اشتراكًا ماديًا.
+   - السبب: Firebase يسمي تفعيل ميزات Identity Platform ترقية، مع أنها تستطيع العمل على Spark بقيود استخدام مختلفة.
+   - الحل: فصل مفهوم ترقية الميزة عن خطة Blaze المدفوعة، وتوثيق حد Spark قبل أي تغيير خارجي.
+   - الحالة: محسوم؛ لا يلزم اشتراك مادي أو بطاقة دفع للبند الأول.
+
+الملفات المتأثرة:
+
+- `docs/HUMAN_VERIFICATION_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```txt
+مراجعة وثائق Firebase Authentication وIdentity Platform Pricing وQuotas الرسمية
+```
+
+الحالة:
+
+- اختبارات الأجهزة وإمكانية الوصول وPWA مكتملة بتأكيد المستخدم.
+- البند الأول لا يصنف ضمن البنود المدفوعة، لذلك يبقى هو البند الجاري وفق ترتيب التنفيذ.
+- لم تُجر أي ترقية في Firebase ولم يُنشر شيء ضمن خطوة التحقق من التكلفة.
+- لم يُضغط زر `Upgrade to the new Authentication` لأن Firebase يوضح أن القرار غير قابل للتراجع، وبقيت الصفحة عند خطوة التأكيد النهائية في انتظار موافقة المالك الصريحة.
+
+المتبقي المحفوظ:
+
+- تنفيذ ترقية Identity Platform المجانية بعد اعتماد أثر حد 3,000 مستخدم نشط يوميًا، ثم متابعة تفعيل TOTP والاختبار المرحلي.
+- لا ينتقل العمل إلى App Check وحساب الخدمة وWAF قبل إغلاق MFA أو توثيق عائق جديد.
+
+### تفعيل TOTP وتدوير حساب خدمة Firebase وتشديد Cloudflare - 2026-09-25
+
+تم إنجازه:
+
+- ترقية Firebase Authentication إلى Identity Platform مع بقاء المشروع على Spark المجانية ودون إضافة وسيلة دفع.
+- تفعيل موفر TOTP على المشروع بقيمة `adjacentIntervals=1`، مع إبقاء SMS MFA معطلًا عمدًا.
+- إبقاء فرض MFA العام و`mfaRequired` غير مفعّلين حتى نشر النسخة المرحلية وتسجيل مالك المنصة واختبار الدخول الحقيقي.
+- إنشاء حساب الخدمة `datetools-worker@date-tool-official.iam.gserviceaccount.com` ومنحه الدور المحدد `roles/datastore.user` فقط.
+- إنشاء المفتاح الجديد `9087a3fcc7f2536d78b0916e0f12088d749f5c90` ونقله مباشرة إلى سر Worker `datetools` باسم `FIREBASE_SERVICE_ACCOUNT_JSON` دون عرضه أو إدخاله في المستودع.
+- نجاح اختبار Firestore قراءة أولي بالحساب الجديد بعد اكتمال انتشار IAM، ثم نجاح اختبار كتابة مباشر برمز HTTP `200`.
+- نجاح مساري الإنتاج `/api/public-campaigns` و`/api/site-config?include=pages` برمز `200` قبل إزالة مسار الرجوع وبعده.
+- حذف مستند الاختبار `security_rotation_checks/rotation-test-1790280674` بعد نجاح الكتابة.
+- حذف المفتاح القديم `081d1ba168b24974dfcce7a2012be3ca5ef0ca4a` من حساب `firebase-adminsdk-fbsvc` والتحقق من اختفائه من قائمة المفاتيح.
+- حذف ملف المفتاح وملف علامة الاختبار المؤقتين من Cloud Shell.
+- حذف سري Cloudflare القديمين `FIREBASE_SERVICE_ACCOUNT_EMAIL` و`FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY`؛ بقي السر الموحد الجديد وحده لهوية Firestore الخادمية.
+- توسيع قاعدة Cloudflare المجانية الوحيدة وتسميتها `Protect sensitive APIs from bursts` لحماية `/api/support` و`/api/security/turnstile` و`/api/media/upload` و`/api/statistics` بمعدل 20 طلبًا لكل IP خلال 10 ثوانٍ وحظر 10 ثوانٍ.
+- نجاح 224 اختبارًا في 43 ملفًا، ونجاح فحص الأسرار، ونجاح بناء Next.js وتوليد 39 صفحة بعد تنظيف التعديلات المؤقتة.
+
+الأخطاء المكتشفة:
+
+1. **تأخر انتشار صلاحية حساب الخدمة الجديد**
+   - الأعراض: أعاد أول اختبار Firestore الرمز `403 PERMISSION_DENIED` مباشرة بعد منح الدور.
+   - السبب: انتشار سياسة IAM لم يكن قد اكتمل بعد إنشاء الحساب ومنحه `roles/datastore.user`.
+   - الحل: الانتظار ثم إعادة الاختبار دون توسيع الصلاحيات؛ أعاد الاختبار اللاحق `200` للقراءة والكتابة.
+   - الحالة: محلول ومثبت دون منح دور أوسع.
+2. **الخطة المجانية تسمح بقاعدة Rate Limiting واحدة فقط**
+   - الأعراض: لا يمكن إنشاء قواعد مستقلة لكل مسار ضمن Free.
+   - السبب: حد الخطة هو قاعدة واحدة.
+   - الحل: دمج المسارات الحساسة الأربعة في تعبير واحد، مع حماية تدفق الدخول عبر `/api/security/turnstile` لأن إرسال كلمة المرور يتم مباشرة إلى Firebase.
+   - الحالة: محلول والقاعدة نشطة.
+
+الملفات المتأثرة:
+
+- `docs/HUMAN_VERIFICATION_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test
+npm run security:secrets
+npm run build
+curl.exe https://date-tool.com/api/public-campaigns
+curl.exe "https://date-tool.com/api/site-config?include=pages"
+```
+
+الحالة:
+
+- بند حساب خدمة Firebase الأقل صلاحية وتدوير المفتاح مكتمل بالكامل، بما في ذلك إزالة المفتاح والأسرار القديمة والتنظيف بعد نجاح اختبار القراءة والكتابة.
+- بند Cloudflare WAF/Rate Limiting مكتمل ضمن حدود الخطة المجانية.
+- إعداد Identity Platform وTOTP الخارجي مكتمل، لكن كود MFA المحلي غير منشور ولم يسجل حساب `platform_owner` عامل TOTP بعد.
+- لم يُنشر كود تطبيق ضمن هذه الخطوة؛ عمليات Cloudflare المنشورة كانت تغييرات أسرار وإعداد أمان فقط.
+
+المتبقي المحفوظ:
+
+- نشر نسخة MFA المرحلية مع `NEXT_PUBLIC_FIREBASE_MFA_REQUIRED=false`، ثم تسجيل حساب `platform_owner` في Authenticator واختبار خروج ودخول حقيقي قبل أي فرض.
+- بعد نجاح الاختبار فقط: ضبط `mfaRequired=true` للمالك، تفعيل علم الإصدار، ونشر قواعد Firestore ثم اختبار الاسترداد.
+- معالجة App Check واختباره إنتاجيًا قبل أي إعادة تفعيل أو Enforcement.
+- تنفيذ اختبار رفع الوسائط من الواجهة بحساب معلن تجريبي.
+- حسم إبقاء اتصال Wrangler OAuth أو إلغائه، مع بقاء قرار المالك الاحتياطي مؤجلًا بقرار المستخدم.
+- النسخ والاستعادة والتنبيهات التي تعتمد على الخطة، والتقارير الزمنية والمراجعة القانونية البشرية.
+
+### إصلاح App Check وإعادة تفعيله في وضع المراقبة - الإصدار 0.3.64
+
+تم إنجازه:
+
+- تحديد سبب تعطل App Check السابق بدقة: سياسة أمان المحتوى كانت تسمح بإطار reCAPTCHA، لكنها لا تسمح بتحميل سكربتي `www.google.com/recaptcha` و`www.gstatic.com/recaptcha`، لذلك ظهر عنصر السكربت دون توفر مزود Enterprise وحجز Firebase Auth انتظار الرمز.
+- إضافة مسارات reCAPTCHA اللازمة فقط إلى `script-src` و`script-src-elem` وإضافة مسار الإطار الاحتياطي `recaptcha.google.com/recaptcha` بدل توسيع CSP إلى نطاقات عامة غير لازمة.
+- ترقية فحص مركز الأمان لطلب رمز App Check فعلي بمهلة 10 ثوانٍ؛ لا تعرض البطاقة حالة `مهيأ` لمجرد بدء التهيئة.
+- نجاح اختبار محلي بعميل App Check مفعّل: حُمّل سكربتا reCAPTCHA وظهر إطار Enterprise المخفي، ووصل طلب Firebase Auth الوهمي وأعاد خطأ الاعتماد المتوقع بدل `auth/network-request-failed`.
+- نجاح بوابة الجودة الكاملة: ESLint، فحص الأسرار، `npm audit` مع 0 ثغرات، و225 اختبار وحدة وتكامل في 43 ملفًا، و9 اختبارات قواعد Firestore على المحاكي، وبناء 39 صفحة، و57 اختبار متصفح مع تجاوز واحد مقصود.
+- نشر الإصدار `0.3.64` إلى Worker `datetools` بمعرف `a0461a41-c110-49d8-8507-44053c1ba366` مع `NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=true` والمفتاح العام المسجل، مع بقاء Firebase Enforcement معطلًا.
+- نجاح فحص الصحة الإنتاجي من أول محاولة وتأكيد بقاء `date-tool.com` مرتبطًا بالعامل وظهور CSP المصححة في الاستجابة.
+- نجاح التحقق الإنتاجي من مركز أمان الإدارة: ظهرت الحالة `تم إصدار رمز App Check صالح` وبقيت جلسة المالك وقراءات الإدارة تعمل دون خطأ شبكة.
+- ظهور أول طلبات موثقة في Firebase App Check: 2% لـCloud Firestore و7% لـAuthentication ضمن النافذة التاريخية، والحالتان ما زالتا `Monitoring` عمدًا.
+- نشر تجهيز MFA المرحلي ضمن الإصدار نفسه مع بقاء `NEXT_PUBLIC_FIREBASE_MFA_REQUIRED=false` وعدم تعديل `mfaRequired` أو قواعد الإنتاج.
+
+الأخطاء المكتشفة:
+
+1. **CSP منعت JavaScript الخاص بـreCAPTCHA Enterprise**
+   - الأعراض: كانت حاوية `fire_app_check_[DEFAULT]` تظهر، لكن `grecaptcha.enterprise` والإطار لا يكتملان، ثم ينتظر Firebase Auth الرمز حتى تنتهي مهلة الدخول بخطأ شبكة.
+   - السبب: `frame-src` كان يسمح لـGoogle، بينما `script-src` و`script-src-elem` لا يتضمنان مسارات reCAPTCHA على `www.google.com` و`www.gstatic.com`.
+   - الحل: السماح بالمسارات الضيقة اللازمة والتحقق من رمز حقيقي قبل إعلان نجاح App Check.
+   - الحالة: محلول ومنشور ومثبت محليًا وإنتاجيًا.
+2. **أول محاولة نشر فشلت بسبب قفل مجلد `.open-next`**
+   - الأعراض: أعاد OpenNext الخطأ `EPERM` عند تنظيف مجلد البناء.
+   - السبب: خادم اختبار Next المحلي كان ما زال يعمل ويمسك ملفات البناء على Windows/OneDrive.
+   - الحل: إيقاف جلسة الخادم المحلية ثم إعادة النشر دون حذف يدوي أو تغيير إعدادات المشروع.
+   - الحالة: محلول؛ نجحت المحاولة التالية.
+
+الملفات المتأثرة:
+
+- `middleware.js`
+- `app/firebase.js`
+- `app/admin/security/page.jsx`
+- `tests/settingsSecurity.test.js`
+- `app/version.js`
+- `package.json`
+- `package-lock.json`
+- `VERSION_LOG.md`
+- `docs/HUMAN_VERIFICATION_CHECKLIST.md`
+- `PROJECT_MEMO.md`
+
+الأوامر المستخدمة:
+
+```powershell
+npm test -- --run tests/settingsSecurity.test.js tests/firebaseAuthRetry.test.js
+npm run lint
+npm run build
+npm run quality:local
+npm run deploy
+npm run health:production
+curl.exe -sS -D - -o NUL https://date-tool.com/admin_login
+git diff --check
+```
+
+الحالة:
+
+- البند الثاني مكتمل برمجيًا وإنتاجيًا: App Check مفعّل في العميل، يصدر رمزًا صالحًا، ولا يعطل الإدارة أو Firebase Auth.
+- يبقى Firestore وAuthentication في `Monitoring` وفق تسلسل Firebase الرسمي؛ هذا ليس عطلًا، بل مرحلة مراقبة إلزامية قبل فرض الحظر على الطلبات غير الموثقة.
+- لا يفعّل Enforcement الآن لأن نافذة المقاييس ما زالت تحتوي 98% طلبات غير موثقة لـFirestore و93% لـAuthentication من الإصدارات السابقة والزيارات القديمة.
+
+المتبقي المحفوظ:
+
+- مراقبة نسب App Check بعد انتشار `0.3.64` ثم تفعيل Enforcement تدريجيًا لـAuthentication وCloud Firestore فقط عندما تصبح الطلبات الشرعية موثقة بدرجة كافية، مع اختبار الدخول والقراءة بعد كل خطوة.
+- تسجيل حساب `platform_owner` في Authenticator واختبار خروج ودخول حقيقي، ثم فرض MFA تدريجيًا ونشر قواعد Firestore بعد نجاح الاسترداد.
+- تنفيذ اختبار رفع الوسائط من الواجهة بحساب معلن تجريبي.
+- حسم إبقاء اتصال Wrangler OAuth أو إلغائه؛ قرار المالك الاحتياطي مؤجل بقرار المستخدم.
+- النسخ والاستعادة وCloudflare Health Checks التي تعتمد على الخطة، وتحسين AdSense وانتظار تقارير Search Console وCrUX، والمراجعة القانونية البشرية.

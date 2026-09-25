@@ -37,6 +37,7 @@ let appCheckPromise = null;
 const adminProfileCache = new Map();
 const appCheckSiteKey = String(process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY || '').trim();
 const appCheckEnabled = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED === 'true';
+const APP_CHECK_TOKEN_TIMEOUT_MS = 10_000;
 
 export async function ensureFirebaseAppCheck() {
     if (typeof window === "undefined") return null;
@@ -68,11 +69,33 @@ export async function ensureFirebaseAppCheck() {
 export async function getFirebaseAppCheckStatus() {
     const configured = Boolean(appCheckSiteKey);
     if (!configured || !appCheckEnabled) {
-        return { configured, enabled: appCheckEnabled, initialized: false };
+        return { configured, enabled: appCheckEnabled, initialized: false, tokenValid: false };
     }
 
     const instance = await ensureFirebaseAppCheck();
-    return { configured: true, enabled: true, initialized: Boolean(instance) };
+    if (!instance) {
+        return { configured: true, enabled: true, initialized: false, tokenValid: false };
+    }
+
+    try {
+        const { getToken } = await import("firebase/app-check");
+        const tokenResult = await Promise.race([
+            getToken(instance, false),
+            new Promise((_, reject) => {
+                setTimeout(() => reject(new Error("app-check-token-timeout")), APP_CHECK_TOKEN_TIMEOUT_MS);
+            })
+        ]);
+
+        return {
+            configured: true,
+            enabled: true,
+            initialized: true,
+            tokenValid: Boolean(tokenResult?.token)
+        };
+    } catch (error) {
+        console.error("Firebase App Check token verification failed.", error);
+        return { configured: true, enabled: true, initialized: true, tokenValid: false };
+    }
 }
 
 export async function getFirebaseAuth() {

@@ -1,6 +1,6 @@
 {
   "name": "date_tools",
-  "version": "0.3.63",
+  "version": "0.3.64",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -28,6 +28,7 @@
     "@opennextjs/cloudflare": "^1.19.11",
     "firebase": "^12.14.0",
     "next": "^15.5.25",
+    "qrcode": "^1.5.4",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "sanitize-html": "^2.17.7"

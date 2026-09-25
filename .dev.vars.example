@@ -10,3 +10,5 @@ TURNSTILE_ALLOWED_HOSTNAMES=date-tool.com,www.date-tool.com
 NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY=
 # Activate only after the production reCAPTCHA script and App Check metrics are verified.
 NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=false
+# Keep false until the owner has enrolled and a full MFA sign-in succeeds in production.
+NEXT_PUBLIC_FIREBASE_MFA_REQUIRED=false

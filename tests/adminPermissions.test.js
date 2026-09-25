@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { hasAdminPermission, isActiveAdminProfile } from '../app/api/_lib/adminPermissions';
+import {
+    adminMfaRequirementSatisfied,
+    hasAdminPermission,
+    isActiveAdminProfile,
+} from '../app/api/_lib/adminPermissions';
 
 const bool = (value) => ({ booleanValue: value });
 const text = (value) => ({ stringValue: value });
@@ -61,5 +65,23 @@ describe('admin permissions', () => {
     it('denies assistants without an explicit permission', () => {
         const profile = { active: bool(true), role: text('assistant') };
         expect(hasAdminPermission(profile, ['support'])).toBe(false);
+    });
+
+    it('requires a TOTP-authenticated token for sensitive roles only when enforcement is enabled', () => {
+        const owner = { active: bool(true), platformRole: text('platform_owner') };
+        const contentManager = { active: bool(true), platformRole: text('content_manager') };
+        const totpUser = { claims: { firebase: { sign_in_second_factor: 'enrollment-id' } } };
+        const passwordUser = { claims: { firebase: { sign_in_provider: 'password' } } };
+        const accountRequiredOwner = {
+            ...owner,
+            mfaRequired: bool(true),
+        };
+
+        expect(adminMfaRequirementSatisfied(owner, passwordUser, { required: false })).toBe(true);
+        expect(adminMfaRequirementSatisfied(owner, passwordUser, { required: true })).toBe(false);
+        expect(adminMfaRequirementSatisfied(owner, totpUser, { required: true })).toBe(true);
+        expect(adminMfaRequirementSatisfied(contentManager, passwordUser, { required: true })).toBe(true);
+        expect(adminMfaRequirementSatisfied(accountRequiredOwner, passwordUser)).toBe(false);
+        expect(adminMfaRequirementSatisfied(accountRequiredOwner, totpUser)).toBe(true);
     });
 });

@@ -103,7 +103,8 @@ service cloud.firestore {
       return isSignedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
-        && isKnownAdminRoleValue(adminRole());
+        && isKnownAdminRoleValue(adminRole())
+        && adminMfaRequirementSatisfied();
     }
 
     function adminData() {
@@ -119,6 +120,11 @@ service cloud.firestore {
           ? primaryRole
           : adminData().get("adminRole", "");
       return canonicalAdminRoleValue(resolvedRole);
+    }
+
+    function adminMfaRequirementSatisfied() {
+      return adminData().get("mfaRequired", false) != true
+        || request.auth.token.get("firebase", {}).get("sign_in_second_factor", "") != "";
     }
 
     function isActiveAdvertiser() {

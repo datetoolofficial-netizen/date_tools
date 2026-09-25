@@ -61,3 +61,25 @@ export function isPlatformOwnerProfile(fields) {
         && resolveEncodedAdminRole(fields) === ADMIN_ROLES.PLATFORM_OWNER
         && hasAdminPermission(fields, [ADMIN_PERMISSIONS.PLATFORM_OWNERSHIP_MANAGE]);
 }
+
+export function adminMfaRequirementSatisfied(
+    fields,
+    user,
+    { required } = {},
+) {
+    const accountRequiresMfa = fields?.mfaRequired?.booleanValue === true;
+    const releaseRequiresMfa = process.env.NEXT_PUBLIC_FIREBASE_MFA_REQUIRED === 'true';
+
+    if (!(required ?? (accountRequiresMfa || releaseRequiresMfa))) return true;
+
+    const role = resolveEncodedAdminRole(fields);
+    const protectedRole = [
+        ADMIN_ROLES.PLATFORM_OWNER,
+        ADMIN_ROLES.SUPER_ADMIN,
+        ADMIN_ROLES.SECURITY_MANAGER,
+    ].includes(role);
+
+    if (!protectedRole) return true;
+    const secondFactor = user?.claims?.firebase?.sign_in_second_factor;
+    return typeof secondFactor === 'string' && secondFactor.trim().length > 0;
+}

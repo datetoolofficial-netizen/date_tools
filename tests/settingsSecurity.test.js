@@ -50,8 +50,18 @@ describe('settings security boundaries', () => {
         expect(source).toContain('NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY');
         expect(source).toContain("process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED === 'true'");
         expect(source).toContain('if (!appCheckEnabled || !appCheckSiteKey) return null;');
+        expect(source).toContain('getToken(instance, false)');
+        expect(source).toContain('tokenValid: Boolean(tokenResult?.token)');
         expect(envExample).toContain('NEXT_PUBLIC_FIREBASE_APP_CHECK_ENABLED=false');
         expect(source).not.toContain('6LcGrIwsAAAAAP5f-fzzMMmHVZzqtpC2OhslCe_3');
+    });
+
+    it('allows only the reCAPTCHA script and frame paths required by App Check', () => {
+        const middleware = readProjectFile('middleware.js');
+
+        expect(middleware).toContain('https://www.google.com/recaptcha/');
+        expect(middleware).toContain('https://www.gstatic.com/recaptcha/');
+        expect(middleware).toContain('https://recaptcha.google.com/recaptcha/');
     });
 
     it('does not use regular expressions as an HTML sanitizer fallback', () => {
